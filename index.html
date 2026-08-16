@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>先生のアプリ</title>
+<meta name="description" content="授業で使えるアプリ集">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c96f3f">
+<!-- iPhoneホーム画面（フルスクリーン起動） -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="アプリ">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root{
+    --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
+    --accent:#c96f3f;--accent-soft:#fbeee4;--shadow:0 2px 12px rgba(90,70,40,.08);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;
+    --accent:#e0895a;--accent-soft:#3a2f26;--shadow:0 2px 14px rgba(0,0,0,.35);
+  }}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:0 16px calc(40px + env(safe-area-inset-bottom));
+    padding-top:env(safe-area-inset-top);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;
+    -webkit-text-size-adjust:100%;}
+  header{max-width:620px;margin:0 auto;padding:34px 4px 6px;text-align:center}
+  h1{font-size:1.6rem;margin:0 0 4px}
+  .lead{color:var(--sub);margin:0;font-size:.9rem}
+  main{max-width:620px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+  a.card{display:flex;flex-direction:column;justify-content:flex-start;
+    background:var(--panel);border:1px solid var(--line);border-radius:20px;
+    padding:20px 16px;box-shadow:var(--shadow);text-decoration:none;color:inherit;
+    transition:transform .12s;min-height:150px}
+  a.card:active{transform:scale(.97)}
+  .emoji{font-size:2.4rem;line-height:1;margin-bottom:12px}
+  .name{font-weight:700;font-size:1rem;margin:0 0 4px}
+  .desc{color:var(--sub);font-size:.78rem;margin:0}
+  .tag{display:inline-block;margin-top:auto;padding-top:10px;font-size:.7rem;
+    font-weight:700;color:var(--accent)}
+  footer{max-width:620px;margin:32px auto 0;text-align:center;color:var(--sub);font-size:.75rem}
+  @media (min-width:560px){.grid{grid-template-columns:1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🚀 先生のアプリ</h1>
+  <p class="lead">授業で使えるアプリ集</p>
+</header>
+<main>
+  <div class="grid">
+
+    <a class="card" href="https://33rrr33.github.io/omiseyasan/">
+      <div class="emoji">🏪</div>
+      <p class="name">おみせやさんごっこ</p>
+      <p class="desc">低学年・お金の学習ゲーム</p>
+      <span class="tag">ひらく →</span>
+    </a>
+
+    <a class="card" href="https://33rrr33.github.io/okaimono/">
+      <div class="emoji">🛒</div>
+      <p class="name">はじめてのおつかい</p>
+      <p class="desc">お買い物とお釣りの学習</p>
+      <span class="tag">ひらく →</span>
+    </a>
+
+    <a class="card" href="https://33rrr33.github.io/tsumiki-tower/">
+      <div class="emoji">🧱</div>
+      <p class="name">さんすう つみきタワー</p>
+      <p class="desc">低学年・数と量の学習</p>
+      <span class="tag">ひらく →</span>
+    </a>
+
+    <a class="card" href="https://33rrr33.github.io/sankaku-logic/">
+      <div class="emoji">🔺</div>
+      <p class="name">三角ロジック</p>
+      <p class="desc">根拠ぬきだし授業ツール</p>
+      <span class="tag">ひらく →</span>
+    </a>
+
+    <a class="card" href="https://slide-sync-38rj.onrender.com">
+      <div class="emoji">📽️</div>
+      <p class="name">スライド同期</p>
+      <p class="desc">PDFスライドを同期共有</p>
+      <span class="tag">ひらく →</span>
+    </a>
+
+  </div>
+  <footer>このページはホーム画面に追加できます。<br>共有ボタン → 「ホーム画面に追加」</footer>
+</main>
+</body>
+</html>
