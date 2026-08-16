@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>先生のアプリ（全部）</title>
+<meta name="description" content="授業で使えるアプリ集・全一覧">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c96f3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="アプリ全部">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{
+    --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
+    --accent:#c96f3f;--accent-soft:#fbeee4;--gray:#9a9186;--shadow:0 2px 12px rgba(90,70,40,.08);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;
+    --accent:#e0895a;--accent-soft:#3a2f26;--gray:#7d7568;--shadow:0 2px 14px rgba(0,0,0,.35);
+  }}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:0 16px calc(40px + env(safe-area-inset-bottom));
+    padding-top:env(safe-area-inset-top);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;-webkit-text-size-adjust:100%;}
+  header{max-width:640px;margin:0 auto;padding:34px 4px 6px;text-align:center}
+  h1{font-size:1.6rem;margin:0 0 4px}
+  .lead{color:var(--sub);margin:0;font-size:.9rem}
+  main{max-width:640px;margin:0 auto}
+  .sec-title{font-size:1rem;font-weight:700;margin:28px 2px 12px;display:flex;align-items:center;gap:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (min-width:560px){.grid{grid-template-columns:1fr 1fr 1fr}}
+  .card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
+    border-radius:20px;padding:18px 16px;box-shadow:var(--shadow);text-decoration:none;color:inherit;
+    min-height:148px;transition:transform .12s}
+  a.card:active{transform:scale(.97)}
+  .card.soon{opacity:.62}
+  .emoji{font-size:2.2rem;line-height:1;margin-bottom:10px}
+  .name{font-weight:700;font-size:.98rem;margin:0 0 4px}
+  .desc{color:var(--sub);font-size:.76rem;margin:0}
+  .tag{display:inline-block;margin-top:auto;padding-top:10px;font-size:.7rem;font-weight:700}
+  .tag.go{color:var(--accent)}
+  .tag.soon{color:var(--gray)}
+  footer{max-width:640px;margin:34px auto 0;text-align:center;color:var(--sub);font-size:.78rem}
+  footer a{color:var(--accent);font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>🚀 先生のアプリ（全部）</h1>
+  <p class="lead">作ったアプリの全一覧</p>
+</header>
+<main>
+
+  <h2 class="sec-title">🌐 公開中（どこでも使えます）</h2>
+  <div class="grid">
+    <a class="card" href="https://33rrr33.github.io/omiseyasan/">
+      <div class="emoji">🏪</div><p class="name">おみせやさんごっこ</p>
+      <p class="desc">低学年・お金の学習ゲーム</p><span class="tag go">ひらく →</span>
+    </a>
+    <a class="card" href="https://33rrr33.github.io/okaimono/">
+      <div class="emoji">🛒</div><p class="name">はじめてのおつかい</p>
+      <p class="desc">お買い物とお釣りの学習</p><span class="tag go">ひらく →</span>
+    </a>
+    <a class="card" href="https://33rrr33.github.io/tsumiki-tower/">
+      <div class="emoji">🧱</div><p class="name">さんすう つみきタワー</p>
+      <p class="desc">低学年・数と量の学習</p><span class="tag go">ひらく →</span>
+    </a>
+    <a class="card" href="https://33rrr33.github.io/sankaku-logic/">
+      <div class="emoji">🔺</div><p class="name">三角ロジック</p>
+      <p class="desc">根拠ぬきだし授業ツール</p><span class="tag go">ひらく →</span>
+    </a>
+    <a class="card" href="https://slide-sync-38rj.onrender.com">
+      <div class="emoji">📽️</div><p class="name">スライド同期</p>
+      <p class="desc">PDFスライドを同期共有</p><span class="tag go">ひらく →</span>
+    </a>
+  </div>
+
+  <h2 class="sec-title">🛠 準備中（調整後に公開予定）</h2>
+  <div class="grid">
+    <div class="card soon">
+      <div class="emoji">📝</div><p class="name">算数プリントメーカー</p>
+      <p class="desc">プリントを自動作成</p><span class="tag soon">準備中</span>
+    </div>
+    <div class="card soon">
+      <div class="emoji">📚</div><p class="name">国語教材研究スーパー秘書</p>
+      <p class="desc">国語の教材研究サポート</p><span class="tag soon">準備中</span>
+    </div>
+    <div class="card soon">
+      <div class="emoji">📜</div><p class="name">縦書き 全文シート</p>
+      <p class="desc">全文を縦書きに整形</p><span class="tag soon">準備中</span>
+    </div>
+  </div>
+
+  <h2 class="sec-title">🖥 Mac専用（この端末では開けません）</h2>
+  <div class="grid">
+    <div class="card soon">
+      <div class="emoji">🤖</div><p class="name">パフォーマンス課題 評価</p>
+      <p class="desc">課題をAIでABC評価</p><span class="tag soon">Mac専用</span>
+    </div>
+    <div class="card soon">
+      <div class="emoji">🖨️</div><p class="name">印刷ステーション</p>
+      <p class="desc">1タップ印刷</p><span class="tag soon">Mac専用</span>
+    </div>
+  </div>
+
+  <footer><a href="../">← 使えるアプリだけ表示（5つ）</a></footer>
+</main>
+</body>
+</html>
