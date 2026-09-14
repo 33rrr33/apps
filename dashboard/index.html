@@ -1,0 +1,837 @@
+<title>きょうの司令塔</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" />
+<style>
+  :root {
+    --ground: #eef1f1;
+    --surface: #ffffff;
+    --surface-2: #f4f7f7;
+    --ink: #17201f;
+    --muted: #5c6b69;
+    --faint: #8a9895;
+    --line: #dce3e2;
+    --accent: #17838f;
+    --accent-ink: #0c5a63;
+    --accent-soft: #dceff0;
+    --warn: #b5720f;
+    --warn-soft: #f9edd6;
+    --urgent: #c4463a;
+    --urgent-soft: #f9e4e0;
+    --good: #26895f;
+    --good-soft: #dcefe6;
+    --shadow: 0 1px 2px rgba(20, 35, 33, 0.06), 0 6px 18px rgba(20, 35, 33, 0.06);
+    --radius: 16px;
+    --radius-sm: 11px;
+    --font-display: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+    --font-body: "Noto Sans JP", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0f1413;
+      --surface: #171e1d;
+      --surface-2: #1d2625;
+      --ink: #e9eeed;
+      --muted: #97a5a2;
+      --faint: #6e7d7a;
+      --line: #29332f;
+      --accent: #46b8c6;
+      --accent-ink: #7fd3dd;
+      --accent-soft: #10302f;
+      --warn: #e2a552;
+      --warn-soft: #2c2411;
+      --urgent: #e8776a;
+      --urgent-soft: #2f1712;
+      --good: #4dc08e;
+      --good-soft: #102820;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0f1413;
+    --surface: #171e1d;
+    --surface-2: #1d2625;
+    --ink: #e9eeed;
+    --muted: #97a5a2;
+    --faint: #6e7d7a;
+    --line: #29332f;
+    --accent: #46b8c6;
+    --accent-ink: #7fd3dd;
+    --accent-soft: #10302f;
+    --warn: #e2a552;
+    --warn-soft: #2c2411;
+    --urgent: #e8776a;
+    --urgent-soft: #2f1712;
+    --good: #4dc08e;
+    --good-soft: #102820;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+  button { font-family: inherit; color: inherit; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+  .app {
+    height: 100dvh;
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 8px);
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  /* ---- top bar ---- */
+  .topbar { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 0 2px; }
+  .date { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .date .d-num { font-family: var(--font-display); font-weight: 800; font-size: 26px; letter-spacing: -0.01em; }
+  .date .d-dow { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--muted); }
+  .date .d-holiday {
+    font-size: 12px; font-weight: 700; color: var(--urgent);
+    background: var(--urgent-soft); padding: 2px 8px; border-radius: 999px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw;
+  }
+  .sync { display: flex; align-items: center; gap: 8px; flex: none; }
+  .sync .stamp { font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--line); color: var(--muted);
+    box-shadow: var(--shadow);
+  }
+  .icon-btn:active { transform: scale(0.94); }
+  .icon-btn.spin svg { animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- hero: next event ---- */
+  .hero {
+    position: relative; overflow: hidden;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 13px 15px 14px; flex: none;
+  }
+  .hero::before {
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--accent);
+  }
+  .hero[data-state="soon"]::before { background: var(--warn); }
+  .hero[data-state="imminent"]::before { background: var(--urgent); }
+  .hero[data-state="now"]::before { background: var(--good); }
+  .hero-label {
+    font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px;
+  }
+  .hero-count {
+    font-size: 11px; font-weight: 700; color: var(--accent-ink);
+    background: var(--accent-soft); padding: 1px 8px; border-radius: 999px; letter-spacing: 0;
+  }
+  .hero-main { display: flex; align-items: flex-end; gap: 12px; margin-top: 5px; }
+  .hero-time {
+    font-family: var(--font-display); font-weight: 800; font-size: 34px; line-height: 1;
+    letter-spacing: -0.01em; font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .hero-body { min-width: 0; flex: 1; padding-bottom: 2px; }
+  .hero-title {
+    font-weight: 700; font-size: 16px; line-height: 1.28;
+    overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .hero-meta { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .countdown {
+    display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 12.5px;
+    color: var(--accent-ink);
+  }
+  .hero[data-state="soon"] .countdown { color: var(--warn); }
+  .hero[data-state="imminent"] .countdown { color: var(--urgent); }
+  .hero[data-state="now"] .countdown { color: var(--good); }
+  .hero-empty { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+  .hero-empty .big { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+  .hero-empty .sub { font-size: 12.5px; color: var(--muted); }
+
+  /* ---- section blocks ---- */
+  .block {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .block.sched, .block.mail { flex: none; }
+  .block.tasks { flex: 1 1 auto; min-height: 96px; }
+  .b-head {
+    display: flex; align-items: center; gap: 8px; padding: 9px 13px 7px;
+  }
+  .b-head .h-ic { color: var(--accent); display: inline-flex; flex: none; }
+  .b-title { font-family: var(--font-display); font-weight: 700; font-size: 13.5px; letter-spacing: 0.01em; }
+  .b-count {
+    margin-left: auto; font-size: 12px; font-weight: 700; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .b-count b { color: var(--ink); font-size: 14px; }
+  .b-list { display: flex; flex-direction: column; }
+  .tasks .b-list { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+
+  .row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 13px;
+    border-top: 1px solid var(--line); position: relative;
+  }
+  .row:first-child { border-top: 0; }
+  .row .stripe { position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 0 3px 3px 0; background: var(--line); }
+  .row.u-imminent .stripe { background: var(--urgent); }
+  .row.u-soon .stripe { background: var(--warn); }
+  .row.u-ok .stripe { background: var(--accent); }
+  .row .r-time {
+    font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--ink);
+    min-width: 42px; font-variant-numeric: tabular-nums; flex: none;
+  }
+  .row .r-time.allday { color: var(--accent-ink); font-size: 11px; min-width: 42px; }
+  .row .r-body { min-width: 0; flex: 1; }
+  .row .r-title {
+    font-size: 14px; font-weight: 500; line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .row .r-sub { font-size: 11.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* mail rows */
+  .row.mailrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+  .row.mailrow.important .dot { background: var(--urgent); }
+  .row.mailrow .r-from { font-size: 11.5px; color: var(--muted); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chev { color: var(--faint); flex: none; }
+
+  /* task rows */
+  .task {
+    display: flex; align-items: center; gap: 11px; padding: 9px 13px;
+    border-top: 1px solid var(--line);
+  }
+  .task:first-child { border-top: 0; }
+  .check {
+    width: 23px; height: 23px; border-radius: 7px; flex: none;
+    border: 2px solid var(--faint); background: transparent;
+    display: inline-flex; align-items: center; justify-content: center; color: #fff;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .check svg { opacity: 0; }
+  .task.done .check { background: var(--good); border-color: var(--good); }
+  .task.done .check svg { opacity: 1; }
+  .task .t-body { flex: 1; min-width: 0; }
+  .task .t-title { font-size: 14.5px; line-height: 1.3; word-break: break-word; }
+  .task.done .t-title { color: var(--faint); text-decoration: line-through; }
+  .task .kind {
+    font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; letter-spacing: 0.02em;
+    flex: none; margin-top: 1px;
+  }
+  .kind.line { color: #05852b; background: rgba(6, 199, 85, 0.14); }
+  .kind.task { color: var(--accent-ink); background: var(--accent-soft); }
+  :root[data-theme="dark"] .kind.line, :root:not([data-theme="light"]) .kind.line { color: #5fe08a; }
+  .task .del {
+    border: 0; background: transparent; color: var(--faint); font-size: 20px; line-height: 1;
+    padding: 2px 4px; flex: none; opacity: 0.7;
+  }
+  .task .del:active { color: var(--urgent); }
+
+  .empty { padding: 14px 13px; color: var(--faint); font-size: 13px; text-align: center; }
+  .note {
+    padding: 9px 13px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line);
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.4;
+  }
+  .note.reauth { color: var(--urgent); }
+  .note a { color: var(--accent-ink); font-weight: 700; text-decoration: underline; }
+
+  /* add bar inside tasks */
+  .addbar {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    border-top: 1px solid var(--line); flex: none; background: var(--surface-2);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .kindtoggle { display: flex; gap: 4px; flex: none; }
+  .kindtoggle button {
+    font-family: var(--font-display); font-size: 11px; font-weight: 700; padding: 6px 8px;
+    border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  }
+  .kindtoggle button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .addbar input {
+    flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface);
+    border-radius: 9px; padding: 9px 11px; font-size: 15px; color: var(--ink); font-family: inherit;
+  }
+  .addbar input::placeholder { color: var(--faint); }
+  .addbar .add {
+    flex: none; width: 38px; height: 38px; border-radius: 10px; border: 0;
+    background: var(--accent); color: #fff; font-size: 22px; line-height: 1; display: inline-flex;
+    align-items: center; justify-content: center;
+  }
+  .addbar .add:active { transform: scale(0.94); }
+
+  /* ---- dock ---- */
+  .dock { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: none; }
+  .dock a, .dock button {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    box-shadow: var(--shadow); padding: 9px 4px 8px; color: var(--muted);
+    font-family: var(--font-display); font-weight: 700; font-size: 11px;
+  }
+  .dock a:active, .dock button:active { transform: scale(0.96); }
+  .dock .ic { display: inline-flex; }
+  .dock .line-ic { color: #06c755; }
+  .dock .mail-ic { color: #ea4335; }
+  .dock .cal-ic { color: #4285f4; }
+
+  .skl { color: var(--faint); font-size: 13px; padding: 10px 13px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="date">
+      <span class="d-num" id="dNum">—</span>
+      <span class="d-dow" id="dDow"></span>
+      <span class="d-holiday" id="dHoliday" hidden></span>
+    </div>
+    <div class="sync">
+      <span class="stamp" id="stamp"></span>
+      <button class="icon-btn" id="refreshBtn" aria-label="更新">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="hero" id="hero" data-state="ok">
+    <div class="hero-label"><span>この後の予定</span><span class="hero-count" id="heroCount" hidden></span></div>
+    <div id="heroContent"><div class="hero-empty"><span class="sub">読み込み中…</span></div></div>
+  </section>
+
+  <section class="block sched">
+    <div class="b-head">
+      <span class="h-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg></span>
+      <span class="b-title">きょうの予定</span>
+      <span class="b-count" id="schedCount"></span>
+    </div>
+    <div class="b-list" id="schedList"><div class="skl">読み込み中…</div></div>
+  </section>
+
+  <section class="block mail">
+    <div class="b-head">
+      <span class="h-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>
+      <span class="b-title">要チェックのメール</span>
+      <span class="b-count" id="mailCount"></span>
+    </div>
+    <div class="b-list" id="mailList"><div class="skl">読み込み中…</div></div>
+  </section>
+
+  <section class="block tasks">
+    <div class="b-head">
+      <span class="h-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></span>
+      <span class="b-title">きょう やること</span>
+      <span class="b-count" id="taskCount"></span>
+    </div>
+    <div class="b-list" id="taskList"><div class="skl">読み込み中…</div></div>
+    <div class="addbar">
+      <div class="kindtoggle" role="group" aria-label="種類">
+        <button type="button" id="kTask" aria-pressed="true">タスク</button>
+        <button type="button" id="kLine" aria-pressed="false">LINE返信</button>
+      </div>
+      <input id="taskInput" type="text" inputmode="text" placeholder="やること・返信を追加…" autocomplete="off" />
+      <button class="add" id="addBtn" aria-label="追加">＋</button>
+    </div>
+  </section>
+
+  <nav class="dock">
+    <a href="https://mail.google.com/mail/u/89ryokinishida@gmail.com/#inbox" target="_blank" rel="noopener">
+      <span class="ic mail-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>Gmail
+    </a>
+    <a href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">
+      <span class="ic cal-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg></span>カレンダー
+    </a>
+    <a href="line://" target="_blank" rel="noopener" id="lineLink">
+      <span class="ic line-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.2c0-4-4-7.2-9-7.2S3 7.2 3 11.2c0 3.6 3.2 6.6 7.5 7.1.9.1.8.6.7 1.2l-.2 1.1c-.1.5.3.9.9.6 2.9-1.4 6.6-4 8.2-6.6.6-1 .9-2 .9-3.4Z"/></svg></span>LINE
+    </a>
+    <button type="button" id="dockRefresh">
+      <span class="ic" style="color:var(--accent)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></span>更新
+    </button>
+  </nav>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var GOOGLE_ACCOUNT = "89ryokinishida@gmail.com";
+  var CAL_SERVER = "Google Calendar";
+  var MAIL_SERVER = "Gmail";
+  var MAIL_QUERY = "is:unread in:inbox -category:promotions -category:social";
+  var DOW = ["日", "月", "火", "水", "木", "金", "土"];
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function fmtTime(d) { return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+
+  // ---------- state ----------
+  var calEvents = {};      // calendarId -> [events]
+  var calStatus = {};      // calendarId -> "ok"|errcode
+  var calNames = {};       // calendarId -> summary
+  var mailData = null;     // payload
+  var mailStatus = "load"; // "ok"|"load"|errcode
+  var todos = [];          // {id,title,done,kind,createdAt}
+  var todoBackend = "load";
+  var lastMcpUpdate = 0;
+  var kindSel = "task";
+
+  // ---------- date header ----------
+  function renderHeader() {
+    var now = new Date();
+    $("dNum").textContent = (now.getMonth() + 1) + "月" + now.getDate() + "日";
+    $("dDow").textContent = "(" + DOW[now.getDay()] + ")";
+  }
+
+  function todayBounds() {
+    var s = new Date(); s.setHours(0, 0, 0, 0);
+    var e = new Date(s); e.setDate(e.getDate() + 1);
+    return { startTime: s.toISOString(), endTime: e.toISOString(), key: s.toDateString() };
+  }
+  var dayKey = todayBounds().key;
+
+  // ---------- schedule / hero ----------
+  function evStart(e) { return e.start && (e.start.dateTime || e.start.date); }
+  function isAllDay(e) { return !!(e.start && e.start.date && !e.start.dateTime); }
+  function startMs(e) {
+    if (isAllDay(e)) return 0;
+    return new Date(e.start.dateTime).getTime();
+  }
+  function mergedEvents() {
+    var all = [];
+    Object.keys(calEvents).forEach(function (id) {
+      (calEvents[id] || []).forEach(function (e) {
+        if (e && e.status !== "cancelled" && evStart(e)) all.push(e);
+      });
+    });
+    all.sort(function (a, b) { return startMs(a) - startMs(b); });
+    return all;
+  }
+  function humanGap(ms) {
+    var m = Math.round(ms / 60000);
+    if (m < 1) return "まもなく";
+    if (m < 60) return "あと" + m + "分";
+    var h = Math.floor(m / 60), mm = m % 60;
+    return "あと" + h + "時間" + (mm ? mm + "分" : "");
+  }
+
+  function renderHero() {
+    var hero = $("hero"), content = $("heroContent"), badge = $("heroCount");
+    var anyCal = Object.keys(calStatus).length > 0;
+    var errored = anyCal && Object.keys(calStatus).every(function (k) { return calStatus[k] !== "ok"; });
+
+    if (!window.__mcpReady && !anyCal) {
+      hero.setAttribute("data-state", "ok");
+      badge.hidden = true;
+      content.innerHTML = '<div class="hero-empty"><span class="sub">Googleカレンダーを読み込み中…</span></div>';
+      return;
+    }
+    if (errored) {
+      hero.setAttribute("data-state", "ok");
+      badge.hidden = true;
+      content.innerHTML = '<div class="hero-empty"><span class="sub">' + connectMsg(firstErr(calStatus)) + "</span></div>";
+      return;
+    }
+
+    var all = mergedEvents();
+    var timed = all.filter(function (e) { return !isAllDay(e); });
+    var now = Date.now();
+    var ongoing = null, next = null;
+    for (var i = 0; i < timed.length; i++) {
+      var st = new Date(timed[i].start.dateTime).getTime();
+      var en = timed[i].end && timed[i].end.dateTime ? new Date(timed[i].end.dateTime).getTime() : st + 3600000;
+      if (st <= now && en > now) { ongoing = timed[i]; break; }
+      if (st > now && !next) next = timed[i];
+    }
+    var upcomingCount = timed.filter(function (e) {
+      return new Date(e.start.dateTime).getTime() > now;
+    }).length;
+
+    var ev = ongoing || next;
+    if (!ev) {
+      hero.setAttribute("data-state", "ok");
+      badge.hidden = true;
+      var msg = all.length ? "きょうの予定は終わりました" : "きょうの予定はありません";
+      var sub = all.length ? "おつかれさま。次はやることに集中" : "予定なし。今日は身軽です";
+      content.innerHTML = '<div class="hero-empty"><div><div class="big">' + msg + '</div><div class="sub">' + sub + "</div></div></div>";
+      return;
+    }
+
+    var st2 = new Date(ev.start.dateTime).getTime();
+    var state = "ok", cd = "";
+    if (ongoing) {
+      state = "now";
+      var enT = ev.end && ev.end.dateTime ? fmtTime(new Date(ev.end.dateTime)) : "";
+      cd = "進行中" + (enT ? " ・ " + enT + "まで" : "");
+    } else {
+      var gap = st2 - now;
+      if (gap <= 15 * 60000) state = "imminent";
+      else if (gap <= 60 * 60000) state = "soon";
+      cd = humanGap(gap);
+    }
+    hero.setAttribute("data-state", state);
+    if (upcomingCount > 1) { badge.hidden = false; badge.textContent = "この後 " + upcomingCount + "件"; }
+    else badge.hidden = true;
+
+    var loc = ev.location ? '<span>📍' + esc(ev.location) + "</span>" : "";
+    var calN = calNames[ev.__cal] && !ev.__primary ? '<span>' + esc(calNames[ev.__cal]) + "</span>" : "";
+    content.innerHTML =
+      '<div class="hero-main">' +
+        '<div class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + "</div>" +
+        '<div class="hero-body">' +
+          '<div class="hero-title">' + esc(ev.summary || "(タイトルなし)") + "</div>" +
+          '<div class="hero-meta"><span class="countdown">' + cd + "</span>" + calN + loc + "</div>" +
+        "</div>" +
+      "</div>";
+  }
+
+  function renderSchedule() {
+    var box = $("schedList"), cnt = $("schedCount");
+    var anyCal = Object.keys(calStatus).length > 0;
+    var errored = anyCal && Object.keys(calStatus).every(function (k) { return calStatus[k] !== "ok"; });
+    if (!anyCal && !window.__mcpReady) { box.innerHTML = '<div class="skl">読み込み中…</div>'; cnt.textContent = ""; return; }
+    if (errored) { box.innerHTML = '<div class="note ' + (isReauth(firstErr(calStatus)) ? "reauth" : "") + '">' + connectMsg(firstErr(calStatus)) + "</div>"; cnt.textContent = ""; return; }
+
+    var all = mergedEvents();
+    var now = Date.now();
+    if (!all.length) { box.innerHTML = '<div class="empty">予定なし</div>'; cnt.textContent = ""; return; }
+
+    var upcoming = all.filter(function (e) {
+      if (isAllDay(e)) return true;
+      var en = e.end && e.end.dateTime ? new Date(e.end.dateTime).getTime() : startMs(e) + 3600000;
+      return en > now;
+    });
+    var list = (upcoming.length ? upcoming : all);
+    var remaining = upcoming.filter(function (e) { return !isAllDay(e); }).length;
+    cnt.innerHTML = "残り <b>" + remaining + "</b> 件";
+
+    var show = list.slice(0, 3);
+    var html = show.map(function (e) {
+      var u = "u-ok", timeCell;
+      if (isAllDay(e)) {
+        timeCell = '<span class="r-time allday">終日</span>';
+      } else {
+        var st = new Date(e.start.dateTime).getTime();
+        var gap = st - now;
+        if (st <= now) u = "u-ok";
+        else if (gap <= 15 * 60000) u = "u-imminent";
+        else if (gap <= 60 * 60000) u = "u-soon";
+        timeCell = '<span class="r-time">' + fmtTime(new Date(e.start.dateTime)) + "</span>";
+      }
+      var sub = "";
+      if (e.location) sub = esc(e.location);
+      else if (e.__cal && calNames[e.__cal] && !e.__primary) sub = esc(calNames[e.__cal]);
+      return '<div class="row ' + u + '"><span class="stripe"></span>' + timeCell +
+        '<div class="r-body"><div class="r-title">' + esc(e.summary || "(タイトルなし)") + "</div>" +
+        (sub ? '<div class="r-sub">' + sub + "</div>" : "") + "</div></div>";
+    }).join("");
+    if (list.length > 3) {
+      html += '<a class="note" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">ほか ' + (list.length - 3) + " 件をカレンダーで見る →</a>";
+    }
+    box.innerHTML = html;
+  }
+
+  // ---------- mail ----------
+  function senderName(s) {
+    if (!s) return "";
+    var m = /^\s*"?([^"<]+?)"?\s*</.exec(s);
+    if (m) return m[1].trim();
+    var at = s.indexOf("@");
+    return at > 0 ? s.slice(0, at) : s;
+  }
+  function threadLatest(t) {
+    var msgs = t.messages || [];
+    var best = msgs[0];
+    for (var i = 1; i < msgs.length; i++) {
+      if (new Date(msgs[i].date) >= new Date(best.date)) best = msgs[i];
+    }
+    return best || {};
+  }
+  function renderMail() {
+    var box = $("mailList"), cnt = $("mailCount");
+    if (mailStatus === "load" && !mailData) { box.innerHTML = '<div class="skl">読み込み中…</div>'; return; }
+    if (mailStatus !== "ok" && mailStatus !== "load") {
+      box.innerHTML = '<div class="note ' + (isReauth(mailStatus) ? "reauth" : "") + '">' + connectMsg(mailStatus) + "</div>";
+      cnt.textContent = ""; return;
+    }
+    var threads = (mailData && mailData.threads) || [];
+    if (!threads.length) { box.innerHTML = '<div class="empty">未読なし。受信箱スッキリ ✓</div>'; cnt.innerHTML = ""; return; }
+
+    var items = threads.map(function (t) {
+      var m = threadLatest(t);
+      var labels = m.labelIds || [];
+      return {
+        id: t.id, subject: m.subject || "(件名なし)", from: senderName(m.sender),
+        date: m.date ? new Date(m.date).getTime() : 0,
+        important: labels.indexOf("IMPORTANT") >= 0
+      };
+    });
+    items.sort(function (a, b) {
+      if (a.important !== b.important) return a.important ? -1 : 1;
+      return b.date - a.date;
+    });
+    var impCount = items.filter(function (i) { return i.important; }).length;
+    cnt.innerHTML = "<b>" + items.length + "</b> 件" + (impCount ? " ・ 重要" + impCount : "");
+
+    var show = items.slice(0, 3);
+    var html = show.map(function (i) {
+      var href = "https://mail.google.com/mail/u/" + encodeURIComponent(GOOGLE_ACCOUNT) + "/#inbox/" + encodeURIComponent(i.id);
+      return '<a class="row mailrow ' + (i.important ? "important" : "") + '" href="' + href + '" target="_blank" rel="noopener">' +
+        '<span class="dot"></span>' +
+        '<div class="r-body"><div class="r-title">' + esc(i.subject) + "</div>" +
+        '<div class="r-from">' + esc(i.from) + "</div></div>" +
+        '<span class="chev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span></a>';
+    }).join("");
+    if (items.length > 3) {
+      html += '<a class="note" href="https://mail.google.com/mail/u/' + encodeURIComponent(GOOGLE_ACCOUNT) + '/#inbox" target="_blank" rel="noopener">ほか ' + (items.length - 3) + " 件をGmailで見る →</a>";
+    }
+    box.innerHTML = html;
+  }
+
+  // ---------- error copy ----------
+  function isReauth(code) { return code === "needs_reauth" || code === "server_not_connected" || code === "selection_required"; }
+  function firstErr(map) {
+    var k = Object.keys(map).filter(function (x) { return map[x] !== "ok"; })[0];
+    return k ? map[k] : "upstream_error";
+  }
+  function connectMsg(code) {
+    if (code === "needs_reauth") return 'Googleの再接続が必要です（claude.ai 設定 → コネクタ）';
+    if (code === "server_not_connected") return 'Googleコネクタを追加してください（claude.ai 設定 → コネクタ）';
+    if (code === "selection_required") return 'アカウントを選択してください';
+    if (code === "not_granted" || code === "capability_disabled") return 'この画面ではGoogleに接続できません';
+    return '読み込めませんでした。「更新」でもう一度お試しください';
+  }
+
+  // ---------- tasks ----------
+  var db = null, dbUnsub = null;
+  var LS_KEY = "adhd_dash_todos_v1";
+  function lsLoad() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { return []; } }
+  function lsSave() { try { localStorage.setItem(LS_KEY, JSON.stringify(todos)); } catch (e) {} }
+
+  function sortTodos(arr) {
+    return arr.slice().sort(function (a, b) {
+      if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    });
+  }
+  function renderTasks() {
+    var box = $("taskList"), cnt = $("taskCount");
+    if (todoBackend === "load") { box.innerHTML = '<div class="skl">読み込み中…</div>'; return; }
+    var list = sortTodos(todos);
+    var remain = list.filter(function (t) { return !t.done; }).length;
+    cnt.innerHTML = "残り <b>" + remain + "</b> 件";
+    if (!list.length) {
+      box.innerHTML = '<div class="empty">やること・LINEの返信を下から追加<br>頭の中を空っぽにしよう</div>';
+      return;
+    }
+    box.innerHTML = list.map(function (t) {
+      var kindLbl = t.kind === "line" ? '<span class="kind line">LINE</span>' : '<span class="kind task">タスク</span>';
+      return '<div class="task ' + (t.done ? "done" : "") + '" data-id="' + esc(t.id) + '">' +
+        '<button class="check" data-act="toggle" aria-label="完了"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></button>' +
+        '<div class="t-body"><span class="t-title">' + esc(t.title) + "</span></div>" +
+        kindLbl +
+        '<button class="del" data-act="del" aria-label="削除">×</button></div>';
+    }).join("");
+  }
+
+  function addTodo(title, kind) {
+    title = (title || "").trim();
+    if (!title) return;
+    var item = { title: title, kind: kind, done: false, createdAt: Date.now() };
+    if (db) {
+      db.collection("todos").add(item).catch(function () { /* transient; snapshot stays source of truth */ });
+    } else {
+      item.id = "l" + Date.now() + Math.random().toString(36).slice(2, 6);
+      todos.push(item); lsSave(); renderTasks();
+    }
+  }
+  function toggleTodo(id) {
+    var t = todos.filter(function (x) { return x.id === id; })[0];
+    if (!t) return;
+    if (db) {
+      db.doc("todos/" + id).update({ done: !t.done }).catch(function () {});
+    } else {
+      t.done = !t.done; lsSave(); renderTasks();
+    }
+  }
+  function delTodo(id) {
+    if (db) {
+      db.doc("todos/" + id).delete().catch(function () {});
+    } else {
+      todos = todos.filter(function (x) { return x.id !== id; }); lsSave(); renderTasks();
+    }
+  }
+
+  // task list interactions (event delegation)
+  $("taskList").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    var row = e.target.closest(".task"); if (!row) return;
+    var id = row.getAttribute("data-id");
+    if (btn.getAttribute("data-act") === "toggle") toggleTodo(id);
+    else if (btn.getAttribute("data-act") === "del") delTodo(id);
+  });
+  function submitTask() { addTodo($("taskInput").value, kindSel); $("taskInput").value = ""; $("taskInput").focus(); }
+  $("addBtn").addEventListener("click", submitTask);
+  $("taskInput").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); submitTask(); } });
+  $("kTask").addEventListener("click", function () { kindSel = "task"; $("kTask").setAttribute("aria-pressed", "true"); $("kLine").setAttribute("aria-pressed", "false"); $("taskInput").focus(); });
+  $("kLine").addEventListener("click", function () { kindSel = "line"; $("kLine").setAttribute("aria-pressed", "true"); $("kTask").setAttribute("aria-pressed", "false"); $("taskInput").placeholder = "誰に返信する？（例：田中さんにLINE）"; $("taskInput").focus(); });
+
+  // ---------- sync stamp ----------
+  function touchStamp() { lastMcpUpdate = Date.now(); $("stamp").textContent = "更新 " + fmtTime(new Date()); }
+
+  // ---------- refresh ----------
+  var refreshing = false;
+  function doRefresh() {
+    if (!window.__mcp || refreshing) return;
+    refreshing = true;
+    $("refreshBtn").classList.add("spin");
+    Promise.resolve(window.__mcp.invalidate ? window.__mcp.invalidate() : null)
+      .catch(function () {})
+      .then(function () { setTimeout(function () { $("refreshBtn").classList.remove("spin"); refreshing = false; }, 800); });
+  }
+  $("refreshBtn").addEventListener("click", doRefresh);
+  $("dockRefresh").addEventListener("click", doRefresh);
+
+  // ---------- clock (countdown refresh + day rollover) ----------
+  setInterval(function () {
+    renderHeader();
+    var k = todayBounds().key;
+    if (k !== dayKey) { dayKey = k; startWatches(); }
+    renderHero();
+    renderSchedule();
+  }, 30000);
+
+  // ---------- boot ----------
+  renderHeader();
+  renderHero();
+  renderSchedule();
+  renderMail();
+
+  // db
+  (async function () {
+    try {
+      db = window.claude && claude.use ? await claude.use("db") : null;
+    } catch (e) { db = null; }
+    if (db) {
+      todoBackend = "db";
+      try {
+        db.collection("todos").orderBy("createdAt", "asc").onSnapshot(function (snap) {
+          todos = snap.docs.map(function (d) { var o = d.data() || {}; o.id = d.id; return o; });
+          renderTasks();
+        }, function (err) {
+          // fall back to local on terminal db error
+          if (!todos.length) { todoBackend = "local"; db = null; todos = lsLoad(); renderTasks(); }
+        });
+      } catch (e) { todoBackend = "local"; db = null; todos = lsLoad(); renderTasks(); }
+    } else {
+      todoBackend = "local"; todos = lsLoad(); renderTasks();
+    }
+  })();
+
+  // mcp
+  var calUnsubs = [];
+  function startWatches() {
+    var mcp = window.__mcp; if (!mcp) return;
+    // reset calendar watches (used on day rollover too)
+    calUnsubs.forEach(function (u) { try { u(); } catch (e) {} });
+    calUnsubs = [];
+    calEvents = {}; calStatus = {};
+    var b = todayBounds();
+
+    // gmail (once)
+    if (!window.__mailWatch) {
+      window.__mailWatch = mcp.watchTool(MAIL_SERVER, "search_threads",
+        { query: MAIL_QUERY, pageSize: 25 },
+        function (ev) {
+          if (ev.type === "data") { mailData = ev.result && ev.result.payload; mailStatus = "ok"; touchStamp(); renderMail(); }
+          else { mailStatus = (ev.error && ev.error.code) || "upstream_error"; renderMail(); }
+        }, { refetchInterval: 90000 });
+    }
+
+    // discover calendars, then watch each
+    mcp.callTool(CAL_SERVER, "list_calendars", {}).then(function (res) {
+      var cals = (res && res.payload && res.payload.calendars) || [];
+      var use = cals.filter(function (c) { return c.id && !/#holiday@/.test(c.id) && c.id.indexOf("#") < 0; });
+      if (!use.length) use = [{ id: "primary", summary: "" }];
+      // holiday label
+      var holCal = cals.filter(function (c) { return /#holiday@/.test(c.id); })[0];
+      if (holCal) fetchHoliday(holCal.id, b);
+      use.forEach(function (c) {
+        calNames[c.id] = c.summary || "";
+        calStatus[c.id] = "load";
+        var isPrimary = c.summary === GOOGLE_ACCOUNT || c.id === GOOGLE_ACCOUNT || c.id === "primary";
+        var un = mcp.watchTool(CAL_SERVER, "list_events",
+          { calendarId: c.id, startTime: b.startTime, endTime: b.endTime, timeZone: "Asia/Tokyo", orderBy: "startTime" },
+          function (ev) {
+            if (ev.type === "data") {
+              var evs = (ev.result && ev.result.payload && ev.result.payload.events) || [];
+              evs.forEach(function (x) { x.__cal = c.id; x.__primary = isPrimary; });
+              calEvents[c.id] = evs; calStatus[c.id] = "ok"; touchStamp();
+            } else {
+              calStatus[c.id] = (ev.error && ev.error.code) || "upstream_error";
+            }
+            renderHero(); renderSchedule();
+          }, { refetchInterval: 120000 });
+        calUnsubs.push(un);
+      });
+      renderHero(); renderSchedule();
+    }).catch(function (err) {
+      // fall back to primary calendar only
+      var code = (err && err.code) || "upstream_error";
+      calStatus.__list = code;
+      var un = mcp.watchTool(CAL_SERVER, "list_events",
+        { calendarId: "primary", startTime: b.startTime, endTime: b.endTime, timeZone: "Asia/Tokyo", orderBy: "startTime" },
+        function (ev) {
+          if (ev.type === "data") {
+            delete calStatus.__list;
+            var evs = (ev.result && ev.result.payload && ev.result.payload.events) || [];
+            evs.forEach(function (x) { x.__cal = "primary"; x.__primary = true; });
+            calEvents.primary = evs; calStatus.primary = "ok"; touchStamp();
+          } else { calStatus.primary = (ev.error && ev.error.code) || code; }
+          renderHero(); renderSchedule();
+        }, { refetchInterval: 120000 });
+      calUnsubs.push(un);
+    });
+  }
+
+  function fetchHoliday(id, b) {
+    if (!window.__mcp) return;
+    window.__mcp.callTool(CAL_SERVER, "list_events",
+      { calendarId: id, startTime: b.startTime, endTime: b.endTime, timeZone: "Asia/Tokyo" }
+    ).then(function (r) {
+      var evs = (r && r.payload && r.payload.events) || [];
+      if (evs.length && evs[0].summary) {
+        var h = $("dHoliday"); h.textContent = evs[0].summary; h.hidden = false;
+      }
+    }).catch(function () {});
+  }
+
+  (async function () {
+    var mcp = null;
+    try { mcp = window.claude && claude.use ? await claude.use("mcp") : null; } catch (e) { mcp = null; }
+    window.__mcpReady = true;
+    if (!mcp) {
+      // no live data available; show gentle connect state
+      mailStatus = "server_not_connected";
+      calStatus = { __na: "server_not_connected" };
+      renderHero(); renderSchedule(); renderMail();
+      return;
+    }
+    window.__mcp = mcp;
+    startWatches();
+  })();
+})();
+</script>
