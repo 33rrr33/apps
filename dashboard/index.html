@@ -309,6 +309,64 @@
   }
   .addbar .add:active { transform: scale(0.94); }
 
+  /* task due-date row */
+  .task-dates {
+    display: flex; align-items: center; gap: 6px; flex: none; padding: 6px 10px 0;
+    font-size: 12px; color: var(--muted);
+  }
+  .task-dates[hidden] { display: none; }
+  .task-dates .td-label { font-weight: 700; flex: none; }
+  .task-dates input[type="date"] {
+    flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface);
+    border-radius: 8px; padding: 5px 8px; font-size: 13px; color: var(--ink); font-family: inherit;
+  }
+  .task-dates .td-sep { flex: none; color: var(--faint); }
+  .task-dates .td-clear { flex: none; border: 0; background: transparent; color: var(--faint); font-size: 18px; padding: 0 4px; }
+
+  /* header add-event button */
+  .head-add {
+    flex: none; margin-left: 8px; font-family: var(--font-display); font-weight: 700; font-size: 11px;
+    padding: 3px 9px; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  }
+  .head-add:active { transform: scale(0.95); }
+
+  /* modal */
+  .modal {
+    position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center;
+    background: rgba(10, 20, 19, 0.45); padding: 0 12px calc(env(safe-area-inset-bottom) + 12px);
+  }
+  .modal[hidden] { display: none; }
+  .modal-card {
+    width: 100%; max-width: 460px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; box-shadow: var(--shadow); padding: 14px 15px 16px; margin-bottom: 6px;
+    display: flex; flex-direction: column; gap: 11px;
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; font-family: var(--font-display); font-weight: 800; font-size: 16px; }
+  .modal-x { border: 0; background: transparent; color: var(--muted); font-size: 24px; line-height: 1; padding: 0 4px; }
+  .fld { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .fld.chk { flex-direction: row; align-items: center; gap: 8px; }
+  .fld input[type="text"], .fld input[type="date"], .fld input[type="time"] {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 9px 11px;
+    font-size: 15px; color: var(--ink); font-family: inherit; font-weight: 400;
+  }
+  .fld input::placeholder { color: var(--faint); }
+  .fld.chk input { width: 20px; height: 20px; }
+  .fld-row { display: flex; gap: 10px; }
+  .fld-row .fld { flex: 1; }
+  .fld-row[hidden] { display: none; }
+  .modal-note { font-size: 12px; color: var(--urgent); line-height: 1.4; }
+  .modal-note[hidden] { display: none; }
+  .modal-go {
+    border: 0; background: var(--accent); color: #fff; font-family: var(--font-display); font-weight: 700;
+    font-size: 15px; padding: 12px; border-radius: 11px; margin-top: 2px;
+  }
+  .modal-go:active { transform: scale(0.99); }
+  .modal-go:disabled { opacity: 0.55; }
+
+  /* due badge on task rows */
+  .t-due { font-size: 10px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft); padding: 1px 6px; border-radius: 999px; flex: none; margin-top: 1px; white-space: nowrap; }
+  .task.overdue .t-due { color: #fff; background: var(--urgent); }
+
   /* ---- dock ---- */
   .dock { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex: none; }
   .dock a, .dock button {
@@ -345,6 +403,7 @@
       <span class="b-title">きょうの予定</span>
       <span class="allday-chips" id="alldayChips" hidden></span>
       <span class="b-count" id="schedCount"></span>
+      <button class="head-add" id="addEventBtn" aria-label="予定を追加">＋予定</button>
     </div>
     <div class="hero" id="hero" data-state="ok">
       <div id="heroContent"><div class="hero-empty"><span class="sub">読み込み中…</span></div></div>
@@ -369,6 +428,13 @@
       <span class="b-count" id="taskCount"></span>
     </div>
     <div class="b-list" id="taskList"><div class="skl">読み込み中…</div></div>
+    <div class="task-dates" id="taskDates">
+      <span class="td-label">期限</span>
+      <input id="taskDue" type="date" aria-label="期限（開始）" />
+      <span class="td-sep">〜</span>
+      <input id="taskDueEnd" type="date" aria-label="期限（終了・任意）" />
+      <button type="button" class="td-clear" id="taskDueClear" aria-label="日付をクリア">×</button>
+    </div>
     <div class="addbar">
       <div class="kindtoggle" role="group" aria-label="種類">
         <button type="button" id="kTask" aria-pressed="true">タスク</button>
@@ -381,6 +447,21 @@
 
 </div>
 
+<div class="modal" id="evtModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="evtModalTitle">
+    <div class="modal-head"><span id="evtModalTitle">予定を追加</span><button class="modal-x" id="evtCancel" aria-label="閉じる">×</button></div>
+    <label class="fld"><span>タイトル</span><input id="evtTitle" type="text" placeholder="例：授業参観" autocomplete="off" /></label>
+    <label class="fld"><span>日付</span><input id="evtDate" type="date" /></label>
+    <label class="fld chk"><input id="evtAllday" type="checkbox" /><span>終日</span></label>
+    <div class="fld-row" id="evtTimeRow">
+      <label class="fld"><span>開始</span><input id="evtStart" type="time" /></label>
+      <label class="fld"><span>終了</span><input id="evtEnd" type="time" /></label>
+    </div>
+    <div class="modal-note" id="evtNote" hidden></div>
+    <button class="modal-go" id="evtSave">カレンダーに追加</button>
+  </div>
+</div>
+
 <script>
 (function () {
   "use strict";
@@ -389,6 +470,7 @@
   var CAL_SERVER = "Google Calendar";
   var MAIL_SERVER = "Gmail";
   var MAIL_QUERY = "is:unread in:inbox -category:promotions -category:social";
+  var TASK_CAL_NAME = "タスク管理";
   var DOW = ["日", "月", "火", "水", "木", "金", "土"];
 
   var $ = function (id) { return document.getElementById(id); };
@@ -399,6 +481,25 @@
   }
   function pad(n) { return (n < 10 ? "0" : "") + n; }
   function fmtTime(d) { return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function nextDayStr(s) { var d = new Date(s + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); }
+  function fmtDueShort(s) { var p = (s || "").split("-"); return p.length === 3 ? (Number(p[1]) + "/" + Number(p[2])) : ""; }
+  // create a Google Calendar event via mcp; returns the created event payload (or throws)
+  function gcalCreate(calendarId, opts) {
+    var mcp = window.__mcp;
+    if (!mcp) return Promise.reject({ code: "server_not_connected" });
+    var input = { summary: opts.summary, calendarId: calendarId };
+    if (opts.allDay) {
+      input.allDay = true;
+      input.startTime = opts.date + "T00:00:00Z";
+      input.endTime = nextDayStr(opts.endDate || opts.date) + "T00:00:00Z";
+    } else {
+      input.startTime = opts.date + "T" + opts.start + ":00+09:00";
+      input.endTime = opts.date + "T" + opts.end + ":00+09:00";
+      input.timeZone = "Asia/Tokyo";
+    }
+    return mcp.callTool(CAL_SERVER, "create_event", input).then(function (r) { return (r && r.payload) || {}; });
+  }
 
   // ---------- state ----------
   var calEvents = {};      // calendarId -> [events]
@@ -653,18 +754,21 @@
   function lsLoad() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { return []; } }
   function lsSave() { try { localStorage.setItem(LS_KEY, JSON.stringify(todos)); } catch (e) {} }
 
+  function dueKey(t) { return t.due || "9999-99-99"; }
   function sortTodos(arr) {
     return arr.slice().sort(function (a, b) {
       if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+      var da = dueKey(a), dbb = dueKey(b);
+      if (da !== dbb) return da < dbb ? -1 : 1;
       return (a.createdAt || 0) - (b.createdAt || 0);
     });
   }
   function renderTasks() {
     var box = $("taskList"), cnt = $("taskCount");
-    var todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-    var todayMs = todayStart.getTime();
+    var TODAY = todayStr();
+    function over(t) { return !t.done && t.due && t.due < TODAY; }
     var remain = todos.filter(function (t) { return !t.done; }).length;
-    var overdue = todos.filter(function (t) { return !t.done && t.createdAt && t.createdAt < todayMs; }).length;
+    var overdue = todos.filter(over).length;
     cnt.innerHTML = "残り <b>" + remain + "</b> 件" +
       (overdue ? ' <span class="cnt-over">繰越 ' + overdue + "</span>" : "");
     if (!todos.length) {
@@ -672,10 +776,16 @@
       return;
     }
     function row(t) {
-      var isOver = !t.done && t.createdAt && t.createdAt < todayMs;
+      var isOver = over(t);
+      var dueBadge = "";
+      if (t.due) {
+        var dtxt = fmtDueShort(t.due) + (t.dueEnd && t.dueEnd !== t.due ? "〜" + fmtDueShort(t.dueEnd) : "");
+        dueBadge = '<span class="t-due">' + dtxt + "</span>";
+      }
       return '<div class="task ' + (t.done ? "done" : "") + (isOver ? " overdue" : "") + '" data-id="' + esc(t.id) + '">' +
         '<button class="check" data-act="toggle" aria-label="完了"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></button>' +
         '<div class="t-body"><span class="t-title">' + esc(t.title) + "</span></div>" +
+        dueBadge +
         '<button class="del" data-act="del" aria-label="削除">×</button></div>';
     }
     var groups = [
@@ -691,17 +801,28 @@
     }).join("");
   }
 
-  function addTodo(title, kind) {
+  function addTodo(title, kind, due, dueEnd) {
     title = (title || "").trim();
     if (!title) return;
-    var item = { title: title, kind: kind, done: false, createdAt: Date.now() };
+    due = due || ""; dueEnd = dueEnd || "";
+    if (dueEnd && due && dueEnd < due) { var tmp = due; due = dueEnd; dueEnd = tmp; }
+    var item = { title: title, kind: kind, done: false, createdAt: Date.now(), due: due, dueEnd: dueEnd, eventId: "" };
+    // add a dated task to the タスク管理 calendar (all-day), remember its event id
+    function pushToCalendar(onId) {
+      if (kind !== "task" || !due || !window.__taskCalId || !window.__mcp) return;
+      gcalCreate(window.__taskCalId, { summary: title, allDay: true, date: due, endDate: dueEnd || due })
+        .then(function (ev) {
+          if (ev && ev.id) { item.eventId = ev.id; onId(ev.id); }
+          if (window.__mcp && window.__mcp.invalidate) { try { window.__mcp.invalidate(CAL_SERVER); } catch (e) {} }
+        })
+        .catch(function () { /* task is saved even if the calendar write fails */ });
+    }
     if (usingDb && db) {
-      // optimistic: show immediately, reconcile when snapshot arrives (same id → replaced, no dup)
       var ref = db.collection("todos").doc();
       item.id = ref.id;
       todos.push(item); renderTasks();
-      ref.set({ title: item.title, kind: item.kind, done: false, createdAt: item.createdAt })
-        .then(function () { dbRefresh(); })
+      ref.set({ title: title, kind: kind, done: false, createdAt: item.createdAt, due: due, dueEnd: dueEnd, eventId: "" })
+        .then(function () { dbRefresh(); pushToCalendar(function (eid) { db.doc("todos/" + item.id).update({ eventId: eid }).catch(function () {}); }); })
         .catch(function () {
           todos = todos.filter(function (x) { return x.id !== item.id; });
           renderTasks();
@@ -710,6 +831,7 @@
     } else {
       item.id = genId();
       todos.push(item); lsSave(); renderTasks();
+      pushToCalendar(function () { lsSave(); });
     }
   }
   function toggleTodo(id) {
@@ -727,6 +849,12 @@
     var removed = todos.filter(function (x) { return x.id === id; })[0];
     todos = todos.filter(function (x) { return x.id !== id; });
     renderTasks(); // optimistic
+    // also remove its all-day event from the タスク管理 calendar
+    if (removed && removed.eventId && window.__taskCalId && window.__mcp) {
+      window.__mcp.callTool(CAL_SERVER, "delete_event", { eventId: removed.eventId, calendarId: window.__taskCalId })
+        .then(function () { if (window.__mcp.invalidate) { try { window.__mcp.invalidate(CAL_SERVER); } catch (e) {} } })
+        .catch(function () {});
+    }
     if (usingDb && db) {
       db.doc("todos/" + id).delete().then(function () { dbRefresh(); }).catch(function () { if (removed) { todos.push(removed); renderTasks(); } });
     } else {
@@ -743,11 +871,65 @@
     if (btn.getAttribute("data-act") === "toggle") toggleTodo(id);
     else if (btn.getAttribute("data-act") === "del") delTodo(id);
   });
-  function submitTask() { addTodo($("taskInput").value, kindSel); $("taskInput").value = ""; $("taskInput").focus(); }
+  function submitTask() {
+    var due = kindSel === "task" ? ($("taskDue").value || "") : "";
+    var dueEnd = kindSel === "task" ? ($("taskDueEnd").value || "") : "";
+    addTodo($("taskInput").value, kindSel, due, dueEnd);
+    $("taskInput").value = ""; $("taskInput").focus();
+  }
   $("addBtn").addEventListener("click", submitTask);
   // Enter では登録しない（＋ボタンでのみ登録）
-  $("kTask").addEventListener("click", function () { kindSel = "task"; $("kTask").setAttribute("aria-pressed", "true"); $("kLine").setAttribute("aria-pressed", "false"); $("taskInput").focus(); });
-  $("kLine").addEventListener("click", function () { kindSel = "line"; $("kLine").setAttribute("aria-pressed", "true"); $("kTask").setAttribute("aria-pressed", "false"); $("taskInput").placeholder = "誰に返信する？（例：田中さんにLINE）"; $("taskInput").focus(); });
+  function setKind(k) {
+    kindSel = k;
+    $("kTask").setAttribute("aria-pressed", k === "task" ? "true" : "false");
+    $("kLine").setAttribute("aria-pressed", k === "line" ? "true" : "false");
+    $("taskDates").hidden = (k !== "task");
+    $("taskInput").placeholder = k === "line" ? "誰に返信する？（例：田中さんにLINE）" : "やること・返信を追加…";
+    $("taskInput").focus();
+  }
+  $("kTask").addEventListener("click", function () { setKind("task"); });
+  $("kLine").addEventListener("click", function () { setKind("line"); });
+  $("taskDueClear").addEventListener("click", function () { $("taskDue").value = ""; $("taskDueEnd").value = ""; });
+  // default the task due date to today
+  $("taskDue").value = todayStr();
+
+  // ---------- add-event modal (予定追加 → primary calendar) ----------
+  function openEvtModal() {
+    $("evtTitle").value = ""; $("evtDate").value = todayStr();
+    $("evtAllday").checked = false; $("evtTimeRow").hidden = false;
+    $("evtStart").value = "09:00"; $("evtEnd").value = "10:00";
+    $("evtNote").hidden = true; $("evtSave").disabled = false; $("evtSave").textContent = "カレンダーに追加";
+    $("evtModal").hidden = false; $("evtTitle").focus();
+  }
+  function closeEvtModal() { $("evtModal").hidden = true; }
+  $("addEventBtn").addEventListener("click", openEvtModal);
+  $("evtCancel").addEventListener("click", closeEvtModal);
+  $("evtModal").addEventListener("click", function (e) { if (e.target === $("evtModal")) closeEvtModal(); });
+  $("evtAllday").addEventListener("change", function () { $("evtTimeRow").hidden = $("evtAllday").checked; });
+  $("evtSave").addEventListener("click", function () {
+    var title = ($("evtTitle").value || "").trim();
+    var date = $("evtDate").value;
+    var note = $("evtNote");
+    if (!title) { note.textContent = "タイトルを入力してください。"; note.hidden = false; return; }
+    if (!date) { note.textContent = "日付を選んでください。"; note.hidden = false; return; }
+    if (!window.__mcp) { note.textContent = "Googleに接続されていません。"; note.hidden = false; return; }
+    var allDay = $("evtAllday").checked;
+    var opts = { summary: title, allDay: allDay, date: date };
+    if (!allDay) {
+      opts.start = $("evtStart").value || "09:00";
+      opts.end = $("evtEnd").value || opts.start;
+    }
+    note.hidden = true; $("evtSave").disabled = true; $("evtSave").textContent = "追加中…";
+    gcalCreate("primary", opts).then(function () {
+      if (window.__mcp && window.__mcp.invalidate) { try { window.__mcp.invalidate(CAL_SERVER); } catch (e) {} }
+      closeEvtModal();
+      setTimeout(function () { renderHero(); renderSchedule(); }, 600);
+    }).catch(function (err) {
+      $("evtSave").disabled = false; $("evtSave").textContent = "カレンダーに追加";
+      note.textContent = "追加できませんでした（" + ((err && err.code) || "エラー") + "）。もう一度お試しください。";
+      note.hidden = false;
+    });
+  });
 
   // ---------- sync stamp ----------
   function touchStamp() { lastMcpUpdate = Date.now(); $("stamp").textContent = "更新 " + fmtTime(new Date()); }
@@ -783,7 +965,8 @@
     // snapshot docs & data() are FROZEN — clone before touching (strict mode throws on frozen assign)
     return snap.docs.map(function (doc) {
       var src = doc.data() || {};
-      return { id: doc.id, title: src.title, kind: src.kind, done: !!src.done, createdAt: src.createdAt || 0 };
+      return { id: doc.id, title: src.title, kind: src.kind, done: !!src.done, createdAt: src.createdAt || 0,
+        due: src.due || "", dueEnd: src.dueEnd || "", eventId: src.eventId || "" };
     });
   }
   var localItems = [];
@@ -858,7 +1041,12 @@
     // discover calendars, then watch each
     mcp.callTool(CAL_SERVER, "list_calendars", {}).then(function (res) {
       var cals = (res && res.payload && res.payload.calendars) || [];
-      var use = cals.filter(function (c) { return c.id && !/#holiday@/.test(c.id) && c.id.indexOf("#") < 0; });
+      // remember the タスク管理 calendar id (used when adding tasks); don't display it as a schedule
+      var taskCal = cals.filter(function (c) { return (c.summary || "").trim() === TASK_CAL_NAME; })[0];
+      window.__taskCalId = taskCal ? taskCal.id : "";
+      var use = cals.filter(function (c) {
+        return c.id && !/#holiday@/.test(c.id) && c.id.indexOf("#") < 0 && (c.summary || "").trim() !== TASK_CAL_NAME;
+      });
       if (!use.length) use = [{ id: "primary", summary: "" }];
       // holiday label
       var holCal = cals.filter(function (c) { return /#holiday@/.test(c.id); })[0];
