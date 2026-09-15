@@ -117,46 +117,29 @@
   /* ---- agenda card (next event + rest of today) ---- */
   .block.agenda { flex: none; overflow: hidden; }
   .agenda .b-list .row:first-child { border-top: 1px solid var(--line); }
-  .hero {
-    position: relative; overflow: hidden;
-    padding: 4px 15px 12px;
-  }
-  .hero::before {
-    content: ""; position: absolute; inset: 2px auto 8px 0; width: 5px; border-radius: 0 3px 3px 0; background: var(--accent);
-  }
-  .hero[data-state="soon"]::before { background: var(--warn); }
-  .hero[data-state="imminent"]::before { background: var(--urgent); }
-  .hero[data-state="now"]::before { background: var(--good); }
-  .hero-label {
-    font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.09em;
-    text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px;
-  }
-  .hero-count {
-    font-size: 11px; font-weight: 700; color: var(--accent-ink);
-    background: var(--accent-soft); padding: 1px 8px; border-radius: 999px; letter-spacing: 0;
-  }
-  .hero-main { display: flex; align-items: flex-end; gap: 12px; margin-top: 5px; }
+  .hero { padding: 6px 15px 12px; }
+  .hero-row { display: flex; align-items: baseline; gap: 11px; }
   .hero-time {
-    font-family: var(--font-display); font-weight: 800; font-size: 34px; line-height: 1;
-    letter-spacing: -0.01em; font-variant-numeric: tabular-nums; white-space: nowrap;
+    font-family: var(--font-display); font-weight: 800; font-size: 23px; line-height: 1.1;
+    letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--ink); flex: none;
   }
-  .hero-body { min-width: 0; flex: 1; padding-bottom: 2px; }
   .hero-title {
-    font-weight: 700; font-size: 16px; line-height: 1.28;
-    overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
-    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    font-weight: 700; font-size: 15.5px; line-height: 1.3; flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .hero-meta { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
-  .countdown {
-    display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 12.5px;
-    color: var(--accent-ink);
+  .hero-cd {
+    flex: none; font-size: 11.5px; font-weight: 700; white-space: nowrap;
+    color: var(--accent-ink); background: var(--accent-soft); padding: 2px 9px; border-radius: 999px;
   }
-  .hero[data-state="soon"] .countdown { color: var(--warn); }
-  .hero[data-state="imminent"] .countdown { color: var(--urgent); }
-  .hero[data-state="now"] .countdown { color: var(--good); }
-  .hero-empty { display: flex; align-items: center; gap: 10px; min-height: 44px; }
-  .hero-empty .big { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
-  .hero-empty .sub { font-size: 12.5px; color: var(--muted); }
+  .hero[data-state="soon"] .hero-cd { color: #fff; background: var(--warn); }
+  .hero[data-state="imminent"] .hero-cd { color: #fff; background: var(--urgent); }
+  .hero[data-state="imminent"] .hero-time { color: var(--urgent); }
+  .hero[data-state="now"] .hero-cd { color: #fff; background: var(--good); }
+  .hero[data-state="now"] .hero-time { color: var(--good); }
+  .hero-sub { font-size: 11.5px; color: var(--faint); margin-top: 4px; padding-left: 1px; }
+  .hero-empty { padding: 6px 0 3px; }
+  .hero-empty .big { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+  .hero-empty .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
   /* ---- section blocks ---- */
   .block {
@@ -478,8 +461,7 @@
     var state = "ok", cd = "";
     if (ongoing) {
       state = "now";
-      var enT = ev.end && ev.end.dateTime ? fmtTime(new Date(ev.end.dateTime)) : "";
-      cd = "進行中" + (enT ? " ・ " + enT + "まで" : "");
+      cd = "進行中";
     } else {
       var gap = st2 - now;
       if (gap <= 15 * 60000) state = "imminent";
@@ -488,17 +470,16 @@
     }
     hero.setAttribute("data-state", state);
 
-    var loc = ev.location ? '<span>📍' + esc(ev.location) + "</span>" : "";
-    var calN = calNames[ev.__cal] && !ev.__primary ? '<span>' + esc(calNames[ev.__cal]) + "</span>" : "";
+    var subParts = [];
+    if (ev.location) subParts.push(esc(ev.location));
+    if (calNames[ev.__cal] && !ev.__primary) subParts.push(esc(calNames[ev.__cal]));
+    var sub = subParts.length ? '<div class="hero-sub">' + subParts.join(" ・ ") + "</div>" : "";
     content.innerHTML =
-      '<div class="hero-label">つぎの予定</div>' +
-      '<div class="hero-main">' +
-        '<div class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + "</div>" +
-        '<div class="hero-body">' +
-          '<div class="hero-title">' + esc(ev.summary || "(タイトルなし)") + "</div>" +
-          '<div class="hero-meta"><span class="countdown">' + cd + "</span>" + calN + loc + "</div>" +
-        "</div>" +
-      "</div>";
+      '<div class="hero-row">' +
+        '<span class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + "</span>" +
+        '<span class="hero-title">' + esc(ev.summary || "(タイトルなし)") + "</span>" +
+        '<span class="hero-cd">' + cd + "</span>" +
+      "</div>" + sub;
   }
 
   function renderSchedule() {
