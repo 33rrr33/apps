@@ -309,10 +309,11 @@
   }
   .addbar .add:active { transform: scale(0.94); }
   .add-open {
-    flex: 1; border: 0; background: var(--accent); color: #fff; font-family: var(--font-display);
-    font-weight: 700; font-size: 14.5px; padding: 11px; border-radius: 11px;
+    flex: 1; min-width: 0; border: 0; background: var(--accent); color: #fff; font-family: var(--font-display);
+    font-weight: 700; font-size: 14px; padding: 11px 8px; border-radius: 11px; white-space: nowrap;
   }
-  .add-open:active { transform: scale(0.99); }
+  .add-open.line { background: #06c755; }
+  .add-open:active { transform: scale(0.98); }
   /* type toggle inside the add popup */
   .seg { display: flex; gap: 7px; }
   .seg button {
@@ -446,7 +447,8 @@
     </div>
     <div class="b-list" id="taskList"><div class="skl">読み込み中…</div></div>
     <div class="addbar">
-      <button class="add-open" id="openAddBtn">＋ やること・LINE返信を追加</button>
+      <button class="add-open task" id="openTaskBtn">＋ タスク・カレンダー</button>
+      <button class="add-open line" id="openLineBtn">＋ LINE返信</button>
     </div>
   </section>
 
@@ -916,8 +918,8 @@
     $("tmDateWrap").hidden = (k === "line");
     $("tmTitle").placeholder = k === "line" ? "例：田中さんに日程を返信" : "例：連絡プリント作成";
   }
-  function openAddModal() {
-    setTmKind("task");
+  function openAddModal(kind) {
+    setTmKind(kind === "line" ? "line" : "task");
     $("tmTitle").value = "";
     $("tmDate").value = todayStr();
     $("tmStart").value = ""; $("tmEnd").value = "";
@@ -973,7 +975,8 @@
       afterAdd();
     }
   }
-  $("openAddBtn").addEventListener("click", openAddModal);
+  $("openTaskBtn").addEventListener("click", function () { openAddModal("task"); });
+  $("openLineBtn").addEventListener("click", function () { openAddModal("line"); });
   $("tmCancel").addEventListener("click", closeAddModal);
   $("taskModal").addEventListener("click", function (e) { if (e.target === $("taskModal")) closeAddModal(); });
   $("tmKindTask").addEventListener("click", function () { setTmKind("task"); $("tmTitle").focus(); });
