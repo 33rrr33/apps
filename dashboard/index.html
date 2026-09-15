@@ -384,7 +384,6 @@
   var mailData = null;     // payload
   var mailStatus = "load"; // "ok"|"load"|errcode
   var todos = [];          // {id,title,done,kind,createdAt}
-  var todoBackend = "load";
   var lastMcpUpdate = 0;
   var kindSel = "task";
 
@@ -615,8 +614,9 @@
   }
 
   // ---------- tasks ----------
-  var db = null, dbUnsub = null;
+  var db = null, usingDb = false;
   var LS_KEY = "adhd_dash_todos_v1";
+  function genId() { return "l" + Date.now() + Math.random().toString(36).slice(2, 6); }
   function lsLoad() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { return []; } }
   function lsSave() { try { localStorage.setItem(LS_KEY, JSON.stringify(todos)); } catch (e) {} }
 
@@ -628,7 +628,6 @@
   }
   function renderTasks() {
     var box = $("taskList"), cnt = $("taskCount");
-    if (todoBackend === "load") { box.innerHTML = '<div class="skl">読み込み中…</div>'; return; }
     var list = sortTodos(todos);
     var remain = list.filter(function (t) { return !t.done; }).length;
     cnt.innerHTML = "残り <b>" + remain + "</b> 件";
@@ -650,7 +649,7 @@
     title = (title || "").trim();
     if (!title) return;
     var item = { title: title, kind: kind, done: false, createdAt: Date.now() };
-    if (db) {
+    if (usingDb && db) {
       // optimistic: show immediately, reconcile when snapshot arrives (same id → replaced, no dup)
       var ref = db.collection("todos").doc();
       item.id = ref.id;
@@ -662,7 +661,7 @@
           alert("保存できませんでした。通信を確認してもう一度お試しください。");
         });
     } else {
-      item.id = "l" + Date.now() + Math.random().toString(36).slice(2, 6);
+      item.id = genId();
       todos.push(item); lsSave(); renderTasks();
     }
   }
@@ -671,7 +670,7 @@
     if (!t) return;
     var nv = !t.done;
     t.done = nv; renderTasks(); // optimistic
-    if (db) {
+    if (usingDb && db) {
       db.doc("todos/" + id).update({ done: nv }).catch(function () { t.done = !nv; renderTasks(); });
     } else {
       lsSave();
@@ -681,7 +680,7 @@
     var removed = todos.filter(function (x) { return x.id === id; })[0];
     todos = todos.filter(function (x) { return x.id !== id; });
     renderTasks(); // optimistic
-    if (db) {
+    if (usingDb && db) {
       db.doc("todos/" + id).delete().catch(function () { if (removed) { todos.push(removed); renderTasks(); } });
     } else {
       lsSave();
@@ -734,29 +733,42 @@
   renderSchedule();
   renderMail();
 
-  // db
+  // tasks: render instantly from local cache, then upgrade to db when/if it connects
+  todos = lsLoad();
+  renderTasks();
+
   (async function () {
+    var d = null;
+    try { d = window.claude && claude.use ? await claude.use("db") : null; } catch (e) { d = null; }
+    if (!d) return; // db unavailable → stay on local cache (works fully, per-device)
+    db = d;
+    var localItems = todos.slice(); // items added before db came online
+    var migrated = false;
     try {
-      db = window.claude && claude.use ? await claude.use("db") : null;
-    } catch (e) { db = null; }
-    if (db) {
-      todoBackend = "db";
-      try {
-        db.collection("todos").orderBy("createdAt", "asc").onSnapshot(function (snap) {
-          // snapshot docs & data() are FROZEN — clone before adding id (strict mode throws on frozen assign)
-          todos = snap.docs.map(function (d) {
-            var src = d.data() || {};
-            return { id: d.id, title: src.title, kind: src.kind, done: !!src.done, createdAt: src.createdAt || 0 };
-          });
-          renderTasks();
-        }, function (err) {
-          // fall back to local on terminal db error
-          if (!todos.length) { todoBackend = "local"; db = null; todos = lsLoad(); renderTasks(); }
+      db.collection("todos").orderBy("createdAt", "asc").onSnapshot(function (snap) {
+        usingDb = true;
+        // snapshot docs & data() are FROZEN — clone before touching (strict mode throws on frozen assign)
+        todos = snap.docs.map(function (doc) {
+          var src = doc.data() || {};
+          return { id: doc.id, title: src.title, kind: src.kind, done: !!src.done, createdAt: src.createdAt || 0 };
         });
-      } catch (e) { todoBackend = "local"; db = null; todos = lsLoad(); renderTasks(); }
-    } else {
-      todoBackend = "local"; todos = lsLoad(); renderTasks();
-    }
+        renderTasks();
+        if (!migrated) {
+          migrated = true;
+          if (localItems.length) {
+            var seen = {};
+            todos.forEach(function (t) { seen[(t.title || "") + "|" + (t.createdAt || 0)] = true; });
+            localItems.forEach(function (li) {
+              if (!li || seen[(li.title || "") + "|" + (li.createdAt || 0)]) return;
+              db.collection("todos").doc().set({
+                title: li.title, kind: li.kind || "task", done: !!li.done, createdAt: li.createdAt || Date.now()
+              }).catch(function () {});
+            });
+          }
+          try { localStorage.removeItem(LS_KEY); } catch (e) {}
+        }
+      }, function (err) { /* terminal db error → keep whatever local state we have */ });
+    } catch (e) { /* stay on local cache */ }
   })();
 
   // mcp
