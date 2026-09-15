@@ -123,6 +123,7 @@
     display: block; font-family: var(--font-display); font-weight: 800; font-size: 27px; line-height: 1;
     letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--ink);
   }
+  .hero-end { font-size: 15px; font-weight: 700; color: var(--muted); margin-left: 5px; letter-spacing: 0; }
   .hero-title {
     font-weight: 700; font-size: 15.5px; line-height: 1.3; margin-top: 3px;
     overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
@@ -150,9 +151,10 @@
   .mini[data-state="soon"]::before { background: var(--warn); }
   .mini[data-state="imminent"]::before { background: var(--urgent); }
   .mini[data-state="now"]::before { background: var(--good); }
-  .mini-time { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; padding-left: 6px; }
-  .mini.allday .mini-time { color: var(--accent-ink); font-size: 10px; }
-  .mini-title { font-size: 9px; color: var(--muted); line-height: 1.2; margin-top: 1px; flex: 1; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; padding-left: 6px; }
+  .mini-time { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; padding-left: 6px; white-space: nowrap; line-height: 1.1; }
+  .mini.allday .mini-time { color: var(--accent-ink); font-size: 11px; }
+  .mini-end { font-size: 9.5px; font-weight: 700; color: var(--faint); font-variant-numeric: tabular-nums; padding-left: 6px; white-space: nowrap; line-height: 1.15; }
+  .mini-title { font-size: 9px; color: var(--muted); line-height: 1.2; margin-top: 1px; flex: 1; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding-left: 6px; }
   .mini-cd { font-size: 8.5px; font-weight: 700; color: var(--accent-ink); padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mini[data-state="soon"] .mini-cd { color: var(--warn); }
   .mini[data-state="imminent"] .mini-cd { color: var(--urgent); }
@@ -501,8 +503,9 @@
     if (ev.location) subParts.push(esc(ev.location));
     if (calNames[ev.__cal] && !ev.__primary) subParts.push(esc(calNames[ev.__cal]));
     var sub = subParts.length ? '<div class="hero-sub">' + subParts.join(" ・ ") + "</div>" : "";
+    var heroEnd = ev.end && ev.end.dateTime ? '<span class="hero-end">〜' + fmtTime(new Date(ev.end.dateTime)) + "</span>" : "";
     content.innerHTML =
-      '<span class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + "</span>" +
+      '<span class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + heroEnd + "</span>" +
       '<div class="hero-title">' + esc(ev.summary || "(タイトルなし)") + "</div>" +
       '<span class="hero-cd">' + cd + "</span>" + sub;
   }
@@ -547,8 +550,9 @@
       var gap = st - now, u = "ok";
       if (gap <= 15 * 60000) u = "imminent";
       else if (gap <= 60 * 60000) u = "soon";
+      var mEnd = e.end && e.end.dateTime ? '<div class="mini-end">〜' + fmtTime(new Date(e.end.dateTime)) + "</div>" : "";
       return '<div class="mini" data-state="' + u + '">' +
-        '<div class="mini-time">' + fmtTime(new Date(e.start.dateTime)) + "</div>" +
+        '<div class="mini-time">' + fmtTime(new Date(e.start.dateTime)) + "</div>" + mEnd +
         '<div class="mini-title">' + esc(e.summary || "(タイトルなし)") + "</div>" +
         '<div class="mini-cd">' + shortGap(gap) + "</div></div>";
     }).join("");
