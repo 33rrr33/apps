@@ -308,6 +308,22 @@
     align-items: center; justify-content: center;
   }
   .addbar .add:active { transform: scale(0.94); }
+  .add-open {
+    flex: 1; border: 0; background: var(--accent); color: #fff; font-family: var(--font-display);
+    font-weight: 700; font-size: 14.5px; padding: 11px; border-radius: 11px;
+  }
+  .add-open:active { transform: scale(0.99); }
+  /* type toggle inside the add popup */
+  .seg { display: flex; gap: 7px; }
+  .seg button {
+    flex: 1; font-family: var(--font-display); font-weight: 700; font-size: 13.5px; padding: 10px;
+    border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  }
+  .seg #tmKindTask[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg #tmKindLine[aria-pressed="true"] { background: #06c755; border-color: #06c755; color: #fff; }
+  #tmDateWrap[hidden] { display: none; }
+  .tm-added { font-size: 12.5px; font-weight: 700; color: var(--good); }
+  .tm-added[hidden] { display: none; }
 
   /* task due-date row */
   .task-dates {
@@ -430,12 +446,7 @@
     </div>
     <div class="b-list" id="taskList"><div class="skl">読み込み中…</div></div>
     <div class="addbar">
-      <div class="kindtoggle" role="group" aria-label="種類">
-        <button type="button" id="kTask" aria-pressed="true">タスク</button>
-        <button type="button" id="kLine" aria-pressed="false">LINE返信</button>
-      </div>
-      <input id="taskInput" type="text" inputmode="text" placeholder="やること・返信を追加…" autocomplete="off" />
-      <button class="add" id="addBtn" aria-label="追加">＋</button>
+      <button class="add-open" id="openAddBtn">＋ やること・LINE返信を追加</button>
     </div>
   </section>
 
@@ -458,15 +469,22 @@
 
 <div class="modal" id="taskModal" hidden>
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
-    <div class="modal-head"><span id="taskModalTitle">やることを追加</span><button class="modal-x" id="tmCancel" aria-label="閉じる">×</button></div>
-    <label class="fld"><span>内容</span><input id="tmTitle" type="text" placeholder="例：連絡プリント作成" autocomplete="off" /></label>
-    <label class="fld"><span>日付</span><input id="tmDate" type="date" /></label>
-    <div class="fld-row">
-      <label class="fld"><span>開始時刻（任意）</span><input id="tmStart" type="time" /></label>
-      <label class="fld"><span>終了時刻（任意）</span><input id="tmEnd" type="time" /></label>
+    <div class="modal-head"><span id="taskModalTitle">追加</span><button class="modal-x" id="tmCancel" aria-label="閉じる">×</button></div>
+    <div class="seg" role="group" aria-label="種類">
+      <button type="button" id="tmKindTask" aria-pressed="true">タスク</button>
+      <button type="button" id="tmKindLine" aria-pressed="false">LINE返信</button>
     </div>
-    <div class="modal-hint" id="tmHint">時刻なし → タスク（タスク管理＋やること一覧）<br>時刻あり → Rカレンダーの予定として登録</div>
+    <label class="fld"><span>内容</span><input id="tmTitle" type="text" placeholder="例：連絡プリント作成" autocomplete="off" /></label>
+    <div id="tmDateWrap">
+      <label class="fld"><span>日付</span><input id="tmDate" type="date" /></label>
+      <div class="fld-row">
+        <label class="fld"><span>開始時刻（任意）</span><input id="tmStart" type="time" /></label>
+        <label class="fld"><span>終了時刻（任意）</span><input id="tmEnd" type="time" /></label>
+      </div>
+      <div class="modal-hint" id="tmHint">時刻なし → タスク（タスク管理＋やること一覧）<br>時刻あり → Rカレンダーの予定として登録</div>
+    </div>
     <div class="modal-note" id="tmNote" hidden></div>
+    <div class="tm-added" id="tmAdded" hidden>✓ 追加しました</div>
     <button class="modal-go" id="tmSave">追加</button>
   </div>
 </div>
@@ -890,57 +908,58 @@
     if (btn.getAttribute("data-act") === "toggle") toggleTodo(id);
     else if (btn.getAttribute("data-act") === "del") delTodo(id);
   });
-  function submitTask() {
-    if (kindSel === "line") {
-      // LINE返信 is a quick, list-only add
-      addTodo($("taskInput").value, "line");
-      $("taskInput").value = ""; $("taskInput").focus();
-      return;
-    }
-    // タスク → open the settings popup (date / optional time)
-    openTaskModal($("taskInput").value);
-  }
-  $("addBtn").addEventListener("click", submitTask);
-  // Enter では登録しない（＋ボタンでのみ登録）
-  function setKind(k) {
+  // ---------- unified add popup (choose タスク / LINE, then keep entering) ----------
+  function setTmKind(k) {
     kindSel = k;
-    $("kTask").setAttribute("aria-pressed", k === "task" ? "true" : "false");
-    $("kLine").setAttribute("aria-pressed", k === "line" ? "true" : "false");
-    $("taskInput").placeholder = k === "line" ? "誰に返信する？（例：田中さんにLINE）" : "やること・返信を追加…";
-    $("taskInput").focus();
+    $("tmKindTask").setAttribute("aria-pressed", k === "task" ? "true" : "false");
+    $("tmKindLine").setAttribute("aria-pressed", k === "line" ? "true" : "false");
+    $("tmDateWrap").hidden = (k === "line");
+    $("tmTitle").placeholder = k === "line" ? "例：田中さんに日程を返信" : "例：連絡プリント作成";
   }
-  $("kTask").addEventListener("click", function () { setKind("task"); });
-  $("kLine").addEventListener("click", function () { setKind("line"); });
-
-  // ---------- add-task popup (date / optional time) ----------
-  function openTaskModal(prefill) {
-    $("tmTitle").value = (prefill || "").trim();
+  function openAddModal() {
+    setTmKind("task");
+    $("tmTitle").value = "";
     $("tmDate").value = todayStr();
     $("tmStart").value = ""; $("tmEnd").value = "";
-    $("tmNote").hidden = true; $("tmSave").disabled = false; $("tmSave").textContent = "追加";
+    $("tmNote").hidden = true; $("tmAdded").hidden = true;
+    $("tmSave").disabled = false; $("tmSave").textContent = "追加";
     $("taskModal").hidden = false; $("tmTitle").focus();
   }
-  function closeTaskModal() { $("taskModal").hidden = true; }
-  $("tmCancel").addEventListener("click", closeTaskModal);
-  $("taskModal").addEventListener("click", function (e) { if (e.target === $("taskModal")) closeTaskModal(); });
-  $("tmSave").addEventListener("click", function () {
+  function closeAddModal() { $("taskModal").hidden = true; }
+  var addedTimer = null;
+  function flashAdded() {
+    $("tmAdded").hidden = false;
+    if (addedTimer) clearTimeout(addedTimer);
+    addedTimer = setTimeout(function () { $("tmAdded").hidden = true; }, 1600);
+  }
+  // after a successful add, clear only the content so the next item can be typed right away
+  function afterAdd() { flashAdded(); $("tmTitle").value = ""; $("tmStart").value = ""; $("tmEnd").value = ""; $("tmTitle").focus(); }
+
+  function saveFromModal() {
     var title = ($("tmTitle").value || "").trim();
+    var note = $("tmNote");
+    if (!title) { note.textContent = "内容を入力してください。"; note.hidden = false; return; }
+    note.hidden = true;
+    if (kindSel === "line") {
+      addTodo(title, "line");
+      afterAdd();
+      return;
+    }
     var date = $("tmDate").value || "";
     var start = $("tmStart").value || "";
     var end = $("tmEnd").value || "";
-    var note = $("tmNote");
-    if (!title) { note.textContent = "内容を入力してください。"; note.hidden = false; return; }
     if (start) {
-      // time set → post to the R calendar as a timed event (not added to the やること list)
+      // time set → R calendar timed event (not added to the やること list)
       if (!date) { note.textContent = "日付を選んでください。"; note.hidden = false; return; }
       if (!window.__mcp) { note.textContent = "Googleに接続されていません。"; note.hidden = false; return; }
       var rCal = window.__rCalId || window.__taskCalId;
       if (!rCal) { note.textContent = "「R」カレンダーが見つかりません。"; note.hidden = false; return; }
-      note.hidden = true; $("tmSave").disabled = true; $("tmSave").textContent = "追加中…";
+      $("tmSave").disabled = true; $("tmSave").textContent = "追加中…";
       gcalCreate(rCal, { summary: title, allDay: false, date: date, start: start, end: (end && end > start) ? end : addOneHour(start) })
         .then(function () {
           if (window.__mcp && window.__mcp.invalidate) { try { window.__mcp.invalidate(CAL_SERVER); } catch (e) {} }
-          closeTaskModal(); $("taskInput").value = "";
+          $("tmSave").disabled = false; $("tmSave").textContent = "追加";
+          afterAdd();
           setTimeout(function () { renderHero(); renderSchedule(); }, 600);
         })
         .catch(function (err) {
@@ -949,11 +968,18 @@
           note.hidden = false;
         });
     } else {
-      // no time → task: add to the やること list + タスク管理 calendar (all-day)
+      // no time → task: やること list + タスク管理 calendar (all-day)
       addTodo(title, "task", date, "", "", "");
-      closeTaskModal(); $("taskInput").value = "";
+      afterAdd();
     }
-  });
+  }
+  $("openAddBtn").addEventListener("click", openAddModal);
+  $("tmCancel").addEventListener("click", closeAddModal);
+  $("taskModal").addEventListener("click", function (e) { if (e.target === $("taskModal")) closeAddModal(); });
+  $("tmKindTask").addEventListener("click", function () { setTmKind("task"); $("tmTitle").focus(); });
+  $("tmKindLine").addEventListener("click", function () { setTmKind("line"); $("tmTitle").focus(); });
+  $("tmSave").addEventListener("click", saveFromModal);
+  $("tmTitle").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); saveFromModal(); } });
 
   // ---------- add-event modal (予定追加 → primary calendar) ----------
   function openEvtModal() {
