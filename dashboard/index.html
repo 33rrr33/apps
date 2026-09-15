@@ -516,6 +516,12 @@
   function nextDayStr(s) { var d = new Date(s + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); }
   function fmtDueShort(s) { var p = (s || "").split("-"); return p.length === 3 ? (Number(p[1]) + "/" + Number(p[2])) : ""; }
   function addOneHour(hhmm) { var p = (hhmm || "").split(":"); var h = (Number(p[0]) + 1) % 24; return pad(h) + ":" + (p[1] || "00"); }
+  function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function wideWindow() {
+    var s = new Date(); s.setHours(0, 0, 0, 0); s.setDate(s.getDate() - 31);
+    var e = new Date(); e.setHours(0, 0, 0, 0); e.setDate(e.getDate() + 366);
+    return { start: s.toISOString(), end: e.toISOString(), startDate: isoDate(s), endDate: isoDate(e) };
+  }
   // create a Google Calendar event via mcp; returns the created event payload (or throws)
   function gcalCreate(calendarId, opts) {
     var mcp = window.__mcp;
@@ -531,6 +537,13 @@
       input.timeZone = "Asia/Tokyo";
     }
     return mcp.callTool(CAL_SERVER, "create_event", input).then(function (r) { return (r && r.payload) || {}; });
+  }
+  function gcalDelete(calendarId, eventId) {
+    var mcp = window.__mcp;
+    if (!mcp || !eventId || !calendarId) return Promise.resolve();
+    return mcp.callTool(CAL_SERVER, "delete_event", { eventId: eventId, calendarId: calendarId })
+      .then(function () { if (mcp.invalidate) { try { mcp.invalidate(CAL_SERVER); } catch (e) {} } })
+      .catch(function () {});
   }
 
   // ---------- state ----------
@@ -878,8 +891,12 @@
     if (!t) return;
     var nv = !t.done;
     t.done = nv; renderTasks(); // optimistic
+    // completing a task removes its linked calendar event
+    var eid = t.eventId, cid = t.calId, removeEvt = nv && eid && cid;
+    if (removeEvt) { gcalDelete(cid, eid); t.eventId = ""; t.calId = ""; }
     if (usingDb && db) {
-      db.doc("todos/" + id).update({ done: nv }).then(function () { dbRefresh(); }).catch(function () { t.done = !nv; renderTasks(); });
+      var patch = removeEvt ? { done: nv, eventId: "", calId: "" } : { done: nv };
+      db.doc("todos/" + id).update(patch).then(function () { dbRefresh(); }).catch(function () { t.done = !nv; renderTasks(); });
     } else {
       lsSave();
     }
@@ -900,6 +917,26 @@
     } else {
       lsSave();
     }
+  }
+
+  // reverse sync: if a task's タスク管理 event was deleted in Google Calendar, drop the task here
+  function reconcileTasks() {
+    if (!window.__taskEventsFresh) return;
+    var ids = window.__taskEventIds || {};
+    var ws = window.__taskWinStart, we = window.__taskWinEnd;
+    if (!ws || !we) return;
+    var now = Date.now();
+    var gone = todos.filter(function (t) {
+      return t.kind === "task" && !t.done && t.eventId && t.calId && t.calId === window.__taskCalId &&
+        t.due && t.due >= ws && t.due <= we && !ids[t.eventId] &&
+        (now - (t.createdAt || 0) > 60000); // grace so a just-created event isn't misread as deleted
+    });
+    if (!gone.length) return;
+    var goneIds = {};
+    gone.forEach(function (t) { goneIds[t.id] = 1; if (usingDb && db) { db.doc("todos/" + t.id).delete().catch(function () {}); } });
+    todos = todos.filter(function (t) { return !goneIds[t.id]; });
+    if (!(usingDb && db)) lsSave();
+    renderTasks();
   }
 
   // task list interactions (event delegation)
@@ -1086,6 +1123,7 @@
       todos = mapDocs(snap);
       renderTasks();
       migrateLocalOnce();
+      reconcileTasks();
     }).catch(function () {});
   }
   var refreshTimer = null;
@@ -1138,6 +1176,21 @@
       window.__taskCalId = taskCal ? taskCal.id : "";
       var rCal = cals.filter(function (c) { return (c.summary || "").trim() === R_CAL_NAME; })[0];
       window.__rCalId = rCal ? rCal.id : "";
+      // reverse-sync watch on タスク管理 (not displayed): detect externally-deleted task events
+      if (window.__taskCalId) {
+        var ws = wideWindow();
+        var un0 = mcp.watchTool(CAL_SERVER, "list_events",
+          { calendarId: window.__taskCalId, startTime: ws.start, endTime: ws.end, timeZone: "Asia/Tokyo", orderBy: "startTime", pageSize: 250 },
+          function (ev) {
+            if (ev.type !== "data") return;
+            var evs = (ev.result && ev.result.payload && ev.result.payload.events) || [];
+            var ids = {};
+            evs.forEach(function (x) { if (x && x.id && x.status !== "cancelled") ids[x.id] = 1; });
+            window.__taskEventIds = ids; window.__taskWinStart = ws.startDate; window.__taskWinEnd = ws.endDate; window.__taskEventsFresh = true;
+            reconcileTasks();
+          }, { refetchInterval: 120000 });
+        calUnsubs.push(un0);
+      }
       var use = cals.filter(function (c) {
         return c.id && !/#holiday@/.test(c.id) && c.id.indexOf("#") < 0 && (c.summary || "").trim() !== TASK_CAL_NAME;
       });
