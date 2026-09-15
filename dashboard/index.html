@@ -114,11 +114,9 @@
   .icon-btn.spin svg { animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ---- agenda card (next event + later / all-day tiles) ---- */
+  /* ---- agenda card (next event + later/all-day rows) ---- */
   .block.agenda { flex: none; overflow: hidden; }
-  .agenda-flow { display: flex; gap: 11px; padding: 6px 14px 13px; align-items: stretch; }
-  .agenda-main { flex: 1; min-width: 0; }
-  /* left: next event */
+  .hero { padding: 8px 15px 11px; }
   .hero-time {
     display: block; font-family: var(--font-display); font-weight: 800; font-size: 27px; line-height: 1;
     letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--ink);
@@ -141,25 +139,21 @@
   .hero-empty { padding: 6px 0 3px; }
   .hero-empty .big { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
   .hero-empty .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  /* right: small square tiles in a 2-col grid */
-  .agenda-side { flex: none; width: 146px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
-  .mini {
-    aspect-ratio: 1 / 1; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2);
-    padding: 5px 5px 5px 4px; display: flex; flex-direction: column; overflow: hidden; position: relative;
-  }
-  .mini::before { content: ""; position: absolute; inset: 5px auto 5px 0; width: 3px; border-radius: 0 3px 3px 0; background: var(--line); }
-  .mini[data-state="soon"]::before { background: var(--warn); }
-  .mini[data-state="imminent"]::before { background: var(--urgent); }
-  .mini[data-state="now"]::before { background: var(--good); }
-  .mini-time { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; padding-left: 6px; white-space: nowrap; line-height: 1.1; }
-  .mini.allday .mini-time { color: var(--accent-ink); font-size: 11px; }
-  .mini-end { font-size: 9.5px; font-weight: 700; color: var(--faint); font-variant-numeric: tabular-nums; padding-left: 6px; white-space: nowrap; line-height: 1.15; }
-  .mini-title { font-size: 9px; color: var(--muted); line-height: 1.2; margin-top: 1px; flex: 1; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding-left: 6px; }
-  .mini-cd { font-size: 8.5px; font-weight: 700; color: var(--accent-ink); padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mini[data-state="soon"] .mini-cd { color: var(--warn); }
-  .mini[data-state="imminent"] .mini-cd { color: var(--urgent); }
-  .mini.more { align-items: center; justify-content: center; color: var(--muted); font-family: var(--font-display); font-weight: 700; font-size: 12px; text-decoration: none; }
-  .mini.more::before { display: none; }
+  /* later / all-day: readable full-width rows */
+  .ev-list { display: flex; flex-direction: column; }
+  .ev-row { position: relative; display: flex; align-items: center; gap: 11px; padding: 8px 15px; border-top: 1px solid var(--line); }
+  .ev-row::before { content: ""; position: absolute; inset: 6px auto 6px 0; width: 4px; border-radius: 0 3px 3px 0; background: var(--line); }
+  .ev-row[data-state="soon"]::before { background: var(--warn); }
+  .ev-row[data-state="imminent"]::before { background: var(--urgent); }
+  .ev-row[data-state="now"]::before { background: var(--good); }
+  .ev-time { flex: none; font-family: var(--font-display); font-weight: 800; font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .ev-end { font-size: 11px; font-weight: 700; color: var(--muted); margin-left: 3px; }
+  .ev-row.allday .ev-time { font-size: 12.5px; color: var(--accent-ink); }
+  .ev-title { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ev-cd { flex: none; font-size: 11.5px; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
+  .ev-row[data-state="soon"] .ev-cd { color: var(--warn); }
+  .ev-row[data-state="imminent"] .ev-cd { color: var(--urgent); }
+  .ev-more { display: block; padding: 7px 15px; font-size: 12px; color: var(--accent-ink); border-top: 1px solid var(--line); text-decoration: none; font-weight: 700; }
 
   /* ---- section blocks ---- */
   .block {
@@ -224,7 +218,11 @@
   }
   .row .r-sub { font-size: 11.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* mail rows */
+  /* mail rows (compact) */
+  .mail .b-head { padding-bottom: 4px; }
+  .mail .row { padding-top: 5px; padding-bottom: 5px; }
+  .mail .r-title { line-height: 1.25; }
+  .mail .r-from { line-height: 1.15; }
   .row.mailrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
   .row.mailrow.important .dot { background: var(--urgent); }
   .row.mailrow .r-from { font-size: 11.5px; color: var(--muted); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -335,12 +333,10 @@
       <span class="b-title">きょうの予定</span>
       <span class="b-count" id="schedCount"></span>
     </div>
-    <div class="agenda-flow">
-      <div class="agenda-main hero" id="hero" data-state="ok">
-        <div id="heroContent"><div class="hero-empty"><span class="sub">読み込み中…</span></div></div>
-      </div>
-      <div class="agenda-side" id="schedSide" hidden></div>
+    <div class="hero" id="hero" data-state="ok">
+      <div id="heroContent"><div class="hero-empty"><span class="sub">読み込み中…</span></div></div>
     </div>
+    <div class="ev-list" id="schedList"></div>
   </section>
 
   <section class="block mail">
@@ -511,14 +507,14 @@
   }
 
   function renderSchedule() {
-    var side = $("schedSide"), cnt = $("schedCount");
+    var box = $("schedList"), cnt = $("schedCount");
     var anyCal = Object.keys(calStatus).length > 0;
     var errored = anyCal && Object.keys(calStatus).every(function (k) { return calStatus[k] !== "ok"; });
-    if ((!anyCal && !window.__mcpReady) || errored) { side.innerHTML = ""; side.hidden = true; cnt.textContent = ""; return; }
+    if ((!anyCal && !window.__mcpReady) || errored) { box.innerHTML = ""; cnt.textContent = ""; return; }
 
     var all = mergedEvents();
     var now = Date.now();
-    if (!all.length) { side.innerHTML = ""; side.hidden = true; cnt.textContent = ""; return; }
+    if (!all.length) { box.innerHTML = ""; cnt.textContent = ""; return; }
 
     var upcoming = all.filter(function (e) {
       if (isAllDay(e)) return true;
@@ -528,38 +524,35 @@
     var remaining = upcoming.filter(function (e) { return !isAllDay(e); }).length;
     cnt.innerHTML = "残り <b>" + remaining + "</b> 件";
 
-    // right-side tiles: later timed events first, then all-day; exclude the hero event
+    // later timed events first, then all-day; exclude the hero event
     var pool = (upcoming.length ? upcoming : all).filter(function (e) { return e !== heroEv; });
     var timed = pool.filter(function (e) { return !isAllDay(e); });
     var allday = pool.filter(function (e) { return isAllDay(e); });
-    var tiles = timed.concat(allday);
-    if (!tiles.length) { side.innerHTML = ""; side.hidden = true; return; }
-    side.hidden = false;
+    var rows = timed.concat(allday);
+    if (!rows.length) { box.innerHTML = ""; return; }
 
-    var MAX = 4;
-    var overflow = tiles.length > MAX ? tiles.length - (MAX - 1) : 0;
-    var show = overflow ? tiles.slice(0, MAX - 1) : tiles.slice(0, MAX);
-
+    var MAX = 3;
+    var show = rows.slice(0, MAX);
     var html = show.map(function (e) {
       if (isAllDay(e)) {
-        return '<div class="mini allday">' +
-          '<div class="mini-time">終日</div>' +
-          '<div class="mini-title">' + esc(e.summary || "(タイトルなし)") + "</div></div>";
+        return '<div class="ev-row allday">' +
+          '<span class="ev-time">終日</span>' +
+          '<span class="ev-title">' + esc(e.summary || "(タイトルなし)") + "</span></div>";
       }
       var st = new Date(e.start.dateTime).getTime();
       var gap = st - now, u = "ok";
       if (gap <= 15 * 60000) u = "imminent";
       else if (gap <= 60 * 60000) u = "soon";
-      var mEnd = e.end && e.end.dateTime ? '<div class="mini-end">〜' + fmtTime(new Date(e.end.dateTime)) + "</div>" : "";
-      return '<div class="mini" data-state="' + u + '">' +
-        '<div class="mini-time">' + fmtTime(new Date(e.start.dateTime)) + "</div>" + mEnd +
-        '<div class="mini-title">' + esc(e.summary || "(タイトルなし)") + "</div>" +
-        '<div class="mini-cd">' + shortGap(gap) + "</div></div>";
+      var end = e.end && e.end.dateTime ? '<span class="ev-end">〜' + fmtTime(new Date(e.end.dateTime)) + "</span>" : "";
+      return '<div class="ev-row" data-state="' + u + '">' +
+        '<span class="ev-time">' + fmtTime(new Date(e.start.dateTime)) + end + "</span>" +
+        '<span class="ev-title">' + esc(e.summary || "(タイトルなし)") + "</span>" +
+        '<span class="ev-cd">' + shortGap(gap) + "</span></div>";
     }).join("");
-    if (overflow) {
-      html += '<a class="mini more" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">+' + overflow + "</a>";
+    if (rows.length > MAX) {
+      html += '<a class="ev-more" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">ほか ' + (rows.length - MAX) + " 件をカレンダーで見る →</a>";
     }
-    side.innerHTML = html;
+    box.innerHTML = html;
   }
 
   // ---------- mail ----------
