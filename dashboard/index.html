@@ -478,6 +478,7 @@
   var MAIL_SERVER = "Gmail";
   var MAIL_QUERY = "is:unread in:inbox -category:promotions -category:social";
   var TASK_CAL_NAME = "タスク管理";
+  var R_CAL_NAME = "R";
   var DOW = ["日", "月", "火", "水", "木", "金", "土"];
 
   var $ = function (id) { return document.getElementById(id); };
@@ -817,16 +818,17 @@
     if (dueEnd && due && dueEnd < due) { var tmp = due; due = dueEnd; dueEnd = tmp; }
     // a start time makes it a timed single-day event (on the start date)
     if (dtime) { dueEnd = ""; if (!dtimeEnd || dtimeEnd <= dtime) dtimeEnd = addOneHour(dtime); }
-    var item = { title: title, kind: kind, done: false, createdAt: Date.now(), due: due, dueEnd: dueEnd, dtime: dtime, dtimeEnd: dtimeEnd, eventId: "" };
-    // add a dated task to the タスク管理 calendar (timed if a time is set, else all-day)
+    // time set → "R" calendar (timed event); no time → "タスク管理" calendar (all-day)
+    var targetCal = dtime ? (window.__rCalId || window.__taskCalId) : window.__taskCalId;
+    var item = { title: title, kind: kind, done: false, createdAt: Date.now(), due: due, dueEnd: dueEnd, dtime: dtime, dtimeEnd: dtimeEnd, eventId: "", calId: "" };
     function pushToCalendar(onId) {
-      if (kind !== "task" || !due || !window.__taskCalId || !window.__mcp) return;
+      if (kind !== "task" || !due || !targetCal || !window.__mcp) return;
       var opts = dtime
         ? { summary: title, allDay: false, date: due, start: dtime, end: dtimeEnd }
         : { summary: title, allDay: true, date: due, endDate: dueEnd || due };
-      gcalCreate(window.__taskCalId, opts)
+      gcalCreate(targetCal, opts)
         .then(function (ev) {
-          if (ev && ev.id) { item.eventId = ev.id; onId(ev.id); }
+          if (ev && ev.id) { item.eventId = ev.id; item.calId = targetCal; onId(ev.id, targetCal); }
           if (window.__mcp && window.__mcp.invalidate) { try { window.__mcp.invalidate(CAL_SERVER); } catch (e) {} }
         })
         .catch(function () { /* task is saved even if the calendar write fails */ });
@@ -835,8 +837,8 @@
       var ref = db.collection("todos").doc();
       item.id = ref.id;
       todos.push(item); renderTasks();
-      ref.set({ title: title, kind: kind, done: false, createdAt: item.createdAt, due: due, dueEnd: dueEnd, dtime: dtime, dtimeEnd: dtimeEnd, eventId: "" })
-        .then(function () { dbRefresh(); pushToCalendar(function (eid) { db.doc("todos/" + item.id).update({ eventId: eid }).catch(function () {}); }); })
+      ref.set({ title: title, kind: kind, done: false, createdAt: item.createdAt, due: due, dueEnd: dueEnd, dtime: dtime, dtimeEnd: dtimeEnd, eventId: "", calId: "" })
+        .then(function () { dbRefresh(); pushToCalendar(function (eid, cid) { db.doc("todos/" + item.id).update({ eventId: eid, calId: cid }).catch(function () {}); }); })
         .catch(function () {
           todos = todos.filter(function (x) { return x.id !== item.id; });
           renderTasks();
@@ -845,7 +847,7 @@
     } else {
       item.id = genId();
       todos.push(item); lsSave(); renderTasks();
-      pushToCalendar(function () { lsSave(); });
+      pushToCalendar(function (eid, cid) { item.eventId = eid; item.calId = cid; lsSave(); });
     }
   }
   function toggleTodo(id) {
@@ -863,9 +865,10 @@
     var removed = todos.filter(function (x) { return x.id === id; })[0];
     todos = todos.filter(function (x) { return x.id !== id; });
     renderTasks(); // optimistic
-    // also remove its all-day event from the タスク管理 calendar
-    if (removed && removed.eventId && window.__taskCalId && window.__mcp) {
-      window.__mcp.callTool(CAL_SERVER, "delete_event", { eventId: removed.eventId, calendarId: window.__taskCalId })
+    // also remove its event from whichever calendar it was added to
+    var delCal = (removed && removed.calId) || window.__taskCalId;
+    if (removed && removed.eventId && delCal && window.__mcp) {
+      window.__mcp.callTool(CAL_SERVER, "delete_event", { eventId: removed.eventId, calendarId: delCal })
         .then(function () { if (window.__mcp.invalidate) { try { window.__mcp.invalidate(CAL_SERVER); } catch (e) {} } })
         .catch(function () {});
     }
@@ -985,7 +988,7 @@
     return snap.docs.map(function (doc) {
       var src = doc.data() || {};
       return { id: doc.id, title: src.title, kind: src.kind, done: !!src.done, createdAt: src.createdAt || 0,
-        due: src.due || "", dueEnd: src.dueEnd || "", dtime: src.dtime || "", dtimeEnd: src.dtimeEnd || "", eventId: src.eventId || "" };
+        due: src.due || "", dueEnd: src.dueEnd || "", dtime: src.dtime || "", dtimeEnd: src.dtimeEnd || "", eventId: src.eventId || "", calId: src.calId || "" };
     });
   }
   var localItems = [];
@@ -1060,9 +1063,11 @@
     // discover calendars, then watch each
     mcp.callTool(CAL_SERVER, "list_calendars", {}).then(function (res) {
       var cals = (res && res.payload && res.payload.calendars) || [];
-      // remember the タスク管理 calendar id (used when adding tasks); don't display it as a schedule
+      // remember the タスク管理 calendar id (all-day tasks) and the R calendar id (timed tasks)
       var taskCal = cals.filter(function (c) { return (c.summary || "").trim() === TASK_CAL_NAME; })[0];
       window.__taskCalId = taskCal ? taskCal.id : "";
+      var rCal = cals.filter(function (c) { return (c.summary || "").trim() === R_CAL_NAME; })[0];
+      window.__rCalId = rCal ? rCal.id : "";
       var use = cals.filter(function (c) {
         return c.id && !/#holiday@/.test(c.id) && c.id.indexOf("#") < 0 && (c.summary || "").trim() !== TASK_CAL_NAME;
       });
