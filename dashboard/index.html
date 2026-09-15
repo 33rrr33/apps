@@ -181,6 +181,19 @@
   .chip-sync.local { color: var(--warn); background: var(--warn-soft); }
   .b-list { display: flex; flex-direction: column; }
   .tasks .b-list { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+  .grp-head {
+    font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.06em;
+    color: var(--muted); padding: 9px 13px 4px; display: flex; align-items: center; gap: 7px;
+    border-top: 1px solid var(--line);
+  }
+  .grp-head:first-child { border-top: 0; }
+  .grp-head.line { color: #05852b; }
+  :root[data-theme="dark"] .grp-head.line, :root:not([data-theme="light"]) .grp-head.line { color: #5fe08a; }
+  .grp-head .grp-n {
+    font-size: 10px; font-weight: 700; color: var(--faint);
+    background: var(--surface-2); border-radius: 999px; padding: 0 7px; min-width: 18px; text-align: center;
+  }
+  .grp-head + .task { border-top: 0; }
 
   .row {
     display: flex; align-items: center; gap: 10px; padding: 8px 13px;
@@ -347,17 +360,6 @@
     </div>
   </section>
 
-  <nav class="dock">
-    <a href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener">
-      <span class="ic mail-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>Gmail
-    </a>
-    <a href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">
-      <span class="ic cal-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg></span>カレンダー
-    </a>
-    <a href="line://" target="_blank" rel="noopener" id="lineLink">
-      <span class="ic line-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.2c0-4-4-7.2-9-7.2S3 7.2 3 11.2c0 3.6 3.2 6.6 7.5 7.1.9.1.8.6.7 1.2l-.2 1.1c-.1.5.3.9.9.6 2.9-1.4 6.6-4 8.2-6.6.6-1 .9-2 .9-3.4Z"/></svg></span>LINE
-    </a>
-  </nav>
 </div>
 
 <script>
@@ -635,27 +637,37 @@
   }
   function renderTasks() {
     var box = $("taskList"), cnt = $("taskCount");
-    var list = sortTodos(todos);
     var todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     var todayMs = todayStart.getTime();
-    var remain = list.filter(function (t) { return !t.done; }).length;
-    var overdue = list.filter(function (t) { return !t.done && t.createdAt && t.createdAt < todayMs; }).length;
+    var remain = todos.filter(function (t) { return !t.done; }).length;
+    var overdue = todos.filter(function (t) { return !t.done && t.createdAt && t.createdAt < todayMs; }).length;
     cnt.innerHTML = "残り <b>" + remain + "</b> 件" +
       (overdue ? ' <span class="cnt-over">繰越 ' + overdue + "</span>" : "");
-    if (!list.length) {
+    if (!todos.length) {
       box.innerHTML = '<div class="empty">やること・LINEの返信を下から追加<br>頭の中を空っぽにしよう</div>';
       return;
     }
-    box.innerHTML = list.map(function (t) {
+    function row(t) {
       var isOver = !t.done && t.createdAt && t.createdAt < todayMs;
-      var kindLbl = t.kind === "line" ? '<span class="kind line">LINE</span>' : '<span class="kind task">タスク</span>';
       var overBadge = isOver ? '<span class="kind over">前日まで</span>' : "";
       return '<div class="task ' + (t.done ? "done" : "") + (isOver ? " overdue" : "") + '" data-id="' + esc(t.id) + '">' +
         '<button class="check" data-act="toggle" aria-label="完了"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></button>' +
         '<div class="t-body"><span class="t-title">' + esc(t.title) + "</span></div>" +
-        overBadge + kindLbl +
+        overBadge +
         '<button class="del" data-act="del" aria-label="削除">×</button></div>';
+    }
+    var groups = [
+      { key: "task", label: "タスク", items: sortTodos(todos.filter(function (t) { return t.kind !== "line"; })) },
+      { key: "line", label: "LINE返信", items: sortTodos(todos.filter(function (t) { return t.kind === "line"; })) }
+    ];
+    var html = groups.map(function (g) {
+      if (!g.items.length) return "";
+      var open = g.items.filter(function (t) { return !t.done; }).length;
+      return '<div class="grp-head ' + g.key + '">' + g.label +
+        ' <span class="grp-n">' + open + "</span></div>" +
+        g.items.map(row).join("");
     }).join("");
+    box.innerHTML = html;
   }
 
   function addTodo(title, kind) {
