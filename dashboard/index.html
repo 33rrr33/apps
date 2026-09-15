@@ -114,15 +114,15 @@
   .icon-btn.spin svg { animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ---- hero: next event ---- */
+  /* ---- agenda card (next event + rest of today) ---- */
+  .block.agenda { flex: none; overflow: hidden; }
+  .agenda .b-list .row:first-child { border-top: 1px solid var(--line); }
   .hero {
     position: relative; overflow: hidden;
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 13px 15px 14px; flex: none;
+    padding: 4px 15px 12px;
   }
   .hero::before {
-    content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--accent);
+    content: ""; position: absolute; inset: 2px auto 8px 0; width: 5px; border-radius: 0 3px 3px 0; background: var(--accent);
   }
   .hero[data-state="soon"]::before { background: var(--warn); }
   .hero[data-state="imminent"]::before { background: var(--urgent); }
@@ -233,7 +233,13 @@
   }
   .kind.line { color: #05852b; background: rgba(6, 199, 85, 0.14); }
   .kind.task { color: var(--accent-ink); background: var(--accent-soft); }
+  .kind.over { color: #fff; background: var(--urgent); }
   :root[data-theme="dark"] .kind.line, :root:not([data-theme="light"]) .kind.line { color: #5fe08a; }
+  /* overdue (carried over from a previous day) */
+  .task.overdue { background: var(--urgent-soft); }
+  .task.overdue .t-title { color: var(--urgent); font-weight: 700; }
+  .task.overdue .check { border-color: var(--urgent); }
+  .cnt-over { color: #fff; background: var(--urgent); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: 4px; }
   .task .del {
     border: 0; background: transparent; color: var(--faint); font-size: 20px; line-height: 1;
     padding: 2px 4px; flex: none; opacity: 0.7;
@@ -302,18 +308,16 @@
     </div>
   </header>
 
-  <section class="hero" id="hero" data-state="ok">
-    <div class="hero-label"><span>この後の予定</span><span class="hero-count" id="heroCount" hidden></span></div>
-    <div id="heroContent"><div class="hero-empty"><span class="sub">読み込み中…</span></div></div>
-  </section>
-
-  <section class="block sched">
+  <section class="block agenda">
     <div class="b-head">
       <span class="h-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg></span>
       <span class="b-title">きょうの予定</span>
       <span class="b-count" id="schedCount"></span>
     </div>
-    <div class="b-list" id="schedList"><div class="skl">読み込み中…</div></div>
+    <div class="hero" id="hero" data-state="ok">
+      <div id="heroContent"><div class="hero-empty"><span class="sub">読み込み中…</span></div></div>
+    </div>
+    <div class="b-list" id="schedList"></div>
   </section>
 
   <section class="block mail">
@@ -424,20 +428,20 @@
     return "あと" + h + "時間" + (mm ? mm + "分" : "");
   }
 
+  var heroEv = null;
   function renderHero() {
-    var hero = $("hero"), content = $("heroContent"), badge = $("heroCount");
+    var hero = $("hero"), content = $("heroContent");
+    heroEv = null;
     var anyCal = Object.keys(calStatus).length > 0;
     var errored = anyCal && Object.keys(calStatus).every(function (k) { return calStatus[k] !== "ok"; });
 
     if (!window.__mcpReady && !anyCal) {
       hero.setAttribute("data-state", "ok");
-      badge.hidden = true;
       content.innerHTML = '<div class="hero-empty"><span class="sub">Googleカレンダーを読み込み中…</span></div>';
       return;
     }
     if (errored) {
       hero.setAttribute("data-state", "ok");
-      badge.hidden = true;
       content.innerHTML = '<div class="hero-empty"><span class="sub">' + connectMsg(firstErr(calStatus)) + "</span></div>";
       return;
     }
@@ -452,19 +456,16 @@
       if (st <= now && en > now) { ongoing = timed[i]; break; }
       if (st > now && !next) next = timed[i];
     }
-    var upcomingCount = timed.filter(function (e) {
-      return new Date(e.start.dateTime).getTime() > now;
-    }).length;
 
     var ev = ongoing || next;
     if (!ev) {
       hero.setAttribute("data-state", "ok");
-      badge.hidden = true;
-      var msg = all.length ? "きょうの予定は終わりました" : "きょうの予定はありません";
-      var sub = all.length ? "おつかれさま。次はやることに集中" : "予定なし。今日は身軽です";
+      var msg = all.length ? "この後の予定はありません" : "きょうの予定はありません";
+      var sub = all.length ? "おつかれさま。やることに集中" : "予定なし。今日は身軽です";
       content.innerHTML = '<div class="hero-empty"><div><div class="big">' + msg + '</div><div class="sub">' + sub + "</div></div></div>";
       return;
     }
+    heroEv = ev;
 
     var st2 = new Date(ev.start.dateTime).getTime();
     var state = "ok", cd = "";
@@ -479,12 +480,11 @@
       cd = humanGap(gap);
     }
     hero.setAttribute("data-state", state);
-    if (upcomingCount > 1) { badge.hidden = false; badge.textContent = "この後 " + upcomingCount + "件"; }
-    else badge.hidden = true;
 
     var loc = ev.location ? '<span>📍' + esc(ev.location) + "</span>" : "";
     var calN = calNames[ev.__cal] && !ev.__primary ? '<span>' + esc(calNames[ev.__cal]) + "</span>" : "";
     content.innerHTML =
+      '<div class="hero-label">つぎの予定</div>' +
       '<div class="hero-main">' +
         '<div class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + "</div>" +
         '<div class="hero-body">' +
@@ -498,23 +498,26 @@
     var box = $("schedList"), cnt = $("schedCount");
     var anyCal = Object.keys(calStatus).length > 0;
     var errored = anyCal && Object.keys(calStatus).every(function (k) { return calStatus[k] !== "ok"; });
-    if (!anyCal && !window.__mcpReady) { box.innerHTML = '<div class="skl">読み込み中…</div>'; cnt.textContent = ""; return; }
-    if (errored) { box.innerHTML = '<div class="note ' + (isReauth(firstErr(calStatus)) ? "reauth" : "") + '">' + connectMsg(firstErr(calStatus)) + "</div>"; cnt.textContent = ""; return; }
+    if (!anyCal && !window.__mcpReady) { box.innerHTML = ""; cnt.textContent = ""; return; }
+    if (errored) { box.innerHTML = ""; cnt.textContent = ""; return; }
 
     var all = mergedEvents();
     var now = Date.now();
-    if (!all.length) { box.innerHTML = '<div class="empty">予定なし</div>'; cnt.textContent = ""; return; }
+    if (!all.length) { box.innerHTML = ""; cnt.textContent = ""; return; }
 
     var upcoming = all.filter(function (e) {
       if (isAllDay(e)) return true;
       var en = e.end && e.end.dateTime ? new Date(e.end.dateTime).getTime() : startMs(e) + 3600000;
       return en > now;
     });
-    var list = (upcoming.length ? upcoming : all);
     var remaining = upcoming.filter(function (e) { return !isAllDay(e); }).length;
     cnt.innerHTML = "残り <b>" + remaining + "</b> 件";
 
-    var show = list.slice(0, 3);
+    // exclude the event already highlighted in the hero (avoid duplication)
+    var rest = (upcoming.length ? upcoming : all).filter(function (e) { return e !== heroEv; });
+    if (!rest.length) { box.innerHTML = ""; return; }
+
+    var show = rest.slice(0, 3);
     var html = show.map(function (e) {
       var u = "u-ok", timeCell;
       if (isAllDay(e)) {
@@ -534,8 +537,8 @@
         '<div class="r-body"><div class="r-title">' + esc(e.summary || "(タイトルなし)") + "</div>" +
         (sub ? '<div class="r-sub">' + sub + "</div>" : "") + "</div></div>";
     }).join("");
-    if (list.length > 3) {
-      html += '<a class="note" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">ほか ' + (list.length - 3) + " 件をカレンダーで見る →</a>";
+    if (rest.length > 3) {
+      html += '<a class="note" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">ほか ' + (rest.length - 3) + " 件をカレンダーで見る →</a>";
     }
     box.innerHTML = html;
   }
@@ -633,18 +636,24 @@
   function renderTasks() {
     var box = $("taskList"), cnt = $("taskCount");
     var list = sortTodos(todos);
+    var todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    var todayMs = todayStart.getTime();
     var remain = list.filter(function (t) { return !t.done; }).length;
-    cnt.innerHTML = "残り <b>" + remain + "</b> 件";
+    var overdue = list.filter(function (t) { return !t.done && t.createdAt && t.createdAt < todayMs; }).length;
+    cnt.innerHTML = "残り <b>" + remain + "</b> 件" +
+      (overdue ? ' <span class="cnt-over">繰越 ' + overdue + "</span>" : "");
     if (!list.length) {
       box.innerHTML = '<div class="empty">やること・LINEの返信を下から追加<br>頭の中を空っぽにしよう</div>';
       return;
     }
     box.innerHTML = list.map(function (t) {
+      var isOver = !t.done && t.createdAt && t.createdAt < todayMs;
       var kindLbl = t.kind === "line" ? '<span class="kind line">LINE</span>' : '<span class="kind task">タスク</span>';
-      return '<div class="task ' + (t.done ? "done" : "") + '" data-id="' + esc(t.id) + '">' +
+      var overBadge = isOver ? '<span class="kind over">前日まで</span>' : "";
+      return '<div class="task ' + (t.done ? "done" : "") + (isOver ? " overdue" : "") + '" data-id="' + esc(t.id) + '">' +
         '<button class="check" data-act="toggle" aria-label="完了"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></button>' +
         '<div class="t-body"><span class="t-title">' + esc(t.title) + "</span></div>" +
-        kindLbl +
+        overBadge + kindLbl +
         '<button class="del" data-act="del" aria-label="削除">×</button></div>';
     }).join("");
   }
