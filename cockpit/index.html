@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>きょうの司令塔</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="theme-color" content="#eef1f1" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0f1413" media="(prefers-color-scheme: dark)" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="司令塔" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" />
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --ground: #eef1f1;
+    --surface: #ffffff;
+    --surface-2: #f4f7f7;
+    --ink: #17201f;
+    --muted: #5c6b69;
+    --faint: #8a9895;
+    --line: #dce3e2;
+    --accent: #17838f;
+    --accent-ink: #0c5a63;
+    --accent-soft: #dceff0;
+    --warn: #b5720f;
+    --warn-soft: #f9edd6;
+    --urgent: #c4463a;
+    --urgent-soft: #f9e4e0;
+    --good: #26895f;
+    --good-soft: #dcefe6;
+    --shadow: 0 1px 2px rgba(20, 35, 33, 0.06), 0 6px 18px rgba(20, 35, 33, 0.06);
+    --radius: 16px;
+    --radius-sm: 11px;
+    --font-display: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+    --font-body: "Noto Sans JP", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0f1413;
+      --surface: #171e1d;
+      --surface-2: #1d2625;
+      --ink: #e9eeed;
+      --muted: #97a5a2;
+      --faint: #6e7d7a;
+      --line: #29332f;
+      --accent: #46b8c6;
+      --accent-ink: #7fd3dd;
+      --accent-soft: #10302f;
+      --warn: #e2a552;
+      --warn-soft: #2c2411;
+      --urgent: #e8776a;
+      --urgent-soft: #2f1712;
+      --good: #4dc08e;
+      --good-soft: #102820;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0f1413;
+    --surface: #171e1d;
+    --surface-2: #1d2625;
+    --ink: #e9eeed;
+    --muted: #97a5a2;
+    --faint: #6e7d7a;
+    --line: #29332f;
+    --accent: #46b8c6;
+    --accent-ink: #7fd3dd;
+    --accent-soft: #10302f;
+    --warn: #e2a552;
+    --warn-soft: #2c2411;
+    --urgent: #e8776a;
+    --urgent-soft: #2f1712;
+    --good: #4dc08e;
+    --good-soft: #102820;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; width: 100%; max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    position: relative;
+  }
+  button { font-family: inherit; color: inherit; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+  .app {
+    height: 100dvh;
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 8px);
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  /* ---- top bar ---- */
+  .topbar { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 0 2px; }
+  .date { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .date .d-num { font-family: var(--font-display); font-weight: 800; font-size: 26px; letter-spacing: -0.01em; }
+  .date .d-dow { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--muted); }
+  .date .d-holiday {
+    font-size: 12px; font-weight: 700; color: var(--urgent);
+    background: var(--urgent-soft); padding: 2px 8px; border-radius: 999px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw;
+  }
+  .sync { display: flex; align-items: center; gap: 8px; flex: none; }
+  .sync .stamp { font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--line); color: var(--muted);
+    box-shadow: var(--shadow);
+  }
+  .icon-btn:active { transform: scale(0.94); }
+  .icon-btn.spin svg { animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- agenda card (next event + later/all-day rows) ---- */
+  .block.agenda { flex: none; overflow: hidden; }
+  .hero { position: relative; padding: 9px 15px 9px 16px; }
+  .hero::before { content: ""; position: absolute; inset: 7px auto 7px 0; width: 4px; border-radius: 0 3px 3px 0; background: var(--accent); }
+  .hero[data-state="soon"]::before { background: var(--warn); }
+  .hero[data-state="imminent"]::before { background: var(--urgent); }
+  .hero[data-state="now"]::before { background: var(--good); }
+  .hero-line { display: flex; align-items: center; gap: 10px; }
+  .hero-time {
+    flex: none; font-family: var(--font-display); font-weight: 800; font-size: 19px; line-height: 1.15;
+    letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--ink);
+  }
+  .hero-end { font-size: 13px; font-weight: 700; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
+  .hero-title {
+    flex: 1; min-width: 0; font-weight: 700; font-size: 14.5px; line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .hero-cal { color: var(--faint); font-weight: 500; font-size: 12px; }
+  .hero-cd {
+    flex: none; font-size: 11.5px; font-weight: 700; white-space: nowrap;
+    color: var(--accent-ink); background: var(--accent-soft); padding: 2px 9px; border-radius: 999px;
+  }
+  .hero[data-state="soon"] .hero-cd { color: #fff; background: var(--warn); }
+  .hero[data-state="imminent"] .hero-cd { color: #fff; background: var(--urgent); }
+  .hero[data-state="imminent"] .hero-time { color: var(--urgent); }
+  .hero[data-state="now"] .hero-cd { color: #fff; background: var(--good); }
+  .hero[data-state="now"] .hero-time { color: var(--good); }
+  .hero-empty { padding: 2px 0; }
+  .hero-empty .big { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; }
+  .hero-empty .sub { font-size: 12px; color: var(--muted); }
+  /* all-day events → chips in the header (they behave like tasks) */
+  .allday-chips { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; margin-left: 8px; }
+  .ac-chip {
+    font-size: 10.5px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft);
+    padding: 2px 9px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 128px;
+  }
+  .ac-chip.more { color: var(--muted); background: var(--surface-2); }
+  /* later timed events: readable full-width rows, only this area scrolls when long */
+  .ev-list { display: flex; flex-direction: column; max-height: 172px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  .ev-row { position: relative; display: flex; align-items: center; gap: 11px; padding: 8px 15px; border-top: 1px solid var(--line); }
+  .ev-row::before { content: ""; position: absolute; inset: 6px auto 6px 0; width: 4px; border-radius: 0 3px 3px 0; background: var(--line); }
+  .ev-row[data-state="soon"]::before { background: var(--warn); }
+  .ev-row[data-state="imminent"]::before { background: var(--urgent); }
+  .ev-row[data-state="now"]::before { background: var(--good); }
+  .ev-time { flex: none; font-family: var(--font-display); font-weight: 800; font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .ev-end { font-size: 11px; font-weight: 700; color: var(--muted); margin-left: 3px; }
+  .ev-row.allday .ev-time { font-size: 12.5px; color: var(--accent-ink); }
+  .ev-title { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ev-cd { flex: none; font-size: 11.5px; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
+  .ev-row[data-state="soon"] .ev-cd { color: var(--warn); }
+  .ev-row[data-state="imminent"] .ev-cd { color: var(--urgent); }
+  .ev-more { display: block; padding: 7px 15px; font-size: 12px; color: var(--accent-ink); border-top: 1px solid var(--line); text-decoration: none; font-weight: 700; }
+
+  /* ---- section blocks ---- */
+  .block {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .block.sched, .block.mail { flex: none; }
+  .block.tasks { flex: 1 1 auto; min-height: 96px; }
+  .b-head {
+    display: flex; align-items: center; gap: 8px; padding: 9px 13px 7px;
+  }
+  .b-head .h-ic { color: var(--accent); display: inline-flex; flex: none; }
+  .b-title { font-family: var(--font-display); font-weight: 700; font-size: 13.5px; letter-spacing: 0.01em; }
+  .b-count {
+    margin-left: auto; font-size: 12px; font-weight: 700; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .b-count b { color: var(--ink); font-size: 14px; }
+  .chip-sync { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; letter-spacing: 0.02em; }
+  .chip-sync.ok { color: var(--good); background: var(--good-soft); }
+  .chip-sync.local { color: var(--warn); background: var(--warn-soft); }
+  .b-list { display: flex; flex-direction: column; }
+  /* tasks: two vertical columns (タスク | LINE返信) */
+  .tasks .b-list { flex: 1; min-height: 0; display: flex; flex-direction: row; overflow: hidden; }
+  .tasks .b-list .empty { flex: 1; }
+  .grp-col { flex: 1 1 0; min-width: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+  .grp-col + .grp-col { border-left: 1px solid var(--line); }
+  .grp-head {
+    font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.06em;
+    color: var(--muted); padding: 8px 12px 5px; display: flex; align-items: center; gap: 6px;
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
+  }
+  .grp-head.line { color: #05852b; }
+  :root[data-theme="dark"] .grp-head.line, :root:not([data-theme="light"]) .grp-head.line { color: #5fe08a; }
+  .grp-head .grp-n {
+    font-size: 10px; font-weight: 700; color: var(--faint);
+    background: var(--surface-2); border-radius: 999px; padding: 0 7px; min-width: 18px; text-align: center;
+  }
+  .grp-none { padding: 6px 12px 12px; color: var(--faint); font-size: 12px; }
+  .grp-col .task { padding: 9px 10px 9px 12px; gap: 9px; }
+  .grp-col .task .del { font-size: 18px; padding: 2px 2px; }
+
+  .row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 13px;
+    border-top: 1px solid var(--line); position: relative;
+  }
+  .row:first-child { border-top: 0; }
+  .row .stripe { position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 0 3px 3px 0; background: var(--line); }
+  .row.u-imminent .stripe { background: var(--urgent); }
+  .row.u-soon .stripe { background: var(--warn); }
+  .row.u-ok .stripe { background: var(--accent); }
+  .row .r-time {
+    font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--ink);
+    min-width: 42px; font-variant-numeric: tabular-nums; flex: none;
+  }
+  .row .r-time.allday { color: var(--accent-ink); font-size: 11px; min-width: 42px; }
+  .row .r-body { min-width: 0; flex: 1; }
+  .row .r-title {
+    font-size: 14px; font-weight: 500; line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .row .r-sub { font-size: 11.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* mail rows (compact) */
+  .mail .b-head { padding-bottom: 4px; }
+  .mail .row { padding-top: 5px; padding-bottom: 5px; }
+  .mail .r-title { line-height: 1.25; }
+  .mail .r-from { line-height: 1.15; }
+  .row.mailrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+  .row.mailrow.important .dot { background: var(--urgent); }
+  .row.mailrow .r-from { font-size: 11.5px; color: var(--muted); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chev { color: var(--faint); flex: none; }
+
+  /* task rows */
+  .task {
+    display: flex; align-items: center; gap: 11px; padding: 9px 13px;
+    border-top: 1px solid var(--line);
+  }
+  .task:first-child { border-top: 0; }
+  .check {
+    width: 23px; height: 23px; border-radius: 7px; flex: none;
+    border: 2px solid var(--faint); background: transparent;
+    display: inline-flex; align-items: center; justify-content: center; color: #fff;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .check svg { opacity: 0; }
+  .task.done .check { background: var(--good); border-color: var(--good); }
+  .task.done .check svg { opacity: 1; }
+  .task .t-body { flex: 1; min-width: 0; }
+  .task .t-title { font-size: 14.5px; line-height: 1.3; word-break: break-word; }
+  .task.done .t-title { color: var(--faint); text-decoration: line-through; }
+  .task .kind {
+    font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; letter-spacing: 0.02em;
+    flex: none; margin-top: 1px;
+  }
+  .kind.line { color: #05852b; background: rgba(6, 199, 85, 0.14); }
+  .kind.task { color: var(--accent-ink); background: var(--accent-soft); }
+  .kind.over { color: #fff; background: var(--urgent); }
+  :root[data-theme="dark"] .kind.line, :root:not([data-theme="light"]) .kind.line { color: #5fe08a; }
+  /* overdue (carried over from a previous day) */
+  .task.overdue { background: var(--urgent-soft); }
+  .task.overdue .t-title { color: var(--urgent); font-weight: 700; }
+  .task.overdue .check { border-color: var(--urgent); }
+  .cnt-over { color: #fff; background: var(--urgent); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: 4px; }
+  .task .del {
+    border: 0; background: transparent; color: var(--faint); font-size: 20px; line-height: 1;
+    padding: 2px 4px; flex: none; opacity: 0.7;
+  }
+  .task .del:active { color: var(--urgent); }
+
+  .empty { padding: 14px 13px; color: var(--faint); font-size: 13px; text-align: center; }
+  .note {
+    padding: 9px 13px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line);
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.4;
+  }
+  .note.reauth { color: var(--urgent); }
+  .note a { color: var(--accent-ink); font-weight: 700; text-decoration: underline; }
+
+  /* add bar inside tasks */
+  .addbar {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    border-top: 1px solid var(--line); flex: none; background: var(--surface-2);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .kindtoggle { display: flex; gap: 4px; flex: none; }
+  .kindtoggle button {
+    font-family: var(--font-display); font-size: 11px; font-weight: 700; padding: 6px 8px;
+    border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  }
+  .kindtoggle button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .addbar input {
+    flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface);
+    border-radius: 9px; padding: 9px 11px; font-size: 15px; color: var(--ink); font-family: inherit;
+  }
+  .addbar input::placeholder { color: var(--faint); }
+  .addbar .add {
+    flex: none; width: 38px; height: 38px; border-radius: 10px; border: 0;
+    background: var(--accent); color: #fff; font-size: 22px; line-height: 1; display: inline-flex;
+    align-items: center; justify-content: center;
+  }
+  .addbar .add:active { transform: scale(0.94); }
+  .add-open {
+    flex: 1; min-width: 0; border: 0; background: var(--accent); color: #fff; font-family: var(--font-display);
+    font-weight: 700; font-size: 14px; padding: 11px 8px; border-radius: 11px; white-space: nowrap;
+  }
+  .add-open.line { background: #06c755; }
+  .add-open:active { transform: scale(0.98); }
+  /* type toggle inside the add popup */
+  .seg { display: flex; gap: 7px; }
+  .seg button {
+    flex: 1; font-family: var(--font-display); font-weight: 700; font-size: 13.5px; padding: 10px;
+    border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  }
+  .seg #tmKindTask[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg #tmKindLine[aria-pressed="true"] { background: #06c755; border-color: #06c755; color: #fff; }
+  #tmDateWrap[hidden] { display: none; }
+  .tm-added { font-size: 12.5px; font-weight: 700; color: var(--good); }
+  .tm-added[hidden] { display: none; }
+
+  /* task due-date row */
+  .task-dates {
+    display: flex; align-items: center; gap: 6px; flex: none; padding: 6px 10px 0;
+    font-size: 12px; color: var(--muted);
+  }
+  .task-dates[hidden] { display: none; }
+  .task-dates .td-label { font-weight: 700; flex: none; }
+  .task-dates input[type="date"], .task-dates input[type="time"] {
+    flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface);
+    border-radius: 8px; padding: 5px 8px; font-size: 13px; color: var(--ink); font-family: inherit;
+  }
+  .task-dates .td-sep { flex: none; color: var(--faint); }
+  .task-dates .td-clear { flex: none; border: 0; background: transparent; color: var(--faint); font-size: 18px; padding: 0 4px; }
+
+  /* header add-event button */
+  .head-add {
+    flex: none; margin-left: 8px; font-family: var(--font-display); font-weight: 700; font-size: 11px;
+    padding: 3px 9px; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  }
+  .head-add:active { transform: scale(0.95); }
+
+  /* modal */
+  .modal {
+    position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center;
+    background: rgba(10, 20, 19, 0.45); padding: 0 12px calc(env(safe-area-inset-bottom) + 12px);
+  }
+  .modal[hidden] { display: none; }
+  .modal-card {
+    width: 100%; max-width: 460px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; box-shadow: var(--shadow); padding: 14px 15px 16px; margin-bottom: 6px;
+    display: flex; flex-direction: column; gap: 11px;
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; font-family: var(--font-display); font-weight: 800; font-size: 16px; }
+  .modal-x { border: 0; background: transparent; color: var(--muted); font-size: 24px; line-height: 1; padding: 0 4px; }
+  .fld { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .fld.chk { flex-direction: row; align-items: center; gap: 8px; }
+  .fld input[type="text"], .fld input[type="date"], .fld input[type="time"] {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 9px 11px;
+    font-size: 15px; color: var(--ink); font-family: inherit; font-weight: 400;
+  }
+  .fld input::placeholder { color: var(--faint); }
+  .fld.chk input { width: 20px; height: 20px; }
+  .fld-row { display: flex; gap: 10px; }
+  .fld-row .fld { flex: 1; }
+  .fld-row[hidden] { display: none; }
+  .modal-hint { font-size: 11.5px; color: var(--muted); line-height: 1.5; background: var(--surface-2); border-radius: 9px; padding: 8px 10px; }
+  .modal-note { font-size: 12px; color: var(--urgent); line-height: 1.4; }
+  .modal-note[hidden] { display: none; }
+  .modal-go {
+    border: 0; background: var(--accent); color: #fff; font-family: var(--font-display); font-weight: 700;
+    font-size: 15px; padding: 12px; border-radius: 11px; margin-top: 2px;
+  }
+  .modal-go:active { transform: scale(0.99); }
+  .modal-go:disabled { opacity: 0.55; }
+
+  /* due badge on task rows */
+  .t-due { font-size: 10px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft); padding: 1px 6px; border-radius: 999px; flex: none; margin-top: 1px; white-space: nowrap; }
+  .task.overdue .t-due { color: #fff; background: var(--urgent); }
+
+  /* ---- dock ---- */
+  .dock { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex: none; }
+  .dock a, .dock button {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    box-shadow: var(--shadow); padding: 9px 4px 8px; color: var(--muted);
+    font-family: var(--font-display); font-weight: 700; font-size: 11px;
+  }
+  .dock a:active, .dock button:active { transform: scale(0.96); }
+  .dock .ic { display: inline-flex; }
+  .dock .line-ic { color: #06c755; }
+  .dock .mail-ic { color: #ea4335; }
+  .dock .cal-ic { color: #4285f4; }
+
+  .skl { color: var(--faint); font-size: 13px; padding: 10px 13px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  /* ---- auth gate (standalone PWA) ---- */
+  .authgate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+    padding:24px;background:var(--ground);
+    padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));}
+  .authcard{width:100%;max-width:340px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;box-shadow:var(--shadow);padding:30px 24px 26px;text-align:center;}
+  .authmark{font-size:46px;line-height:1;margin-bottom:12px;}
+  .authttl{font-family:var(--font-display);font-weight:800;font-size:21px;color:var(--ink);margin-bottom:8px;}
+  .authsub{font-size:13.5px;line-height:1.7;color:var(--muted);margin-bottom:22px;}
+  .authbtn{width:100%;border:none;border-radius:13px;padding:15px 16px;font-family:var(--font-display);
+    font-weight:800;font-size:16px;color:#fff;background:var(--accent);cursor:pointer;
+    box-shadow:0 6px 16px rgba(23,131,143,.28);transition:transform .06s ease,filter .15s ease;}
+  .authbtn:active{transform:translateY(1px);filter:brightness(.96);}
+  .authnote{margin-top:14px;font-size:12.5px;line-height:1.6;color:var(--urgent);}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="date">
+      <span class="d-num" id="dNum">—</span>
+      <span class="d-dow" id="dDow"></span>
+      <span class="d-holiday" id="dHoliday" hidden></span>
+    </div>
+    <div class="sync">
+      <span class="stamp" id="stamp"></span>
+    </div>
+  </header>
+
+  <section class="block agenda">
+    <div class="b-head">
+      <span class="h-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg></span>
+      <span class="b-title">きょうの予定</span>
+      <span class="allday-chips" id="alldayChips" hidden></span>
+      <span class="b-count" id="schedCount"></span>
+      <button class="head-add" id="addEventBtn" aria-label="予定を追加">＋予定</button>
+    </div>
+    <div class="hero" id="hero" data-state="ok">
+      <div id="heroContent"><div class="hero-empty"><span class="sub">読み込み中…</span></div></div>
+    </div>
+    <div class="ev-list" id="schedList"></div>
+  </section>
+
+  <section class="block mail">
+    <div class="b-head">
+      <span class="h-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>
+      <span class="b-title">要チェックのメール</span>
+      <span class="b-count" id="mailCount"></span>
+    </div>
+    <div class="b-list" id="mailList"><div class="skl">読み込み中…</div></div>
+  </section>
+
+  <section class="block tasks">
+    <div class="b-head">
+      <span class="h-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></span>
+      <span class="b-title">きょう やること</span>
+      <span class="chip-sync" id="syncChip" hidden></span>
+      <span class="b-count" id="taskCount"></span>
+    </div>
+    <div class="b-list" id="taskList"><div class="skl">読み込み中…</div></div>
+    <div class="addbar">
+      <button class="add-open task" id="openTaskBtn">＋ タスク・カレンダー</button>
+      <button class="add-open line" id="openLineBtn">＋ LINE返信</button>
+    </div>
+  </section>
+
+</div>
+
+<div class="modal" id="evtModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="evtModalTitle">
+    <div class="modal-head"><span id="evtModalTitle">予定を追加</span><button class="modal-x" id="evtCancel" aria-label="閉じる">×</button></div>
+    <label class="fld"><span>タイトル</span><input id="evtTitle" type="text" placeholder="例：授業参観" autocomplete="off" /></label>
+    <label class="fld"><span>日付</span><input id="evtDate" type="date" /></label>
+    <label class="fld chk"><input id="evtAllday" type="checkbox" /><span>終日</span></label>
+    <div class="fld-row" id="evtTimeRow">
+      <label class="fld"><span>開始</span><input id="evtStart" type="time" /></label>
+      <label class="fld"><span>終了</span><input id="evtEnd" type="time" /></label>
+    </div>
+    <div class="modal-note" id="evtNote" hidden></div>
+    <button class="modal-go" id="evtSave">カレンダーに追加</button>
+  </div>
+</div>
+
+<div class="modal" id="taskModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+    <div class="modal-head"><span id="taskModalTitle">追加</span><button class="modal-x" id="tmCancel" aria-label="閉じる">×</button></div>
+    <div class="seg" role="group" aria-label="種類">
+      <button type="button" id="tmKindTask" aria-pressed="true">タスク</button>
+      <button type="button" id="tmKindLine" aria-pressed="false">LINE返信</button>
+    </div>
+    <label class="fld"><span>内容</span><input id="tmTitle" type="text" placeholder="例：連絡プリント作成" autocomplete="off" /></label>
+    <div id="tmDateWrap">
+      <label class="fld"><span>日付</span><input id="tmDate" type="date" /></label>
+      <div class="fld-row">
+        <label class="fld"><span>開始時刻（任意）</span><input id="tmStart" type="time" /></label>
+        <label class="fld"><span>終了時刻（任意）</span><input id="tmEnd" type="time" /></label>
+      </div>
+      <div class="modal-hint" id="tmHint">時刻なし → タスク（タスク管理＋やること一覧）<br>時刻あり → Rカレンダーの予定として登録</div>
+    </div>
+    <div class="modal-note" id="tmNote" hidden></div>
+    <div class="tm-added" id="tmAdded" hidden>✓ 追加しました</div>
+    <button class="modal-go" id="tmSave">追加</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var CLIENT_ID = "382885832208-6hh3jrjd23a1q4jqas4c8i8ks97vjlfj.apps.googleusercontent.com";
+  var SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar";
+  var MAIL_QUERY = "is:unread in:inbox -category:promotions -category:social";
+  var TASK_CAL_NAME = "タスク管理";
+  var R_CAL_NAME = "R";
+  var TZ = "Asia/Tokyo";
+  var DOW = ["日", "月", "火", "水", "木", "金", "土"];
+  var LS_LINE = "cockpit_line_v1";
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function fmtTime(d) { return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function nextDayStr(s) { var d = new Date(s + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); }
+  function fmtDueShort(s) { var p = (s || "").split("-"); return p.length === 3 ? (Number(p[1]) + "/" + Number(p[2])) : ""; }
+  function addOneHour(hhmm) { var p = (hhmm || "").split(":"); var h = (Number(p[0]) + 1) % 24; return pad(h) + ":" + (p[1] || "00"); }
+  function todayBounds() { var s = new Date(); s.setHours(0, 0, 0, 0); var e = new Date(s); e.setDate(e.getDate() + 1); return { startTime: s.toISOString(), endTime: e.toISOString(), key: s.toDateString() }; }
+  function wideWindow() { var s = new Date(); s.setHours(0, 0, 0, 0); s.setDate(s.getDate() - 31); var e = new Date(); e.setHours(0, 0, 0, 0); e.setDate(e.getDate() + 366); return { start: s.toISOString(), end: e.toISOString() }; }
+  function humanGap(ms) { var m = Math.round(ms / 60000); if (m < 1) return "まもなく"; if (m < 60) return "あと" + m + "分"; var h = Math.floor(m / 60), mm = m % 60; return "あと" + h + "時間" + mm + "分"; }
+  function shortGap(ms) { var m = Math.round(ms / 60000); if (m < 1) return "まもなく"; if (m < 60) return m + "分"; var h = Math.floor(m / 60), mm = m % 60; return h + "時間" + mm + "分"; }
+  function senderName(s) { if (!s) return ""; var m = /^\s*"?([^"<]+?)"?\s*</.exec(s); if (m) return m[1].trim(); var at = s.indexOf("@"); return at > 0 ? s.slice(0, at) : s; }
+
+  // ---------- state ----------
+  var calEvents = {}, calStatus = {}, calNames = {};
+  var displayCals = [], taskCalId = "", rCalId = "";
+  var mailItems = null, mailStatus = "load", mailTotal = 0;
+  var calTasks = [];        // tasks derived from タスク管理 calendar (all-day)
+  var lineItems = lsLineLoad(); // LINE返信 (per-device)
+  var kindSel = "task";
+  var heroEv = null;
+  var dayKey = todayBounds().key;
+
+  function lsLineLoad() { try { return JSON.parse(localStorage.getItem(LS_LINE) || "[]"); } catch (e) { return []; } }
+  function lsLineSave() { try { localStorage.setItem(LS_LINE, JSON.stringify(lineItems)); } catch (e) {} }
+
+  // ---------- auth (Google Identity Services token model) ----------
+  var tokenClient = null, accessToken = null, tokenExpiry = 0, pendingAuth = null, authed = false;
+
+  function onToken(resp) {
+    if (resp && resp.access_token) {
+      accessToken = resp.access_token;
+      tokenExpiry = Date.now() + ((resp.expires_in || 3600) * 1000) - 60000;
+      var was = authed; authed = true;
+      if (pendingAuth) { pendingAuth.resolve(accessToken); pendingAuth = null; }
+      hideAuthGate(); setSync("db");
+      if (!was) loadAll();
+    } else {
+      if (pendingAuth) { pendingAuth.reject(resp || {}); pendingAuth = null; }
+      showAuthGate(resp && resp.error === "access_denied" ? "アクセスが許可されませんでした。もう一度お試しください。" : "");
+    }
+  }
+  function requestToken(prompt) {
+    return new Promise(function (res, rej) {
+      if (!tokenClient) { rej({ error: "no_client" }); return; }
+      pendingAuth = { resolve: res, reject: rej };
+      try { tokenClient.requestAccessToken({ prompt: prompt || "" }); } catch (e) { pendingAuth = null; rej(e); }
+    });
+  }
+  function ensureToken() {
+    if (accessToken && Date.now() < tokenExpiry) return Promise.resolve(accessToken);
+    return requestToken("");
+  }
+  function gfetch(url, opts) {
+    opts = opts || {};
+    return ensureToken().then(function (tok) {
+      var h = Object.assign({}, opts.headers, { Authorization: "Bearer " + tok });
+      return fetch(url, Object.assign({}, opts, { headers: h }));
+    }).then(function (r) {
+      if (r.status === 401) {
+        return requestToken("").then(function (tok) {
+          var h = Object.assign({}, opts.headers, { Authorization: "Bearer " + tok });
+          return fetch(url, Object.assign({}, opts, { headers: h }));
+        });
+      }
+      return r;
+    }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { throw { status: r.status, body: t }; });
+      if (r.status === 204) return null;
+      return r.json();
+    });
+  }
+
+  // ---------- auth gate UI ----------
+  function ensureAuthGate() {
+    var g = $("authGate");
+    if (g) return g;
+    g = document.createElement("div");
+    g.id = "authGate"; g.className = "authgate"; g.hidden = true;
+    g.innerHTML =
+      '<div class="authcard">' +
+      '<div class="authmark">🧭</div>' +
+      '<div class="authttl">きょうの司令塔</div>' +
+      '<div class="authsub">Gmail・Googleカレンダーとつないで、今日やることを一目で。</div>' +
+      '<button class="authbtn" id="authBtn">Googleと接続</button>' +
+      '<div class="authnote" id="authNote" hidden></div>' +
+      "</div>";
+    document.body.appendChild(g);
+    $("authBtn").addEventListener("click", function () { $("authNote").hidden = true; requestToken("consent").catch(function () {}); });
+    return g;
+  }
+  function showAuthGate(msg) {
+    var g = ensureAuthGate(); g.hidden = false;
+    if (msg) { $("authNote").textContent = msg; $("authNote").hidden = false; }
+    setSync("local");
+  }
+  function hideAuthGate() { var g = $("authGate"); if (g) g.hidden = true; }
+
+  function setSync(state) {
+    var c = $("syncChip"); if (!c) return; c.hidden = false;
+    if (state === "db") { c.textContent = "☁ 連携中"; c.className = "chip-sync ok"; }
+    else { c.textContent = "未接続"; c.className = "chip-sync local"; }
+  }
+
+  // ---------- header date ----------
+  function renderHeader() {
+    var now = new Date();
+    $("dNum").textContent = (now.getMonth() + 1) + "月" + now.getDate() + "日";
+    $("dDow").textContent = "(" + DOW[now.getDay()] + ")";
+  }
+  function touchStamp() { $("stamp").textContent = "更新 " + fmtTime(new Date()); }
+
+  // ---------- calendar helpers ----------
+  function evStart(e) { return e.start && (e.start.dateTime || e.start.date); }
+  function isAllDay(e) { return !!(e.start && e.start.date && !e.start.dateTime); }
+  function startMs(e) { return isAllDay(e) ? 0 : new Date(e.start.dateTime).getTime(); }
+  function mergedEvents() {
+    var all = [];
+    Object.keys(calEvents).forEach(function (id) {
+      (calEvents[id] || []).forEach(function (e) { if (e && e.status !== "cancelled" && evStart(e)) all.push(e); });
+    });
+    all.sort(function (a, b) { return startMs(a) - startMs(b); });
+    return all;
+  }
+
+  // ---------- render: hero ----------
+  function renderHero() {
+    var hero = $("hero"), content = $("heroContent");
+    heroEv = null;
+    if (!authed) { hero.setAttribute("data-state", "ok"); content.innerHTML = '<div class="hero-empty"><span class="sub">接続待ち…</span></div>'; return; }
+    var all = mergedEvents(), timed = all.filter(function (e) { return !isAllDay(e); }), now = Date.now();
+    var ongoing = null, next = null;
+    for (var i = 0; i < timed.length; i++) {
+      var st = new Date(timed[i].start.dateTime).getTime();
+      var en = timed[i].end && timed[i].end.dateTime ? new Date(timed[i].end.dateTime).getTime() : st + 3600000;
+      if (st <= now && en > now) { ongoing = timed[i]; break; }
+      if (st > now && !next) next = timed[i];
+    }
+    var ev = ongoing || next;
+    if (!ev) {
+      hero.setAttribute("data-state", "ok");
+      var msg = all.length ? "この後の予定はありません" : "きょうの予定はありません";
+      var sub = all.length ? "おつかれさま。やることに集中" : "予定なし。今日は身軽です";
+      content.innerHTML = '<div class="hero-empty"><div><div class="big">' + msg + '</div><div class="sub">' + sub + "</div></div></div>";
+      return;
+    }
+    heroEv = ev;
+    var st2 = new Date(ev.start.dateTime).getTime(), state = "ok", cd = "";
+    if (ongoing) { state = "now"; cd = "進行中"; }
+    else { var gap = st2 - now; if (gap <= 15 * 60000) state = "imminent"; else if (gap <= 60 * 60000) state = "soon"; cd = humanGap(gap); }
+    hero.setAttribute("data-state", state);
+    var calName = (calNames[ev.__cal] && !ev.__primary) ? esc(calNames[ev.__cal]) : (ev.location ? esc(ev.location) : "");
+    var calSpan = calName ? '<span class="hero-cal"> ・ ' + calName + "</span>" : "";
+    var heroEnd = ev.end && ev.end.dateTime ? '<span class="hero-end">〜' + fmtTime(new Date(ev.end.dateTime)) + "</span>" : "";
+    content.innerHTML =
+      '<div class="hero-line">' +
+      '<span class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + heroEnd + "</span>" +
+      '<span class="hero-title">' + esc(ev.summary || "(タイトルなし)") + calSpan + "</span>" +
+      '<span class="hero-cd">' + cd + "</span>" +
+      "</div>";
+  }
+
+  // ---------- render: schedule + all-day chips ----------
+  function renderSchedule() {
+    var box = $("schedList"), cnt = $("schedCount"), chips = $("alldayChips");
+    function clearChips() { chips.innerHTML = ""; chips.hidden = true; }
+    if (!authed) { box.innerHTML = ""; clearChips(); cnt.textContent = ""; return; }
+    var all = mergedEvents(), now = Date.now();
+    if (!all.length) { box.innerHTML = ""; clearChips(); cnt.textContent = ""; return; }
+    var upcoming = all.filter(function (e) {
+      if (isAllDay(e)) return true;
+      var en = e.end && e.end.dateTime ? new Date(e.end.dateTime).getTime() : startMs(e) + 3600000;
+      return en > now;
+    });
+    cnt.innerHTML = "残り <b>" + upcoming.filter(function (e) { return !isAllDay(e); }).length + "</b> 件";
+    var pool = (upcoming.length ? upcoming : all).filter(function (e) { return e !== heroEv; });
+    var timed = pool.filter(function (e) { return !isAllDay(e); });
+    var allday = pool.filter(function (e) { return isAllDay(e); });
+    if (allday.length) {
+      chips.hidden = false;
+      var CMAX = 2, cShow = allday.length > CMAX ? allday.slice(0, CMAX - 1) : allday.slice(0, CMAX);
+      var chtml = cShow.map(function (e) { return '<span class="ac-chip">' + esc(e.summary || "(予定)") + "</span>"; }).join("");
+      if (allday.length > CMAX) chtml += '<span class="ac-chip more">+' + (allday.length - (CMAX - 1)) + "</span>";
+      chips.innerHTML = chtml;
+    } else clearChips();
+    if (!timed.length) { box.innerHTML = ""; return; }
+    box.innerHTML = timed.map(function (e) {
+      var st = new Date(e.start.dateTime).getTime(), gap = st - now, u = "ok";
+      if (gap <= 15 * 60000) u = "imminent"; else if (gap <= 60 * 60000) u = "soon";
+      var end = e.end && e.end.dateTime ? '<span class="ev-end">〜' + fmtTime(new Date(e.end.dateTime)) + "</span>" : "";
+      return '<div class="ev-row" data-state="' + u + '">' +
+        '<span class="ev-time">' + fmtTime(new Date(e.start.dateTime)) + end + "</span>" +
+        '<span class="ev-title">' + esc(e.summary || "(タイトルなし)") + "</span>" +
+        '<span class="ev-cd">' + shortGap(gap) + "</span></div>";
+    }).join("");
+  }
+
+  // ---------- render: mail ----------
+  function renderMail() {
+    var box = $("mailList"), cnt = $("mailCount");
+    if (!authed) { box.innerHTML = ""; cnt.textContent = ""; return; }
+    if (mailStatus === "load" && !mailItems) { box.innerHTML = '<div class="skl">読み込み中…</div>'; return; }
+    if (mailStatus !== "ok") { box.innerHTML = '<div class="note">メールを読み込めませんでした</div>'; cnt.textContent = ""; return; }
+    var items = (mailItems || []).slice();
+    if (!items.length) { box.innerHTML = '<div class="empty">未読なし。受信箱スッキリ ✓</div>'; cnt.innerHTML = ""; return; }
+    items.sort(function (a, b) { if (a.important !== b.important) return a.important ? -1 : 1; return b.date - a.date; });
+    var imp = items.filter(function (i) { return i.important; }).length;
+    cnt.innerHTML = "<b>" + (mailTotal || items.length) + "</b> 件" + (imp ? " ・ 重要" + imp : "");
+    var show = items.slice(0, 3);
+    var html = show.map(function (i) {
+      var href = "https://mail.google.com/mail/u/0/#inbox/" + encodeURIComponent(i.id);
+      return '<a class="row mailrow ' + (i.important ? "important" : "") + '" href="' + href + '" target="_blank" rel="noopener">' +
+        '<span class="dot"></span>' +
+        '<div class="r-body"><div class="r-title">' + esc(i.subject) + "</div><div class=\"r-from\">" + esc(i.from) + "</div></div>" +
+        '<span class="chev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span></a>';
+    }).join("");
+    if (items.length > 3) html += '<a class="note" href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener">ほか ' + (items.length - 3) + " 件をGmailで見る →</a>";
+    box.innerHTML = html;
+  }
+
+  // ---------- render: tasks (calTasks + lineItems) ----------
+  function allTasks() {
+    var arr = [];
+    calTasks.forEach(function (t) { arr.push(t); });
+    lineItems.forEach(function (t) { arr.push({ id: t.id, title: t.title, kind: "line", due: "", createdAt: t.createdAt || 0, local: true }); });
+    return arr;
+  }
+  function dueKey(t) { return t.due || "9999-99-99"; }
+  function sortTasks(a) { return a.slice().sort(function (x, y) { var dx = dueKey(x), dy = dueKey(y); if (dx !== dy) return dx < dy ? -1 : 1; return (x.createdAt || 0) - (y.createdAt || 0); }); }
+  function renderTasks() {
+    var box = $("taskList"), cnt = $("taskCount");
+    var TODAY = todayStr();
+    var list = allTasks();
+    var over = list.filter(function (t) { return t.kind === "task" && t.due && t.due < TODAY; }).length;
+    cnt.innerHTML = "残り <b>" + list.length + "</b> 件" + (over ? ' <span class="cnt-over">繰越 ' + over + "</span>" : "");
+    if (!list.length) { box.innerHTML = '<div class="empty">下のボタンから追加<br>頭の中を空っぽにしよう</div>'; return; }
+    function row(t) {
+      var isOver = t.kind === "task" && t.due && t.due < TODAY;
+      var dueBadge = t.due ? '<span class="t-due">' + fmtDueShort(t.due) + "</span>" : "";
+      return '<div class="task ' + (isOver ? "overdue" : "") + '" data-id="' + esc(t.id) + '" data-kind="' + t.kind + '">' +
+        '<button class="check" data-act="toggle" aria-label="完了"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></button>' +
+        '<div class="t-body"><span class="t-title">' + esc(t.title) + "</span></div>" + dueBadge +
+        '<button class="del" data-act="del" aria-label="削除">×</button></div>';
+    }
+    var groups = [
+      { key: "task", label: "タスク", items: sortTasks(list.filter(function (t) { return t.kind !== "line"; })) },
+      { key: "line", label: "LINE返信", items: sortTasks(list.filter(function (t) { return t.kind === "line"; })) }
+    ];
+    box.innerHTML = groups.map(function (g) {
+      var body = g.items.length ? g.items.map(row).join("") : '<div class="grp-none">なし</div>';
+      return '<div class="grp-col"><div class="grp-head ' + g.key + '">' + g.label + ' <span class="grp-n">' + g.items.length + "</span></div>" + body + "</div>";
+    }).join("");
+  }
+
+  // ---------- calendar writes ----------
+  function gcalCreate(calId, opts) {
+    var body = { summary: opts.summary };
+    if (opts.allDay) { body.start = { date: opts.date }; body.end = { date: nextDayStr(opts.endDate || opts.date) }; }
+    else { body.start = { dateTime: opts.date + "T" + opts.start + ":00+09:00", timeZone: TZ }; body.end = { dateTime: opts.date + "T" + opts.end + ":00+09:00", timeZone: TZ }; }
+    return gfetch("https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(calId) + "/events", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  }
+  function gcalDelete(calId, eventId) {
+    return gfetch("https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(calId) + "/events/" + encodeURIComponent(eventId), { method: "DELETE" });
+  }
+
+  // ---------- loaders ----------
+  function loadCalendars() {
+    return gfetch("https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=250").then(function (d) {
+      var items = (d && d.items) || [];
+      taskCalId = ""; rCalId = ""; displayCals = []; calNames = {};
+      items.forEach(function (c) {
+        var name = (c.summary || "").trim();
+        calNames[c.id] = name;
+        if (name === TASK_CAL_NAME) { taskCalId = c.id; return; }        // tasks calendar: not displayed
+        if (name === R_CAL_NAME) rCalId = c.id;
+        if (/#holiday@/.test(c.id)) return;                               // skip holidays from schedule
+        displayCals.push({ id: c.id, summary: name, primary: c.primary === true });
+      });
+      if (!displayCals.length) displayCals.push({ id: "primary", summary: "", primary: true });
+    });
+  }
+  function loadSchedule() {
+    var b = todayBounds();
+    return Promise.all(displayCals.map(function (c) {
+      var u = "https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(c.id) +
+        "/events?singleEvents=true&orderBy=startTime&maxResults=50&timeMin=" + encodeURIComponent(b.startTime) + "&timeMax=" + encodeURIComponent(b.endTime);
+      return gfetch(u).then(function (d) {
+        var evs = (d && d.items) || [];
+        evs.forEach(function (e) { e.__cal = c.id; e.__primary = c.primary; });
+        calEvents[c.id] = evs; calStatus[c.id] = "ok";
+      }).catch(function () { calEvents[c.id] = []; calStatus[c.id] = "err"; });
+    })).then(function () { touchStamp(); renderHero(); renderSchedule(); });
+  }
+  function loadTasks() {
+    if (!taskCalId) { calTasks = []; renderTasks(); return Promise.resolve(); }
+    var w = wideWindow();
+    var u = "https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(taskCalId) +
+      "/events?singleEvents=true&orderBy=startTime&maxResults=250&timeMin=" + encodeURIComponent(w.start) + "&timeMax=" + encodeURIComponent(w.end);
+    return gfetch(u).then(function (d) {
+      var items = (d && d.items) || [];
+      calTasks = items.filter(function (e) { return e.status !== "cancelled" && e.start; }).map(function (e) {
+        var day = e.start.date || (e.start.dateTime || "").slice(0, 10);
+        return { id: e.id, title: e.summary || "(タスク)", kind: "task", due: day, calId: taskCalId, eventId: e.id, createdAt: new Date(e.created || Date.now()).getTime() };
+      });
+      renderTasks();
+    }).catch(function () { renderTasks(); });
+  }
+  function loadMail() {
+    var u = "https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q=" + encodeURIComponent(MAIL_QUERY);
+    return gfetch(u).then(function (d) {
+      var msgs = (d && d.messages) || []; mailTotal = (d && d.resultSizeEstimate) || msgs.length;
+      var top = msgs.slice(0, 8);
+      return Promise.all(top.map(function (m) {
+        return gfetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/" + m.id + "?format=metadata&metadataHeaders=Subject&metadataHeaders=From")
+          .catch(function () { return null; });
+      }));
+    }).then(function (arr) {
+      mailItems = (arr || []).filter(Boolean).map(function (mm) {
+        var h = {}; ((mm.payload && mm.payload.headers) || []).forEach(function (x) { h[x.name] = x.value; });
+        return { id: mm.threadId || mm.id, subject: h.Subject || "(件名なし)", from: senderName(h.From || ""), date: Number(mm.internalDate) || 0, important: (mm.labelIds || []).indexOf("IMPORTANT") >= 0 };
+      });
+      mailStatus = "ok"; touchStamp(); renderMail();
+    }).catch(function (e) { mailStatus = "err"; renderMail(); });
+  }
+  var loading = false;
+  function loadAll() {
+    if (!authed || loading) return; loading = true;
+    loadCalendars().then(function () {
+      return Promise.all([loadSchedule(), loadTasks(), loadMail()]);
+    }).catch(function () {}).then(function () { loading = false; });
+  }
+  function refreshLive() { if (authed) { loadSchedule(); loadTasks(); loadMail(); } }
+
+  // ---------- task interactions ----------
+  $("taskList").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-act]"); if (!btn) return;
+    var rowEl = e.target.closest(".task"); if (!rowEl) return;
+    var id = rowEl.getAttribute("data-id"), kind = rowEl.getAttribute("data-kind");
+    // both 完了 and 削除 remove the item (task → delete calendar event; LINE → remove local)
+    if (kind === "line") { lineItems = lineItems.filter(function (x) { return x.id !== id; }); lsLineSave(); renderTasks(); return; }
+    var t = calTasks.filter(function (x) { return x.id === id; })[0];
+    calTasks = calTasks.filter(function (x) { return x.id !== id; }); renderTasks();
+    if (t && t.eventId) { gcalDelete(t.calId, t.eventId).then(function () { loadTasks(); }).catch(function () { loadTasks(); }); }
+  });
+
+  // ---------- add popup ----------
+  function setTmKind(k) {
+    kindSel = k;
+    $("tmKindTask").setAttribute("aria-pressed", k === "task" ? "true" : "false");
+    $("tmKindLine").setAttribute("aria-pressed", k === "line" ? "true" : "false");
+    $("tmDateWrap").hidden = (k === "line");
+    $("tmTitle").placeholder = k === "line" ? "例：田中さんに日程を返信" : "例：連絡プリント作成";
+  }
+  function openAddModal(kind) {
+    setTmKind(kind === "line" ? "line" : "task");
+    $("tmTitle").value = ""; $("tmDate").value = todayStr(); $("tmStart").value = ""; $("tmEnd").value = "";
+    $("tmNote").hidden = true; $("tmAdded").hidden = true; $("tmSave").disabled = false; $("tmSave").textContent = "追加";
+    $("taskModal").hidden = false; $("tmTitle").focus();
+  }
+  function closeAddModal() { $("taskModal").hidden = true; }
+  var addedTimer = null;
+  function afterAdd() { $("tmAdded").hidden = false; if (addedTimer) clearTimeout(addedTimer); addedTimer = setTimeout(function () { $("tmAdded").hidden = true; }, 1600); $("tmTitle").value = ""; $("tmStart").value = ""; $("tmEnd").value = ""; $("tmTitle").focus(); }
+  function saveFromModal() {
+    var title = ($("tmTitle").value || "").trim(); var note = $("tmNote");
+    if (!title) { note.textContent = "内容を入力してください。"; note.hidden = false; return; }
+    note.hidden = true;
+    if (kindSel === "line") {
+      lineItems.push({ id: "l" + Date.now() + Math.random().toString(36).slice(2, 6), title: title, createdAt: Date.now() });
+      lsLineSave(); renderTasks(); afterAdd(); return;
+    }
+    if (!authed) { note.textContent = "先にGoogleと接続してください。"; note.hidden = false; return; }
+    var date = $("tmDate").value || "", start = $("tmStart").value || "", end = $("tmEnd").value || "";
+    if (!date) { note.textContent = "日付を選んでください。"; note.hidden = false; return; }
+    $("tmSave").disabled = true; $("tmSave").textContent = "追加中…";
+    var done = function () { $("tmSave").disabled = false; $("tmSave").textContent = "追加"; };
+    if (start) {
+      var rCal = rCalId || taskCalId;
+      if (!rCal) { done(); note.textContent = "「R」カレンダーが見つかりません。"; note.hidden = false; return; }
+      gcalCreate(rCal, { summary: title, allDay: false, date: date, start: start, end: (end && end > start) ? end : addOneHour(start) })
+        .then(function () { done(); afterAdd(); setTimeout(loadSchedule, 400); })
+        .catch(function () { done(); note.textContent = "追加できませんでした。"; note.hidden = false; });
+    } else {
+      if (!taskCalId) { done(); note.textContent = "「タスク管理」カレンダーが見つかりません。"; note.hidden = false; return; }
+      gcalCreate(taskCalId, { summary: title, allDay: true, date: date, endDate: date })
+        .then(function () { done(); afterAdd(); setTimeout(loadTasks, 400); })
+        .catch(function () { done(); note.textContent = "追加できませんでした。"; note.hidden = false; });
+    }
+  }
+  $("openTaskBtn").addEventListener("click", function () { openAddModal("task"); });
+  $("openLineBtn").addEventListener("click", function () { openAddModal("line"); });
+  $("tmCancel").addEventListener("click", closeAddModal);
+  $("taskModal").addEventListener("click", function (e) { if (e.target === $("taskModal")) closeAddModal(); });
+  $("tmKindTask").addEventListener("click", function () { setTmKind("task"); $("tmTitle").focus(); });
+  $("tmKindLine").addEventListener("click", function () { setTmKind("line"); $("tmTitle").focus(); });
+  $("tmSave").addEventListener("click", saveFromModal);
+  $("tmTitle").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); saveFromModal(); } });
+
+  // ---------- add-event modal (＋予定 → primary calendar) ----------
+  function openEvtModal() {
+    $("evtTitle").value = ""; $("evtDate").value = todayStr(); $("evtAllday").checked = false; $("evtTimeRow").hidden = false;
+    $("evtStart").value = "09:00"; $("evtEnd").value = "10:00"; $("evtNote").hidden = true; $("evtSave").disabled = false; $("evtSave").textContent = "カレンダーに追加";
+    $("evtModal").hidden = false; $("evtTitle").focus();
+  }
+  function closeEvtModal() { $("evtModal").hidden = true; }
+  $("addEventBtn").addEventListener("click", function () { if (!authed) { showAuthGate(""); return; } openEvtModal(); });
+  $("evtCancel").addEventListener("click", closeEvtModal);
+  $("evtModal").addEventListener("click", function (e) { if (e.target === $("evtModal")) closeEvtModal(); });
+  $("evtAllday").addEventListener("change", function () { $("evtTimeRow").hidden = $("evtAllday").checked; });
+  $("evtSave").addEventListener("click", function () {
+    var title = ($("evtTitle").value || "").trim(), date = $("evtDate").value, note = $("evtNote");
+    if (!title) { note.textContent = "タイトルを入力してください。"; note.hidden = false; return; }
+    if (!date) { note.textContent = "日付を選んでください。"; note.hidden = false; return; }
+    var allDay = $("evtAllday").checked, opts = { summary: title, allDay: allDay, date: date, endDate: date };
+    if (!allDay) { opts.start = $("evtStart").value || "09:00"; opts.end = $("evtEnd").value || opts.start; }
+    note.hidden = true; $("evtSave").disabled = true; $("evtSave").textContent = "追加中…";
+    gcalCreate("primary", opts).then(function () {
+      $("evtSave").disabled = false; $("evtSave").textContent = "カレンダーに追加"; closeEvtModal(); setTimeout(loadSchedule, 400);
+    }).catch(function () { $("evtSave").disabled = false; $("evtSave").textContent = "カレンダーに追加"; note.textContent = "追加できませんでした。"; note.hidden = false; });
+  });
+
+  // ---------- clock + auto refresh ----------
+  setInterval(function () {
+    renderHeader();
+    var k = todayBounds().key;
+    if (k !== dayKey) { dayKey = k; refreshLive(); }
+    renderHero(); renderSchedule();
+  }, 30000);
+  setInterval(refreshLive, 90000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && authed) refreshLive(); });
+
+  // ---------- boot ----------
+  renderHeader(); renderHero(); renderSchedule(); renderMail(); renderTasks();
+  ensureAuthGate(); showAuthGate("");
+
+  function startGis() {
+    if (!(window.google && google.accounts && google.accounts.oauth2)) { setTimeout(startGis, 200); return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: onToken });
+    // try a silent sign-in for returning users; if it needs interaction, the gate stays
+    requestToken("").catch(function () { /* stay on gate */ });
+  }
+  startGis();
+})();
+</script>
+</body>
+</html>
