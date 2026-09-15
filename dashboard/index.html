@@ -114,32 +114,50 @@
   .icon-btn.spin svg { animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ---- agenda card (next event + rest of today) ---- */
+  /* ---- agenda card (next event + later / all-day tiles) ---- */
   .block.agenda { flex: none; overflow: hidden; }
-  .agenda .b-list .row:first-child { border-top: 1px solid var(--line); }
-  .hero { padding: 6px 15px 12px; }
-  .hero-row { display: flex; align-items: baseline; gap: 11px; }
+  .agenda-flow { display: flex; gap: 11px; padding: 6px 14px 13px; align-items: stretch; }
+  .agenda-main { flex: 1; min-width: 0; }
+  /* left: next event */
   .hero-time {
-    font-family: var(--font-display); font-weight: 800; font-size: 23px; line-height: 1.1;
-    letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--ink); flex: none;
+    display: block; font-family: var(--font-display); font-weight: 800; font-size: 27px; line-height: 1;
+    letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--ink);
   }
   .hero-title {
-    font-weight: 700; font-size: 15.5px; line-height: 1.3; flex: 1; min-width: 0;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-weight: 700; font-size: 15.5px; line-height: 1.3; margin-top: 3px;
+    overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
   .hero-cd {
-    flex: none; font-size: 11.5px; font-weight: 700; white-space: nowrap;
-    color: var(--accent-ink); background: var(--accent-soft); padding: 2px 9px; border-radius: 999px;
+    display: inline-block; margin-top: 6px; font-size: 11.5px; font-weight: 700; white-space: nowrap;
+    color: var(--accent-ink); background: var(--accent-soft); padding: 2px 10px; border-radius: 999px;
   }
   .hero[data-state="soon"] .hero-cd { color: #fff; background: var(--warn); }
   .hero[data-state="imminent"] .hero-cd { color: #fff; background: var(--urgent); }
   .hero[data-state="imminent"] .hero-time { color: var(--urgent); }
   .hero[data-state="now"] .hero-cd { color: #fff; background: var(--good); }
   .hero[data-state="now"] .hero-time { color: var(--good); }
-  .hero-sub { font-size: 11.5px; color: var(--faint); margin-top: 4px; padding-left: 1px; }
+  .hero-sub { font-size: 11.5px; color: var(--faint); margin-top: 5px; }
   .hero-empty { padding: 6px 0 3px; }
   .hero-empty .big { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
   .hero-empty .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  /* right: small square tiles in a 2-col grid */
+  .agenda-side { flex: none; width: 146px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+  .mini {
+    aspect-ratio: 1 / 1; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2);
+    padding: 5px 5px 5px 4px; display: flex; flex-direction: column; overflow: hidden; position: relative;
+  }
+  .mini::before { content: ""; position: absolute; inset: 5px auto 5px 0; width: 3px; border-radius: 0 3px 3px 0; background: var(--line); }
+  .mini[data-state="soon"]::before { background: var(--warn); }
+  .mini[data-state="imminent"]::before { background: var(--urgent); }
+  .mini[data-state="now"]::before { background: var(--good); }
+  .mini-time { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; padding-left: 6px; }
+  .mini.allday .mini-time { color: var(--accent-ink); font-size: 10px; }
+  .mini-title { font-size: 9px; color: var(--muted); line-height: 1.2; margin-top: 1px; flex: 1; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; padding-left: 6px; }
+  .mini-cd { font-size: 8.5px; font-weight: 700; color: var(--accent-ink); padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini[data-state="soon"] .mini-cd { color: var(--warn); }
+  .mini[data-state="imminent"] .mini-cd { color: var(--urgent); }
+  .mini.more { align-items: center; justify-content: center; color: var(--muted); font-family: var(--font-display); font-weight: 700; font-size: 12px; text-decoration: none; }
+  .mini.more::before { display: none; }
 
   /* ---- section blocks ---- */
   .block {
@@ -315,10 +333,12 @@
       <span class="b-title">きょうの予定</span>
       <span class="b-count" id="schedCount"></span>
     </div>
-    <div class="hero" id="hero" data-state="ok">
-      <div id="heroContent"><div class="hero-empty"><span class="sub">読み込み中…</span></div></div>
+    <div class="agenda-flow">
+      <div class="agenda-main hero" id="hero" data-state="ok">
+        <div id="heroContent"><div class="hero-empty"><span class="sub">読み込み中…</span></div></div>
+      </div>
+      <div class="agenda-side" id="schedSide" hidden></div>
     </div>
-    <div class="b-list" id="schedList"></div>
   </section>
 
   <section class="block mail">
@@ -415,7 +435,14 @@
     if (m < 1) return "まもなく";
     if (m < 60) return "あと" + m + "分";
     var h = Math.floor(m / 60), mm = m % 60;
-    return "あと" + h + "時間" + (mm ? mm + "分" : "");
+    return "あと" + h + "時間" + mm + "分";
+  }
+  function shortGap(ms) {
+    var m = Math.round(ms / 60000);
+    if (m < 1) return "まもなく";
+    if (m < 60) return m + "分";
+    var h = Math.floor(m / 60), mm = m % 60;
+    return h + "時間" + mm + "分";
   }
 
   var heroEv = null;
@@ -475,23 +502,20 @@
     if (calNames[ev.__cal] && !ev.__primary) subParts.push(esc(calNames[ev.__cal]));
     var sub = subParts.length ? '<div class="hero-sub">' + subParts.join(" ・ ") + "</div>" : "";
     content.innerHTML =
-      '<div class="hero-row">' +
-        '<span class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + "</span>" +
-        '<span class="hero-title">' + esc(ev.summary || "(タイトルなし)") + "</span>" +
-        '<span class="hero-cd">' + cd + "</span>" +
-      "</div>" + sub;
+      '<span class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + "</span>" +
+      '<div class="hero-title">' + esc(ev.summary || "(タイトルなし)") + "</div>" +
+      '<span class="hero-cd">' + cd + "</span>" + sub;
   }
 
   function renderSchedule() {
-    var box = $("schedList"), cnt = $("schedCount");
+    var side = $("schedSide"), cnt = $("schedCount");
     var anyCal = Object.keys(calStatus).length > 0;
     var errored = anyCal && Object.keys(calStatus).every(function (k) { return calStatus[k] !== "ok"; });
-    if (!anyCal && !window.__mcpReady) { box.innerHTML = ""; cnt.textContent = ""; return; }
-    if (errored) { box.innerHTML = ""; cnt.textContent = ""; return; }
+    if ((!anyCal && !window.__mcpReady) || errored) { side.innerHTML = ""; side.hidden = true; cnt.textContent = ""; return; }
 
     var all = mergedEvents();
     var now = Date.now();
-    if (!all.length) { box.innerHTML = ""; cnt.textContent = ""; return; }
+    if (!all.length) { side.innerHTML = ""; side.hidden = true; cnt.textContent = ""; return; }
 
     var upcoming = all.filter(function (e) {
       if (isAllDay(e)) return true;
@@ -501,34 +525,37 @@
     var remaining = upcoming.filter(function (e) { return !isAllDay(e); }).length;
     cnt.innerHTML = "残り <b>" + remaining + "</b> 件";
 
-    // exclude the event already highlighted in the hero (avoid duplication)
-    var rest = (upcoming.length ? upcoming : all).filter(function (e) { return e !== heroEv; });
-    if (!rest.length) { box.innerHTML = ""; return; }
+    // right-side tiles: later timed events first, then all-day; exclude the hero event
+    var pool = (upcoming.length ? upcoming : all).filter(function (e) { return e !== heroEv; });
+    var timed = pool.filter(function (e) { return !isAllDay(e); });
+    var allday = pool.filter(function (e) { return isAllDay(e); });
+    var tiles = timed.concat(allday);
+    if (!tiles.length) { side.innerHTML = ""; side.hidden = true; return; }
+    side.hidden = false;
 
-    var show = rest.slice(0, 3);
+    var MAX = 4;
+    var overflow = tiles.length > MAX ? tiles.length - (MAX - 1) : 0;
+    var show = overflow ? tiles.slice(0, MAX - 1) : tiles.slice(0, MAX);
+
     var html = show.map(function (e) {
-      var u = "u-ok", timeCell;
       if (isAllDay(e)) {
-        timeCell = '<span class="r-time allday">終日</span>';
-      } else {
-        var st = new Date(e.start.dateTime).getTime();
-        var gap = st - now;
-        if (st <= now) u = "u-ok";
-        else if (gap <= 15 * 60000) u = "u-imminent";
-        else if (gap <= 60 * 60000) u = "u-soon";
-        timeCell = '<span class="r-time">' + fmtTime(new Date(e.start.dateTime)) + "</span>";
+        return '<div class="mini allday">' +
+          '<div class="mini-time">終日</div>' +
+          '<div class="mini-title">' + esc(e.summary || "(タイトルなし)") + "</div></div>";
       }
-      var sub = "";
-      if (e.location) sub = esc(e.location);
-      else if (e.__cal && calNames[e.__cal] && !e.__primary) sub = esc(calNames[e.__cal]);
-      return '<div class="row ' + u + '"><span class="stripe"></span>' + timeCell +
-        '<div class="r-body"><div class="r-title">' + esc(e.summary || "(タイトルなし)") + "</div>" +
-        (sub ? '<div class="r-sub">' + sub + "</div>" : "") + "</div></div>";
+      var st = new Date(e.start.dateTime).getTime();
+      var gap = st - now, u = "ok";
+      if (gap <= 15 * 60000) u = "imminent";
+      else if (gap <= 60 * 60000) u = "soon";
+      return '<div class="mini" data-state="' + u + '">' +
+        '<div class="mini-time">' + fmtTime(new Date(e.start.dateTime)) + "</div>" +
+        '<div class="mini-title">' + esc(e.summary || "(タイトルなし)") + "</div>" +
+        '<div class="mini-cd">' + shortGap(gap) + "</div></div>";
     }).join("");
-    if (rest.length > 3) {
-      html += '<a class="note" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">ほか ' + (rest.length - 3) + " 件をカレンダーで見る →</a>";
+    if (overflow) {
+      html += '<a class="mini more" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">+' + overflow + "</a>";
     }
-    box.innerHTML = html;
+    side.innerHTML = html;
   }
 
   // ---------- mail ----------
