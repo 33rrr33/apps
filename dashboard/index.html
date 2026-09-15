@@ -316,7 +316,7 @@
   }
   .task-dates[hidden] { display: none; }
   .task-dates .td-label { font-weight: 700; flex: none; }
-  .task-dates input[type="date"] {
+  .task-dates input[type="date"], .task-dates input[type="time"] {
     flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface);
     border-radius: 8px; padding: 5px 8px; font-size: 13px; color: var(--ink); font-family: inherit;
   }
@@ -435,6 +435,13 @@
       <input id="taskDueEnd" type="date" aria-label="期限（終了・任意）" />
       <button type="button" class="td-clear" id="taskDueClear" aria-label="日付をクリア">×</button>
     </div>
+    <div class="task-dates" id="taskTimes">
+      <span class="td-label">時刻</span>
+      <input id="taskStart" type="time" aria-label="開始時刻（任意）" />
+      <span class="td-sep">〜</span>
+      <input id="taskEnd" type="time" aria-label="終了時刻（任意）" />
+      <button type="button" class="td-clear" id="taskTimeClear" aria-label="時刻をクリア">×</button>
+    </div>
     <div class="addbar">
       <div class="kindtoggle" role="group" aria-label="種類">
         <button type="button" id="kTask" aria-pressed="true">タスク</button>
@@ -484,6 +491,7 @@
   function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
   function nextDayStr(s) { var d = new Date(s + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); }
   function fmtDueShort(s) { var p = (s || "").split("-"); return p.length === 3 ? (Number(p[1]) + "/" + Number(p[2])) : ""; }
+  function addOneHour(hhmm) { var p = (hhmm || "").split(":"); var h = (Number(p[0]) + 1) % 24; return pad(h) + ":" + (p[1] || "00"); }
   // create a Google Calendar event via mcp; returns the created event payload (or throws)
   function gcalCreate(calendarId, opts) {
     var mcp = window.__mcp;
@@ -780,6 +788,7 @@
       var dueBadge = "";
       if (t.due) {
         var dtxt = fmtDueShort(t.due) + (t.dueEnd && t.dueEnd !== t.due ? "〜" + fmtDueShort(t.dueEnd) : "");
+        if (t.dtime) dtxt += " " + t.dtime;
         dueBadge = '<span class="t-due">' + dtxt + "</span>";
       }
       return '<div class="task ' + (t.done ? "done" : "") + (isOver ? " overdue" : "") + '" data-id="' + esc(t.id) + '">' +
@@ -801,16 +810,21 @@
     }).join("");
   }
 
-  function addTodo(title, kind, due, dueEnd) {
+  function addTodo(title, kind, due, dueEnd, dtime, dtimeEnd) {
     title = (title || "").trim();
     if (!title) return;
-    due = due || ""; dueEnd = dueEnd || "";
+    due = due || ""; dueEnd = dueEnd || ""; dtime = dtime || ""; dtimeEnd = dtimeEnd || "";
     if (dueEnd && due && dueEnd < due) { var tmp = due; due = dueEnd; dueEnd = tmp; }
-    var item = { title: title, kind: kind, done: false, createdAt: Date.now(), due: due, dueEnd: dueEnd, eventId: "" };
-    // add a dated task to the タスク管理 calendar (all-day), remember its event id
+    // a start time makes it a timed single-day event (on the start date)
+    if (dtime) { dueEnd = ""; if (!dtimeEnd || dtimeEnd <= dtime) dtimeEnd = addOneHour(dtime); }
+    var item = { title: title, kind: kind, done: false, createdAt: Date.now(), due: due, dueEnd: dueEnd, dtime: dtime, dtimeEnd: dtimeEnd, eventId: "" };
+    // add a dated task to the タスク管理 calendar (timed if a time is set, else all-day)
     function pushToCalendar(onId) {
       if (kind !== "task" || !due || !window.__taskCalId || !window.__mcp) return;
-      gcalCreate(window.__taskCalId, { summary: title, allDay: true, date: due, endDate: dueEnd || due })
+      var opts = dtime
+        ? { summary: title, allDay: false, date: due, start: dtime, end: dtimeEnd }
+        : { summary: title, allDay: true, date: due, endDate: dueEnd || due };
+      gcalCreate(window.__taskCalId, opts)
         .then(function (ev) {
           if (ev && ev.id) { item.eventId = ev.id; onId(ev.id); }
           if (window.__mcp && window.__mcp.invalidate) { try { window.__mcp.invalidate(CAL_SERVER); } catch (e) {} }
@@ -821,7 +835,7 @@
       var ref = db.collection("todos").doc();
       item.id = ref.id;
       todos.push(item); renderTasks();
-      ref.set({ title: title, kind: kind, done: false, createdAt: item.createdAt, due: due, dueEnd: dueEnd, eventId: "" })
+      ref.set({ title: title, kind: kind, done: false, createdAt: item.createdAt, due: due, dueEnd: dueEnd, dtime: dtime, dtimeEnd: dtimeEnd, eventId: "" })
         .then(function () { dbRefresh(); pushToCalendar(function (eid) { db.doc("todos/" + item.id).update({ eventId: eid }).catch(function () {}); }); })
         .catch(function () {
           todos = todos.filter(function (x) { return x.id !== item.id; });
@@ -872,9 +886,12 @@
     else if (btn.getAttribute("data-act") === "del") delTodo(id);
   });
   function submitTask() {
-    var due = kindSel === "task" ? ($("taskDue").value || "") : "";
-    var dueEnd = kindSel === "task" ? ($("taskDueEnd").value || "") : "";
-    addTodo($("taskInput").value, kindSel, due, dueEnd);
+    var isTask = kindSel === "task";
+    var due = isTask ? ($("taskDue").value || "") : "";
+    var dueEnd = isTask ? ($("taskDueEnd").value || "") : "";
+    var dtime = isTask ? ($("taskStart").value || "") : "";
+    var dtimeEnd = isTask ? ($("taskEnd").value || "") : "";
+    addTodo($("taskInput").value, kindSel, due, dueEnd, dtime, dtimeEnd);
     $("taskInput").value = ""; $("taskInput").focus();
   }
   $("addBtn").addEventListener("click", submitTask);
@@ -884,12 +901,14 @@
     $("kTask").setAttribute("aria-pressed", k === "task" ? "true" : "false");
     $("kLine").setAttribute("aria-pressed", k === "line" ? "true" : "false");
     $("taskDates").hidden = (k !== "task");
+    $("taskTimes").hidden = (k !== "task");
     $("taskInput").placeholder = k === "line" ? "誰に返信する？（例：田中さんにLINE）" : "やること・返信を追加…";
     $("taskInput").focus();
   }
   $("kTask").addEventListener("click", function () { setKind("task"); });
   $("kLine").addEventListener("click", function () { setKind("line"); });
   $("taskDueClear").addEventListener("click", function () { $("taskDue").value = ""; $("taskDueEnd").value = ""; });
+  $("taskTimeClear").addEventListener("click", function () { $("taskStart").value = ""; $("taskEnd").value = ""; });
   // default the task due date to today
   $("taskDue").value = todayStr();
 
@@ -966,7 +985,7 @@
     return snap.docs.map(function (doc) {
       var src = doc.data() || {};
       return { id: doc.id, title: src.title, kind: src.kind, done: !!src.done, createdAt: src.createdAt || 0,
-        due: src.due || "", dueEnd: src.dueEnd || "", eventId: src.eventId || "" };
+        due: src.due || "", dueEnd: src.dueEnd || "", dtime: src.dtime || "", dtimeEnd: src.dtimeEnd || "", eventId: src.eventId || "" };
     });
   }
   var localItems = [];
