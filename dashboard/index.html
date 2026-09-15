@@ -273,7 +273,7 @@
   .addbar .add:active { transform: scale(0.94); }
 
   /* ---- dock ---- */
-  .dock { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: none; }
+  .dock { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex: none; }
   .dock a, .dock button {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
@@ -299,9 +299,6 @@
     </div>
     <div class="sync">
       <span class="stamp" id="stamp"></span>
-      <button class="icon-btn" id="refreshBtn" aria-label="更新">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
-      </button>
     </div>
   </header>
 
@@ -356,9 +353,6 @@
     <a href="line://" target="_blank" rel="noopener" id="lineLink">
       <span class="ic line-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.2c0-4-4-7.2-9-7.2S3 7.2 3 11.2c0 3.6 3.2 6.6 7.5 7.1.9.1.8.6.7 1.2l-.2 1.1c-.1.5.3.9.9.6 2.9-1.4 6.6-4 8.2-6.6.6-1 .9-2 .9-3.4Z"/></svg></span>LINE
     </a>
-    <button type="button" id="dockRefresh">
-      <span class="ic" style="color:var(--accent)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></span>更新
-    </button>
   </nav>
 </div>
 
@@ -665,6 +659,7 @@
       item.id = ref.id;
       todos.push(item); renderTasks();
       ref.set({ title: item.title, kind: item.kind, done: false, createdAt: item.createdAt })
+        .then(function () { dbRefresh(); })
         .catch(function () {
           todos = todos.filter(function (x) { return x.id !== item.id; });
           renderTasks();
@@ -681,7 +676,7 @@
     var nv = !t.done;
     t.done = nv; renderTasks(); // optimistic
     if (usingDb && db) {
-      db.doc("todos/" + id).update({ done: nv }).catch(function () { t.done = !nv; renderTasks(); });
+      db.doc("todos/" + id).update({ done: nv }).then(function () { dbRefresh(); }).catch(function () { t.done = !nv; renderTasks(); });
     } else {
       lsSave();
     }
@@ -691,7 +686,7 @@
     todos = todos.filter(function (x) { return x.id !== id; });
     renderTasks(); // optimistic
     if (usingDb && db) {
-      db.doc("todos/" + id).delete().catch(function () { if (removed) { todos.push(removed); renderTasks(); } });
+      db.doc("todos/" + id).delete().then(function () { dbRefresh(); }).catch(function () { if (removed) { todos.push(removed); renderTasks(); } });
     } else {
       lsSave();
     }
@@ -715,18 +710,12 @@
   // ---------- sync stamp ----------
   function touchStamp() { lastMcpUpdate = Date.now(); $("stamp").textContent = "更新 " + fmtTime(new Date()); }
 
-  // ---------- refresh ----------
-  var refreshing = false;
-  function doRefresh() {
-    if (!window.__mcp || refreshing) return;
-    refreshing = true;
-    $("refreshBtn").classList.add("spin");
-    Promise.resolve(window.__mcp.invalidate ? window.__mcp.invalidate() : null)
-      .catch(function () {})
-      .then(function () { setTimeout(function () { $("refreshBtn").classList.remove("spin"); refreshing = false; }, 800); });
+  // ---------- refresh (auto) ----------
+  function autoRefresh() {
+    if (window.__mcp && window.__mcp.invalidate) { try { window.__mcp.invalidate(); } catch (e) {} }
+    dbRefresh();
   }
-  $("refreshBtn").addEventListener("click", doRefresh);
-  $("dockRefresh").addEventListener("click", doRefresh);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) autoRefresh(); });
 
   // ---------- clock (countdown refresh + day rollover) ----------
   setInterval(function () {
@@ -748,39 +737,60 @@
   setSync("local");
   renderTasks();
 
+  function mapDocs(snap) {
+    // snapshot docs & data() are FROZEN — clone before touching (strict mode throws on frozen assign)
+    return snap.docs.map(function (doc) {
+      var src = doc.data() || {};
+      return { id: doc.id, title: src.title, kind: src.kind, done: !!src.done, createdAt: src.createdAt || 0 };
+    });
+  }
+  var localItems = [];
+  var migrated = false;
+  function migrateLocalOnce() {
+    if (migrated || !db) return;
+    migrated = true;
+    if (localItems.length) {
+      var seen = {};
+      todos.forEach(function (t) { seen[(t.title || "") + "|" + (t.createdAt || 0)] = true; });
+      localItems.forEach(function (li) {
+        if (!li || seen[(li.title || "") + "|" + (li.createdAt || 0)]) return;
+        db.collection("todos").doc().set({
+          title: li.title, kind: li.kind || "task", done: !!li.done, createdAt: li.createdAt || Date.now()
+        }).catch(function () {});
+      });
+    }
+    try { localStorage.removeItem(LS_KEY); } catch (e) {}
+  }
+  // one-shot authoritative read — reliable even where the realtime stream is quiet/partial on this surface
+  function dbRefresh() {
+    if (!db) return;
+    db.collection("todos").orderBy("createdAt", "asc").get().then(function (snap) {
+      usingDb = true; setSync("db");
+      todos = mapDocs(snap);
+      renderTasks();
+      migrateLocalOnce();
+    }).catch(function () {});
+  }
+  var refreshTimer = null;
+  function dbRefreshSoon() { if (refreshTimer) return; refreshTimer = setTimeout(function () { refreshTimer = null; dbRefresh(); }, 300); }
+
   (async function () {
     var d = null;
     try { d = window.claude && claude.use ? await claude.use("db") : null; } catch (e) { d = null; }
     if (!d) return; // db unavailable → stay on local cache (works fully, per-device)
     db = d;
-    var localItems = todos.slice(); // items added before db came online
-    var migrated = false;
+    localItems = todos.slice(); // items added before db came online
+    dbRefresh(); // primary load
+    // live updates (best-effort); ignore empty cache flickers so existing rows aren't wiped
     try {
-      db.collection("todos").orderBy("createdAt", "asc").onSnapshot(function (snap) {
-        usingDb = true;
-        setSync("db");
-        // snapshot docs & data() are FROZEN — clone before touching (strict mode throws on frozen assign)
-        todos = snap.docs.map(function (doc) {
-          var src = doc.data() || {};
-          return { id: doc.id, title: src.title, kind: src.kind, done: !!src.done, createdAt: src.createdAt || 0 };
-        });
-        renderTasks();
-        if (!migrated) {
-          migrated = true;
-          if (localItems.length) {
-            var seen = {};
-            todos.forEach(function (t) { seen[(t.title || "") + "|" + (t.createdAt || 0)] = true; });
-            localItems.forEach(function (li) {
-              if (!li || seen[(li.title || "") + "|" + (li.createdAt || 0)]) return;
-              db.collection("todos").doc().set({
-                title: li.title, kind: li.kind || "task", done: !!li.done, createdAt: li.createdAt || Date.now()
-              }).catch(function () {});
-            });
-          }
-          try { localStorage.removeItem(LS_KEY); } catch (e) {}
-        }
-      }, function (err) { /* terminal db error → keep whatever local state we have */ });
-    } catch (e) { /* stay on local cache */ }
+      db.collection("todos").orderBy("createdAt", "asc").onSnapshot(function () {
+        usingDb = true; setSync("db");
+        // don't trust a possibly-partial realtime view; let the authoritative get() set contents
+        dbRefreshSoon();
+      }, function (err) { /* terminal db error → keep whatever we have; get() still refreshes */ });
+    } catch (e) { /* onSnapshot unsupported → get()/interval keep it current */ }
+    // periodic authoritative refresh for cross-device changes
+    setInterval(dbRefresh, 25000);
   })();
 
   // mcp
