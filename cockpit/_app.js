@@ -43,9 +43,18 @@
   function lsLineSave() { try { localStorage.setItem(LS_LINE, JSON.stringify(lineItems)); } catch (e) {} }
 
   // ---------- auth (Google Identity Services token model) ----------
-  var tokenClient = null, accessToken = null, tokenExpiry = 0, pendingAuth = null, authed = false;
+  var tokenClient = null, accessToken = null, tokenExpiry = 0, pendingAuth = null, authed = false, bootSilent = false;
 
+  function errMsg(e) {
+    var code = e && (e.type || e.error || e.message);
+    if (code === "access_denied") return "アクセスが許可されませんでした。もう一度お試しください。";
+    if (code === "popup_closed" || code === "popup_closed_by_user") return "ログイン画面が閉じられました。もう一度「Googleと接続」を押してください。";
+    if (code === "popup_failed_to_open") return "ポップアップがブロックされました。ブラウザのポップアップ許可を確認してください。";
+    if (code) return "接続できませんでした（" + code + "）。数分待って再試行、または生成元URL設定をご確認ください。";
+    return "接続できませんでした。数分待って再試行してください。";
+  }
   function onToken(resp) {
+    bootSilent = false;
     if (resp && resp.access_token) {
       accessToken = resp.access_token;
       tokenExpiry = Date.now() + ((resp.expires_in || 3600) * 1000) - 60000;
@@ -55,8 +64,13 @@
       if (!was) loadAll();
     } else {
       if (pendingAuth) { pendingAuth.reject(resp || {}); pendingAuth = null; }
-      showAuthGate(resp && resp.error === "access_denied" ? "アクセスが許可されませんでした。もう一度お試しください。" : "");
+      showAuthGate(errMsg(resp));
     }
+  }
+  function onTokenError(err) {
+    if (pendingAuth) { pendingAuth.reject(err || {}); pendingAuth = null; }
+    if (bootSilent) { bootSilent = false; showAuthGate(""); return; } // silent boot attempt: no scary message
+    showAuthGate(errMsg(err));
   }
   function requestToken(prompt) {
     return new Promise(function (res, rej) {
@@ -452,8 +466,9 @@
 
   function startGis() {
     if (!(window.google && google.accounts && google.accounts.oauth2)) { setTimeout(startGis, 200); return; }
-    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: onToken });
-    // try a silent sign-in for returning users; if it needs interaction, the gate stays
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: onToken, error_callback: onTokenError });
+    // try a silent sign-in for returning users; if it needs interaction, the gate stays (no error shown)
+    bootSilent = true;
     requestToken("").catch(function () { /* stay on gate */ });
   }
   startGis();

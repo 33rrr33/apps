@@ -430,7 +430,25 @@
     box-shadow:0 6px 16px rgba(23,131,143,.28);transition:transform .06s ease,filter .15s ease;}
   .authbtn:active{transform:translateY(1px);filter:brightness(.96);}
   .authnote{margin-top:14px;font-size:12.5px;line-height:1.6;color:var(--urgent);}
+
+  /* ---- auth gate (standalone PWA) ---- */
+  .authgate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+    padding:24px;background:var(--ground);
+    padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));}
+  .authcard{width:100%;max-width:340px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;box-shadow:var(--shadow);padding:30px 24px 26px;text-align:center;}
+  .authmark{font-size:46px;line-height:1;margin-bottom:12px;}
+  .authttl{font-family:var(--font-display);font-weight:800;font-size:21px;color:var(--ink);margin-bottom:8px;}
+  .authsub{font-size:13.5px;line-height:1.7;color:var(--muted);margin-bottom:22px;}
+  .authbtn{width:100%;border:none;border-radius:13px;padding:15px 16px;font-family:var(--font-display);
+    font-weight:800;font-size:16px;color:#fff;background:var(--accent);cursor:pointer;
+    box-shadow:0 6px 16px rgba(23,131,143,.28);transition:transform .06s ease,filter .15s ease;}
+  .authbtn:active{transform:translateY(1px);filter:brightness(.96);}
+  .authnote{margin-top:14px;font-size:12.5px;line-height:1.6;color:var(--urgent);}
 </style>
+</head>
+<body>
+
 </head>
 <body>
 
@@ -568,9 +586,18 @@
   function lsLineSave() { try { localStorage.setItem(LS_LINE, JSON.stringify(lineItems)); } catch (e) {} }
 
   // ---------- auth (Google Identity Services token model) ----------
-  var tokenClient = null, accessToken = null, tokenExpiry = 0, pendingAuth = null, authed = false;
+  var tokenClient = null, accessToken = null, tokenExpiry = 0, pendingAuth = null, authed = false, bootSilent = false;
 
+  function errMsg(e) {
+    var code = e && (e.type || e.error || e.message);
+    if (code === "access_denied") return "アクセスが許可されませんでした。もう一度お試しください。";
+    if (code === "popup_closed" || code === "popup_closed_by_user") return "ログイン画面が閉じられました。もう一度「Googleと接続」を押してください。";
+    if (code === "popup_failed_to_open") return "ポップアップがブロックされました。ブラウザのポップアップ許可を確認してください。";
+    if (code) return "接続できませんでした（" + code + "）。数分待って再試行、または生成元URL設定をご確認ください。";
+    return "接続できませんでした。数分待って再試行してください。";
+  }
   function onToken(resp) {
+    bootSilent = false;
     if (resp && resp.access_token) {
       accessToken = resp.access_token;
       tokenExpiry = Date.now() + ((resp.expires_in || 3600) * 1000) - 60000;
@@ -580,8 +607,13 @@
       if (!was) loadAll();
     } else {
       if (pendingAuth) { pendingAuth.reject(resp || {}); pendingAuth = null; }
-      showAuthGate(resp && resp.error === "access_denied" ? "アクセスが許可されませんでした。もう一度お試しください。" : "");
+      showAuthGate(errMsg(resp));
     }
+  }
+  function onTokenError(err) {
+    if (pendingAuth) { pendingAuth.reject(err || {}); pendingAuth = null; }
+    if (bootSilent) { bootSilent = false; showAuthGate(""); return; } // silent boot attempt: no scary message
+    showAuthGate(errMsg(err));
   }
   function requestToken(prompt) {
     return new Promise(function (res, rej) {
@@ -977,8 +1009,9 @@
 
   function startGis() {
     if (!(window.google && google.accounts && google.accounts.oauth2)) { setTimeout(startGis, 200); return; }
-    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: onToken });
-    // try a silent sign-in for returning users; if it needs interaction, the gate stays
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: onToken, error_callback: onTokenError });
+    // try a silent sign-in for returning users; if it needs interaction, the gate stays (no error shown)
+    bootSilent = true;
     requestToken("").catch(function () { /* stay on gate */ });
   }
   startGis();
