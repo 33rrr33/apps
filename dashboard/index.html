@@ -176,6 +176,9 @@
     font-variant-numeric: tabular-nums;
   }
   .b-count b { color: var(--ink); font-size: 14px; }
+  .chip-sync { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; letter-spacing: 0.02em; }
+  .chip-sync.ok { color: var(--good); background: var(--good-soft); }
+  .chip-sync.local { color: var(--warn); background: var(--warn-soft); }
   .b-list { display: flex; flex-direction: column; }
   .tasks .b-list { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
 
@@ -329,6 +332,7 @@
     <div class="b-head">
       <span class="h-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></span>
       <span class="b-title">きょう やること</span>
+      <span class="chip-sync" id="syncChip" hidden></span>
       <span class="b-count" id="taskCount"></span>
     </div>
     <div class="b-list" id="taskList"><div class="skl">読み込み中…</div></div>
@@ -617,6 +621,12 @@
   var db = null, usingDb = false;
   var LS_KEY = "adhd_dash_todos_v1";
   function genId() { return "l" + Date.now() + Math.random().toString(36).slice(2, 6); }
+  function setSync(state) {
+    var c = $("syncChip"); if (!c) return;
+    c.hidden = false;
+    if (state === "db") { c.textContent = "☁ 同期中"; c.className = "chip-sync ok"; }
+    else { c.textContent = "この端末のみ"; c.className = "chip-sync local"; }
+  }
   function lsLoad() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { return []; } }
   function lsSave() { try { localStorage.setItem(LS_KEY, JSON.stringify(todos)); } catch (e) {} }
 
@@ -735,6 +745,7 @@
 
   // tasks: render instantly from local cache, then upgrade to db when/if it connects
   todos = lsLoad();
+  setSync("local");
   renderTasks();
 
   (async function () {
@@ -747,6 +758,7 @@
     try {
       db.collection("todos").orderBy("createdAt", "asc").onSnapshot(function (snap) {
         usingDb = true;
+        setSync("db");
         // snapshot docs & data() are FROZEN — clone before touching (strict mode throws on frozen assign)
         todos = snap.docs.map(function (doc) {
           var src = doc.data() || {};
