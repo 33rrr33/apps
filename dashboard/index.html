@@ -144,8 +144,15 @@
   .hero-empty { padding: 2px 0; }
   .hero-empty .big { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; }
   .hero-empty .sub { font-size: 12px; color: var(--muted); }
-  /* later / all-day: readable full-width rows */
-  .ev-list { display: flex; flex-direction: column; }
+  /* all-day events → chips in the header (they behave like tasks) */
+  .allday-chips { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; margin-left: 8px; }
+  .ac-chip {
+    font-size: 10.5px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft);
+    padding: 2px 9px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 128px;
+  }
+  .ac-chip.more { color: var(--muted); background: var(--surface-2); }
+  /* later timed events: readable full-width rows, only this area scrolls when long */
+  .ev-list { display: flex; flex-direction: column; max-height: 172px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .ev-row { position: relative; display: flex; align-items: center; gap: 11px; padding: 8px 15px; border-top: 1px solid var(--line); }
   .ev-row::before { content: ""; position: absolute; inset: 6px auto 6px 0; width: 4px; border-radius: 0 3px 3px 0; background: var(--line); }
   .ev-row[data-state="soon"]::before { background: var(--warn); }
@@ -336,6 +343,7 @@
     <div class="b-head">
       <span class="h-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg></span>
       <span class="b-title">きょうの予定</span>
+      <span class="allday-chips" id="alldayChips" hidden></span>
       <span class="b-count" id="schedCount"></span>
     </div>
     <div class="hero" id="hero" data-state="ok">
@@ -512,14 +520,15 @@
   }
 
   function renderSchedule() {
-    var box = $("schedList"), cnt = $("schedCount");
+    var box = $("schedList"), cnt = $("schedCount"), chips = $("alldayChips");
+    function clearChips() { chips.innerHTML = ""; chips.hidden = true; }
     var anyCal = Object.keys(calStatus).length > 0;
     var errored = anyCal && Object.keys(calStatus).every(function (k) { return calStatus[k] !== "ok"; });
-    if ((!anyCal && !window.__mcpReady) || errored) { box.innerHTML = ""; cnt.textContent = ""; return; }
+    if ((!anyCal && !window.__mcpReady) || errored) { box.innerHTML = ""; clearChips(); cnt.textContent = ""; return; }
 
     var all = mergedEvents();
     var now = Date.now();
-    if (!all.length) { box.innerHTML = ""; cnt.textContent = ""; return; }
+    if (!all.length) { box.innerHTML = ""; clearChips(); cnt.textContent = ""; return; }
 
     var upcoming = all.filter(function (e) {
       if (isAllDay(e)) return true;
@@ -529,21 +538,25 @@
     var remaining = upcoming.filter(function (e) { return !isAllDay(e); }).length;
     cnt.innerHTML = "残り <b>" + remaining + "</b> 件";
 
-    // later timed events first, then all-day; exclude the hero event
     var pool = (upcoming.length ? upcoming : all).filter(function (e) { return e !== heroEv; });
     var timed = pool.filter(function (e) { return !isAllDay(e); });
     var allday = pool.filter(function (e) { return isAllDay(e); });
-    var rows = timed.concat(allday);
-    if (!rows.length) { box.innerHTML = ""; return; }
 
-    var MAX = 3;
-    var show = rows.slice(0, MAX);
-    var html = show.map(function (e) {
-      if (isAllDay(e)) {
-        return '<div class="ev-row allday">' +
-          '<span class="ev-time">終日</span>' +
-          '<span class="ev-title">' + esc(e.summary || "(タイトルなし)") + "</span></div>";
-      }
+    // all-day events → chips beside the header (they're basically tasks)
+    if (allday.length) {
+      chips.hidden = false;
+      var CMAX = 2;
+      var cShow = allday.length > CMAX ? allday.slice(0, CMAX - 1) : allday.slice(0, CMAX);
+      var chtml = cShow.map(function (e) {
+        return '<span class="ac-chip">' + esc(e.summary || "(予定)") + "</span>";
+      }).join("");
+      if (allday.length > CMAX) chtml += '<span class="ac-chip more">+' + (allday.length - (CMAX - 1)) + "</span>";
+      chips.innerHTML = chtml;
+    } else { clearChips(); }
+
+    // timed events → full list; only this area scrolls when there are many
+    if (!timed.length) { box.innerHTML = ""; return; }
+    box.innerHTML = timed.map(function (e) {
       var st = new Date(e.start.dateTime).getTime();
       var gap = st - now, u = "ok";
       if (gap <= 15 * 60000) u = "imminent";
@@ -554,10 +567,6 @@
         '<span class="ev-title">' + esc(e.summary || "(タイトルなし)") + "</span>" +
         '<span class="ev-cd">' + shortGap(gap) + "</span></div>";
     }).join("");
-    if (rows.length > MAX) {
-      html += '<a class="ev-more" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">ほか ' + (rows.length - MAX) + " 件をカレンダーで見る →</a>";
-    }
-    box.innerHTML = html;
   }
 
   // ---------- mail ----------
