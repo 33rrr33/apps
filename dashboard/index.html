@@ -726,7 +726,7 @@
   });
   function submitTask() { addTodo($("taskInput").value, kindSel); $("taskInput").value = ""; $("taskInput").focus(); }
   $("addBtn").addEventListener("click", submitTask);
-  $("taskInput").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); submitTask(); } });
+  // Enter では登録しない（＋ボタンでのみ登録）
   $("kTask").addEventListener("click", function () { kindSel = "task"; $("kTask").setAttribute("aria-pressed", "true"); $("kLine").setAttribute("aria-pressed", "false"); $("taskInput").focus(); });
   $("kLine").addEventListener("click", function () { kindSel = "line"; $("kLine").setAttribute("aria-pressed", "true"); $("kTask").setAttribute("aria-pressed", "false"); $("taskInput").placeholder = "誰に返信する？（例：田中さんにLINE）"; $("taskInput").focus(); });
 
