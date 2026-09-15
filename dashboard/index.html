@@ -180,20 +180,25 @@
   .chip-sync.ok { color: var(--good); background: var(--good-soft); }
   .chip-sync.local { color: var(--warn); background: var(--warn-soft); }
   .b-list { display: flex; flex-direction: column; }
-  .tasks .b-list { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+  /* tasks: two vertical columns (タスク | LINE返信) */
+  .tasks .b-list { flex: 1; min-height: 0; display: flex; flex-direction: row; overflow: hidden; }
+  .tasks .b-list .empty { flex: 1; }
+  .grp-col { flex: 1 1 0; min-width: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+  .grp-col + .grp-col { border-left: 1px solid var(--line); }
   .grp-head {
     font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.06em;
-    color: var(--muted); padding: 9px 13px 4px; display: flex; align-items: center; gap: 7px;
-    border-top: 1px solid var(--line);
+    color: var(--muted); padding: 8px 12px 5px; display: flex; align-items: center; gap: 6px;
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
   }
-  .grp-head:first-child { border-top: 0; }
   .grp-head.line { color: #05852b; }
   :root[data-theme="dark"] .grp-head.line, :root:not([data-theme="light"]) .grp-head.line { color: #5fe08a; }
   .grp-head .grp-n {
     font-size: 10px; font-weight: 700; color: var(--faint);
     background: var(--surface-2); border-radius: 999px; padding: 0 7px; min-width: 18px; text-align: center;
   }
-  .grp-head + .task { border-top: 0; }
+  .grp-none { padding: 6px 12px 12px; color: var(--faint); font-size: 12px; }
+  .grp-col .task { padding: 9px 10px 9px 12px; gap: 9px; }
+  .grp-col .task .del { font-size: 18px; padding: 2px 2px; }
 
   .row {
     display: flex; align-items: center; gap: 10px; padding: 8px 13px;
@@ -649,25 +654,22 @@
     }
     function row(t) {
       var isOver = !t.done && t.createdAt && t.createdAt < todayMs;
-      var overBadge = isOver ? '<span class="kind over">前日まで</span>' : "";
       return '<div class="task ' + (t.done ? "done" : "") + (isOver ? " overdue" : "") + '" data-id="' + esc(t.id) + '">' +
         '<button class="check" data-act="toggle" aria-label="完了"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></button>' +
         '<div class="t-body"><span class="t-title">' + esc(t.title) + "</span></div>" +
-        overBadge +
         '<button class="del" data-act="del" aria-label="削除">×</button></div>';
     }
     var groups = [
       { key: "task", label: "タスク", items: sortTodos(todos.filter(function (t) { return t.kind !== "line"; })) },
       { key: "line", label: "LINE返信", items: sortTodos(todos.filter(function (t) { return t.kind === "line"; })) }
     ];
-    var html = groups.map(function (g) {
-      if (!g.items.length) return "";
+    box.innerHTML = groups.map(function (g) {
       var open = g.items.filter(function (t) { return !t.done; }).length;
-      return '<div class="grp-head ' + g.key + '">' + g.label +
-        ' <span class="grp-n">' + open + "</span></div>" +
-        g.items.map(row).join("");
+      var body = g.items.length ? g.items.map(row).join("") : '<div class="grp-none">なし</div>';
+      return '<div class="grp-col">' +
+        '<div class="grp-head ' + g.key + '">' + g.label + ' <span class="grp-n">' + open + "</span></div>" +
+        body + "</div>";
     }).join("");
-    box.innerHTML = html;
   }
 
   function addTodo(title, kind) {
