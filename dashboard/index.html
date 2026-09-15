@@ -343,7 +343,7 @@
   </section>
 
   <nav class="dock">
-    <a href="https://mail.google.com/mail/u/89ryokinishida@gmail.com/#inbox" target="_blank" rel="noopener">
+    <a href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener">
       <span class="ic mail-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>Gmail
     </a>
     <a href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">
@@ -586,7 +586,7 @@
 
     var show = items.slice(0, 3);
     var html = show.map(function (i) {
-      var href = "https://mail.google.com/mail/u/" + encodeURIComponent(GOOGLE_ACCOUNT) + "/#inbox/" + encodeURIComponent(i.id);
+      var href = "https://mail.google.com/mail/u/0/#inbox/" + encodeURIComponent(i.id);
       return '<a class="row mailrow ' + (i.important ? "important" : "") + '" href="' + href + '" target="_blank" rel="noopener">' +
         '<span class="dot"></span>' +
         '<div class="r-body"><div class="r-title">' + esc(i.subject) + "</div>" +
@@ -594,7 +594,7 @@
         '<span class="chev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span></a>';
     }).join("");
     if (items.length > 3) {
-      html += '<a class="note" href="https://mail.google.com/mail/u/' + encodeURIComponent(GOOGLE_ACCOUNT) + '/#inbox" target="_blank" rel="noopener">ほか ' + (items.length - 3) + " 件をGmailで見る →</a>";
+      html += '<a class="note" href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener">ほか ' + (items.length - 3) + " 件をGmailで見る →</a>";
     }
     box.innerHTML = html;
   }
