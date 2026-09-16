@@ -459,7 +459,25 @@
     box-shadow:0 6px 16px rgba(23,131,143,.28);transition:transform .06s ease,filter .15s ease;}
   .authbtn:active{transform:translateY(1px);filter:brightness(.96);}
   .authnote{margin-top:14px;font-size:12.5px;line-height:1.6;color:var(--urgent);}
+
+  /* ---- auth gate (standalone PWA) ---- */
+  .authgate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+    padding:24px;background:var(--ground);
+    padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));}
+  .authcard{width:100%;max-width:340px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;box-shadow:var(--shadow);padding:30px 24px 26px;text-align:center;}
+  .authmark{font-size:46px;line-height:1;margin-bottom:12px;}
+  .authttl{font-family:var(--font-display);font-weight:800;font-size:21px;color:var(--ink);margin-bottom:8px;}
+  .authsub{font-size:13.5px;line-height:1.7;color:var(--muted);margin-bottom:22px;}
+  .authbtn{width:100%;border:none;border-radius:13px;padding:15px 16px;font-family:var(--font-display);
+    font-weight:800;font-size:16px;color:#fff;background:var(--accent);cursor:pointer;
+    box-shadow:0 6px 16px rgba(23,131,143,.28);transition:transform .06s ease,filter .15s ease;}
+  .authbtn:active{transform:translateY(1px);filter:brightness(.96);}
+  .authnote{margin-top:14px;font-size:12.5px;line-height:1.6;color:var(--urgent);word-break:break-all;overflow-wrap:anywhere;}
 </style>
+</head>
+<body>
+
 </head>
 <body>
 
@@ -656,7 +674,6 @@
       redirect_uri: redirectUri(),
       response_type: "token",
       scope: SCOPES,
-      include_granted_scopes: "true",
       state: "cockpit"
     });
     if (prompt) params.set("prompt", prompt);
@@ -1042,11 +1059,15 @@
   ensureAuthGate();
 
   // 1) did we just come back from Google with a token in the URL? 2) do we have a still-valid saved token?
+  var incoming = (location.hash || "").replace(/^#/, "");
   var haveToken = readReturn() || loadTok();
   if (haveToken) {
     authed = true; hideAuthGate(); setSync("db"); loadAll();
   } else {
-    showAuthGate(errMsg(pendingErr));
+    var diag = "";
+    if (pendingErr) diag = "Googleからのエラー: " + pendingErr;
+    else if (incoming) diag = "受信データを認識できませんでした → " + incoming.slice(0, 140);
+    showAuthGate(diag);
   }
 })();
 </script>
