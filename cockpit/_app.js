@@ -2,7 +2,13 @@
   "use strict";
 
   var CLIENT_ID = "382885832208-6hh3jrjd23a1q4jqas4c8i8ks97vjlfj.apps.googleusercontent.com";
-  var SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar";
+  // Gmail は「制限付きスコープ」で、サーバー無しの静的サイト＋リダイレクト方式ではトークンが
+  // 発行されない（同意しても空で戻る）。そのため未読の自動表示は行わず、メール欄はGmailを開く
+  // リンクにする。カレンダー(sensitive)はリダイレクト方式で問題なく動く。
+  var GMAIL_ENABLED = false;
+  var SCOPES = GMAIL_ENABLED
+    ? "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar"
+    : "https://www.googleapis.com/auth/calendar";
   var MAIL_QUERY = "is:unread in:inbox -category:promotions -category:social";
   var TASK_CAL_NAME = "タスク管理";
   var R_CAL_NAME = "R";
@@ -246,6 +252,14 @@
   function renderMail() {
     var box = $("mailList"), cnt = $("mailCount");
     if (!authed) { box.innerHTML = ""; cnt.textContent = ""; return; }
+    if (!GMAIL_ENABLED) {
+      cnt.textContent = "";
+      box.innerHTML = '<a class="row mailrow" href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener">' +
+        '<span class="dot"></span>' +
+        '<div class="r-body"><div class="r-title">Gmail を開く</div><div class="r-from">未読メールを確認する →</div></div>' +
+        '<span class="chev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span></a>';
+      return;
+    }
     if (mailStatus === "load" && !mailItems) { box.innerHTML = '<div class="skl">読み込み中…</div>'; return; }
     if (mailStatus !== "ok") { box.innerHTML = '<div class="note">メールを読み込めませんでした</div>'; cnt.textContent = ""; return; }
     var items = (mailItems || []).slice();
@@ -353,6 +367,7 @@
     }).catch(function () { renderTasks(); });
   }
   function loadMail() {
+    if (!GMAIL_ENABLED) { renderMail(); return Promise.resolve(); }
     var u = "https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q=" + encodeURIComponent(MAIL_QUERY);
     return gfetch(u).then(function (d) {
       var msgs = (d && d.messages) || []; mailTotal = (d && d.resultSizeEstimate) || msgs.length;
