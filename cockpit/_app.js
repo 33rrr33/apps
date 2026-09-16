@@ -42,16 +42,11 @@
   function lsLineLoad() { try { return JSON.parse(localStorage.getItem(LS_LINE) || "[]"); } catch (e) { return []; } }
   function lsLineSave() { try { localStorage.setItem(LS_LINE, JSON.stringify(lineItems)); } catch (e) {} }
 
-  // ---------- auth (OAuth 2.0 implicit, full-page redirect — iOS Safari safe) ----------
-  var AUTH_EP = "https://accounts.google.com/o/oauth2/v2/auth";
+  // ---------- auth (Google Identity Services token client — recommended for restricted scopes) ----------
   var LS_TOK = "cockpit_tok_v1";
-  var accessToken = null, tokenExpiry = 0, authed = false, pendingErr = "";
+  var accessToken = null, tokenExpiry = 0, authed = false;
+  var tokenClient = null, pending = null;
 
-  function redirectUri() {
-    var p = location.pathname.replace(/index\.html$/, "");
-    if (p.charAt(p.length - 1) !== "/") p += "/";
-    return location.origin + p; // e.g. https://33rrr33.github.io/apps/cockpit/
-  }
   function saveTok() { try { localStorage.setItem(LS_TOK, JSON.stringify({ t: accessToken, e: tokenExpiry })); } catch (e) {} }
   function loadTok() {
     try {
@@ -62,49 +57,56 @@
   }
   function clearTok() { accessToken = null; tokenExpiry = 0; authed = false; try { localStorage.removeItem(LS_TOK); } catch (e) {} }
 
-  function errMsg(code) {
-    if (!code) return "";
-    if (code === "access_denied") return "アクセスが許可されませんでした。もう一度「Googleと接続」を押してください。";
-    if (code === "redirect_uri_mismatch") return "リダイレクトURI未登録です。Cloud Console でこのページのURLを承認済みリダイレクトURIに追加してください。";
-    if (code === "admin_policy_enforced") return "組織のポリシーで許可されていません。個人のGoogleアカウントでお試しください。";
-    return "接続できませんでした（" + code + "）。もう一度お試しください。";
+  function gisErr(e) {
+    var t = e && (e.type || e.error || e.message);
+    if (t === "popup_closed" || t === "popup_closed_by_user") return "ログイン画面が閉じられました。もう一度「Googleと接続」を押してください。";
+    if (t === "popup_failed_to_open") return "ポップアップがブロックされました。ブラウザの設定で許可してください。";
+    if (t === "access_denied") return "アクセスが許可されませんでした。もう一度「Googleと接続」を押してください。";
+    if (t) return "接続できませんでした（" + t + "）。もう一度お試しください。";
+    return "接続できませんでした。もう一度お試しください。";
   }
+  function resetAuthBtn() { var b = $("authBtn"); if (b) b.textContent = "Googleと接続"; }
 
-  // read the token (or error) Google appended to the URL fragment on redirect back
-  function readReturn() {
-    var hash = location.hash || "";
-    if (hash.charAt(0) === "#") hash = hash.slice(1);
-    if (!hash) return false;
-    var q = new URLSearchParams(hash);
-    var tok = q.get("access_token"), err = q.get("error");
-    if (tok || err) {
-      try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; }
+  function onGisToken(resp) {
+    if (resp && resp.access_token) {
+      accessToken = resp.access_token;
+      tokenExpiry = Date.now() + ((resp.expires_in || 3600) * 1000) - 60000;
+      var was = authed; authed = true; saveTok();
+      if (pending) { pending.resolve(accessToken); pending = null; }
+      hideAuthGate(); setSync("db");
+      if (!was) loadAll();
+    } else {
+      if (pending) { pending.reject(resp || {}); pending = null; }
+      resetAuthBtn(); showAuthGate(gisErr(resp));
     }
-    if (tok) {
-      accessToken = tok;
-      tokenExpiry = Date.now() + (Number(q.get("expires_in") || 3600) * 1000) - 60000;
-      authed = true; saveTok();
-      return true;
-    }
-    if (err) pendingErr = err;
-    return false;
   }
-
-  function startAuth(prompt) {
-    var params = new URLSearchParams({
-      client_id: CLIENT_ID,
-      redirect_uri: redirectUri(),
-      response_type: "token",
-      scope: SCOPES,
-      state: "cockpit"
+  function initGis() {
+    if (tokenClient) return true;
+    if (!(window.google && google.accounts && google.accounts.oauth2)) return false;
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID, scope: SCOPES, callback: onGisToken,
+      error_callback: function (err) { if (pending) { pending.reject(err || {}); pending = null; } resetAuthBtn(); showAuthGate(gisErr(err)); }
     });
-    if (prompt) params.set("prompt", prompt);
-    location.href = AUTH_EP + "?" + params.toString();
+    return true;
+  }
+  // called from the connect button (user gesture) — opens Google's popup
+  function connect() {
+    if (!initGis()) { showAuthGate("Google接続の準備中です。数秒後にもう一度押してください。"); resetAuthBtn(); return; }
+    try { tokenClient.requestAccessToken({ prompt: "" }); }
+    catch (e) { resetAuthBtn(); showAuthGate(gisErr(e)); }
+  }
+  // silent re-auth (no popup) — used when a stored token has expired mid-use
+  function reauthSilent() {
+    return new Promise(function (res, rej) {
+      if (!initGis()) { rej({ error: "no_client" }); return; }
+      pending = { resolve: res, reject: rej };
+      try { tokenClient.requestAccessToken({ prompt: "none" }); } catch (e) { pending = null; rej(e); }
+    });
   }
 
   function ensureToken() {
     if (accessToken && Date.now() < tokenExpiry) return Promise.resolve(accessToken);
-    return Promise.reject({ error: "no_token" });
+    return reauthSilent();
   }
   function gfetch(url, opts) {
     opts = opts || {};
@@ -134,7 +136,7 @@
       '<div class="authnote" id="authNote" hidden></div>' +
       "</div>";
     document.body.appendChild(g);
-    $("authBtn").addEventListener("click", function () { $("authNote").hidden = true; $("authBtn").textContent = "接続中…"; startAuth("consent"); });
+    $("authBtn").addEventListener("click", function () { $("authNote").hidden = true; $("authBtn").textContent = "接続中…"; connect(); });
     return g;
   }
   function showAuthGate(msg) {
@@ -480,15 +482,13 @@
   renderHeader(); renderHero(); renderSchedule(); renderMail(); renderTasks();
   ensureAuthGate();
 
-  // 1) did we just come back from Google with a token in the URL? 2) do we have a still-valid saved token?
-  var incoming = (location.hash || "").replace(/^#/, "");
-  var haveToken = readReturn() || loadTok();
-  if (haveToken) {
+  // reuse a still-valid saved token so reopening the app just works; otherwise show the connect gate
+  if (loadTok()) {
     authed = true; hideAuthGate(); setSync("db"); loadAll();
   } else {
-    var diag = "";
-    if (pendingErr) diag = "Googleからのエラー: " + pendingErr;
-    else if (incoming) diag = "受信データを認識できませんでした → " + incoming.slice(0, 140);
-    showAuthGate(diag);
+    showAuthGate("");
   }
+
+  // initialize the Google Identity Services client as soon as its script has loaded
+  (function waitGis() { if (initGis()) return; setTimeout(waitGis, 200); })();
 })();
