@@ -89,24 +89,19 @@
     });
     return true;
   }
-  // called from the connect button (user gesture) — opens Google's popup
+  // called from the connect button (user gesture) — always opens Google's popup
+  // prompt:"consent" forces the visible popup, avoiding the silent-iframe path that
+  // hangs when third-party cookies are blocked ("接続中…" with no popup, no error).
   function connect() {
     if (!initGis()) { showAuthGate("Google接続の準備中です。数秒後にもう一度押してください。"); resetAuthBtn(); return; }
-    try { tokenClient.requestAccessToken({ prompt: "" }); }
+    try { tokenClient.requestAccessToken({ prompt: "consent" }); }
     catch (e) { resetAuthBtn(); showAuthGate(gisErr(e)); }
-  }
-  // silent re-auth (no popup) — used when a stored token has expired mid-use
-  function reauthSilent() {
-    return new Promise(function (res, rej) {
-      if (!initGis()) { rej({ error: "no_client" }); return; }
-      pending = { resolve: res, reject: rej };
-      try { tokenClient.requestAccessToken({ prompt: "none" }); } catch (e) { pending = null; rej(e); }
-    });
   }
 
   function ensureToken() {
     if (accessToken && Date.now() < tokenExpiry) return Promise.resolve(accessToken);
-    return reauthSilent();
+    clearTok(); showAuthGate("接続の有効期限が切れました。もう一度「Googleと接続」を押してください。");
+    return Promise.reject({ error: "expired" });
   }
   function gfetch(url, opts) {
     opts = opts || {};
