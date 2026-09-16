@@ -96,7 +96,6 @@
       redirect_uri: redirectUri(),
       response_type: "token",
       scope: SCOPES,
-      include_granted_scopes: "true",
       state: "cockpit"
     });
     if (prompt) params.set("prompt", prompt);
@@ -482,10 +481,14 @@
   ensureAuthGate();
 
   // 1) did we just come back from Google with a token in the URL? 2) do we have a still-valid saved token?
+  var incoming = (location.hash || "").replace(/^#/, "");
   var haveToken = readReturn() || loadTok();
   if (haveToken) {
     authed = true; hideAuthGate(); setSync("db"); loadAll();
   } else {
-    showAuthGate(errMsg(pendingErr));
+    var diag = "";
+    if (pendingErr) diag = "Googleからのエラー: " + pendingErr;
+    else if (incoming) diag = "受信データを認識できませんでした → " + incoming.slice(0, 140);
+    showAuthGate(diag);
   }
 })();
