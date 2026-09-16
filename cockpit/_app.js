@@ -2,10 +2,13 @@
   "use strict";
 
   var CLIENT_ID = "382885832208-6hh3jrjd23a1q4jqas4c8i8ks97vjlfj.apps.googleusercontent.com";
-  // Gmail は「制限付きスコープ」で、サーバー無しの静的サイト＋リダイレクト方式ではトークンが
-  // 発行されない（同意しても空で戻る）。そのため未読の自動表示は行わず、メール欄はGmailを開く
-  // リンクにする。カレンダー(sensitive)はリダイレクト方式で問題なく動く。
-  var GMAIL_ENABLED = false;
+  var LS_SECRET = "cockpit_secret_v1";
+  // Client secret is NEVER stored in this (public) code. It lives only in this browser's
+  // localStorage, entered once by the user. Google requires it even with PKCE for web clients.
+  function getSecret() { try { return localStorage.getItem(LS_SECRET) || ""; } catch (e) { return ""; } }
+  function setSecret(v) { try { localStorage.setItem(LS_SECRET, v); } catch (e) {} }
+  // Authorization Code + PKCE flow — works for restricted scopes (Gmail), returns a refresh token.
+  var GMAIL_ENABLED = true;
   var SCOPES = GMAIL_ENABLED
     ? "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar"
     : "https://www.googleapis.com/auth/calendar";
@@ -48,26 +51,36 @@
   function lsLineLoad() { try { return JSON.parse(localStorage.getItem(LS_LINE) || "[]"); } catch (e) { return []; } }
   function lsLineSave() { try { localStorage.setItem(LS_LINE, JSON.stringify(lineItems)); } catch (e) {} }
 
-  // ---------- auth (OAuth 2.0 implicit, full-page redirect — no external library, iOS-safe) ----------
+  // ---------- auth (OAuth 2.0 Authorization Code + PKCE, full-page redirect — no library, iOS-safe) ----------
   var AUTH_EP = "https://accounts.google.com/o/oauth2/v2/auth";
-  var LS_TOK = "cockpit_tok_v1";
-  var accessToken = null, tokenExpiry = 0, authed = false, pendingErr = "";
+  var TOKEN_EP = "https://oauth2.googleapis.com/token";
+  var LS_TOK = "cockpit_tok_v2";
+  var PKCE_KEY = "cockpit_pkce";
+  var accessToken = null, tokenExpiry = 0, refreshToken = null, authed = false, pendingErr = "";
 
   function redirectUri() {
     var p = location.pathname.replace(/index\.html$/, "");
     if (p.charAt(p.length - 1) !== "/") p += "/";
     return location.origin + p; // e.g. https://33rrr33.github.io/apps/cockpit/
   }
-  function saveTok() { try { localStorage.setItem(LS_TOK, JSON.stringify({ t: accessToken, e: tokenExpiry })); } catch (e) {} }
+  function saveTok() { try { localStorage.setItem(LS_TOK, JSON.stringify({ t: accessToken, e: tokenExpiry, r: refreshToken })); } catch (e) {} }
   function loadTok() {
     try {
       var o = JSON.parse(localStorage.getItem(LS_TOK) || "null");
-      if (o && o.t && o.e && Date.now() < o.e) { accessToken = o.t; tokenExpiry = o.e; return true; }
+      if (o) {
+        if (o.r) refreshToken = o.r;
+        if (o.t && o.e && Date.now() < o.e) { accessToken = o.t; tokenExpiry = o.e; return true; }
+      }
     } catch (e) {}
     return false;
   }
-  function clearTok() { accessToken = null; tokenExpiry = 0; authed = false; try { localStorage.removeItem(LS_TOK); } catch (e) {} }
+  function clearTok() { accessToken = null; tokenExpiry = 0; refreshToken = null; authed = false; try { localStorage.removeItem(LS_TOK); } catch (e) {} }
   function resetAuthBtn() { var b = $("authBtn"); if (b) b.textContent = "Googleと接続"; }
+  function storeTokens(d) {
+    if (d.access_token) { accessToken = d.access_token; tokenExpiry = Date.now() + (Number(d.expires_in || 3600) * 1000) - 60000; }
+    if (d.refresh_token) refreshToken = d.refresh_token;
+    saveTok();
+  }
 
   function errMsg(code) {
     if (!code) return "";
@@ -77,39 +90,74 @@
     return "接続できませんでした（" + code + "）。もう一度お試しください。";
   }
 
-  // read the token (or error) Google appended to the URL fragment on redirect back
-  function readReturn() {
-    var hash = (location.hash || "").replace(/^#/, "");
-    if (!hash) return false;
-    var q = new URLSearchParams(hash);
-    var tok = q.get("access_token"), err = q.get("error");
-    if (tok || err) { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; } }
-    if (tok) {
-      accessToken = tok;
-      tokenExpiry = Date.now() + (Number(q.get("expires_in") || 3600) * 1000) - 60000;
-      authed = true; saveTok();
-      return true;
-    }
-    if (err) pendingErr = err;
-    return false;
+  // ---- PKCE helpers ----
+  function b64url(bytes) {
+    var s = btoa(String.fromCharCode.apply(null, new Uint8Array(bytes)));
+    return s.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function randVerifier() { var a = new Uint8Array(48); crypto.getRandomValues(a); return b64url(a); }
+  function challengeOf(verifier) {
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)).then(function (d) { return b64url(d); });
   }
 
-  // full-page redirect to Google (no popup, no library) — button handler calls this
+  // start the login: build PKCE, remember the verifier, then full-page redirect to Google (no popup)
   function connect() {
-    var params = new URLSearchParams({
+    if (!getSecret()) { resetAuthBtn(); showSecretPrompt(); return; }  // ask for the on-device secret first
+    var verifier = randVerifier();
+    try { sessionStorage.setItem(PKCE_KEY, verifier); } catch (e) {}
+    challengeOf(verifier).then(function (chal) {
+      var params = new URLSearchParams({
+        client_id: CLIENT_ID,
+        redirect_uri: redirectUri(),
+        response_type: "code",
+        scope: SCOPES,
+        code_challenge: chal,
+        code_challenge_method: "S256",
+        access_type: "offline",
+        include_granted_scopes: "true",
+        prompt: "consent",
+        state: "cockpit"
+      });
+      location.href = AUTH_EP + "?" + params.toString();
+    }).catch(function () { resetAuthBtn(); showAuthGate("接続の準備に失敗しました。もう一度お試しください。"); });
+  }
+
+  // exchange the ?code=... returned by Google for tokens (browser→Google, CORS-enabled)
+  function exchangeCode(code) {
+    var verifier = "";
+    try { verifier = sessionStorage.getItem(PKCE_KEY) || ""; } catch (e) {}
+    var body = new URLSearchParams({
+      grant_type: "authorization_code",
+      code: code,
       client_id: CLIENT_ID,
+      client_secret: getSecret(),
       redirect_uri: redirectUri(),
-      response_type: "token",
-      scope: SCOPES,
-      state: "cockpit"
+      code_verifier: verifier
     });
-    location.href = AUTH_EP + "?" + params.toString();
+    return fetch(TOKEN_EP, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { try { sessionStorage.removeItem(PKCE_KEY); } catch (e) {} return d; });
+  }
+  // silently get a fresh access token from the stored refresh token (no user interaction)
+  function doRefresh() {
+    if (!refreshToken) return Promise.reject({ error: "no_refresh" });
+    var body = new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      client_id: CLIENT_ID,
+      client_secret: getSecret()
+    });
+    return fetch(TOKEN_EP, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (d && d.access_token) { storeTokens(d); return accessToken; } throw d || {}; });
   }
 
   function ensureToken() {
     if (accessToken && Date.now() < tokenExpiry) return Promise.resolve(accessToken);
-    clearTok(); showAuthGate("接続の有効期限が切れました。もう一度「Googleと接続」を押してください。");
-    return Promise.reject({ error: "expired" });
+    return doRefresh().catch(function () {
+      clearTok(); showAuthGate("接続の有効期限が切れました。もう一度「Googleと接続」を押してください。");
+      return Promise.reject({ error: "reauth" });
+    });
   }
   function gfetch(url, opts) {
     opts = opts || {};
@@ -117,7 +165,15 @@
       var h = Object.assign({}, opts.headers, { Authorization: "Bearer " + tok });
       return fetch(url, Object.assign({}, opts, { headers: h }));
     }).then(function (r) {
-      if (r.status === 401) { clearTok(); showAuthGate("接続の有効期限が切れました。もう一度「Googleと接続」を押してください。"); throw { status: 401 }; }
+      if (r.status === 401) {
+        // token rejected mid-use: try one silent refresh, then retry the request
+        return doRefresh().then(function (tok) {
+          var h = Object.assign({}, opts.headers, { Authorization: "Bearer " + tok });
+          return fetch(url, Object.assign({}, opts, { headers: h }));
+        }).catch(function () { clearTok(); showAuthGate("接続の有効期限が切れました。もう一度「Googleと接続」を押してください。"); throw { status: 401 }; });
+      }
+      return r;
+    }).then(function (r) {
       if (!r.ok) return r.text().then(function (t) { throw { status: r.status, body: t }; });
       if (r.status === 204) return null;
       return r.json();
@@ -137,11 +193,23 @@
       '<div class="authsub">Gmail・Googleカレンダーとつないで、今日やることを一目で。</div>' +
       '<button class="authbtn" id="authBtn">Googleと接続</button>' +
       '<div class="authnote" id="authNote" hidden></div>' +
+      '<div class="authsec" id="secretRow" hidden>' +
+        '<div class="authseclbl">この端末で初回のみ：クライアントシークレット（GOCSPX-…）を貼り付け</div>' +
+        '<input class="authsecin" id="secretInput" type="password" inputmode="text" autocomplete="off" placeholder="GOCSPX-…" />' +
+        '<button class="authbtn sm" id="secretSave">保存して接続</button>' +
+        '<div class="authsecnote">この値はこの端末の中だけに保存され、外部やコードには残りません。</div>' +
+      '</div>' +
       "</div>";
     document.body.appendChild(g);
     $("authBtn").addEventListener("click", function () { $("authNote").hidden = true; $("authBtn").textContent = "接続中…"; connect(); });
+    $("secretSave").addEventListener("click", function () {
+      var v = ($("secretInput").value || "").trim();
+      if (!/^GOCSPX-/.test(v)) { $("authNote").textContent = "「GOCSPX-」で始まる値を貼り付けてください。"; $("authNote").hidden = false; return; }
+      setSecret(v); $("secretRow").hidden = true; $("authNote").hidden = true; $("authBtn").textContent = "接続中…"; connect();
+    });
     return g;
   }
+  function showSecretPrompt() { var g = ensureAuthGate(); g.hidden = false; $("secretRow").hidden = false; setSync("local"); var i = $("secretInput"); if (i) i.focus(); }
   function showAuthGate(msg) {
     var g = ensureAuthGate(); g.hidden = false;
     if (msg) { $("authNote").textContent = msg; $("authNote").hidden = false; }
@@ -494,10 +562,26 @@
   renderHeader(); renderHero(); renderSchedule(); renderMail(); renderTasks();
   ensureAuthGate();
 
-  // 1) did we just come back from Google with a token in the URL? 2) reuse a still-valid saved token?
-  if (readReturn() || loadTok()) {
-    authed = true; hideAuthGate(); setSync("db"); loadAll();
+  // did we just come back from Google with an authorization code (or error) in the query string?
+  var qp = new URLSearchParams(location.search || "");
+  var retCode = qp.get("code"), retErr = qp.get("error");
+  if (retCode || retErr) { try { history.replaceState(null, "", location.pathname); } catch (e) {} }
+
+  if (retCode) {
+    var b = $("authBtn"); if (b) b.textContent = "接続中…";
+    exchangeCode(retCode).then(function (d) {
+      if (d && d.access_token) { storeTokens(d); authed = true; hideAuthGate(); setSync("db"); loadAll(); }
+      else { resetAuthBtn(); showAuthGate("トークン取得に失敗しました（" + ((d && (d.error_description || d.error)) || "error") + "）。もう一度お試しください。"); }
+    }).catch(function () { resetAuthBtn(); showAuthGate("トークン取得に失敗しました。通信環境を確認して、もう一度お試しください。"); });
+  } else if (retErr) {
+    showAuthGate(errMsg(retErr));
+  } else if (loadTok()) {
+    authed = true; hideAuthGate(); setSync("db"); loadAll();          // valid saved access token
+  } else if (refreshToken) {
+    // access token expired but we have a refresh token — renew silently, no re-login
+    doRefresh().then(function () { authed = true; hideAuthGate(); setSync("db"); loadAll(); })
+      .catch(function () { showAuthGate(""); });
   } else {
-    showAuthGate(errMsg(pendingErr));
+    showAuthGate("");
   }
 })();
