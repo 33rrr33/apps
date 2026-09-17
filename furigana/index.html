@@ -69,8 +69,10 @@
   .score .msg{font-size:.9rem;color:var(--sub)}
 
   /* ===== 縦書きワークシート（iPad向け・①→⑩を右から左へ） ===== */
-  #stage.sheetv{display:flex;flex-direction:row-reverse;justify-content:safe center;align-items:flex-start;
-    gap:16px;padding:10px 4px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #stage.sheetv{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
+    overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0}
+  .vrow{display:flex;flex-direction:row;align-items:flex-start;gap:16px;
+    width:max-content;margin-inline:auto;padding:12px 48px 18px}
   .vcol{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:14px;
     background:var(--panel);border:1px solid var(--line);border-radius:18px;
     padding:16px 12px;box-shadow:var(--shadow)}
@@ -80,16 +82,17 @@
     font-size:1.85rem;line-height:1.9;letter-spacing:.03em;flex:0 0 auto;text-align:start}
   .vsent .target{color:var(--accent);font-weight:800;background:var(--accent-soft);border-radius:6px;padding:1px 2px}
 
-  /* mode1: 読みの入力（縦・大きめ） */
-  .vans input{writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;
-    font-family:inherit;font-size:1.85rem;font-weight:700;text-align:center;color:var(--ink);
-    height:6em;width:1.8em;padding:10px 6px;border-radius:14px;border:2px dashed var(--accent);
-    background:var(--accent-soft);box-sizing:content-box}
-  .vans input:focus{outline:none;border-style:solid;background:var(--panel)}
-  .vans input::placeholder{color:var(--gray);font-weight:400}
+  /* mode1: 読みを漢字の右どなり（ふりがなの位置）に書く */
+  .vsent ruby.tgt{ruby-position:over;-webkit-ruby-position:before}
+  .ryin{writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;
+    font-family:inherit;font-size:1.5rem;font-weight:700;text-align:center;color:var(--ink);
+    width:1.5em;height:5.6em;padding:5px 3px;border-radius:10px;border:2px dashed var(--accent);
+    background:var(--accent-soft);box-sizing:content-box;vertical-align:top}
+  .ryin:focus{outline:none;border-style:solid;background:var(--panel)}
+  .ryin::placeholder{color:var(--gray);font-weight:400}
   .item.correct{background:var(--ok-soft);border-color:var(--ok)}
   .item.wrong{background:var(--ng-soft);border-color:var(--ng)}
-  .item.correct .vans input,.item.wrong .vans input{background:var(--panel)}
+  .item.correct .ryin,.item.wrong .ryin{background:var(--panel)}
   .verdict{writing-mode:horizontal-tb;font-weight:800;font-size:1rem;display:none;text-align:center;min-height:1.3em}
   .verdict.show{display:block}
   .verdict.c{color:var(--ok)} .verdict.w{color:var(--ng)}
@@ -409,22 +412,24 @@
 
   function renderMode1(){
     var t=findTest(state.testId), h="";
-    for(var i=0;i<t.items.length;i++){
+    for(var i=t.items.length-1;i>=0;i--){ // ⑩→① の順にDOM生成し、視覚的に①が右端(右→左)になる
       var it=t.items[i];
       h+='<div class="item vcol" data-i="'+i+'">';
       h+= '<span class="vno">'+NUM[i]+'</span>';
-      h+= '<div class="vsent">'+esc(it.before)+'<span class="target">'+esc(it.answer)+'</span>'+esc(it.after)+'</div>';
-      h+= '<div class="vans"><input type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="よみ"></div>';
+      h+= '<div class="vsent">'+esc(it.before)+
+          '<ruby class="tgt"><span class="target">'+esc(it.answer)+'</span>'+
+          '<rt><input class="ryin" type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="よみ"></rt></ruby>'+
+          esc(it.after)+'</div>';
       h+= '<div class="verdict" data-i="'+i+'"></div>';
       h+='</div>';
     }
-    stage.className="sheetv"; stage.innerHTML=h;
+    stage.className="sheetv"; stage.innerHTML='<div class="vrow">'+h+'</div>';
   }
 
   function renderMode2(){
     var t=findTest(state.testId), h="";
-    // build slots (縦書き。ルビ<rt>は縦書きで自動的に右側へ)
-    for(var i=0;i<t.items.length;i++){
+    // build slots (縦書き。ルビ<rt>は縦書きで自動的に右側へ)。⑩→①順で生成し①を右端に
+    for(var i=t.items.length-1;i>=0;i--){
       var it=t.items[i];
       h+='<div class="item vcol" data-i="'+i+'">';
       h+= '<span class="vno">'+NUM[i]+'</span>';
@@ -443,7 +448,7 @@
       h+= esc(it.after)+'</div>';
       h+='</div>';
     }
-    stage.className="sheetv"; stage.innerHTML=h;
+    stage.className="sheetv"; stage.innerHTML='<div class="vrow">'+h+'</div>';
     // tiles = all kanji chars shuffled
     var pool=[];
     for(var k=0;k<t.items.length;k++){ pool=pool.concat(kanjiChars(t.items[k].answer)); }
