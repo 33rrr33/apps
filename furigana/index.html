@@ -815,11 +815,18 @@
   function analyzePhoto(file){
     var prov=lsGet(LS_PROV,"gemini"), key=lsGet(LS_KEY,""), model=lsGet(LS_MODEL,"");
     mSet.classList.add("show");
-    aiStatus('<span class="spin"></span>写真を読み取っています…（10〜30秒）',"busy");
+    var t0=Date.now();
+    var timer=setInterval(function(){
+      var s=Math.round((Date.now()-t0)/1000);
+      aiStatus('<span class="spin"></span>写真を読み取っています…（'+s+'秒）<br>10〜40秒ほどかかります。',"busy");
+    },1000);
+    function stop(){ clearInterval(timer); }
+    aiStatus('<span class="spin"></span>写真を読み取っています…（0秒）',"busy");
     prepImage(file).then(function(im){
       if(prov==="gemini") return callGemini(key, model||"gemini-3.6-flash", im.data, im.mime);
       return callClaude(key, model||"claude-sonnet-5", im.data, im.mime);
     }).then(function(text){
+      stop();
       var obj=parseAI(text);
       if(!obj||!obj.items||!obj.items.length) throw new Error("読み取り結果が空でした");
       // normalize to 10
@@ -836,9 +843,10 @@
         $("edStatus").textContent="AIが読み取りました。まちがいがないか確認してから保存してください。";
       }, 500);
     }).catch(function(err){
+      stop();
       var msg=String(err&&err.message||err);
-      var hint = /Failed to fetch|NetworkError|load failed|aborted|timeout/i.test(msg)
-        ? "通信に失敗しました。①Wi‑Fi/学校のネット制限、②APIキーの有効化（Generative Language API）、③写真が大きすぎないか、をご確認のうえ、少し待って再度おためしください。"
+      var hint = /Failed to fetch|NetworkError|load failed|abort|timeout|時間切れ/i.test(msg)
+        ? "通信がうまくいきませんでした。①Wi‑Fi/学校のネット制限、②APIキーの有効化（Generative Language API）、をご確認のうえ再度おためしください。うまくいかない時は⚙︎でAnthropic Claudeに切り替えると通ることがあります。"
         : "キー・モデル名・通信をご確認ください。";
       aiStatus("読み取れませんでした：<br>"+esc(msg)+"<br>"+hint,"err");
     });
@@ -855,22 +863,45 @@
   }
 
   function fetchTimeout(url, opts, ms){
+    ms=ms||60000;
     var ac = (typeof AbortController!=="undefined") ? new AbortController() : null;
     if(ac) opts=Object.assign({}, opts, {signal:ac.signal});
-    var t=setTimeout(function(){ if(ac) ac.abort(); }, ms||90000);
+    var timedOut=false;
+    var t=setTimeout(function(){ timedOut=true; if(ac) ac.abort(); }, ms);
     return fetch(url,opts).then(function(r){ clearTimeout(t); return r; },
-                               function(e){ clearTimeout(t); throw e; });
+      function(e){ clearTimeout(t); if(timedOut) throw new Error("時間切れ（"+Math.round(ms/1000)+"秒）"); throw e; });
+  }
+  var GEMINI_SCHEMA={ type:"object", properties:{
+      title:{type:"string"},
+      items:{ type:"array", items:{ type:"object", properties:{
+        before:{type:"string"}, answer:{type:"string"}, yomi:{type:"string"}, after:{type:"string"}
+      }, required:["before","answer","yomi","after"] } }
+    }, required:["title","items"] };
+  function geminiExtract(j){
+    try{ return j.candidates[0].content.parts.map(function(p){return p.text||"";}).join(""); }
+    catch(e){ throw new Error("応答の形式が想定外です"); }
+  }
+  function geminiOnce(key, model, b64, mime, cfg){
+    var url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(key);
+    var body={ contents:[{ parts:[ {text:AI_PROMPT}, {inline_data:{mime_type:mime, data:b64}} ] }], generationConfig:cfg };
+    return fetchTimeout(url,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) })
+      .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, status:r.status, j:j }; }); });
   }
   function callGemini(key, model, b64, mime){
-    var url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(key);
-    var body={ contents:[{ parts:[ {text:AI_PROMPT}, {inline_data:{mime_type:mime, data:b64}} ] }],
-               generationConfig:{ temperature:0, responseMimeType:"application/json" } };
-    return fetchTimeout(url,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) })
-      .then(function(r){ return r.json().then(function(j){
-        if(!r.ok){ throw new Error((j.error&&j.error.message)||("HTTP "+r.status)); }
-        try{ return j.candidates[0].content.parts.map(function(p){return p.text||"";}).join(""); }
-        catch(e){ throw new Error("応答の形式が想定外です"); }
-      });});
+    var full={ temperature:0, maxOutputTokens:4096, responseMimeType:"application/json",
+               responseSchema:GEMINI_SCHEMA, thinkingConfig:{ thinkingBudget:0 } };
+    var basic={ temperature:0, maxOutputTokens:4096, responseMimeType:"application/json" };
+    return geminiOnce(key,model,b64,mime,full).then(function(res){
+      if(res.ok) return geminiExtract(res.j);
+      // 新しい設定項目(思考オフ/スキーマ)が未対応なら、最小構成で1回だけ再試行
+      if(res.status===400){
+        return geminiOnce(key,model,b64,mime,basic).then(function(r2){
+          if(r2.ok) return geminiExtract(r2.j);
+          throw new Error((r2.j.error&&r2.j.error.message)||("HTTP "+r2.status));
+        });
+      }
+      throw new Error((res.j.error&&res.j.error.message)||("HTTP "+res.status));
+    });
   }
   function callClaude(key, model, b64, mime){
     var url="https://api.anthropic.com/v1/messages";
