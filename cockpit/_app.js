@@ -521,22 +521,29 @@
   });
 
   // ---------- add popup ----------
+  // kinds: "task" = all-day タスク管理 (やること) / "cal" = timed R event (きょうの予定) / "line" = local LINE reply
+  function nextSlot() { var d = new Date(); d.setMinutes(Math.ceil((d.getMinutes() + 1) / 10) * 10, 0, 0); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
   function setTmKind(k) {
     kindSel = k;
     $("tmKindTask").setAttribute("aria-pressed", k === "task" ? "true" : "false");
+    $("tmKindCal").setAttribute("aria-pressed", k === "cal" ? "true" : "false");
     $("tmKindLine").setAttribute("aria-pressed", k === "line" ? "true" : "false");
     $("tmDateWrap").hidden = (k === "line");
-    $("tmTitle").placeholder = k === "line" ? "例：田中さんに日程を返信" : "例：連絡プリント作成";
+    $("tmTimeWrap").hidden = (k !== "cal");   // time picker only for カレンダー
+    $("tmHint").hidden = (k === "line");
+    $("tmTitle").placeholder = k === "line" ? "例：田中さんに日程を返信" : (k === "cal" ? "例：授業参観" : "例：連絡プリント作成");
   }
   function openAddModal(kind) {
-    setTmKind(kind === "line" ? "line" : "task");
-    $("tmTitle").value = ""; $("tmDate").value = todayStr(); $("tmStart").value = ""; $("tmEnd").value = "";
+    setTmKind(kind === "line" ? "line" : (kind === "cal" ? "cal" : "task"));
+    $("tmTitle").value = ""; $("tmDate").value = todayStr();
+    if (kindSel === "cal") { var s = nextSlot(); $("tmStart").value = s; $("tmEnd").value = addOneHour(s); }
+    else { $("tmStart").value = ""; $("tmEnd").value = ""; }
     $("tmNote").hidden = true; $("tmAdded").hidden = true; $("tmSave").disabled = false; $("tmSave").textContent = "追加";
     $("taskModal").hidden = false; $("tmTitle").focus();
   }
   function closeAddModal() { $("taskModal").hidden = true; }
   var addedTimer = null;
-  function afterAdd() { $("tmAdded").hidden = false; if (addedTimer) clearTimeout(addedTimer); addedTimer = setTimeout(function () { $("tmAdded").hidden = true; }, 1600); $("tmTitle").value = ""; $("tmStart").value = ""; $("tmEnd").value = ""; $("tmTitle").focus(); }
+  function afterAdd() { $("tmAdded").hidden = false; if (addedTimer) clearTimeout(addedTimer); addedTimer = setTimeout(function () { $("tmAdded").hidden = true; }, 1600); $("tmTitle").value = ""; $("tmTitle").focus(); }
   function saveFromModal() {
     var title = ($("tmTitle").value || "").trim(); var note = $("tmNote");
     if (!title) { note.textContent = "内容を入力してください。"; note.hidden = false; return; }
@@ -546,29 +553,33 @@
       lsLineSave(); renderTasks(); afterAdd(); return;
     }
     if (!authed) { note.textContent = "先にGoogleと接続してください。"; note.hidden = false; return; }
-    var date = $("tmDate").value || "", start = $("tmStart").value || "", end = $("tmEnd").value || "";
+    var date = $("tmDate").value || "";
     if (!date) { note.textContent = "日付を選んでください。"; note.hidden = false; return; }
     $("tmSave").disabled = true; $("tmSave").textContent = "追加中…";
     var done = function () { $("tmSave").disabled = false; $("tmSave").textContent = "追加"; };
-    // Both timed and all-day entries go to the タスク管理 calendar so everything is a "task".
-    // Timed ones show in やること (with the time) AND on the きょうの予定 timeline.
-    if (!taskCalId) { done(); note.textContent = "「タスク管理」カレンダーが見つかりません。"; note.hidden = false; return; }
-    var reload = function () { loadTasks(); loadSchedule(); };
-    if (start) {
-      gcalCreate(taskCalId, { summary: title, allDay: false, date: date, start: start, end: (end && end > start) ? end : addOneHour(start) })
-        .then(function () { done(); afterAdd(); setTimeout(reload, 400); })
+    if (kindSel === "cal") {
+      // カレンダー：時間指定の予定 → Rカレンダー(なければメイン) → きょうの予定に表示
+      var start = $("tmStart").value || "", end = $("tmEnd").value || "";
+      if (!start) { done(); note.textContent = "開始時刻を選んでください。"; note.hidden = false; return; }
+      var cal = rCalId || "primary";
+      gcalCreate(cal, { summary: title, allDay: false, date: date, start: start, end: (end && end > start) ? end : addOneHour(start) })
+        .then(function () { done(); afterAdd(); setTimeout(loadSchedule, 400); })
         .catch(function () { done(); note.textContent = "追加できませんでした。"; note.hidden = false; });
     } else {
+      // タスク：時間なし → タスク管理カレンダー(終日) → やることに表示
+      if (!taskCalId) { done(); note.textContent = "「タスク管理」カレンダーが見つかりません。"; note.hidden = false; return; }
       gcalCreate(taskCalId, { summary: title, allDay: true, date: date, endDate: date })
-        .then(function () { done(); afterAdd(); setTimeout(reload, 400); })
+        .then(function () { done(); afterAdd(); setTimeout(loadTasks, 400); })
         .catch(function () { done(); note.textContent = "追加できませんでした。"; note.hidden = false; });
     }
   }
   $("openTaskBtn").addEventListener("click", function () { openAddModal("task"); });
+  $("openCalBtn").addEventListener("click", function () { openAddModal("cal"); });
   $("openLineBtn").addEventListener("click", function () { openAddModal("line"); });
   $("tmCancel").addEventListener("click", closeAddModal);
   $("taskModal").addEventListener("click", function (e) { if (e.target === $("taskModal")) closeAddModal(); });
   $("tmKindTask").addEventListener("click", function () { setTmKind("task"); $("tmTitle").focus(); });
+  $("tmKindCal").addEventListener("click", function () { setTmKind("cal"); if (!$("tmStart").value) { var s = nextSlot(); $("tmStart").value = s; $("tmEnd").value = addOneHour(s); } $("tmTitle").focus(); });
   $("tmKindLine").addEventListener("click", function () { setTmKind("line"); $("tmTitle").focus(); });
   $("tmSave").addEventListener("click", saveFromModal);
   // Enter must NOT auto-register (only the 追加 button does). Swallow Enter so nothing happens.
