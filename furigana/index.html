@@ -282,6 +282,10 @@
       <button class="btn primary" id="btnCamera" style="justify-content:center;padding:18px;font-size:1.1rem">📷 カメラで撮る</button>
       <button class="btn" id="btnLibrary" style="justify-content:center;padding:18px;font-size:1.1rem">🖼 写真から選ぶ</button>
     </div>
+    <div id="phNeedKey" class="hidden" style="margin-top:6px">
+      <p class="status err" style="margin:0 0 10px">写真から作るには、先に Google Gemini のAPIキーを登録してください（最初の一度だけ）。</p>
+      <button class="btn primary" id="btnGoSet" style="width:100%;justify-content:center;padding:16px;font-size:1.05rem">⚙︎ APIキーを登録する</button>
+    </div>
     <p class="status" id="phStatus"></p>
     <div class="row2" style="margin-top:8px">
       <button class="btn ghost" id="phClose">とじる</button>
@@ -921,14 +925,16 @@
   }
   var mPhoto=$("mPhoto");
   function phStatus(msg,cls){ var s=$("phStatus"); s.className="status "+(cls||""); s.innerHTML=msg||""; }
-  function openPhoto(){ $("phPick").classList.remove("hidden"); phStatus(""); mPhoto.classList.add("show"); }
-
-  // 写真ボタン → まずキーが無ければ登録画面へ。あれば「撮る／選ぶ」画面を開く
-  $("btnPhoto").addEventListener("click", function(){
-    var key=lsGet(LS_KEY,"");
-    if(!key){ openSet(); var st=$("setStatus"); st.className="status err"; st.textContent="先にAPIキー（Gemini）を登録してください。"; return; }
-    openPhoto();
-  });
+  // 写真ボタン → 必ず「撮る／選ぶ」画面を開く。キーが無いときは同じ画面内で登録を案内
+  function openPhoto(){
+    var hasKey=!!lsGet(LS_KEY,"");
+    $("phPick").classList.toggle("hidden", !hasKey);
+    $("phNeedKey").classList.toggle("hidden", hasKey);
+    phStatus("");
+    mPhoto.classList.add("show");
+  }
+  $("btnPhoto").addEventListener("click", openPhoto);
+  $("btnGoSet").addEventListener("click", function(){ mPhoto.classList.remove("show"); openSet(); });
   $("btnCamera").addEventListener("click", function(){ $("photoCamera").click(); });
   $("btnLibrary").addEventListener("click", function(){ $("photoLibrary").click(); });
   $("phClose").addEventListener("click", function(){ mPhoto.classList.remove("show"); });
