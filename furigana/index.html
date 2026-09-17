@@ -198,7 +198,7 @@
 <main>
   <div class="bar">
     <div class="grow"><select id="testSel" aria-label="テストをえらぶ"></select></div>
-    <button class="btn" id="btnPhoto" title="写真からテストを作る">🖼 写真</button>
+    <button class="btn primary" id="btnPhoto" title="写真からテストを作る">📷 写真でつくる</button>
     <button class="btn icon" id="btnEdit" title="このテストを編集">✏️</button>
     <button class="btn icon" id="btnNew" title="新しく作る">＋</button>
     <button class="btn icon ghost" id="btnSet" title="設定">⚙︎</button>
@@ -955,13 +955,20 @@
       for(var i=0;i<items.length;i++){
         items[i]={ before:items[i].before||"", answer:items[i].answer||"", yomi:items[i].yomi||"", after:items[i].after||"" };
       }
-      aiStatus("読み取れました！内容を確認して保存してください。","ok");
+      var filled=0; for(var f=0;f<items.length;f++){ if(items[f].answer&&items[f].yomi) filled++; }
+      if(!filled) throw new Error("読み取り結果が空でした");
+      // 確認なしで自動作成：そのまま保存して開始する（間違いは後から✏️で直せる）
+      var us=loadUserTests();
+      var id="u"+Date.now();
+      var title=(obj.title&&String(obj.title).trim())||"写真から作ったテスト";
+      us.push({ id:id, title:title, sample:false, items:items });
+      saveUserTests(us);
+      state.testId=id; lsSet(LS_LAST,id);
+      aiStatus("「"+esc(title)+"」ができました！🎉","ok");
       setTimeout(function(){
         mSet.classList.remove("show");
-        openEditor({ title: obj.title||"写真から作ったテスト", items:items }, true);
-        $("edStatus").className="status ok";
-        $("edStatus").textContent="AIが読み取りました。まちがいがないか確認してから保存してください。";
-      }, 500);
+        render();
+      }, 700);
     }).catch(function(err){
       stop();
       var msg=String(err&&err.message||err);
