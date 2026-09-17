@@ -598,7 +598,34 @@
   .authseclbl{font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:8px;}
   .authsecin{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:11px;padding:12px 12px;font-size:15px;background:var(--surface-2);color:var(--ink);}
   .authsecnote{font-size:11px;line-height:1.6;color:var(--faint);margin-top:8px;}
+
+  /* the hidden attribute must always win, even over display:flex elements like .authgate */
+  [hidden]{display:none!important;}
+  .clickable{cursor:pointer;-webkit-tap-highlight-color:rgba(23,131,143,.12);}
+  .clickable:active{opacity:.6;}
+  /* ---- auth gate (standalone PWA) ---- */
+  .authgate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+    padding:24px;background:var(--ground);
+    padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));}
+  .authcard{width:100%;max-width:340px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;box-shadow:var(--shadow);padding:30px 24px 26px;text-align:center;}
+  .authmark{font-size:46px;line-height:1;margin-bottom:12px;}
+  .authttl{font-family:var(--font-display);font-weight:800;font-size:21px;color:var(--ink);margin-bottom:8px;}
+  .authsub{font-size:13.5px;line-height:1.7;color:var(--muted);margin-bottom:22px;}
+  .authbtn{width:100%;border:none;border-radius:13px;padding:15px 16px;font-family:var(--font-display);
+    font-weight:800;font-size:16px;color:#fff;background:var(--accent);cursor:pointer;
+    box-shadow:0 6px 16px rgba(23,131,143,.28);transition:transform .06s ease,filter .15s ease;}
+  .authbtn:active{transform:translateY(1px);filter:brightness(.96);}
+  .authnote{margin-top:14px;font-size:12.5px;line-height:1.6;color:var(--urgent);word-break:break-all;overflow-wrap:anywhere;}
+  .authbtn.sm{padding:12px 14px;font-size:14.5px;margin-top:10px;}
+  .authsec{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);text-align:left;}
+  .authseclbl{font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:8px;}
+  .authsecin{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:11px;padding:12px 12px;font-size:15px;background:var(--surface-2);color:var(--ink);}
+  .authsecnote{font-size:11px;line-height:1.6;color:var(--faint);margin-top:8px;}
 </style>
+</head>
+<body>
+
 </head>
 <body>
 
@@ -997,7 +1024,7 @@
     var calSpan = calName ? '<span class="hero-cal"> ・ ' + calName + "</span>" : "";
     var heroEnd = ev.end && ev.end.dateTime ? '<span class="hero-end">〜' + fmtTime(new Date(ev.end.dateTime)) + "</span>" : "";
     content.innerHTML =
-      '<div class="hero-line">' +
+      '<div class="hero-line clickable" data-link="' + esc(ev.htmlLink || "") + '">' +
       '<span class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + heroEnd + "</span>" +
       '<span class="hero-title">' + esc(ev.summary || "(タイトルなし)") + calSpan + "</span>" +
       '<span class="hero-cd">' + cd + "</span>" +
@@ -1023,7 +1050,7 @@
     if (allday.length) {
       chips.hidden = false;
       var CMAX = 2, cShow = allday.length > CMAX ? allday.slice(0, CMAX - 1) : allday.slice(0, CMAX);
-      var chtml = cShow.map(function (e) { return '<span class="ac-chip">' + esc(e.summary || "(予定)") + "</span>"; }).join("");
+      var chtml = cShow.map(function (e) { return '<span class="ac-chip clickable" data-link="' + esc(e.htmlLink || "") + '">' + esc(e.summary || "(予定)") + "</span>"; }).join("");
       if (allday.length > CMAX) chtml += '<span class="ac-chip more">+' + (allday.length - (CMAX - 1)) + "</span>";
       chips.innerHTML = chtml;
     } else clearChips();
@@ -1032,7 +1059,7 @@
       var st = new Date(e.start.dateTime).getTime(), gap = st - now, u = "ok";
       if (gap <= 15 * 60000) u = "imminent"; else if (gap <= 60 * 60000) u = "soon";
       var end = e.end && e.end.dateTime ? '<span class="ev-end">〜' + fmtTime(new Date(e.end.dateTime)) + "</span>" : "";
-      return '<div class="ev-row" data-state="' + u + '">' +
+      return '<div class="ev-row clickable" data-state="' + u + '" data-link="' + esc(e.htmlLink || "") + '">' +
         '<span class="ev-time">' + fmtTime(new Date(e.start.dateTime)) + end + "</span>" +
         '<span class="ev-title">' + esc(e.summary || "(タイトルなし)") + "</span>" +
         '<span class="ev-cd">' + shortGap(gap) + "</span></div>";
@@ -1089,6 +1116,22 @@
     if (!e.target.closest("a")) return;
     if (isMobile()) { e.preventDefault(); openGmailApp(); }  // let desktop open the web link normally
   });
+
+  // tap a calendar item → open that event (Google Calendar app via universal link on mobile, web on desktop)
+  function openLink(url) {
+    if (!url) return;
+    var a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  function bindOpen(el) {
+    if (!el) return;
+    el.addEventListener("click", function (e) {
+      var t = e.target.closest("[data-link]"); if (!t) return;
+      openLink(t.getAttribute("data-link"));
+    });
+  }
+  bindOpen($("hero")); bindOpen($("schedList")); bindOpen($("alldayChips"));
 
   // ---------- render: tasks (calTasks + lineItems) ----------
   function allTasks() {
@@ -1266,7 +1309,8 @@
   $("tmKindTask").addEventListener("click", function () { setTmKind("task"); $("tmTitle").focus(); });
   $("tmKindLine").addEventListener("click", function () { setTmKind("line"); $("tmTitle").focus(); });
   $("tmSave").addEventListener("click", saveFromModal);
-  $("tmTitle").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); saveFromModal(); } });
+  // Enter must NOT auto-register (only the 追加 button does). Swallow Enter so nothing happens.
+  $("tmTitle").addEventListener("keydown", function (e) { if (e.key === "Enter") e.preventDefault(); });
 
   // ---------- add-event modal (＋予定 → primary calendar) ----------
   function openEvtModal() {
