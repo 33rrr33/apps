@@ -33,15 +33,16 @@
   html,body{overscroll-behavior-y:none}
   body{margin:0;padding:0 14px calc(120px + env(safe-area-inset-bottom));
     padding-top:env(safe-area-inset-top);
-    font-family:"UD デジタル教科書体 NP-R","UDデジタル教科書体 NP-R","UD Digi Kyokasho NP-R","UD Digi Kyokasho N-R","BIZ UDPGothic","BIZ UDPゴシック","Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;
+    font-family:"UD デジタル教科書体 NP-R","UDデジタル教科書体 NP-R","UD Digi Kyokasho NP-R","UD Digi Kyokasho N-R","BIZ UDPGothic","BIZ UDPゴシック","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Noto Sans JP","Noto Sans CJK JP",sans-serif;
     background:var(--bg);color:var(--ink);line-height:1.6;-webkit-text-size-adjust:100%;}
   header{max-width:680px;margin:0 auto;padding:22px 4px 4px;text-align:center}
   h1{font-size:1.45rem;margin:0 0 2px}
   .lead{color:var(--sub);margin:0;font-size:.82rem}
-  main{max-width:680px;margin:0 auto}
+  main{max-width:1180px;margin:0 auto}
+  .bar,.modes,.score{max-width:640px;margin-left:auto;margin-right:auto}
 
   /* ---- toolbar ---- */
-  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 6px}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px auto 6px}
   .bar .grow{flex:1 1 140px;min-width:120px}
   select,.btn{font-family:inherit;font-size:.9rem;border-radius:14px;border:1px solid var(--line);
     background:var(--panel);color:var(--ink);padding:11px 13px;box-shadow:var(--shadow);cursor:pointer}
@@ -67,44 +68,45 @@
   .score .pt small{font-size:.9rem;color:var(--sub);font-weight:700}
   .score .msg{font-size:.9rem;color:var(--sub)}
 
-  /* ---- item cards ---- */
-  .item{background:var(--panel);border:1px solid var(--line);border-radius:18px;
-    padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px}
-  .item .no{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
-    background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1rem;margin-bottom:6px}
-  .sent{font-size:1.35rem;line-height:1.9;letter-spacing:.02em;word-break:break-word}
-  .sent .target{color:var(--accent);font-weight:800;border-bottom:3px solid var(--accent);padding:0 2px;border-radius:2px}
+  /* ===== 縦書きワークシート（iPad向け・①→⑩を右から左へ） ===== */
+  #stage.sheetv{display:flex;flex-direction:row-reverse;justify-content:safe center;align-items:flex-start;
+    gap:16px;padding:10px 4px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .vcol{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:14px;
+    background:var(--panel);border:1px solid var(--line);border-radius:18px;
+    padding:16px 12px;box-shadow:var(--shadow)}
+  .vno{display:flex;align-items:center;justify-content:center;width:38px;height:38px;flex:0 0 auto;
+    background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1.2rem}
+  .vsent{writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;white-space:nowrap;
+    font-size:1.85rem;line-height:1.9;letter-spacing:.03em;flex:0 0 auto;text-align:start}
+  .vsent .target{color:var(--accent);font-weight:800;background:var(--accent-soft);border-radius:6px;padding:1px 2px}
 
-  /* mode1 input */
-  .ansrow{display:flex;align-items:center;gap:10px;margin-top:10px}
-  .ansrow label{font-size:.82rem;color:var(--sub);font-weight:700;white-space:nowrap}
-  .ansrow input{flex:1;font-family:inherit;font-size:1.25rem;padding:10px 12px;border-radius:12px;
-    border:2px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
-  .ansrow input:focus{outline:none;border-color:var(--accent)}
+  /* mode1: 読みの入力（縦・大きめ） */
+  .vans input{writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;
+    font-family:inherit;font-size:1.85rem;font-weight:700;text-align:center;color:var(--ink);
+    height:6em;width:1.8em;padding:10px 6px;border-radius:14px;border:2px dashed var(--accent);
+    background:var(--accent-soft);box-sizing:content-box}
+  .vans input:focus{outline:none;border-style:solid;background:var(--panel)}
+  .vans input::placeholder{color:var(--gray);font-weight:400}
   .item.correct{background:var(--ok-soft);border-color:var(--ok)}
   .item.wrong{background:var(--ng-soft);border-color:var(--ng)}
-  .verdict{margin-top:8px;font-weight:800;font-size:.95rem;display:none}
+  .item.correct .vans input,.item.wrong .vans input{background:var(--panel)}
+  .verdict{writing-mode:horizontal-tb;font-weight:800;font-size:1rem;display:none;text-align:center;min-height:1.3em}
   .verdict.show{display:block}
   .verdict.c{color:var(--ok)} .verdict.w{color:var(--ng)}
-  .verdict .mark{font-size:1.3rem;margin-right:6px}
-  .item.correct .ansrow input,.item.wrong .ansrow input{background:var(--panel)}
+  .verdict .mark{font-size:1.35rem}
 
-  /* ---- mode2 (drag) ---- */
-  .sent2{font-size:1.4rem;line-height:2.7;word-break:break-word}
-  .grp{position:relative;display:inline-block;vertical-align:baseline;margin:0 2px}
-  .grp .ruby{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:1px;
-    font-size:.72rem;color:var(--accent);font-weight:800;line-height:1;white-space:nowrap;pointer-events:none}
-  .grp .row{display:inline-block;white-space:nowrap}
-  /* overflow:hidden で中身に関係なく「ますの下端」を基準にし、文字を置いてもズレないようにする */
-  .slot{display:inline-block;overflow:hidden;width:1.5em;height:1.55em;line-height:1.5em;text-align:center;
-    border:2px dashed var(--tile-line);border-radius:8px;background:var(--bg);
-    font-size:1.4rem;font-weight:700;color:var(--ink);vertical-align:-0.34em}
+  /* mode2: ますとルビ（縦書きではルビは右側に自動配置） */
+  ruby.grp{ruby-position:over;-webkit-ruby-position:before}
+  ruby.grp>rt{font-size:1.05rem;color:var(--accent);font-weight:800;letter-spacing:.04em}
+  .slot{display:inline-block;overflow:hidden;width:1.85em;height:1.85em;line-height:1.8em;text-align:center;
+    border:2px dashed var(--tile-line);border-radius:10px;background:var(--bg);
+    font-size:1.95rem;font-weight:700;color:var(--ink);margin:3px 0}
   .slot.filled{border-style:solid;background:var(--tile);border-color:var(--accent)}
-  .slot.selhi{border-color:var(--accent);background:var(--accent-soft)}
-  .okuri{font-size:1.4rem;font-weight:700;vertical-align:baseline}
+  .slot.selhi{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+  .okuri{font-size:1.95rem;font-weight:700}
   .grp.g-correct .slot{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
   .grp.g-wrong .slot{border-color:var(--ng);background:var(--ng-soft);color:var(--ng)}
-  .fix{font-size:.75rem;color:var(--ng);font-weight:800;margin-top:2px;display:block}
+  .fix{writing-mode:horizontal-tb;font-size:.82rem;color:var(--ng);font-weight:800;text-align:center}
 
   /* bottom dock (tiles + action button) */
   .dock{position:fixed;left:0;right:0;bottom:0;z-index:40;
@@ -114,17 +116,17 @@
   .tray{display:none;margin-bottom:8px}
   .tray.show{display:block}
   .tray .cap{font-size:.72rem;color:var(--sub);font-weight:700;margin:0 2px 6px}
-  .tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-height:34vh;overflow:auto}
-  .tile{width:2em;height:2em;font-size:1.35rem;font-weight:800;
+  .tiles{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-height:32vh;overflow:auto}
+  .tile{width:2.5em;height:2.5em;font-size:1.9rem;font-weight:800;
     display:flex;align-items:center;justify-content:center;
-    background:var(--tile);border:2px solid var(--tile-line);border-radius:12px;color:var(--ink);
+    background:var(--tile);border:2px solid var(--tile-line);border-radius:14px;color:var(--ink);
     cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .08s}
   .tile:active{transform:scale(.92)}
   .tile.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
   .tile.used{opacity:0;pointer-events:none;width:0;height:0;margin:-4px;border:0}
   .drag-ghost{position:fixed;z-index:100;pointer-events:none;
-    background:var(--tile);border:2px solid var(--accent);border-radius:12px;
-    width:2em;height:2em;font-size:1.5rem;font-weight:800;
+    background:var(--tile);border:2px solid var(--accent);border-radius:14px;
+    width:2.5em;height:2.5em;font-size:2rem;font-weight:800;
     display:flex;align-items:center;justify-content:center;color:var(--ink);
     box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translate(-50%,-50%) scale(1.1)}
 
@@ -409,27 +411,25 @@
     var t=findTest(state.testId), h="";
     for(var i=0;i<t.items.length;i++){
       var it=t.items[i];
-      h+='<div class="item" data-i="'+i+'">';
-      h+= '<span class="no">'+NUM[i]+'</span>';
-      h+= '<div class="sent">'+esc(it.before)+'<span class="target">'+esc(it.answer)+'</span>'+esc(it.after)+'</div>';
-      h+= '<div class="ansrow"><label>よみ</label>'+
-          '<input type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="ひらがなで書く"></div>';
+      h+='<div class="item vcol" data-i="'+i+'">';
+      h+= '<span class="vno">'+NUM[i]+'</span>';
+      h+= '<div class="vsent">'+esc(it.before)+'<span class="target">'+esc(it.answer)+'</span>'+esc(it.after)+'</div>';
+      h+= '<div class="vans"><input type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="よみ"></div>';
       h+= '<div class="verdict" data-i="'+i+'"></div>';
       h+='</div>';
     }
-    stage.innerHTML=h;
+    stage.className="sheetv"; stage.innerHTML=h;
   }
 
   function renderMode2(){
     var t=findTest(state.testId), h="";
-    // build slots
+    // build slots (縦書き。ルビ<rt>は縦書きで自動的に右側へ)
     for(var i=0;i<t.items.length;i++){
       var it=t.items[i];
-      h+='<div class="item" data-i="'+i+'">';
-      h+= '<span class="no">'+NUM[i]+'</span>';
-      h+= '<div class="sent2">'+esc(it.before);
-      // group with ruby + slots/okurigana
-      h+= '<span class="grp" data-i="'+i+'"><span class="ruby">'+esc(it.yomi)+'</span><span class="row">';
+      h+='<div class="item vcol" data-i="'+i+'">';
+      h+= '<span class="vno">'+NUM[i]+'</span>';
+      h+= '<div class="vsent">'+esc(it.before);
+      h+= '<ruby class="grp" data-i="'+i+'"><span class="row">';
       var chars=it.answer.split(""), slotIdx=0;
       for(var c=0;c<chars.length;c++){
         if(isKanji(chars[c])){
@@ -439,11 +439,11 @@
           h+='<span class="okuri">'+esc(chars[c])+'</span>';
         }
       }
-      h+= '&#8203;</span></span>';  // ゼロ幅スペースで行のベースラインをそろえる
+      h+= '</span><rt>'+esc(it.yomi)+'</rt></ruby>';
       h+= esc(it.after)+'</div>';
       h+='</div>';
     }
-    stage.innerHTML=h;
+    stage.className="sheetv"; stage.innerHTML=h;
     // tiles = all kanji chars shuffled
     var pool=[];
     for(var k=0;k<t.items.length;k++){ pool=pool.concat(kanjiChars(t.items[k].answer)); }
