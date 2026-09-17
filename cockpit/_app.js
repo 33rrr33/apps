@@ -447,6 +447,18 @@
       if (!displayCals.length) displayCals.push({ id: "primary", summary: "", primary: true });
     });
   }
+  // Make EVERY event on the R calendar notify at its start time — including events other people
+  // add to the shared R calendar. This sets THIS user's default reminders for the R calendar
+  // (personal setting; does not affect other members). Runs once per device.
+  function ensureRCalNotify() {
+    if (!rCalId) return;
+    try { if (localStorage.getItem("cockpit_rcal_notify_v1")) return; } catch (e) {}
+    var body = { defaultReminders: [{ method: "popup", minutes: 0 }] };
+    gfetch("https://www.googleapis.com/calendar/v3/users/me/calendarList/" + encodeURIComponent(rCalId),
+      { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function () { try { localStorage.setItem("cockpit_rcal_notify_v1", "1"); } catch (e) {} })
+      .catch(function () {});
+  }
   function loadSchedule() {
     var b = todayBounds();
     function fetchInto(calId, primary, filterFn) {
@@ -502,6 +514,7 @@
   function loadAll() {
     if (!authed || loading) return; loading = true;
     loadCalendars().then(function () {
+      ensureRCalNotify();   // ensure R-calendar events (incl. others') notify at their time
       return Promise.all([loadSchedule(), loadTasks(), loadMail()]);
     }).catch(function () {}).then(function () { loading = false; });
   }
