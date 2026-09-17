@@ -72,11 +72,11 @@
   #stage.sheetv{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0}
   .vrow{display:flex;flex-direction:row;align-items:flex-start;gap:10px;
     width:max-content;margin-inline:auto;padding:12px 14px 50px}
-  .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:12px;
+  .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:18px;
     background:var(--panel);border:1px solid var(--line);border-radius:16px;
-    padding:11px 7px;box-shadow:var(--shadow)}
+    padding:12px 8px 18px;box-shadow:var(--shadow)}
   .vno{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
-    background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1.05rem}
+    align-self:flex-start;background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1.05rem}
   .vsent{position:relative;writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;white-space:nowrap;
     font-size:1.5rem;line-height:1.8;letter-spacing:.01em;flex:0 0 auto;text-align:start}
   .vsent1{padding-right:1.75em} /* モード1のみ：読み欄のレーンを右に確保 */
@@ -87,7 +87,7 @@
   .tgtwrap{position:relative;display:inline-block;vertical-align:top}
   .ryslots{position:absolute;top:50%;left:100%;transform:translateY(-50%);margin-left:4px;
     writing-mode:horizontal-tb;display:flex;flex-direction:column;gap:3px;align-items:center}
-  .slot.ry{width:1.45em;height:1.45em;line-height:1.4em;font-size:1.05rem;border-radius:7px;margin:0}
+  .slot.ry{width:1.35em;height:1.35em;line-height:1.3em;font-size:1rem;border-radius:7px;margin:0}
   .item.correct{background:var(--ok-soft);border-color:var(--ok)}
   .item.wrong{background:var(--ng-soft);border-color:var(--ng)}
   .item.correct .slot.ry{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
