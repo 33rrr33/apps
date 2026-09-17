@@ -12,6 +12,10 @@
 <meta name="apple-mobile-web-app-title" content="ふりがな">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <link rel="icon" href="../icon-192.png">
+<!-- UDフォント（ユニバーサルデザイン書体・LDの子にも読みやすい） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
 <style>
   :root{
     --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
@@ -29,7 +33,7 @@
   html,body{overscroll-behavior-y:none}
   body{margin:0;padding:0 14px calc(120px + env(safe-area-inset-bottom));
     padding-top:env(safe-area-inset-top);
-    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    font-family:"UD デジタル教科書体 NP-R","UDデジタル教科書体 NP-R","UD Digi Kyokasho NP-R","UD Digi Kyokasho N-R","BIZ UDPGothic","BIZ UDPゴシック","Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;
     background:var(--bg);color:var(--ink);line-height:1.6;-webkit-text-size-adjust:100%;}
   header{max-width:680px;margin:0 auto;padding:22px 4px 4px;text-align:center}
   h1{font-size:1.45rem;margin:0 0 2px}
@@ -684,7 +688,7 @@
   function openEditor(test, isNew){
     edEditingId = isNew ? null : (test.sample ? null : test.id);
     $("edTitle").textContent = isNew ? "✏️ 新しいテストを作る" : "✏️ テストをなおす";
-    $("edName").value = isNew ? "" : (test.title||"");
+    $("edName").value = (test && test.title) ? test.title : "";
     $("edDelete").style.display = (edEditingId? "":"none");
     var items = test && test.items && test.items.length ? test.items : blankItems();
     var h="";
@@ -766,6 +770,36 @@
       r.onerror=rej; r.readAsDataURL(file);
     });
   }
+  // 写真は大きすぎると通信が失敗するので、送信前に縮小・圧縮する
+  function loadImage(file){
+    return new Promise(function(res,rej){
+      var url=URL.createObjectURL(file);
+      var img=new Image();
+      img.onload=function(){ URL.revokeObjectURL(url); res(img); };
+      img.onerror=function(){ URL.revokeObjectURL(url); rej(new Error("画像を読み込めませんでした")); };
+      img.src=url;
+    });
+  }
+  function shrinkImage(file, maxDim, quality){
+    return loadImage(file).then(function(img){
+      var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+      if(!w||!h) throw new Error("画像サイズを取得できませんでした");
+      var scale=Math.min(1, maxDim/Math.max(w,h));
+      var cw=Math.max(1,Math.round(w*scale)), ch=Math.max(1,Math.round(h*scale));
+      var cv=document.createElement("canvas"); cv.width=cw; cv.height=ch;
+      var ctx=cv.getContext("2d");
+      ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,cw,ch);
+      ctx.drawImage(img,0,0,cw,ch);
+      var durl=cv.toDataURL("image/jpeg", quality);
+      return { data:durl.substring(durl.indexOf(",")+1), mime:"image/jpeg" };
+    });
+  }
+  // 縮小できない形式(HEIC等)は元ファイルをそのまま送る
+  function prepImage(file){
+    return shrinkImage(file, 1600, 0.85).catch(function(){
+      return fileToBase64(file).then(function(b64){ return { data:b64, mime:(file.type||"image/jpeg") }; });
+    });
+  }
   function aiStatus(msg,cls){ var s=$("setStatus"); s.className="status "+(cls||""); s.innerHTML=msg; }
 
   $("btnPhoto").addEventListener("click", function(){
@@ -782,10 +816,9 @@
     var prov=lsGet(LS_PROV,"gemini"), key=lsGet(LS_KEY,""), model=lsGet(LS_MODEL,"");
     mSet.classList.add("show");
     aiStatus('<span class="spin"></span>写真を読み取っています…（10〜30秒）',"busy");
-    fileToBase64(file).then(function(b64){
-      var mime=file.type||"image/jpeg";
-      if(prov==="gemini") return callGemini(key, model||"gemini-3.6-flash", b64, mime);
-      return callClaude(key, model||"claude-sonnet-5", b64, mime);
+    prepImage(file).then(function(im){
+      if(prov==="gemini") return callGemini(key, model||"gemini-3.6-flash", im.data, im.mime);
+      return callClaude(key, model||"claude-sonnet-5", im.data, im.mime);
     }).then(function(text){
       var obj=parseAI(text);
       if(!obj||!obj.items||!obj.items.length) throw new Error("読み取り結果が空でした");
@@ -803,7 +836,11 @@
         $("edStatus").textContent="AIが読み取りました。まちがいがないか確認してから保存してください。";
       }, 500);
     }).catch(function(err){
-      aiStatus("読み取れませんでした：<br>"+esc(String(err&&err.message||err))+"<br>キー・モデル名・通信をご確認ください。","err");
+      var msg=String(err&&err.message||err);
+      var hint = /Failed to fetch|NetworkError|load failed|aborted|timeout/i.test(msg)
+        ? "通信に失敗しました。①Wi‑Fi/学校のネット制限、②APIキーの有効化（Generative Language API）、③写真が大きすぎないか、をご確認のうえ、少し待って再度おためしください。"
+        : "キー・モデル名・通信をご確認ください。";
+      aiStatus("読み取れませんでした：<br>"+esc(msg)+"<br>"+hint,"err");
     });
   }
 
@@ -817,11 +854,18 @@
     return null;
   }
 
+  function fetchTimeout(url, opts, ms){
+    var ac = (typeof AbortController!=="undefined") ? new AbortController() : null;
+    if(ac) opts=Object.assign({}, opts, {signal:ac.signal});
+    var t=setTimeout(function(){ if(ac) ac.abort(); }, ms||90000);
+    return fetch(url,opts).then(function(r){ clearTimeout(t); return r; },
+                               function(e){ clearTimeout(t); throw e; });
+  }
   function callGemini(key, model, b64, mime){
     var url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(key);
     var body={ contents:[{ parts:[ {text:AI_PROMPT}, {inline_data:{mime_type:mime, data:b64}} ] }],
                generationConfig:{ temperature:0, responseMimeType:"application/json" } };
-    return fetch(url,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) })
+    return fetchTimeout(url,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) })
       .then(function(r){ return r.json().then(function(j){
         if(!r.ok){ throw new Error((j.error&&j.error.message)||("HTTP "+r.status)); }
         try{ return j.candidates[0].content.parts.map(function(p){return p.text||"";}).join(""); }
@@ -835,7 +879,7 @@
         { type:"image", source:{ type:"base64", media_type:mime, data:b64 } },
         { type:"text", text:AI_PROMPT }
       ]}]};
-    return fetch(url,{ method:"POST",
+    return fetchTimeout(url,{ method:"POST",
       headers:{ "Content-Type":"application/json", "x-api-key":key,
                 "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
       body:JSON.stringify(body) })
