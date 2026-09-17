@@ -82,19 +82,16 @@
   .vsent1{padding-right:1.75em} /* モード1のみ：読み欄のレーンを右に確保 */
   .vsent .target{color:var(--accent);font-weight:800;background:var(--accent-soft);border-radius:6px;padding:1px 2px}
 
-  /* mode1: 読みを漢字の右どなり（ふりがなの位置）に書く。
+  /* mode1: 読みを漢字の右どなり（ふりがなの位置）に、かなタイルをドラッグして置く。
      右側に専用レーン(padding-right)を確保し、そこへ絶対配置。漢字と重ならない */
   .tgtwrap{position:relative;display:inline-block;vertical-align:top}
-  .ryin{position:absolute;top:0;left:100%;margin-left:3px;width:1.5em;height:6.8em;
-    writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;
-    font-family:inherit;font-size:1.2rem;font-weight:700;text-align:center;color:var(--ink);
-    padding:4px 2px;border-radius:9px;border:2px dashed var(--accent);
-    background:var(--accent-soft);box-sizing:border-box}
-  .ryin:focus{outline:none;border-style:solid;background:var(--panel)}
-  .ryin::placeholder{color:var(--gray);font-weight:400}
+  .ryslots{position:absolute;top:0;left:100%;margin-left:4px;
+    writing-mode:horizontal-tb;display:flex;flex-direction:column;gap:3px;align-items:center}
+  .slot.ry{width:1.45em;height:1.45em;line-height:1.4em;font-size:1.05rem;border-radius:7px;margin:0}
   .item.correct{background:var(--ok-soft);border-color:var(--ok)}
   .item.wrong{background:var(--ng-soft);border-color:var(--ng)}
-  .item.correct .ryin,.item.wrong .ryin{background:var(--panel)}
+  .item.correct .slot.ry{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+  .item.wrong .slot.ry{border-color:var(--ng);background:var(--ng-soft);color:var(--ng)}
   /* こたえ表示は列の下に絶対配置。列の幅に影響させない(=右がはみ出さない) */
   .verdict{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;
     writing-mode:horizontal-tb;white-space:nowrap;font-weight:800;font-size:.9rem;display:none;text-align:center}
@@ -199,7 +196,7 @@
   </div>
 
   <div class="modes">
-    <button id="tab1" class="on" data-mode="1">✏️ ふりがなを書く</button>
+    <button id="tab1" class="on" data-mode="1">🔤 ふりがなをドラッグ</button>
     <button id="tab2" data-mode="2">🀄 かんじをドラッグ</button>
   </div>
 
@@ -214,7 +211,7 @@
 <!-- bottom dock: tile tray (mode2) + action buttons -->
 <div class="dock" id="dock">
   <div class="tray" id="tray">
-    <p class="cap">↓ かんじを ドラッグ（またはタップ）して あてはめよう</p>
+    <p class="cap" id="trayCap">↓ かんじを ドラッグ（またはタップ）して あてはめよう</p>
     <div class="tiles" id="tiles"></div>
   </div>
   <div class="actions" id="actions">
@@ -378,7 +375,7 @@
 
   /* ============ elements ============ */
   var $=function(id){ return document.getElementById(id); };
-  var stage=$("stage"), testSel=$("testSel"), tray=$("tray"), tiles=$("tiles"), dock=$("dock");
+  var stage=$("stage"), testSel=$("testSel"), tray=$("tray"), tiles=$("tiles"), dock=$("dock"), trayCap=$("trayCap");
   function adjustPad(){ document.body.style.paddingBottom = (dock.offsetHeight + 16) + "px"; }
   window.addEventListener("resize", adjustPad);
   window.addEventListener("orientationchange", function(){ setTimeout(adjustPad,300); });
@@ -408,12 +405,22 @@
     btnMark.classList.remove("hidden");
     btnMark.textContent="◯つけする";
     fillSelector();
-    if(state.mode===1){ tray.classList.remove("show"); renderMode1(); }
+    if(state.mode===1){ renderMode1(); }
     else { renderMode2(); }
     adjustPad();
     window.scrollTo(0,0);
   }
 
+  function buildTiles(pool){
+    pool=shuffle(pool);
+    var th="";
+    for(var p=0;p<pool.length;p++){ th+='<span class="tile" data-id="tile'+p+'">'+esc(pool[p])+'</span>'; }
+    tiles.innerHTML=th;
+    tray.classList.add("show");
+    bindTiles();
+  }
+
+  // モード1: 漢字を見て、右どなりのマスに「ふりがな(かな)」をドラッグして当てはめる
   function renderMode1(){
     var t=findTest(state.testId), h="";
     for(var i=t.items.length-1;i>=0;i--){ // ⑩→① の順にDOM生成し、視覚的に①が右端(右→左)になる
@@ -422,12 +429,19 @@
       h+= '<span class="vno">'+NUM[i]+'</span>';
       h+= '<div class="vsent vsent1">'+esc(it.before)+
           '<span class="tgtwrap"><span class="target">'+esc(it.answer)+'</span>'+
-          '<input class="ryin" type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="よみ"></span>'+
-          esc(it.after)+'</div>';
+          '<span class="ryslots">';
+      var y=it.yomi.split("");
+      for(var s=0;s<y.length;s++){ h+='<span class="slot ry" data-i="'+i+'" data-s="'+s+'"></span>'; }
+      h+= '</span></span>'+esc(it.after)+'</div>';
       h+= '<div class="verdict" data-i="'+i+'"></div>';
       h+='</div>';
     }
     stage.className="sheetv"; stage.innerHTML='<div class="vrow">'+h+'</div>';
+    var pool=[];
+    for(var k=0;k<t.items.length;k++){ pool=pool.concat(t.items[k].yomi.split("")); }
+    trayCap.textContent="↓ ふりがな（ひらがな）を ドラッグ（またはタップ）して あてはめよう";
+    buildTiles(pool);
+    bindSlots();
   }
 
   function renderMode2(){
@@ -457,13 +471,9 @@
     // tiles = all kanji chars shuffled
     var pool=[];
     for(var k=0;k<t.items.length;k++){ pool=pool.concat(kanjiChars(t.items[k].answer)); }
-    pool=shuffle(pool);
-    var th="";
-    for(var p=0;p<pool.length;p++){ th+='<span class="tile" data-id="tile'+p+'">'+esc(pool[p])+'</span>'; }
-    tiles.innerHTML=th;
-    tray.classList.add("show");
+    trayCap.textContent="↓ かんじを ドラッグ（またはタップ）して あてはめよう";
+    buildTiles(pool);
     bindSlots();
-    bindTiles();
   }
 
   /* ============ mode2 interaction (tap + pointer drag) ============ */
@@ -575,16 +585,14 @@
   function gradeMode1(){
     var t=findTest(state.testId), correct=0;
     for(var i=0;i<t.items.length;i++){
-      var inp=stage.querySelector('input[data-i="'+i+'"]');
+      var y=t.items[i].yomi, placed="";
+      for(var s=0;s<y.length;s++){ var key=i+"-"+s; placed += state.place[key]?tileChar(state.place[key]):""; }
+      var ok = placed.length===y.length && normYomi(placed)===normYomi(y);
       var card=stage.querySelector('.item[data-i="'+i+'"]');
+      card.classList.remove("correct","wrong"); card.classList.add(ok?"correct":"wrong");
       var vd=stage.querySelector('.verdict[data-i="'+i+'"]');
-      var ok = normYomi(inp.value)!=="" && normYomi(inp.value)===normYomi(t.items[i].yomi);
-      inp.readOnly=true;
-      card.classList.remove("correct","wrong");
-      card.classList.add(ok?"correct":"wrong");
       vd.classList.add("show"); vd.classList.remove("c","w"); vd.classList.add(ok?"c":"w");
-      vd.innerHTML = ok ? '<span class="mark">◯</span>'
-                        : '<span class="mark">✕</span>'+esc(t.items[i].yomi);
+      vd.innerHTML = ok ? '<span class="mark">◯</span>' : '<span class="mark">✕</span>'+esc(y);
       if(ok) correct++;
     }
     finishGrade(correct, t.items.length);
