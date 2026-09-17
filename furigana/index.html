@@ -918,12 +918,15 @@
     var t0=Date.now();
     var timer=setInterval(function(){
       var s=Math.round((Date.now()-t0)/1000);
-      phStatus('<span class="spin"></span>写真を読み取っています…（'+s+'秒）<br>10〜40秒ほどかかります。',"busy");
+      phStatus('<span class="spin"></span>写真を読み取っています…（'+s+'秒）<br>'+note,"busy");
     },1000);
     function stop(){ clearInterval(timer); }
+    var note="10〜40秒ほどかかります。";
     phStatus('<span class="spin"></span>写真を読み取っています…（0秒）',"busy");
     prepImage(file).then(function(im){
-      return callGemini(key, model||"gemini-3.6-flash", im.data, im.mime);
+      return callGemini(key, model||"gemini-3.6-flash", im.data, im.mime, function(n){
+        note="AIが混み合っています。少し待って自動で再試行中…（"+n+"回目）";
+      });
     }).then(function(text){
       stop();
       var obj=parseAI(text);
@@ -952,10 +955,15 @@
       stop();
       $("phPick").classList.remove("hidden"); // もう一度「撮る／選ぶ」できるように戻す
       var msg=String(err&&err.message||err);
-      var hint = /Failed to fetch|NetworkError|load failed|abort|timeout|時間切れ/i.test(msg)
-        ? "通信がうまくいきませんでした。①Wi‑Fi/学校のネット制限、②APIキーの有効化（Generative Language API）、をご確認のうえ再度おためしください。"
-        : "⚙︎のAPIキー・モデル名・通信をご確認ください。";
-      phStatus("読み取れませんでした：<br>"+esc(msg)+"<br>"+hint,"err");
+      var transient = (err&&err.transient) || /high demand|overloaded|temporar|try again|unavailable|resource_exhausted|混み/i.test(msg);
+      if(transient){
+        phStatus("いま GeminiのAI が混み合っています。<br>自動で数回ためしましたが、つながりませんでした。<br><b>数分おいて、もう一度「カメラで撮る／写真から選ぶ」をおしてください。</b>","err");
+      } else {
+        var hint = /Failed to fetch|NetworkError|load failed|abort|timeout|時間切れ/i.test(msg)
+          ? "通信がうまくいきませんでした。①Wi‑Fi/学校のネット制限、②APIキーの有効化（Generative Language API）、をご確認のうえ再度おためしください。"
+          : "⚙︎のAPIキー・モデル名・通信をご確認ください。";
+        phStatus("読み取れませんでした：<br>"+esc(msg)+"<br>"+hint,"err");
+      }
     });
   }
 
@@ -994,21 +1002,39 @@
     return fetchTimeout(url,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) })
       .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, status:r.status, j:j }; }); });
   }
-  function callGemini(key, model, b64, mime){
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+  // 一時的（混雑・サーバー側）エラーかどうか。キー間違い等は含めない
+  function isTransient(status,msg){
+    return status===503||status===429||status===500||
+      /high demand|overloaded|temporar|try again|unavailable|resource_exhausted|internal error/i.test(msg||"");
+  }
+  function callGemini(key, model, b64, mime, onRetry){
     var full={ temperature:0, maxOutputTokens:4096, responseMimeType:"application/json",
                responseSchema:GEMINI_SCHEMA, thinkingConfig:{ thinkingBudget:0 } };
     var basic={ temperature:0, maxOutputTokens:4096, responseMimeType:"application/json" };
-    return geminiOnce(key,model,b64,mime,full).then(function(res){
-      if(res.ok) return geminiExtract(res.j);
-      // 新しい設定項目(思考オフ/スキーマ)が未対応なら、最小構成で1回だけ再試行
-      if(res.status===400){
-        return geminiOnce(key,model,b64,mime,basic).then(function(r2){
-          if(r2.ok) return geminiExtract(r2.j);
-          throw new Error((r2.j.error&&r2.j.error.message)||("HTTP "+r2.status));
-        });
-      }
-      throw new Error((res.j.error&&res.j.error.message)||("HTTP "+res.status));
-    });
+    var delays=[3000,8000,14000]; // 混雑時に待って再試行する間隔（最大3回）
+    function attempt(cfg, tries){
+      return geminiOnce(key,model,b64,mime,cfg).then(function(res){
+        if(res.ok) return geminiExtract(res.j);
+        var msg=(res.j.error&&res.j.error.message)||("HTTP "+res.status);
+        // 思考オフ/スキーマが未対応なら、最小構成に切り替えて同じ回で再試行
+        if(res.status===400 && cfg!==basic) return attempt(basic, tries);
+        // 混雑・一時的エラーなら、少し待って自動で再試行
+        if(isTransient(res.status,msg) && tries<delays.length){
+          if(onRetry) onRetry(tries+1);
+          return sleep(delays[tries]).then(function(){ return attempt(cfg, tries+1); });
+        }
+        var e=new Error(msg); e.transient=isTransient(res.status,msg); throw e;
+      }, function(err){
+        var m=String(err&&err.message||err);
+        if(tries<delays.length && /Failed to fetch|NetworkError|load failed|時間切れ|timeout/i.test(m)){
+          if(onRetry) onRetry(tries+1);
+          return sleep(delays[tries]).then(function(){ return attempt(cfg, tries+1); });
+        }
+        throw err;
+      });
+    }
+    return attempt(full, 0);
   }
   /* close modals on backdrop tap */
   [mSet,mEdit,mPhoto].forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m) m.classList.remove("show"); }); });
