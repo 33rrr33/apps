@@ -85,13 +85,21 @@
   /* mode1: 読みを漢字の右どなり（ふりがなの位置）に、かなタイルをドラッグして置く。
      右側に専用レーン(padding-right)を確保し、そこへ絶対配置。漢字と重ならない */
   .tgtwrap{position:relative;display:inline-block;vertical-align:top}
-  .ryslots{position:absolute;top:50%;left:100%;transform:translateY(-50%);margin-left:4px;
-    writing-mode:horizontal-tb;display:flex;flex-direction:column;gap:3px;align-items:center}
-  .slot.ry{width:1.35em;height:1.35em;line-height:1.3em;font-size:1rem;border-radius:7px;margin:0}
+  /* 読みは1つの箱にかなを入れていく（字数を見せない）。入れるほど下に伸びる */
+  .ryzone{position:absolute;top:50%;left:100%;transform:translateY(-50%);margin-left:4px;
+    writing-mode:horizontal-tb;display:flex;flex-direction:column;align-items:center;gap:1px;
+    min-width:1.75em;min-height:1.9em;padding:4px 3px;border:2px dashed var(--tile-line);
+    border-radius:10px;background:var(--bg)}
+  .ryzone.filled{border-style:solid;border-color:var(--accent);background:var(--tile)}
+  .ryzone.selhi{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+  .kchip{display:flex;align-items:center;justify-content:center;width:1.3em;height:1.3em;
+    font-size:1.05rem;font-weight:700;color:var(--ink);cursor:pointer}
   .item.correct{background:var(--ok-soft);border-color:var(--ok)}
   .item.wrong{background:var(--ng-soft);border-color:var(--ng)}
-  .item.correct .slot.ry{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
-  .item.wrong .slot.ry{border-color:var(--ng);background:var(--ng-soft);color:var(--ng)}
+  .item.correct .ryzone{border-color:var(--ok);background:var(--ok-soft)}
+  .item.correct .kchip{color:var(--ok)}
+  .item.wrong .ryzone{border-color:var(--ng);background:var(--ng-soft)}
+  .item.wrong .kchip{color:var(--ng)}
   /* こたえ表示は列の下に絶対配置。列の幅に影響させない(=右がはみ出さない) */
   .verdict{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;
     writing-mode:horizontal-tb;white-space:nowrap;font-weight:800;font-size:.9rem;display:none;text-align:center}
@@ -359,7 +367,7 @@
   function findTest(id){ var a=allTests(); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return a[0]; }
 
   /* ============ state ============ */
-  var state = { mode:1, testId:null, graded:false, place:{} , sel:null };
+  var state = { mode:1, testId:null, graded:false, place:{}, zone:{}, sel:null };
 
   /* ============ helpers ============ */
   function isKanji(ch){ return /[一-龯々〇㐀-䶿]/.test(ch); }
@@ -399,7 +407,7 @@
 
   /* ============ render ============ */
   function render(){
-    state.graded=false; state.place={}; state.sel=null;
+    state.graded=false; state.place={}; state.zone={}; state.sel=null;
     score.classList.remove("show");
     btnRetry.classList.add("hidden");
     btnMark.classList.remove("hidden");
@@ -429,10 +437,8 @@
       h+= '<span class="vno">'+NUM[i]+'</span>';
       h+= '<div class="vsent vsent1">'+esc(it.before)+
           '<span class="tgtwrap"><span class="target">'+esc(it.answer)+'</span>'+
-          '<span class="ryslots">';
-      var y=it.yomi.split("");
-      for(var s=0;s<y.length;s++){ h+='<span class="slot ry" data-i="'+i+'" data-s="'+s+'"></span>'; }
-      h+= '</span></span>'+esc(it.after)+'</div>';
+          '<span class="ryzone" data-i="'+i+'"></span></span>'+
+          esc(it.after)+'</div>';
       h+= '<div class="verdict" data-i="'+i+'"></div>';
       h+='</div>';
     }
@@ -480,6 +486,8 @@
   function bindSlots(){
     var ss=stage.querySelectorAll(".slot");
     for(var i=0;i<ss.length;i++){ ss[i].addEventListener("click", onSlotClick); }
+    var zs=stage.querySelectorAll(".ryzone");
+    for(var j=0;j<zs.length;j++){ zs[j].addEventListener("click", onZoneClick); }
   }
   function bindTiles(){
     var ts=tiles.querySelectorAll(".tile");
@@ -488,7 +496,7 @@
   function clearSel(){
     if(state.sel){ var el=tiles.querySelector('[data-id="'+state.sel+'"]'); if(el) el.classList.remove("sel"); }
     state.sel=null;
-    var hs=stage.querySelectorAll(".slot.selhi"); for(var i=0;i<hs.length;i++) hs[i].classList.remove("selhi");
+    var hs=stage.querySelectorAll(".slot.selhi,.ryzone.selhi"); for(var i=0;i<hs.length;i++) hs[i].classList.remove("selhi");
   }
   function selectTile(id){
     clearSel(); state.sel=id;
@@ -521,6 +529,41 @@
     var key=slot.getAttribute("data-i")+"-"+slot.getAttribute("data-s");
     if(state.place[key]){ freeTile(state.place[key]); delete state.place[key]; }
     slot.textContent=""; slot.classList.remove("filled");
+  }
+
+  /* ---- mode1: 読みの箱（複数のかなを順番に入れる。字数は見せない） ---- */
+  function renderZone(i){
+    var z=stage.querySelector('.ryzone[data-i="'+i+'"]'); if(!z) return;
+    var arr=state.zone[i]||[], h="";
+    for(var k=0;k<arr.length;k++){ h+='<span class="kchip" data-pos="'+k+'">'+esc(tileChar(arr[k]))+'</span>'; }
+    z.innerHTML=h;
+    z.classList.toggle("filled", arr.length>0);
+    var chips=z.querySelectorAll('.kchip');
+    for(var c=0;c<chips.length;c++){ chips[c].addEventListener("click", onChipClick); }
+  }
+  function appendToZone(zoneEl, tileId){
+    if(state.graded) return;
+    var i=zoneEl.getAttribute("data-i");
+    // もし他の箱に入っていたら取り除く
+    for(var k in state.zone){ var idx=state.zone[k].indexOf(tileId); if(idx>=0){ state.zone[k].splice(idx,1); renderZone(k); } }
+    if(!state.zone[i]) state.zone[i]=[];
+    state.zone[i].push(tileId);
+    var tEl=tiles.querySelector('[data-id="'+tileId+'"]'); if(tEl) tEl.classList.add("used");
+    renderZone(i); clearSel();
+  }
+  function onChipClick(e){
+    if(state.graded) return;
+    e.stopPropagation();
+    var chip=e.currentTarget, z=chip.parentNode;
+    // かなを選んでいるときは（チップの上でも）追加。選んでいなければそのチップを取り除く
+    if(state.sel){ appendToZone(z, state.sel); return; }
+    var i=z.getAttribute("data-i"), pos=+chip.getAttribute("data-pos");
+    var arr=state.zone[i]||[]; var tileId=arr[pos];
+    if(tileId!=null){ arr.splice(pos,1); freeTile(tileId); renderZone(i); }
+  }
+  function onZoneClick(e){
+    if(state.graded) return;
+    if(state.sel){ appendToZone(e.currentTarget, state.sel); }
   }
 
   function onSlotClick(e){
@@ -558,8 +601,8 @@
       drag.ghost.style.left=e.clientX+"px"; drag.ghost.style.top=e.clientY+"px";
       // highlight slot under pointer
       var el=document.elementFromPoint(e.clientX,e.clientY);
-      var slot=el&&el.closest?el.closest(".slot"):null;
-      var prev=stage.querySelector(".slot.selhi"); if(prev&&prev!==slot) prev.classList.remove("selhi");
+      var slot=el&&el.closest?el.closest(".slot,.ryzone"):null;
+      var prev=stage.querySelector(".slot.selhi,.ryzone.selhi"); if(prev&&prev!==slot) prev.classList.remove("selhi");
       if(slot) slot.classList.add("selhi");
     }
   }
@@ -570,24 +613,24 @@
     var d=drag; drag=null;
     if(d.ghost){ d.ghost.parentNode&&d.ghost.parentNode.removeChild(d.ghost); }
     if(d.el) d.el.style.visibility="";
-    var hs=stage.querySelectorAll(".slot.selhi"); for(var i=0;i<hs.length;i++) hs[i].classList.remove("selhi");
+    var hs=stage.querySelectorAll(".slot.selhi,.ryzone.selhi"); for(var i=0;i<hs.length;i++) hs[i].classList.remove("selhi");
     if(!d.moved){
       // treat as tap: toggle select
       if(state.sel===d.id) clearSel(); else selectTile(d.id);
       return;
     }
     var el=document.elementFromPoint(e.clientX,e.clientY);
-    var slot=el&&el.closest?el.closest(".slot"):null;
-    if(slot){ placeTile(slot, d.id); }
+    var tgt=el&&el.closest?el.closest(".slot,.ryzone"):null;
+    if(tgt){ if(tgt.classList.contains("ryzone")) appendToZone(tgt, d.id); else placeTile(tgt, d.id); }
   }
 
   /* ============ grading ============ */
   function gradeMode1(){
     var t=findTest(state.testId), correct=0;
     for(var i=0;i<t.items.length;i++){
-      var y=t.items[i].yomi, placed="";
-      for(var s=0;s<y.length;s++){ var key=i+"-"+s; placed += state.place[key]?tileChar(state.place[key]):""; }
-      var ok = placed.length===y.length && normYomi(placed)===normYomi(y);
+      var y=t.items[i].yomi, placed="", arr=state.zone[i]||[];
+      for(var s=0;s<arr.length;s++){ placed += tileChar(arr[s]); }
+      var ok = placed.length>0 && normYomi(placed)===normYomi(y);
       var card=stage.querySelector('.item[data-i="'+i+'"]');
       card.classList.remove("correct","wrong"); card.classList.add(ok?"correct":"wrong");
       var vd=stage.querySelector('.verdict[data-i="'+i+'"]');
