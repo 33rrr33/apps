@@ -347,6 +347,26 @@
     box.innerHTML = html;
   }
 
+  // On phones, open the Gmail app instead of the (slow) mobile web. Falls back to web if the app
+  // isn't installed. Desktop keeps the normal new-tab web link.
+  function isMobile() {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+  function openGmailApp() {
+    var web = "https://mail.google.com/mail/u/0/#inbox";
+    var done = false;
+    var fallback = setTimeout(function () { if (!done) window.location.href = web; }, 1200);
+    function cancel() { done = true; clearTimeout(fallback); }
+    window.addEventListener("pagehide", cancel, { once: true });
+    document.addEventListener("visibilitychange", function vh() { if (document.hidden) { cancel(); document.removeEventListener("visibilitychange", vh); } });
+    try { window.location.href = "googlegmail://"; } catch (e) { clearTimeout(fallback); window.location.href = web; }
+  }
+  $("mailList").addEventListener("click", function (e) {
+    if (!e.target.closest("a")) return;
+    if (isMobile()) { e.preventDefault(); openGmailApp(); }  // let desktop open the web link normally
+  });
+
   // ---------- render: tasks (calTasks + lineItems) ----------
   function allTasks() {
     var arr = [];
