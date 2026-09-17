@@ -73,13 +73,15 @@
   /* ===== 縦書きワークシート（iPad向け・①→⑩を右から左へ） ===== */
   #stage.sheetv{flex:1 1 auto;min-height:0;overflow:hidden;position:relative;
     display:flex;align-items:center;justify-content:center}
-  .vrow{display:flex;flex-direction:row;align-items:flex-start;gap:10px;
+  /* すべての白枠を同じ高さ(align-items:stretch)にそろえる */
+  .vrow{display:flex;flex-direction:row;align-items:stretch;gap:10px;
     width:max-content;margin-inline:auto;padding:8px 14px 34px}
-  .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:18px;
+  .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:40px;
     background:var(--panel);border:1px solid var(--line);border-radius:16px;
     padding:12px 8px 18px;box-shadow:var(--shadow)}
+  /* 問題番号は白枠の上・中央（align-self:centerで水平中央、最初の子で上） */
   .vno{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
-    align-self:flex-start;background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1.05rem}
+    align-self:center;background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1.05rem}
   .vsent{position:relative;writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;white-space:nowrap;
     font-size:1.5rem;line-height:1.8;letter-spacing:.01em;flex:0 0 auto;text-align:start}
   .vsent1{padding-right:1.75em} /* モード1のみ：読み欄のレーンを右に確保 */
@@ -91,7 +93,7 @@
   /* 読みは自由記述（縦書きのテキスト入力）。漢字の右どなり・上下中央。字数は見せない */
   .ryin{position:absolute;top:50%;left:100%;transform:translateY(-50%);margin-left:4px;
     writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;
-    width:1.7em;height:6em;padding:6px 3px;font-family:inherit;font-size:1.2rem;font-weight:700;
+    width:1.7em;height:4.8em;padding:6px 3px;font-family:inherit;font-size:1.2rem;font-weight:700;
     text-align:center;color:var(--ink);border:2px dashed var(--accent);border-radius:10px;
     background:var(--accent-soft);box-sizing:border-box}
   .ryin:focus{outline:none;border-style:solid;background:var(--panel)}
