@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ふりがなテスト</title>
+<meta name="description" content="漢字の読みをこたえる・かんじをドラッグ。写真からテストを自動作成。">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c96f3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ふりがな">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{
+    --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
+    --accent:#c96f3f;--accent-soft:#fbeee4;--gray:#9a9186;--shadow:0 2px 12px rgba(90,70,40,.08);
+    --ok:#2e8b57;--ok-soft:#e5f3ea;--ng:#c0392b;--ng-soft:#fbe9e7;
+    --tile:#fff6ec;--tile-line:#e6c9a8;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;
+    --accent:#e0895a;--accent-soft:#3a2f26;--gray:#7d7568;--shadow:0 2px 14px rgba(0,0,0,.35);
+    --ok:#5fce8f;--ok-soft:#243a2d;--ng:#f0857a;--ng-soft:#3a2723;
+    --tile:#3a3128;--tile-line:#5c4c39;
+  }}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{overscroll-behavior-y:none}
+  body{margin:0;padding:0 14px calc(120px + env(safe-area-inset-bottom));
+    padding-top:env(safe-area-inset-top);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;-webkit-text-size-adjust:100%;}
+  header{max-width:680px;margin:0 auto;padding:22px 4px 4px;text-align:center}
+  h1{font-size:1.45rem;margin:0 0 2px}
+  .lead{color:var(--sub);margin:0;font-size:.82rem}
+  main{max-width:680px;margin:0 auto}
+
+  /* ---- toolbar ---- */
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 6px}
+  .bar .grow{flex:1 1 140px;min-width:120px}
+  select,.btn{font-family:inherit;font-size:.9rem;border-radius:14px;border:1px solid var(--line);
+    background:var(--panel);color:var(--ink);padding:11px 13px;box-shadow:var(--shadow);cursor:pointer}
+  select{width:100%;font-weight:700}
+  .btn{font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;transition:transform .1s}
+  .btn:active{transform:scale(.96)}
+  .btn.icon{padding:11px 12px}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.ghost{background:transparent;box-shadow:none}
+
+  /* ---- mode tabs ---- */
+  .modes{display:flex;gap:6px;background:var(--accent-soft);padding:5px;border-radius:16px;margin:8px 0 16px}
+  .modes button{flex:1;border:none;background:transparent;color:var(--sub);font-family:inherit;
+    font-weight:700;font-size:.92rem;padding:11px 6px;border-radius:12px;cursor:pointer;transition:.12s}
+  .modes button.on{background:var(--panel);color:var(--accent);box-shadow:var(--shadow)}
+
+  /* ---- score banner ---- */
+  .score{display:none;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:12px 16px;box-shadow:var(--shadow);margin:0 0 14px}
+  .score.show{display:flex}
+  .score .pt{font-size:1.7rem;font-weight:800;color:var(--accent)}
+  .score .pt small{font-size:.9rem;color:var(--sub);font-weight:700}
+  .score .msg{font-size:.9rem;color:var(--sub)}
+
+  /* ---- item cards ---- */
+  .item{background:var(--panel);border:1px solid var(--line);border-radius:18px;
+    padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px}
+  .item .no{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+    background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1rem;margin-bottom:6px}
+  .sent{font-size:1.35rem;line-height:1.9;letter-spacing:.02em;word-break:break-word}
+  .sent .target{color:var(--accent);font-weight:800;border-bottom:3px solid var(--accent);padding:0 2px;border-radius:2px}
+
+  /* mode1 input */
+  .ansrow{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .ansrow label{font-size:.82rem;color:var(--sub);font-weight:700;white-space:nowrap}
+  .ansrow input{flex:1;font-family:inherit;font-size:1.25rem;padding:10px 12px;border-radius:12px;
+    border:2px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
+  .ansrow input:focus{outline:none;border-color:var(--accent)}
+  .item.correct{background:var(--ok-soft);border-color:var(--ok)}
+  .item.wrong{background:var(--ng-soft);border-color:var(--ng)}
+  .verdict{margin-top:8px;font-weight:800;font-size:.95rem;display:none}
+  .verdict.show{display:block}
+  .verdict.c{color:var(--ok)} .verdict.w{color:var(--ng)}
+  .verdict .mark{font-size:1.3rem;margin-right:6px}
+  .item.correct .ansrow input,.item.wrong .ansrow input{background:var(--panel)}
+
+  /* ---- mode2 (drag) ---- */
+  .sent2{font-size:1.35rem;line-height:2.6;word-break:break-word}
+  .grp{display:inline-flex;flex-direction:column;align-items:center;vertical-align:bottom;margin:0 1px}
+  .grp .ruby{font-size:.72rem;color:var(--accent);font-weight:800;line-height:1;height:1em;margin-bottom:3px}
+  .grp .row{display:inline-flex;align-items:flex-end;gap:1px}
+  .slot{display:inline-flex;align-items:center;justify-content:center;width:1.55em;height:1.7em;
+    border:2px dashed var(--tile-line);border-radius:8px;background:var(--bg);
+    font-size:1.35rem;font-weight:700;color:var(--ink);vertical-align:bottom}
+  .slot.filled{border-style:solid;background:var(--tile);border-color:var(--accent)}
+  .slot.selhi{border-color:var(--accent);background:var(--accent-soft)}
+  .slot .kana{color:var(--ink)}
+  .okuri{font-size:1.35rem;font-weight:700}
+  .grp.g-correct .slot{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+  .grp.g-wrong .slot{border-color:var(--ng);background:var(--ng-soft);color:var(--ng)}
+  .fix{font-size:.75rem;color:var(--ng);font-weight:800;margin-top:2px;display:block}
+
+  /* bottom dock (tiles + action button) */
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:40;
+    background:var(--panel);border-top:1px solid var(--line);
+    box-shadow:0 -3px 16px rgba(90,70,40,.12);
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+  .tray{display:none;margin-bottom:8px}
+  .tray.show{display:block}
+  .tray .cap{font-size:.72rem;color:var(--sub);font-weight:700;margin:0 2px 6px}
+  .tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-height:34vh;overflow:auto}
+  .tile{width:2em;height:2em;font-size:1.35rem;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--tile);border:2px solid var(--tile-line);border-radius:12px;color:var(--ink);
+    cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .08s}
+  .tile:active{transform:scale(.92)}
+  .tile.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+  .tile.used{opacity:0;pointer-events:none;width:0;height:0;margin:-4px;border:0}
+  .drag-ghost{position:fixed;z-index:100;pointer-events:none;
+    background:var(--tile);border:2px solid var(--accent);border-radius:12px;
+    width:2em;height:2em;font-size:1.5rem;font-weight:800;
+    display:flex;align-items:center;justify-content:center;color:var(--ink);
+    box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translate(-50%,-50%) scale(1.1)}
+
+  /* ---- action buttons (inside dock) ---- */
+  .actions{max-width:680px;margin:0 auto;display:flex;gap:10px}
+  .actions .btn{flex:1;justify-content:center;padding:15px;font-size:1.05rem}
+
+  /* ---- modal ---- */
+  .modal{position:fixed;inset:0;z-index:60;background:rgba(30,22,12,.5);
+    display:none;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto}
+  .modal.show{display:flex}
+  .sheet{background:var(--panel);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,.3);
+    width:100%;max-width:560px;padding:20px;margin:auto 0}
+  .sheet h2{margin:0 0 4px;font-size:1.15rem}
+  .sheet p.note{margin:0 0 14px;color:var(--sub);font-size:.82rem;line-height:1.7}
+  .sheet label.fl{display:block;font-size:.8rem;font-weight:700;color:var(--sub);margin:12px 0 5px}
+  .sheet input.tx,.sheet textarea.tx{width:100%;font-family:inherit;font-size:1rem;padding:11px 12px;
+    border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+  .sheet input.tx:focus,.sheet textarea.tx:focus{outline:none;border-color:var(--accent)}
+  .edrow{display:grid;grid-template-columns:26px 1fr;gap:8px;align-items:start;margin-bottom:10px}
+  .edrow .n{padding-top:10px;font-weight:800;color:var(--accent);text-align:center}
+  .edrow .fields{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .edrow .fields input{font-size:.92rem;padding:8px 9px;border-radius:10px;border:1.5px solid var(--line);
+    background:var(--bg);color:var(--ink);font-family:inherit;width:100%}
+  .edrow .fields input:focus{outline:none;border-color:var(--accent)}
+  .edrow .fields input::placeholder{color:var(--gray);font-size:.82rem}
+  .sheet .row2{display:flex;gap:10px;margin-top:18px}
+  .sheet .row2 .btn{flex:1;justify-content:center;padding:13px}
+  .status{font-size:.85rem;font-weight:700;margin:10px 0 0;min-height:1.2em}
+  .status.err{color:var(--ng)} .status.ok{color:var(--ok)} .status.busy{color:var(--accent)}
+  .prov{display:flex;gap:8px;margin-bottom:4px}
+  .prov label{flex:1;border:2px solid var(--line);border-radius:12px;padding:10px;text-align:center;
+    font-size:.85rem;font-weight:700;cursor:pointer;background:var(--bg)}
+  .prov input{display:none}
+  .prov input:checked + span{color:var(--accent)}
+  .prov label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+  a.link{color:var(--accent);font-weight:700}
+  .hidden{display:none!important}
+  footer{max-width:680px;margin:26px auto 0;text-align:center;color:var(--sub);font-size:.74rem}
+  footer a{color:var(--accent);font-weight:700;text-decoration:none}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--accent);border-right-color:transparent;
+    border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📖 ふりがなテスト</h1>
+  <p class="lead">漢字の読みをこたえる・かんじをドラッグ</p>
+</header>
+
+<main>
+  <div class="bar">
+    <div class="grow"><select id="testSel" aria-label="テストをえらぶ"></select></div>
+    <button class="btn" id="btnPhoto" title="写真からテストを作る">🖼 写真</button>
+    <button class="btn icon" id="btnEdit" title="このテストを編集">✏️</button>
+    <button class="btn icon" id="btnNew" title="新しく作る">＋</button>
+    <button class="btn icon ghost" id="btnSet" title="設定">⚙︎</button>
+  </div>
+
+  <div class="modes">
+    <button id="tab1" class="on" data-mode="1">✏️ ふりがなを書く</button>
+    <button id="tab2" data-mode="2">🀄 かんじをドラッグ</button>
+  </div>
+
+  <div class="score" id="score">
+    <div class="pt" id="scorePt">0<small>/100</small></div>
+    <div class="msg" id="scoreMsg"></div>
+  </div>
+
+  <div id="stage"></div>
+</main>
+
+<!-- bottom dock: tile tray (mode2) + action buttons -->
+<div class="dock" id="dock">
+  <div class="tray" id="tray">
+    <p class="cap">↓ かんじを ドラッグ（またはタップ）して あてはめよう</p>
+    <div class="tiles" id="tiles"></div>
+  </div>
+  <div class="actions" id="actions">
+    <button class="btn primary" id="btnMark">◯つけする</button>
+    <button class="btn ghost hidden" id="btnRetry">もう一度</button>
+  </div>
+</div>
+
+<!-- settings modal -->
+<div class="modal" id="mSet">
+  <div class="sheet">
+    <h2>⚙︎ 設定（AIで写真からテストを作る）</h2>
+    <p class="note">テストの写真から自動でテストを作るには、AIのAPIキーが必要です。キーはこの端末の中だけに保存され、送信は各AIサービスへの解析リクエストのみです。</p>
+    <label class="fl">つかうAI</label>
+    <div class="prov" id="provPick">
+      <label><input type="radio" name="prov" value="gemini"><span>Google&nbsp;Gemini<br><small>無料枠あり・おすすめ</small></span></label>
+      <label><input type="radio" name="prov" value="claude"><span>Anthropic&nbsp;Claude<br><small>Claudeのキー</small></span></label>
+    </div>
+    <label class="fl">APIキー</label>
+    <input class="tx" id="apiKey" type="password" placeholder="AIza... / sk-ant-..." autocomplete="off">
+    <label class="fl">モデル名（ふつうはそのままでOK）</label>
+    <input class="tx" id="apiModel" type="text" placeholder="gemini-2.5-flash">
+    <p class="note" id="keyHelp" style="margin-top:10px"></p>
+    <div class="row2">
+      <button class="btn ghost" id="setCancel">とじる</button>
+      <button class="btn primary" id="setSave">ほぞん</button>
+    </div>
+    <p class="status" id="setStatus"></p>
+    <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+    <div class="row2" style="margin-top:0">
+      <button class="btn ghost" id="btnExport">📤 バックアップ書き出し</button>
+      <button class="btn ghost" id="btnImport">📥 読み込み</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+  </div>
+</div>
+
+<!-- editor modal -->
+<div class="modal" id="mEdit">
+  <div class="sheet">
+    <h2 id="edTitle">✏️ テストを作る／なおす</h2>
+    <p class="note">①〜⑩の文章はそのまま。「漢字」＝ますに入る漢字（送りがなも）、「よみ」＝その読み（ひらがな）を入れてください。前後の文はあれば入れます。</p>
+    <label class="fl">テストの名前</label>
+    <input class="tx" id="edName" type="text" placeholder="例）カンジー博士の暗号解読③">
+    <div id="edRows" style="margin-top:14px"></div>
+    <div class="row2">
+      <button class="btn ghost" id="edCancel">キャンセル</button>
+      <button class="btn primary" id="edSave">ほぞんする</button>
+    </div>
+    <div class="row2" style="margin-top:8px">
+      <button class="btn ghost" id="edDelete" style="color:var(--ng)">🗑 このテストを削除</button>
+    </div>
+    <p class="status" id="edStatus"></p>
+  </div>
+</div>
+
+<input type="file" id="photoFile" accept="image/*" capture="environment" class="hidden">
+
+<footer>
+  ホーム画面に追加できます（共有 → 「ホーム画面に追加」）<br>
+  <a href="../">← 先生のアプリ一覧へ</a>
+</footer>
+
+<script>
+"use strict";
+(function(){
+  var NUM = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];
+
+  /* ============ 収録テスト（写真から作成・光村5年 下）============ */
+  var SAMPLES = [
+    { id:"s4", title:"和語・漢語・外来語（p146〜148）", sample:true, items:[
+      {before:"道が", answer:"混み合う", yomi:"こみあう", after:"。"},
+      {before:"黄色と緑色が", answer:"混じる", yomi:"まじる", after:"。"},
+      {before:"黄身と白身を", answer:"混ぜる", yomi:"まぜる", after:"。"},
+      {before:"駅が", answer:"混雑", yomi:"こんざつ", after:"する。"},
+      {before:"", answer:"雑木林", yomi:"ぞうきばやし", after:"で遊ぶ。"},
+      {before:"話を", answer:"省略", yomi:"しょうりゃく", after:"する。"},
+      {before:"虫を", answer:"採集", yomi:"さいしゅう", after:"する。"},
+      {before:"山菜", answer:"採り", yomi:"とり", after:"をする。"},
+      {before:"進入", answer:"禁止", yomi:"きんし", after:"の表示。"},
+      {before:"実現の", answer:"可能性", yomi:"かのうせい", after:"が高い。"}
+    ]},
+    { id:"s5", title:"固有種が教えてくれること①（p149〜157）", sample:true, items:[
+      {before:"成長の", answer:"過程", yomi:"かてい", after:"。"},
+      {before:"本を読んで", answer:"過ごす", yomi:"すごす", after:"。"},
+      {before:"自然が", answer:"豊か", yomi:"ゆたか", after:"な町。"},
+      {before:"広く", answer:"分布", yomi:"ぶんぷ", after:"する。"},
+      {before:"やわらかい", answer:"布", yomi:"ぬの", after:"。"},
+      {before:"森林が", answer:"減少", yomi:"げんしょう", after:"する。"},
+      {before:"犬を", answer:"保護", yomi:"ほご", after:"する。"},
+      {before:"", answer:"再び", yomi:"ふたたび", after:"対戦する。"},
+      {before:"ごみが", answer:"増加", yomi:"ぞうか", after:"する。"},
+      {before:"", answer:"証人", yomi:"しょうにん", after:"を立てる。"}
+    ]},
+    { id:"s7", title:"カンジーはかせの暗号解読②（p167）", sample:true, items:[
+      {before:"重要な", answer:"文化財", yomi:"ぶんかざい", after:"。"},
+      {before:"", answer:"山脈", yomi:"さんみゃく", after:"が続く。"},
+      {before:"大きな", answer:"組織", yomi:"そしき", after:"。"},
+      {before:"はたを", answer:"織る", yomi:"おる", after:"。"},
+      {before:"競技場を", answer:"建築", yomi:"けんちく", after:"する。"},
+      {before:"城を", answer:"築く", yomi:"きずく", after:"。"},
+      {before:"", answer:"旧道", yomi:"きゅうどう", after:"ぞいの旅館。"},
+      {before:"利用の", answer:"規則", yomi:"きそく", after:"を作る。"},
+      {before:"", answer:"貯金", yomi:"ちょきん", after:"が増える。"},
+      {before:"もの知りな", answer:"博士", yomi:"はかせ", after:"。"}
+    ]},
+    { id:"s8", title:"カンジー博士の暗号解読③（p167〜174）", sample:true, items:[
+      {before:"", answer:"新型", yomi:"しんがた", after:"の機器。"},
+      {before:"", answer:"血液", yomi:"けつえき", after:"が流れる。"},
+      {before:"", answer:"基本", yomi:"きほん", after:"のルール。"},
+      {before:"絵を", answer:"額", yomi:"がく", after:"に入れる。"},
+      {before:"", answer:"額", yomi:"ひたい", after:"に手を当てる。"},
+      {before:"", answer:"事故", yomi:"じこ", after:"が減る。"},
+      {before:"", answer:"夫婦", yomi:"ふうふ", after:"でくらす。"},
+      {before:"命を", answer:"救う", yomi:"すくう", after:"。"},
+      {before:"", answer:"救助", yomi:"きゅうじょ", after:"を待つ。"},
+      {before:"", answer:"本格的", yomi:"ほんかくてき", after:"な味。"}
+    ]},
+    { id:"s9", title:"やなせたかし ―あなたは、どう考える（p174〜189）", sample:true, items:[
+      {before:"姉が就", answer:"職", yomi:"しょく", after:"する。"},
+      {before:"会場に", answer:"移動", yomi:"いどう", after:"する。"},
+      {before:"新しい土地へ", answer:"移る", yomi:"うつる", after:"。"},
+      {before:"祖父の", answer:"墓", yomi:"はか", after:"。"},
+      {before:"", answer:"正義", yomi:"せいぎ", after:"をふりかざす。"},
+      {before:"", answer:"殺し合い", yomi:"ころしあい", after:"をやめる。"},
+      {before:"", answer:"貧しい", yomi:"まずしい", after:"考え。"},
+      {before:"大きな", answer:"出版社", yomi:"しゅっぱんしゃ", after:"。"},
+      {before:"考えを", answer:"述べる", yomi:"のべる", after:"。"},
+      {before:"", answer:"仮", yomi:"かり", after:"のけい約。"}
+    ]}
+  ];
+
+  /* ============ storage ============ */
+  var LS_TESTS = "furigana_tests_v1";
+  var LS_PROV  = "furigana_provider_v1";
+  var LS_KEY   = "furigana_apikey_v1";
+  var LS_MODEL = "furigana_model_v1";
+  var LS_LAST  = "furigana_last_v1";
+  function lsGet(k,d){ try{ var v=localStorage.getItem(k); return v===null?d:v; }catch(e){ return d; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function loadUserTests(){ try{ return JSON.parse(localStorage.getItem(LS_TESTS)||"[]"); }catch(e){ return []; } }
+  function saveUserTests(a){ try{ localStorage.setItem(LS_TESTS, JSON.stringify(a)); }catch(e){} }
+
+  function allTests(){ return SAMPLES.concat(loadUserTests()); }
+  function findTest(id){ var a=allTests(); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return a[0]; }
+
+  /* ============ state ============ */
+  var state = { mode:1, testId:null, graded:false, place:{} , sel:null };
+
+  /* ============ helpers ============ */
+  function isKanji(ch){ return /[一-龯々〇㐀-䶿]/.test(ch); }
+  function kanjiChars(s){ var out=[]; for(var i=0;i<s.length;i++){ if(isKanji(s[i])) out.push(s[i]); } return out; }
+  function normYomi(s){
+    s = (s||"").replace(/\s/g,"").trim();
+    // katakana -> hiragana
+    s = s.replace(/[ァ-ヶ]/g, function(c){ return String.fromCharCode(c.charCodeAt(0)-0x60); });
+    return s;
+  }
+  function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+  function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  /* ============ elements ============ */
+  var $=function(id){ return document.getElementById(id); };
+  var stage=$("stage"), testSel=$("testSel"), tray=$("tray"), tiles=$("tiles"), dock=$("dock");
+  function adjustPad(){ document.body.style.paddingBottom = (dock.offsetHeight + 16) + "px"; }
+  window.addEventListener("resize", adjustPad);
+  window.addEventListener("orientationchange", function(){ setTimeout(adjustPad,300); });
+  var score=$("score"), scorePt=$("scorePt"), scoreMsg=$("scoreMsg");
+  var btnMark=$("btnMark"), btnRetry=$("btnRetry");
+
+  /* ============ test selector ============ */
+  function fillSelector(){
+    var a=allTests(), h="";
+    var us=loadUserTests();
+    h+='<optgroup label="収録テスト">';
+    for(var i=0;i<SAMPLES.length;i++){ h+='<option value="'+SAMPLES[i].id+'">'+esc(SAMPLES[i].title)+'</option>'; }
+    h+='</optgroup>';
+    if(us.length){ h+='<optgroup label="じぶんで作ったテスト">';
+      for(var j=0;j<us.length;j++){ h+='<option value="'+us[j].id+'">'+esc(us[j].title)+'</option>'; }
+      h+='</optgroup>';
+    }
+    testSel.innerHTML=h;
+    testSel.value=state.testId;
+  }
+
+  /* ============ render ============ */
+  function render(){
+    state.graded=false; state.place={}; state.sel=null;
+    score.classList.remove("show");
+    btnRetry.classList.add("hidden");
+    btnMark.classList.remove("hidden");
+    btnMark.textContent="◯つけする";
+    fillSelector();
+    if(state.mode===1){ tray.classList.remove("show"); renderMode1(); }
+    else { renderMode2(); }
+    adjustPad();
+    window.scrollTo(0,0);
+  }
+
+  function renderMode1(){
+    var t=findTest(state.testId), h="";
+    for(var i=0;i<t.items.length;i++){
+      var it=t.items[i];
+      h+='<div class="item" data-i="'+i+'">';
+      h+= '<span class="no">'+NUM[i]+'</span>';
+      h+= '<div class="sent">'+esc(it.before)+'<span class="target">'+esc(it.answer)+'</span>'+esc(it.after)+'</div>';
+      h+= '<div class="ansrow"><label>よみ</label>'+
+          '<input type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="ひらがなで書く"></div>';
+      h+= '<div class="verdict" data-i="'+i+'"></div>';
+      h+='</div>';
+    }
+    stage.innerHTML=h;
+  }
+
+  function renderMode2(){
+    var t=findTest(state.testId), h="";
+    // build slots
+    for(var i=0;i<t.items.length;i++){
+      var it=t.items[i];
+      h+='<div class="item" data-i="'+i+'">';
+      h+= '<span class="no">'+NUM[i]+'</span>';
+      h+= '<div class="sent2">'+esc(it.before);
+      // group with ruby + slots/okurigana
+      h+= '<span class="grp" data-i="'+i+'"><span class="ruby">'+esc(it.yomi)+'</span><span class="row">';
+      var chars=it.answer.split(""), slotIdx=0;
+      for(var c=0;c<chars.length;c++){
+        if(isKanji(chars[c])){
+          h+='<span class="slot" data-i="'+i+'" data-s="'+slotIdx+'"></span>';
+          slotIdx++;
+        } else {
+          h+='<span class="okuri">'+esc(chars[c])+'</span>';
+        }
+      }
+      h+= '</span></span>';
+      h+= esc(it.after)+'</div>';
+      h+='</div>';
+    }
+    stage.innerHTML=h;
+    // tiles = all kanji chars shuffled
+    var pool=[];
+    for(var k=0;k<t.items.length;k++){ pool=pool.concat(kanjiChars(t.items[k].answer)); }
+    pool=shuffle(pool);
+    var th="";
+    for(var p=0;p<pool.length;p++){ th+='<span class="tile" data-id="tile'+p+'">'+esc(pool[p])+'</span>'; }
+    tiles.innerHTML=th;
+    tray.classList.add("show");
+    bindSlots();
+    bindTiles();
+  }
+
+  /* ============ mode2 interaction (tap + pointer drag) ============ */
+  function bindSlots(){
+    var ss=stage.querySelectorAll(".slot");
+    for(var i=0;i<ss.length;i++){ ss[i].addEventListener("click", onSlotClick); }
+  }
+  function bindTiles(){
+    var ts=tiles.querySelectorAll(".tile");
+    for(var i=0;i<ts.length;i++){ ts[i].addEventListener("pointerdown", onTilePointerDown); }
+  }
+  function clearSel(){
+    if(state.sel){ var el=tiles.querySelector('[data-id="'+state.sel+'"]'); if(el) el.classList.remove("sel"); }
+    state.sel=null;
+    var hs=stage.querySelectorAll(".slot.selhi"); for(var i=0;i<hs.length;i++) hs[i].classList.remove("selhi");
+  }
+  function selectTile(id){
+    clearSel(); state.sel=id;
+    var el=tiles.querySelector('[data-id="'+id+'"]'); if(el) el.classList.add("sel");
+  }
+  function tileChar(id){ var el=tiles.querySelector('[data-id="'+id+'"]'); return el?el.textContent:""; }
+
+  function placeTile(slot, tileId){
+    if(state.graded) return;
+    var key=slot.getAttribute("data-i")+"-"+slot.getAttribute("data-s");
+    // if slot already has a tile, free it
+    if(state.place[key]){ freeTile(state.place[key]); }
+    // if this tile was elsewhere, remove from there
+    for(var k in state.place){ if(state.place[k]===tileId){ delete state.place[k]; clearSlotDom(k); } }
+    state.place[key]=tileId;
+    slot.textContent=tileChar(tileId);
+    slot.classList.add("filled");
+    var tEl=tiles.querySelector('[data-id="'+tileId+'"]'); if(tEl) tEl.classList.add("used");
+    clearSel();
+  }
+  function clearSlotDom(key){
+    var s=stage.querySelector('.slot[data-i="'+key.split("-")[0]+'"][data-s="'+key.split("-")[1]+'"]');
+    if(s){ s.textContent=""; s.classList.remove("filled"); }
+  }
+  function freeTile(tileId){
+    var tEl=tiles.querySelector('[data-id="'+tileId+'"]'); if(tEl) tEl.classList.remove("used");
+  }
+  function emptySlot(slot){
+    if(state.graded) return;
+    var key=slot.getAttribute("data-i")+"-"+slot.getAttribute("data-s");
+    if(state.place[key]){ freeTile(state.place[key]); delete state.place[key]; }
+    slot.textContent=""; slot.classList.remove("filled");
+  }
+
+  function onSlotClick(e){
+    if(state.graded) return;
+    var slot=e.currentTarget;
+    var key=slot.getAttribute("data-i")+"-"+slot.getAttribute("data-s");
+    if(state.sel){ placeTile(slot, state.sel); return; }
+    // no tile selected: tapping a filled slot returns its tile
+    if(state.place[key]){ emptySlot(slot); }
+  }
+
+  // pointer drag (works on touch + mouse). If barely moved -> treat as tap-select.
+  var drag=null;
+  function onTilePointerDown(e){
+    if(state.graded) return;
+    var tileEl=e.currentTarget;
+    if(tileEl.classList.contains("used")) return;
+    var id=tileEl.getAttribute("data-id");
+    drag={ id:id, el:tileEl, startX:e.clientX, startY:e.clientY, moved:false, ghost:null };
+    tileEl.setPointerCapture && tileEl.setPointerCapture(e.pointerId);
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+    e.preventDefault();
+  }
+  function onPointerMove(e){
+    if(!drag) return;
+    var dx=e.clientX-drag.startX, dy=e.clientY-drag.startY;
+    if(!drag.moved && (Math.abs(dx)>6 || Math.abs(dy)>6)){
+      drag.moved=true;
+      var g=document.createElement("div"); g.className="drag-ghost"; g.textContent=drag.el.textContent;
+      document.body.appendChild(g); drag.ghost=g;
+      drag.el.style.visibility="hidden";
+    }
+    if(drag.moved && drag.ghost){
+      drag.ghost.style.left=e.clientX+"px"; drag.ghost.style.top=e.clientY+"px";
+      // highlight slot under pointer
+      var el=document.elementFromPoint(e.clientX,e.clientY);
+      var slot=el&&el.closest?el.closest(".slot"):null;
+      var prev=stage.querySelector(".slot.selhi"); if(prev&&prev!==slot) prev.classList.remove("selhi");
+      if(slot) slot.classList.add("selhi");
+    }
+  }
+  function onPointerUp(e){
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+    if(!drag) return;
+    var d=drag; drag=null;
+    if(d.ghost){ d.ghost.parentNode&&d.ghost.parentNode.removeChild(d.ghost); }
+    if(d.el) d.el.style.visibility="";
+    var hs=stage.querySelectorAll(".slot.selhi"); for(var i=0;i<hs.length;i++) hs[i].classList.remove("selhi");
+    if(!d.moved){
+      // treat as tap: toggle select
+      if(state.sel===d.id) clearSel(); else selectTile(d.id);
+      return;
+    }
+    var el=document.elementFromPoint(e.clientX,e.clientY);
+    var slot=el&&el.closest?el.closest(".slot"):null;
+    if(slot){ placeTile(slot, d.id); }
+  }
+
+  /* ============ grading ============ */
+  function gradeMode1(){
+    var t=findTest(state.testId), correct=0;
+    for(var i=0;i<t.items.length;i++){
+      var inp=stage.querySelector('input[data-i="'+i+'"]');
+      var card=stage.querySelector('.item[data-i="'+i+'"]');
+      var vd=stage.querySelector('.verdict[data-i="'+i+'"]');
+      var ok = normYomi(inp.value)!=="" && normYomi(inp.value)===normYomi(t.items[i].yomi);
+      inp.readOnly=true;
+      card.classList.remove("correct","wrong");
+      card.classList.add(ok?"correct":"wrong");
+      vd.classList.add("show"); vd.classList.remove("c","w"); vd.classList.add(ok?"c":"w");
+      vd.innerHTML = ok ? '<span class="mark">◯</span>せいかい！'
+                        : '<span class="mark">✕</span>こたえ：<b>'+esc(t.items[i].yomi)+'</b>';
+      if(ok) correct++;
+    }
+    finishGrade(correct, t.items.length);
+  }
+  function gradeMode2(){
+    var t=findTest(state.testId), correct=0;
+    for(var i=0;i<t.items.length;i++){
+      var ks=kanjiChars(t.items[i].answer);
+      var grp=stage.querySelector('.grp[data-i="'+i+'"]');
+      var ok=true, placedStr="";
+      for(var s=0;s<ks.length;s++){
+        var key=i+"-"+s;
+        var ch = state.place[key] ? tileChar(state.place[key]) : "";
+        placedStr+=ch||"　";
+        if(ch!==ks[s]) ok=false;
+      }
+      grp.classList.remove("g-correct","g-wrong");
+      grp.classList.add(ok?"g-correct":"g-wrong");
+      var old=grp.parentNode.querySelector(".fix"); if(old) old.parentNode.removeChild(old);
+      if(!ok){
+        var fx=document.createElement("span"); fx.className="fix";
+        fx.textContent="こたえ："+t.items[i].answer;
+        grp.parentNode.appendChild(fx);
+      }
+      if(ok) correct++;
+    }
+    finishGrade(correct, t.items.length);
+  }
+  function finishGrade(correct,total){
+    state.graded=true;
+    var pt=Math.round(correct/total*100);
+    scorePt.innerHTML=pt+'<small>点</small>';
+    var m = pt===100 ? "全問せいかい！すごい！🌟" : correct>=Math.ceil(total*0.7) ? "よくできました！💮" : "もう一度ちょうせんしよう💪";
+    scoreMsg.textContent = correct+" / "+total+" もん　"+m;
+    score.classList.add("show");
+    btnMark.classList.add("hidden");
+    btnRetry.classList.remove("hidden");
+    clearSel();
+    adjustPad();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  /* ============ buttons ============ */
+  btnMark.addEventListener("click", function(){
+    if(state.mode===1) gradeMode1(); else gradeMode2();
+  });
+  btnRetry.addEventListener("click", render);
+  testSel.addEventListener("change", function(){ state.testId=testSel.value; lsSet(LS_LAST,state.testId); render(); });
+  document.querySelectorAll(".modes button").forEach(function(b){
+    b.addEventListener("click", function(){
+      var m=+b.getAttribute("data-mode");
+      if(m===state.mode) return;
+      state.mode=m;
+      $("tab1").classList.toggle("on", m===1);
+      $("tab2").classList.toggle("on", m===2);
+      render();
+    });
+  });
+
+  /* ============ settings modal ============ */
+  var mSet=$("mSet");
+  function openSet(){
+    var prov=lsGet(LS_PROV,"gemini");
+    document.querySelector('input[name="prov"][value="'+prov+'"]').checked=true;
+    $("apiKey").value=lsGet(LS_KEY,"");
+    $("apiModel").value=lsGet(LS_MODEL,"");
+    updateKeyHelp();
+    $("setStatus").textContent="";
+    mSet.classList.add("show");
+  }
+  function updateKeyHelp(){
+    var prov=document.querySelector('input[name="prov"]:checked').value;
+    if(!$("apiModel").value){ $("apiModel").placeholder = prov==="gemini" ? "gemini-2.5-flash" : "claude-sonnet-4-5"; }
+    $("keyHelp").innerHTML = prov==="gemini"
+      ? '無料のキーは <a class="link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> で取得できます（AIza… で始まります）。'
+      : 'キーは <a class="link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a> で取得できます（sk-ant-… で始まります）。';
+  }
+  $("provPick").addEventListener("change", updateKeyHelp);
+  $("btnSet").addEventListener("click", openSet);
+  $("setCancel").addEventListener("click", function(){ mSet.classList.remove("show"); });
+  $("setSave").addEventListener("click", function(){
+    var prov=document.querySelector('input[name="prov"]:checked').value;
+    lsSet(LS_PROV,prov); lsSet(LS_KEY,$("apiKey").value.trim()); lsSet(LS_MODEL,$("apiModel").value.trim());
+    var st=$("setStatus"); st.className="status ok"; st.textContent="ほぞんしました。";
+    setTimeout(function(){ mSet.classList.remove("show"); },700);
+  });
+
+  /* export / import */
+  $("btnExport").addEventListener("click", function(){
+    var data=JSON.stringify({ version:1, tests:loadUserTests() }, null, 2);
+    var blob=new Blob([data],{type:"application/json"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a"); a.href=url; a.download="furigana-tests.json"; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+  });
+  $("btnImport").addEventListener("click", function(){ $("importFile").click(); });
+  $("importFile").addEventListener("change", function(e){
+    var f=e.target.files[0]; if(!f) return;
+    var r=new FileReader();
+    r.onload=function(){
+      try{
+        var o=JSON.parse(r.result);
+        var arr = Array.isArray(o)?o:(o.tests||[]);
+        var cur=loadUserTests();
+        for(var i=0;i<arr.length;i++){ if(!arr[i].id) arr[i].id="u"+Date.now()+"_"+i; arr[i].sample=false; cur.push(arr[i]); }
+        saveUserTests(cur); fillSelector();
+        var st=$("setStatus"); st.className="status ok"; st.textContent=arr.length+"件よみこみました。";
+      }catch(err){ var s=$("setStatus"); s.className="status err"; s.textContent="読み込めませんでした。"; }
+    };
+    r.readAsText(f); e.target.value="";
+  });
+
+  /* ============ editor modal ============ */
+  var mEdit=$("mEdit"), edEditingId=null;
+  function blankItems(){ var a=[]; for(var i=0;i<10;i++) a.push({before:"",answer:"",yomi:"",after:""}); return a; }
+  function openEditor(test, isNew){
+    edEditingId = isNew ? null : (test.sample ? null : test.id);
+    $("edTitle").textContent = isNew ? "✏️ 新しいテストを作る" : "✏️ テストをなおす";
+    $("edName").value = isNew ? "" : (test.title||"");
+    $("edDelete").style.display = (edEditingId? "":"none");
+    var items = test && test.items && test.items.length ? test.items : blankItems();
+    var h="";
+    for(var i=0;i<10;i++){
+      var it=items[i]||{before:"",answer:"",yomi:"",after:""};
+      h+='<div class="edrow"><div class="n">'+NUM[i]+'</div><div class="fields">'+
+         '<input data-f="before" data-i="'+i+'" placeholder="前の文（任意）" value="'+esc(it.before)+'">'+
+         '<input data-f="after"  data-i="'+i+'" placeholder="後の文（任意）" value="'+esc(it.after)+'">'+
+         '<input data-f="answer" data-i="'+i+'" placeholder="漢字（例 移動）" value="'+esc(it.answer)+'">'+
+         '<input data-f="yomi"   data-i="'+i+'" placeholder="よみ（例 いどう）" value="'+esc(it.yomi)+'">'+
+         '</div></div>';
+    }
+    $("edRows").innerHTML=h;
+    $("edStatus").textContent="";
+    mEdit.classList.add("show");
+  }
+  function readEditor(){
+    var items=[];
+    for(var i=0;i<10;i++){
+      function g(f){ var el=$("edRows").querySelector('input[data-f="'+f+'"][data-i="'+i+'"]'); return el?el.value.trim():""; }
+      items.push({ before:g("before"), answer:g("answer"), yomi:g("yomi"), after:g("after") });
+    }
+    return items;
+  }
+  $("btnNew").addEventListener("click", function(){ openEditor(null,true); });
+  $("btnEdit").addEventListener("click", function(){
+    var t=findTest(state.testId);
+    if(t.sample){
+      if(confirm("収録テストはそのまま編集できません。コピーして自分のテストとして編集しますか？")){
+        openEditor({title:t.title+"（コピー）", items:t.items}, true);
+      }
+    } else { openEditor(t,false); }
+  });
+  $("edCancel").addEventListener("click", function(){ mEdit.classList.remove("show"); });
+  $("edSave").addEventListener("click", function(){
+    var name=$("edName").value.trim();
+    var items=readEditor();
+    var filled=0; for(var i=0;i<items.length;i++){ if(items[i].answer&&items[i].yomi) filled++; }
+    var st=$("edStatus");
+    if(!name){ st.className="status err"; st.textContent="テストの名前を入れてください。"; return; }
+    if(filled===0){ st.className="status err"; st.textContent="漢字とよみを1問以上入れてください。"; return; }
+    var us=loadUserTests();
+    if(edEditingId){
+      for(var j=0;j<us.length;j++){ if(us[j].id===edEditingId){ us[j].title=name; us[j].items=items; } }
+    } else {
+      var id="u"+Date.now();
+      us.push({ id:id, title:name, sample:false, items:items });
+      edEditingId=id; state.testId=id; lsSet(LS_LAST,id);
+    }
+    saveUserTests(us);
+    mEdit.classList.remove("show");
+    render();
+  });
+  $("edDelete").addEventListener("click", function(){
+    if(!edEditingId) return;
+    if(!confirm("このテストを削除しますか？")) return;
+    var us=loadUserTests().filter(function(t){ return t.id!==edEditingId; });
+    saveUserTests(us);
+    state.testId=SAMPLES[0].id; lsSet(LS_LAST,state.testId);
+    mEdit.classList.remove("show");
+    render();
+  });
+
+  /* ============ AI: photo -> test ============ */
+  var AI_PROMPT =
+    "あなたは日本の小学校の漢字プリントを読み取るアシスタントです。"+
+    "画像は『漢字を書きましょう』形式のテストで、四角い解答らんは空白、"+
+    "その横に小さなひらがなの読みがな（ヒント）と前後の文が書かれています。"+
+    "ヒントの読みと前後の文脈から、各問（①〜⑩）でますに入る漢字（送りがなも含む）を推測してください。"+
+    "波線（〜）が付いた読みは送りがなも書くことを意味します。"+
+    "文章は絶対に変えないでください。出力は次のJSONのみ（説明文なし）："+
+    '{"title":"テスト名","items":[{"before":"ますの前の文","answer":"ますに入る漢字（送りがな込み）","yomi":"その読み（ひらがな全部）","after":"ますの後の文"}]}。'+
+    "itemsは必ず10個。beforeやafterが無い場合は空文字\"\"。titleは単元名やページが分かれば入れる。";
+
+  function fileToBase64(file){
+    return new Promise(function(res,rej){
+      var r=new FileReader();
+      r.onload=function(){ var s=r.result; res(s.substring(s.indexOf(",")+1)); };
+      r.onerror=rej; r.readAsDataURL(file);
+    });
+  }
+  function aiStatus(msg,cls){ var s=$("setStatus"); s.className="status "+(cls||""); s.innerHTML=msg; }
+
+  $("btnPhoto").addEventListener("click", function(){
+    var key=lsGet(LS_KEY,"");
+    if(!key){ openSet(); aiStatus("先にAPIキーを保存してください。","err"); return; }
+    $("photoFile").click();
+  });
+  $("photoFile").addEventListener("change", function(e){
+    var f=e.target.files[0]; e.target.value="";
+    if(f) analyzePhoto(f);
+  });
+
+  function analyzePhoto(file){
+    var prov=lsGet(LS_PROV,"gemini"), key=lsGet(LS_KEY,""), model=lsGet(LS_MODEL,"");
+    mSet.classList.add("show");
+    aiStatus('<span class="spin"></span>写真を読み取っています…（10〜30秒）',"busy");
+    fileToBase64(file).then(function(b64){
+      var mime=file.type||"image/jpeg";
+      if(prov==="gemini") return callGemini(key, model||"gemini-2.5-flash", b64, mime);
+      return callClaude(key, model||"claude-sonnet-4-5", b64, mime);
+    }).then(function(text){
+      var obj=parseAI(text);
+      if(!obj||!obj.items||!obj.items.length) throw new Error("読み取り結果が空でした");
+      // normalize to 10
+      var items=obj.items.slice(0,10);
+      while(items.length<10) items.push({before:"",answer:"",yomi:"",after:""});
+      for(var i=0;i<items.length;i++){
+        items[i]={ before:items[i].before||"", answer:items[i].answer||"", yomi:items[i].yomi||"", after:items[i].after||"" };
+      }
+      aiStatus("読み取れました！内容を確認して保存してください。","ok");
+      setTimeout(function(){
+        mSet.classList.remove("show");
+        openEditor({ title: obj.title||"写真から作ったテスト", items:items }, true);
+        $("edStatus").className="status ok";
+        $("edStatus").textContent="AIが読み取りました。まちがいがないか確認してから保存してください。";
+      }, 500);
+    }).catch(function(err){
+      aiStatus("読み取れませんでした：<br>"+esc(String(err&&err.message||err))+"<br>キー・モデル名・通信をご確認ください。","err");
+    });
+  }
+
+  function parseAI(text){
+    if(!text) return null;
+    text=text.trim();
+    // strip code fences
+    text=text.replace(/^```(json)?/i,"").replace(/```$/,"").trim();
+    try{ return JSON.parse(text); }catch(e){}
+    var m=text.match(/\{[\s\S]*\}/); if(m){ try{ return JSON.parse(m[0]); }catch(e2){} }
+    return null;
+  }
+
+  function callGemini(key, model, b64, mime){
+    var url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(key);
+    var body={ contents:[{ parts:[ {text:AI_PROMPT}, {inline_data:{mime_type:mime, data:b64}} ] }],
+               generationConfig:{ temperature:0, responseMimeType:"application/json" } };
+    return fetch(url,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) })
+      .then(function(r){ return r.json().then(function(j){
+        if(!r.ok){ throw new Error((j.error&&j.error.message)||("HTTP "+r.status)); }
+        try{ return j.candidates[0].content.parts.map(function(p){return p.text||"";}).join(""); }
+        catch(e){ throw new Error("応答の形式が想定外です"); }
+      });});
+  }
+  function callClaude(key, model, b64, mime){
+    var url="https://api.anthropic.com/v1/messages";
+    var body={ model:model, max_tokens:2048, temperature:0,
+      messages:[{ role:"user", content:[
+        { type:"image", source:{ type:"base64", media_type:mime, data:b64 } },
+        { type:"text", text:AI_PROMPT }
+      ]}]};
+    return fetch(url,{ method:"POST",
+      headers:{ "Content-Type":"application/json", "x-api-key":key,
+                "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
+      body:JSON.stringify(body) })
+      .then(function(r){ return r.json().then(function(j){
+        if(!r.ok){ throw new Error((j.error&&j.error.message)||("HTTP "+r.status)); }
+        try{ return j.content.map(function(c){return c.text||"";}).join(""); }
+        catch(e){ throw new Error("応答の形式が想定外です"); }
+      });});
+  }
+
+  /* close modals on backdrop tap */
+  [mSet,mEdit].forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m) m.classList.remove("show"); }); });
+
+  /* ============ init ============ */
+  var last=lsGet(LS_LAST,"");
+  var ids=allTests().map(function(t){return t.id;});
+  state.testId = (last && ids.indexOf(last)>=0) ? last : SAMPLES[0].id;
+  render();
+})();
+</script>
+</body>
+</html>
