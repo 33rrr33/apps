@@ -274,7 +274,7 @@
     var calSpan = calName ? '<span class="hero-cal"> ・ ' + calName + "</span>" : "";
     var heroEnd = ev.end && ev.end.dateTime ? '<span class="hero-end">〜' + fmtTime(new Date(ev.end.dateTime)) + "</span>" : "";
     content.innerHTML =
-      '<div class="hero-line">' +
+      '<div class="hero-line clickable" data-link="' + esc(ev.htmlLink || "") + '">' +
       '<span class="hero-time">' + fmtTime(new Date(ev.start.dateTime)) + heroEnd + "</span>" +
       '<span class="hero-title">' + esc(ev.summary || "(タイトルなし)") + calSpan + "</span>" +
       '<span class="hero-cd">' + cd + "</span>" +
@@ -300,7 +300,7 @@
     if (allday.length) {
       chips.hidden = false;
       var CMAX = 2, cShow = allday.length > CMAX ? allday.slice(0, CMAX - 1) : allday.slice(0, CMAX);
-      var chtml = cShow.map(function (e) { return '<span class="ac-chip">' + esc(e.summary || "(予定)") + "</span>"; }).join("");
+      var chtml = cShow.map(function (e) { return '<span class="ac-chip clickable" data-link="' + esc(e.htmlLink || "") + '">' + esc(e.summary || "(予定)") + "</span>"; }).join("");
       if (allday.length > CMAX) chtml += '<span class="ac-chip more">+' + (allday.length - (CMAX - 1)) + "</span>";
       chips.innerHTML = chtml;
     } else clearChips();
@@ -309,7 +309,7 @@
       var st = new Date(e.start.dateTime).getTime(), gap = st - now, u = "ok";
       if (gap <= 15 * 60000) u = "imminent"; else if (gap <= 60 * 60000) u = "soon";
       var end = e.end && e.end.dateTime ? '<span class="ev-end">〜' + fmtTime(new Date(e.end.dateTime)) + "</span>" : "";
-      return '<div class="ev-row" data-state="' + u + '">' +
+      return '<div class="ev-row clickable" data-state="' + u + '" data-link="' + esc(e.htmlLink || "") + '">' +
         '<span class="ev-time">' + fmtTime(new Date(e.start.dateTime)) + end + "</span>" +
         '<span class="ev-title">' + esc(e.summary || "(タイトルなし)") + "</span>" +
         '<span class="ev-cd">' + shortGap(gap) + "</span></div>";
@@ -366,6 +366,22 @@
     if (!e.target.closest("a")) return;
     if (isMobile()) { e.preventDefault(); openGmailApp(); }  // let desktop open the web link normally
   });
+
+  // tap a calendar item → open that event (Google Calendar app via universal link on mobile, web on desktop)
+  function openLink(url) {
+    if (!url) return;
+    var a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  function bindOpen(el) {
+    if (!el) return;
+    el.addEventListener("click", function (e) {
+      var t = e.target.closest("[data-link]"); if (!t) return;
+      openLink(t.getAttribute("data-link"));
+    });
+  }
+  bindOpen($("hero")); bindOpen($("schedList")); bindOpen($("alldayChips"));
 
   // ---------- render: tasks (calTasks + lineItems) ----------
   function allTasks() {
@@ -543,7 +559,8 @@
   $("tmKindTask").addEventListener("click", function () { setTmKind("task"); $("tmTitle").focus(); });
   $("tmKindLine").addEventListener("click", function () { setTmKind("line"); $("tmTitle").focus(); });
   $("tmSave").addEventListener("click", saveFromModal);
-  $("tmTitle").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); saveFromModal(); } });
+  // Enter must NOT auto-register (only the 追加 button does). Swallow Enter so nothing happens.
+  $("tmTitle").addEventListener("keydown", function (e) { if (e.key === "Enter") e.preventDefault(); });
 
   // ---------- add-event modal (＋予定 → primary calendar) ----------
   function openEvtModal() {
