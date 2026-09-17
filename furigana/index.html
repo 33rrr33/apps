@@ -85,7 +85,7 @@
   /* mode1: 読みを漢字の右どなり（ふりがなの位置）に、かなタイルをドラッグして置く。
      右側に専用レーン(padding-right)を確保し、そこへ絶対配置。漢字と重ならない */
   .tgtwrap{position:relative;display:inline-block;vertical-align:top}
-  .ryslots{position:absolute;top:0;left:100%;margin-left:4px;
+  .ryslots{position:absolute;top:50%;left:100%;transform:translateY(-50%);margin-left:4px;
     writing-mode:horizontal-tb;display:flex;flex-direction:column;gap:3px;align-items:center}
   .slot.ry{width:1.45em;height:1.45em;line-height:1.4em;font-size:1.05rem;border-radius:7px;margin:0}
   .item.correct{background:var(--ok-soft);border-color:var(--ok)}
