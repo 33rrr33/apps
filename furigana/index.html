@@ -38,7 +38,7 @@
   header{max-width:680px;margin:0 auto;padding:22px 4px 4px;text-align:center}
   h1{font-size:1.45rem;margin:0 0 2px}
   .lead{color:var(--sub);margin:0;font-size:.82rem}
-  main{max-width:1180px;margin:0 auto}
+  main{max-width:none;margin:0}
   .bar,.modes,.score{max-width:640px;margin-left:auto;margin-right:auto}
 
   /* ---- toolbar ---- */
@@ -69,11 +69,10 @@
   .score .msg{font-size:.9rem;color:var(--sub)}
 
   /* ===== 縦書きワークシート（iPad向け・①→⑩を右から左へ） ===== */
-  #stage.sheetv{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
-    overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0}
+  #stage.sheetv{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0}
   .vrow{display:flex;flex-direction:row;align-items:flex-start;gap:16px;
-    width:max-content;margin-inline:auto;padding:12px 48px 18px}
-  .vcol{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:14px;
+    width:max-content;margin-inline:auto;padding:12px 48px 52px}
+  .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:14px;
     background:var(--panel);border:1px solid var(--line);border-radius:18px;
     padding:16px 12px;box-shadow:var(--shadow)}
   .vno{display:flex;align-items:center;justify-content:center;width:38px;height:38px;flex:0 0 auto;
@@ -93,10 +92,12 @@
   .item.correct{background:var(--ok-soft);border-color:var(--ok)}
   .item.wrong{background:var(--ng-soft);border-color:var(--ng)}
   .item.correct .ryin,.item.wrong .ryin{background:var(--panel)}
-  .verdict{writing-mode:horizontal-tb;font-weight:800;font-size:1rem;display:none;text-align:center;min-height:1.3em}
+  /* こたえ表示は列の下に絶対配置。列の幅に影響させない(=右がはみ出さない) */
+  .verdict{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;
+    writing-mode:horizontal-tb;white-space:nowrap;font-weight:800;font-size:.9rem;display:none;text-align:center}
   .verdict.show{display:block}
   .verdict.c{color:var(--ok)} .verdict.w{color:var(--ng)}
-  .verdict .mark{font-size:1.35rem}
+  .verdict .mark{font-size:1.2rem;margin-right:2px}
 
   /* mode2: ますとルビ（縦書きではルビは右側に自動配置） */
   ruby.grp{ruby-position:over;-webkit-ruby-position:before}
@@ -446,6 +447,7 @@
       }
       h+= '</span><rt>'+esc(it.yomi)+'</rt></ruby>';
       h+= esc(it.after)+'</div>';
+      h+= '<div class="verdict" data-i="'+i+'"></div>';
       h+='</div>';
     }
     stage.className="sheetv"; stage.innerHTML='<div class="vrow">'+h+'</div>';
@@ -578,8 +580,8 @@
       card.classList.remove("correct","wrong");
       card.classList.add(ok?"correct":"wrong");
       vd.classList.add("show"); vd.classList.remove("c","w"); vd.classList.add(ok?"c":"w");
-      vd.innerHTML = ok ? '<span class="mark">◯</span>せいかい！'
-                        : '<span class="mark">✕</span>こたえ：<b>'+esc(t.items[i].yomi)+'</b>';
+      vd.innerHTML = ok ? '<span class="mark">◯</span>'
+                        : '<span class="mark">✕</span>'+esc(t.items[i].yomi);
       if(ok) correct++;
     }
     finishGrade(correct, t.items.length);
@@ -598,12 +600,12 @@
       }
       grp.classList.remove("g-correct","g-wrong");
       grp.classList.add(ok?"g-correct":"g-wrong");
-      var old=grp.parentNode.querySelector(".fix"); if(old) old.parentNode.removeChild(old);
-      if(!ok){
-        var fx=document.createElement("span"); fx.className="fix";
-        fx.textContent="こたえ："+t.items[i].answer;
-        grp.parentNode.appendChild(fx);
-      }
+      var card=stage.querySelector('.item[data-i="'+i+'"]');
+      card.classList.remove("correct","wrong"); card.classList.add(ok?"correct":"wrong");
+      // こたえは列の下（横書きの小さな見出し）に表示。縦書きの中に入れると列が広がるため
+      var vd=stage.querySelector('.verdict[data-i="'+i+'"]');
+      vd.classList.add("show"); vd.classList.remove("c","w"); vd.classList.add(ok?"c":"w");
+      vd.innerHTML = ok ? '<span class="mark">◯</span>' : '<span class="mark">✕</span>'+esc(t.items[i].answer);
       if(ok) correct++;
     }
     finishGrade(correct, t.items.length);
