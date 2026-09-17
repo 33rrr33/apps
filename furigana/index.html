@@ -95,7 +95,8 @@
   .grp .ruby{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:1px;
     font-size:.72rem;color:var(--accent);font-weight:800;line-height:1;white-space:nowrap;pointer-events:none}
   .grp .row{display:inline-block;white-space:nowrap}
-  .slot{display:inline-block;width:1.5em;height:1.55em;line-height:1.42em;text-align:center;
+  /* overflow:hidden で中身に関係なく「ますの下端」を基準にし、文字を置いてもズレないようにする */
+  .slot{display:inline-block;overflow:hidden;width:1.5em;height:1.55em;line-height:1.5em;text-align:center;
     border:2px dashed var(--tile-line);border-radius:8px;background:var(--bg);
     font-size:1.4rem;font-weight:700;color:var(--ink);vertical-align:-0.34em}
   .slot.filled{border-style:solid;background:var(--tile);border-color:var(--accent)}
