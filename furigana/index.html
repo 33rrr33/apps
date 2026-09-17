@@ -174,12 +174,6 @@
   .sheet .row2 .btn{flex:1;justify-content:center;padding:13px}
   .status{font-size:.85rem;font-weight:700;margin:10px 0 0;min-height:1.2em}
   .status.err{color:var(--ng)} .status.ok{color:var(--ok)} .status.busy{color:var(--accent)}
-  .prov{display:flex;gap:8px;margin-bottom:4px}
-  .prov label{flex:1;border:2px solid var(--line);border-radius:12px;padding:10px;text-align:center;
-    font-size:.85rem;font-weight:700;cursor:pointer;background:var(--bg)}
-  .prov input{display:none}
-  .prov input:checked + span{color:var(--accent)}
-  .prov label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
   a.link{color:var(--accent);font-weight:700}
   .hidden{display:none!important}
   footer{max-width:680px;margin:26px auto 0;text-align:center;color:var(--sub);font-size:.74rem}
@@ -232,15 +226,10 @@
 <!-- settings modal -->
 <div class="modal" id="mSet">
   <div class="sheet">
-    <h2>⚙︎ 設定（AIで写真からテストを作る）</h2>
-    <p class="note">テストの写真から自動でテストを作るには、AIのAPIキーが必要です。キーはこの端末の中だけに保存され、送信は各AIサービスへの解析リクエストのみです。</p>
-    <label class="fl">つかうAI</label>
-    <div class="prov" id="provPick">
-      <label><input type="radio" name="prov" value="gemini"><span>Google&nbsp;Gemini<br><small>無料枠あり・おすすめ</small></span></label>
-      <label><input type="radio" name="prov" value="claude"><span>Anthropic&nbsp;Claude<br><small>Claudeのキー</small></span></label>
-    </div>
+    <h2>⚙︎ APIキーの登録（Google Gemini）</h2>
+    <p class="note">写真からテストを自動で作るには、Google Gemini のAPIキーが必要です。最初に一度だけ登録すれば、あとは写真を撮るだけです。キーはこの端末の中だけに保存されます。</p>
     <label class="fl">APIキー</label>
-    <input class="tx" id="apiKey" type="password" placeholder="AIza... / sk-ant-..." autocomplete="off">
+    <input class="tx" id="apiKey" type="password" placeholder="AIza..." autocomplete="off">
     <label class="fl">モデル名（ふつうはそのままでOK）</label>
     <input class="tx" id="apiModel" type="text" placeholder="gemini-3.6-flash">
     <p class="note" id="keyHelp" style="margin-top:10px"></p>
@@ -284,7 +273,25 @@
   </div>
 </div>
 
-<input type="file" id="photoFile" accept="image/*" capture="environment" class="hidden">
+<!-- 写真からテストを作る画面（撮る／選ぶ を分ける） -->
+<div class="modal" id="mPhoto">
+  <div class="sheet">
+    <h2>📷 写真からテストをつくる</h2>
+    <p class="note">プリントを<b>撮る</b>か、保存済みの写真を<b>選ぶ</b>だけで、AIが自動でテストを作ります。</p>
+    <div id="phPick" style="display:flex;flex-direction:column;gap:12px;margin-top:6px">
+      <button class="btn primary" id="btnCamera" style="justify-content:center;padding:18px;font-size:1.1rem">📷 カメラで撮る</button>
+      <button class="btn" id="btnLibrary" style="justify-content:center;padding:18px;font-size:1.1rem">🖼 写真から選ぶ</button>
+    </div>
+    <p class="status" id="phStatus"></p>
+    <div class="row2" style="margin-top:8px">
+      <button class="btn ghost" id="phClose">とじる</button>
+    </div>
+  </div>
+</div>
+
+<!-- カメラ（撮影）と ライブラリ（選択）で入力を分ける -->
+<input type="file" id="photoCamera" accept="image/*" capture="environment" class="hidden">
+<input type="file" id="photoLibrary" accept="image/*" class="hidden">
 
 <footer>
   ホーム画面に追加できます（共有 → 「ホーム画面に追加」）<br>
@@ -362,7 +369,6 @@
 
   /* ============ storage ============ */
   var LS_TESTS = "furigana_tests_v1";
-  var LS_PROV  = "furigana_provider_v1";
   var LS_KEY   = "furigana_apikey_v1";
   var LS_MODEL = "furigana_model_v1";
   var LS_LAST  = "furigana_last_v1";
@@ -718,8 +724,6 @@
   /* ============ settings modal ============ */
   var mSet=$("mSet");
   function openSet(){
-    var prov=lsGet(LS_PROV,"gemini");
-    document.querySelector('input[name="prov"][value="'+prov+'"]').checked=true;
     $("apiKey").value=lsGet(LS_KEY,"");
     $("apiModel").value=lsGet(LS_MODEL,"");
     updateKeyHelp();
@@ -727,18 +731,13 @@
     mSet.classList.add("show");
   }
   function updateKeyHelp(){
-    var prov=document.querySelector('input[name="prov"]:checked').value;
-    if(!$("apiModel").value){ $("apiModel").placeholder = prov==="gemini" ? "gemini-3.6-flash" : "claude-sonnet-5"; }
-    $("keyHelp").innerHTML = prov==="gemini"
-      ? '無料のキーは <a class="link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> で取得できます（AIza… で始まります）。'
-      : 'キーは <a class="link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a> で取得できます（sk-ant-… で始まります）。';
+    if(!$("apiModel").value){ $("apiModel").placeholder="gemini-3.6-flash"; }
+    $("keyHelp").innerHTML = '無料のキーは <a class="link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> で取得できます（AIza… で始まります）。';
   }
-  $("provPick").addEventListener("change", updateKeyHelp);
   $("btnSet").addEventListener("click", openSet);
   $("setCancel").addEventListener("click", function(){ mSet.classList.remove("show"); });
   $("setSave").addEventListener("click", function(){
-    var prov=document.querySelector('input[name="prov"]:checked').value;
-    lsSet(LS_PROV,prov); lsSet(LS_KEY,$("apiKey").value.trim()); lsSet(LS_MODEL,$("apiModel").value.trim());
+    lsSet(LS_KEY,$("apiKey").value.trim()); lsSet(LS_MODEL,$("apiModel").value.trim());
     var st=$("setStatus"); st.className="status ok"; st.textContent="ほぞんしました。";
     setTimeout(function(){ mSet.classList.remove("show"); },700);
   });
@@ -920,31 +919,36 @@
       return fileToBase64(file).then(function(b64){ return { data:b64, mime:(file.type||"image/jpeg") }; });
     });
   }
-  function aiStatus(msg,cls){ var s=$("setStatus"); s.className="status "+(cls||""); s.innerHTML=msg; }
+  var mPhoto=$("mPhoto");
+  function phStatus(msg,cls){ var s=$("phStatus"); s.className="status "+(cls||""); s.innerHTML=msg||""; }
+  function openPhoto(){ $("phPick").classList.remove("hidden"); phStatus(""); mPhoto.classList.add("show"); }
 
+  // 写真ボタン → まずキーが無ければ登録画面へ。あれば「撮る／選ぶ」画面を開く
   $("btnPhoto").addEventListener("click", function(){
     var key=lsGet(LS_KEY,"");
-    if(!key){ openSet(); aiStatus("先にAPIキーを保存してください。","err"); return; }
-    $("photoFile").click();
+    if(!key){ openSet(); var st=$("setStatus"); st.className="status err"; st.textContent="先にAPIキー（Gemini）を登録してください。"; return; }
+    openPhoto();
   });
-  $("photoFile").addEventListener("change", function(e){
-    var f=e.target.files[0]; e.target.value="";
-    if(f) analyzePhoto(f);
-  });
+  $("btnCamera").addEventListener("click", function(){ $("photoCamera").click(); });
+  $("btnLibrary").addEventListener("click", function(){ $("photoLibrary").click(); });
+  $("phClose").addEventListener("click", function(){ mPhoto.classList.remove("show"); });
+  function onPhotoPicked(e){ var f=e.target.files[0]; e.target.value=""; if(f) analyzePhoto(f); }
+  $("photoCamera").addEventListener("change", onPhotoPicked);
+  $("photoLibrary").addEventListener("change", onPhotoPicked);
 
   function analyzePhoto(file){
-    var prov=lsGet(LS_PROV,"gemini"), key=lsGet(LS_KEY,""), model=lsGet(LS_MODEL,"");
-    mSet.classList.add("show");
+    var key=lsGet(LS_KEY,""), model=lsGet(LS_MODEL,"");
+    mPhoto.classList.add("show");
+    $("phPick").classList.add("hidden"); // 読み取り中は「撮る／選ぶ」ボタンを隠す
     var t0=Date.now();
     var timer=setInterval(function(){
       var s=Math.round((Date.now()-t0)/1000);
-      aiStatus('<span class="spin"></span>写真を読み取っています…（'+s+'秒）<br>10〜40秒ほどかかります。',"busy");
+      phStatus('<span class="spin"></span>写真を読み取っています…（'+s+'秒）<br>10〜40秒ほどかかります。',"busy");
     },1000);
     function stop(){ clearInterval(timer); }
-    aiStatus('<span class="spin"></span>写真を読み取っています…（0秒）',"busy");
+    phStatus('<span class="spin"></span>写真を読み取っています…（0秒）',"busy");
     prepImage(file).then(function(im){
-      if(prov==="gemini") return callGemini(key, model||"gemini-3.6-flash", im.data, im.mime);
-      return callClaude(key, model||"claude-sonnet-5", im.data, im.mime);
+      return callGemini(key, model||"gemini-3.6-flash", im.data, im.mime);
     }).then(function(text){
       stop();
       var obj=parseAI(text);
@@ -964,18 +968,19 @@
       us.push({ id:id, title:title, sample:false, items:items });
       saveUserTests(us);
       state.testId=id; lsSet(LS_LAST,id);
-      aiStatus("「"+esc(title)+"」ができました！🎉","ok");
+      phStatus("「"+esc(title)+"」ができました！🎉","ok");
       setTimeout(function(){
-        mSet.classList.remove("show");
+        mPhoto.classList.remove("show");
         render();
       }, 700);
     }).catch(function(err){
       stop();
+      $("phPick").classList.remove("hidden"); // もう一度「撮る／選ぶ」できるように戻す
       var msg=String(err&&err.message||err);
       var hint = /Failed to fetch|NetworkError|load failed|abort|timeout|時間切れ/i.test(msg)
-        ? "通信がうまくいきませんでした。①Wi‑Fi/学校のネット制限、②APIキーの有効化（Generative Language API）、をご確認のうえ再度おためしください。うまくいかない時は⚙︎でAnthropic Claudeに切り替えると通ることがあります。"
-        : "キー・モデル名・通信をご確認ください。";
-      aiStatus("読み取れませんでした：<br>"+esc(msg)+"<br>"+hint,"err");
+        ? "通信がうまくいきませんでした。①Wi‑Fi/学校のネット制限、②APIキーの有効化（Generative Language API）、をご確認のうえ再度おためしください。"
+        : "⚙︎のAPIキー・モデル名・通信をご確認ください。";
+      phStatus("読み取れませんでした：<br>"+esc(msg)+"<br>"+hint,"err");
     });
   }
 
@@ -1030,26 +1035,8 @@
       throw new Error((res.j.error&&res.j.error.message)||("HTTP "+res.status));
     });
   }
-  function callClaude(key, model, b64, mime){
-    var url="https://api.anthropic.com/v1/messages";
-    var body={ model:model, max_tokens:2048, temperature:0,
-      messages:[{ role:"user", content:[
-        { type:"image", source:{ type:"base64", media_type:mime, data:b64 } },
-        { type:"text", text:AI_PROMPT }
-      ]}]};
-    return fetchTimeout(url,{ method:"POST",
-      headers:{ "Content-Type":"application/json", "x-api-key":key,
-                "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
-      body:JSON.stringify(body) })
-      .then(function(r){ return r.json().then(function(j){
-        if(!r.ok){ throw new Error((j.error&&j.error.message)||("HTTP "+r.status)); }
-        try{ return j.content.map(function(c){return c.text||"";}).join(""); }
-        catch(e){ throw new Error("応答の形式が想定外です"); }
-      });});
-  }
-
   /* close modals on backdrop tap */
-  [mSet,mEdit].forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m) m.classList.remove("show"); }); });
+  [mSet,mEdit,mPhoto].forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m) m.classList.remove("show"); }); });
 
   /* ============ init ============ */
   var last=lsGet(LS_LAST,"");
