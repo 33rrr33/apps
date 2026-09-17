@@ -159,15 +159,19 @@
   .sheet input.tx,.sheet textarea.tx{width:100%;font-family:inherit;font-size:1rem;padding:11px 12px;
     border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
   .sheet input.tx:focus,.sheet textarea.tx:focus{outline:none;border-color:var(--accent)}
-  .edrow{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;
-    margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
-  .edrow .n{padding-top:22px;font-weight:800;color:var(--accent);text-align:center;font-size:1.05rem}
-  .edrow .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
-  .edrow label{display:flex;flex-direction:column;gap:4px;font-size:.72rem;font-weight:800;color:var(--sub)}
-  .edrow label.main{color:var(--accent)}
-  .edrow input{font-size:1.05rem;padding:11px 12px;border-radius:12px;border:2px solid var(--line);
-    background:var(--bg);color:var(--ink);font-family:inherit;width:100%}
-  .edrow label.main input{border-color:var(--accent);background:var(--accent-soft)}
+  .edrow{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;
+    margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .edrow .n{display:flex;align-items:center;justify-content:center;width:30px;height:30px;
+    background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1rem}
+  .edrow .body{display:flex;flex-direction:column;gap:8px;min-width:0}
+  .edrow .sent{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:1.05rem;line-height:1.7}
+  .edrow .ctx{color:var(--ink)}
+  .edrow .kin{width:7.5em;max-width:100%;font-size:1.15rem;font-weight:800;text-align:center;
+    padding:9px 8px;border-radius:10px;border:2px solid var(--accent);background:var(--accent-soft);
+    color:var(--accent);font-family:inherit}
+  .edrow .ylab{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:800;color:var(--sub)}
+  .edrow .yin{width:9em;max-width:100%;font-size:1.05rem;padding:9px 10px;border-radius:10px;
+    border:2px solid var(--line);background:var(--bg);color:var(--ink);font-family:inherit}
   .edrow input:focus{outline:none;border-color:var(--accent);background:var(--panel)}
   .edrow input::placeholder{color:var(--gray);font-weight:400}
   .sheet .row2{display:flex;gap:10px;margin-top:18px}
@@ -250,15 +254,8 @@
 <!-- editor modal -->
 <div class="modal" id="mEdit">
   <div class="sheet">
-    <h2 id="edTitle">✏️ テストを作る／なおす</h2>
-    <label class="fl">かんたん登録（まとめて貼り付け）</label>
-    <p class="note" style="margin:0 0 6px">1行に1問。読ませたい漢字を <b>【漢字｜よみ】</b> で囲むだけ。<br>例）　姉が就<b>【職｜しょく】</b>する。</p>
-    <textarea class="tx" id="edBulk" rows="6" placeholder="姉が就【職｜しょく】する。&#10;会場に【移動｜いどう】する。&#10;新しい土地へ【移る｜うつる】。&#10;祖父の【墓｜はか】。"></textarea>
-    <div class="row2" style="margin-top:8px">
-      <button class="btn primary" id="edBulkApply">↓ この内容を下の欄に反映</button>
-    </div>
-    <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
-    <p class="note" style="margin:0 0 8px">下の欄で1問ずつ確認・修正できます。「漢字」＝ますに入る字（送りがなも）、「よみ」＝読み（ひらがな）。前後の文は任意。</p>
+    <h2 id="edTitle">✏️ テストをなおす</h2>
+    <p class="note" style="margin:0 0 10px">直したいところだけ書きかえてください。<b>ますに入る漢字</b>と<b>よみ（ふりがな）</b>だけでOKです。文の前後はそのまま使われます。</p>
     <label class="fl">テストの名前</label>
     <input class="tx" id="edName" type="text" placeholder="例）カンジー博士の暗号解読③">
     <div id="edRows" style="margin-top:14px"></div>
@@ -774,49 +771,28 @@
   /* ============ editor modal ============ */
   var mEdit=$("mEdit"), edEditingId=null;
   function blankItems(){ var a=[]; for(var i=0;i<10;i++) a.push({before:"",answer:"",yomi:"",after:""}); return a; }
-  // 「まとめて入力」: 1行1問、【漢字｜よみ】をパースして {before,answer,yomi,after} に
-  function parseBulk(text){
-    var lines=(text||"").split(/\r?\n/), items=[];
-    var re=/[\[【]\s*([^\[\]【】｜|\/：:]+?)\s*[｜|\/：:]\s*([^\[\]【】]+?)\s*[\]】]/;
-    for(var i=0;i<lines.length;i++){
-      var line=lines[i].trim(); if(!line) continue;
-      var m=line.match(re); if(!m) continue;
-      items.push({ before:line.slice(0,m.index), answer:m[1].trim(), yomi:m[2].trim(), after:line.slice(m.index+m[0].length) });
-      if(items.length>=10) break;
-    }
-    return items;
-  }
-  function bulkFromItems(items){
-    var lines=[];
-    for(var i=0;i<items.length;i++){ var it=items[i]||{};
-      if(!it.answer&&!it.yomi&&!it.before&&!it.after) continue;
-      lines.push((it.before||"")+"【"+(it.answer||"")+"｜"+(it.yomi||"")+"】"+(it.after||"")); }
-    return lines.join("\n");
-  }
-  function fillRows(items){
-    var fs=["before","answer","yomi","after"];
-    for(var i=0;i<10;i++){ var it=items[i]||{};
-      for(var f=0;f<fs.length;f++){ var el=$("edRows").querySelector('input[data-f="'+fs[f]+'"][data-i="'+i+'"]'); if(el) el.value=it[fs[f]]||""; }
-    }
-  }
+  var edSrc=[]; // 編集中の元データ。前後の文はそのまま保持し、編集は「漢字」と「よみ」だけ
   function openEditor(test, isNew){
     edEditingId = isNew ? null : (test.sample ? null : test.id);
     $("edTitle").textContent = isNew ? "✏️ 新しいテストを作る" : "✏️ テストをなおす";
     $("edName").value = (test && test.title) ? test.title : "";
     $("edDelete").style.display = (edEditingId? "":"none");
     var items = test && test.items && test.items.length ? test.items : blankItems();
+    edSrc=[];
     var h="";
     for(var i=0;i<10;i++){
       var it=items[i]||{before:"",answer:"",yomi:"",after:""};
-      h+='<div class="edrow"><div class="n">'+NUM[i]+'</div><div class="fields">'+
-         '<label class="main">漢字（ますに入る字）<input data-f="answer" data-i="'+i+'" placeholder="例 移動" value="'+esc(it.answer)+'"></label>'+
-         '<label class="main">よみ（ひらがな）<input data-f="yomi" data-i="'+i+'" placeholder="例 いどう" value="'+esc(it.yomi)+'"></label>'+
-         '<label>前の文（なくてもOK）<input data-f="before" data-i="'+i+'" placeholder="例 会場に" value="'+esc(it.before)+'"></label>'+
-         '<label>後の文（なくてもOK）<input data-f="after" data-i="'+i+'" placeholder="例 する。" value="'+esc(it.after)+'"></label>'+
+      edSrc.push({ before:it.before||"", after:it.after||"" });
+      var pre = it.before ? '<span class="ctx">'+esc(it.before)+'</span>' : "";
+      var post= it.after  ? '<span class="ctx">'+esc(it.after)+'</span>'  : "";
+      h+='<div class="edrow"><div class="n">'+NUM[i]+'</div><div class="body">'+
+         '<div class="sent">'+pre+
+           '<input class="kin" data-f="answer" data-i="'+i+'" placeholder="漢字" value="'+esc(it.answer)+'">'+
+         post+'</div>'+
+         '<label class="ylab">よみ　<input class="yin" data-f="yomi" data-i="'+i+'" placeholder="ふりがな" value="'+esc(it.yomi)+'"></label>'+
          '</div></div>';
     }
     $("edRows").innerHTML=h;
-    $("edBulk").value = bulkFromItems(items);
     $("edStatus").textContent="";
     mEdit.classList.add("show");
   }
@@ -824,7 +800,8 @@
     var items=[];
     for(var i=0;i<10;i++){
       function g(f){ var el=$("edRows").querySelector('input[data-f="'+f+'"][data-i="'+i+'"]'); return el?el.value.trim():""; }
-      items.push({ before:g("before"), answer:g("answer"), yomi:g("yomi"), after:g("after") });
+      var src=edSrc[i]||{before:"",after:""};
+      items.push({ before:src.before||"", answer:g("answer"), yomi:g("yomi"), after:src.after||"" });
     }
     return items;
   }
@@ -838,19 +815,11 @@
     } else { openEditor(t,false); }
   });
   $("edCancel").addEventListener("click", function(){ mEdit.classList.remove("show"); });
-  $("edBulkApply").addEventListener("click", function(){
-    var items=parseBulk($("edBulk").value), st=$("edStatus");
-    if(!items.length){ st.className="status err"; st.textContent="【漢字｜よみ】の形が見つかりません。例）姉が就【職｜しょく】する。"; return; }
-    fillRows(items);
-    st.className="status ok"; st.textContent=items.length+"問を反映しました。名前を付けて「ほぞんする」を押してください。";
-  });
   $("edSave").addEventListener("click", function(){
     var name=$("edName").value.trim();
     var items=readEditor();
     var filled=0; for(var i=0;i<items.length;i++){ if(items[i].answer&&items[i].yomi) filled++; }
     var st=$("edStatus");
-    // 反映を押し忘れても、下の欄が空で貼り付け欄に内容があれば自動で反映
-    if(filled===0){ var bi=parseBulk($("edBulk").value); if(bi.length){ fillRows(bi); items=readEditor(); filled=0; for(var k=0;k<items.length;k++){ if(items[k].answer&&items[k].yomi) filled++; } } }
     if(!name){ st.className="status err"; st.textContent="テストの名前を入れてください。"; return; }
     if(filled===0){ st.className="status err"; st.textContent="漢字とよみを1問以上入れてください。"; return; }
     var us=loadUserTests();
