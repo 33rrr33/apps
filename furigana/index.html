@@ -30,16 +30,18 @@
     --tile:#3a3128;--tile-line:#5c4c39;
   }}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{overscroll-behavior-y:none}
-  body{margin:0;padding:0 14px calc(120px + env(safe-area-inset-bottom));
-    padding-top:env(safe-area-inset-top);
+  html,body{overscroll-behavior:none}
+  /* アプリシェル: 画面の高さいっぱいの縦フレックス。ページ自体はスクロールしない */
+  body{margin:0;padding:env(safe-area-inset-top) 12px 0;
+    height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;
     font-family:"UD デジタル教科書体 NP-R","UDデジタル教科書体 NP-R","UD Digi Kyokasho NP-R","UD Digi Kyokasho N-R","BIZ UDPGothic","BIZ UDPゴシック","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Noto Sans JP","Noto Sans CJK JP",sans-serif;
     background:var(--bg);color:var(--ink);line-height:1.6;-webkit-text-size-adjust:100%;}
-  header{max-width:680px;margin:0 auto;padding:22px 4px 4px;text-align:center}
-  h1{font-size:1.45rem;margin:0 0 2px}
-  .lead{color:var(--sub);margin:0;font-size:.82rem}
-  main{max-width:none;margin:0}
-  .bar,.modes,.score{max-width:640px;margin-left:auto;margin-right:auto}
+  header{flex:0 0 auto;max-width:680px;width:100%;margin:0 auto;padding:8px 4px 2px;text-align:center}
+  h1{font-size:1.2rem;margin:0}
+  .lead{display:none}
+  main{flex:1 1 auto;min-height:0;max-width:none;margin:0;display:flex;flex-direction:column}
+  .bar,.modes,.score{flex:0 0 auto;max-width:640px;margin-left:auto;margin-right:auto;width:100%}
+  footer{display:none}
 
   /* ---- toolbar ---- */
   .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px auto 6px}
@@ -69,9 +71,10 @@
   .score .msg{font-size:.9rem;color:var(--sub)}
 
   /* ===== 縦書きワークシート（iPad向け・①→⑩を右から左へ） ===== */
-  #stage.sheetv{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0}
+  #stage.sheetv{flex:1 1 auto;min-height:0;overflow:hidden;position:relative;
+    display:flex;align-items:center;justify-content:center}
   .vrow{display:flex;flex-direction:row;align-items:flex-start;gap:10px;
-    width:max-content;margin-inline:auto;padding:12px 14px 50px}
+    width:max-content;margin-inline:auto;padding:8px 14px 34px}
   .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:18px;
     background:var(--panel);border:1px solid var(--line);border-radius:16px;
     padding:12px 8px 18px;box-shadow:var(--shadow)}
@@ -85,21 +88,17 @@
   /* mode1: 読みを漢字の右どなり（ふりがなの位置）に、かなタイルをドラッグして置く。
      右側に専用レーン(padding-right)を確保し、そこへ絶対配置。漢字と重ならない */
   .tgtwrap{position:relative;display:inline-block;vertical-align:top}
-  /* 読みは1つの箱にかなを入れていく（字数を見せない）。入れるほど下に伸びる */
-  .ryzone{position:absolute;top:50%;left:100%;transform:translateY(-50%);margin-left:4px;
-    writing-mode:horizontal-tb;display:flex;flex-direction:column;align-items:center;gap:1px;
-    min-width:1.75em;min-height:1.9em;padding:4px 3px;border:2px dashed var(--tile-line);
-    border-radius:10px;background:var(--bg)}
-  .ryzone.filled{border-style:solid;border-color:var(--accent);background:var(--tile)}
-  .ryzone.selhi{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
-  .kchip{display:flex;align-items:center;justify-content:center;width:1.3em;height:1.3em;
-    font-size:1.05rem;font-weight:700;color:var(--ink);cursor:pointer}
+  /* 読みは自由記述（縦書きのテキスト入力）。漢字の右どなり・上下中央。字数は見せない */
+  .ryin{position:absolute;top:50%;left:100%;transform:translateY(-50%);margin-left:4px;
+    writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;
+    width:1.7em;height:6em;padding:6px 3px;font-family:inherit;font-size:1.2rem;font-weight:700;
+    text-align:center;color:var(--ink);border:2px dashed var(--accent);border-radius:10px;
+    background:var(--accent-soft);box-sizing:border-box}
+  .ryin:focus{outline:none;border-style:solid;background:var(--panel)}
+  .ryin::placeholder{color:var(--gray);font-weight:400}
   .item.correct{background:var(--ok-soft);border-color:var(--ok)}
   .item.wrong{background:var(--ng-soft);border-color:var(--ng)}
-  .item.correct .ryzone{border-color:var(--ok);background:var(--ok-soft)}
-  .item.correct .kchip{color:var(--ok)}
-  .item.wrong .ryzone{border-color:var(--ng);background:var(--ng-soft)}
-  .item.wrong .kchip{color:var(--ng)}
+  .item.correct .ryin,.item.wrong .ryin{background:var(--panel)}
   /* こたえ表示は列の下に絶対配置。列の幅に影響させない(=右がはみ出さない) */
   .verdict{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;
     writing-mode:horizontal-tb;white-space:nowrap;font-weight:800;font-size:.9rem;display:none;text-align:center}
@@ -120,16 +119,16 @@
   .grp.g-wrong .slot{border-color:var(--ng);background:var(--ng-soft);color:var(--ng)}
   .fix{writing-mode:horizontal-tb;font-size:.82rem;color:var(--ng);font-weight:800;text-align:center}
 
-  /* bottom dock (tiles + action button) */
-  .dock{position:fixed;left:0;right:0;bottom:0;z-index:40;
+  /* bottom dock (tiles + action button) — アプリシェルの一番下 */
+  .dock{flex:0 0 auto;margin:0 -12px;
     background:var(--panel);border-top:1px solid var(--line);
     box-shadow:0 -3px 16px rgba(90,70,40,.12);
-    padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
   .tray{display:none;margin-bottom:8px}
   .tray.show{display:block}
   .tray .cap{font-size:.72rem;color:var(--sub);font-weight:700;margin:0 2px 6px}
-  .tiles{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-height:32vh;overflow:auto}
-  .tile{width:2.5em;height:2.5em;font-size:1.9rem;font-weight:800;
+  .tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-height:23vh;overflow:auto}
+  .tile{width:2em;height:2em;font-size:1.5rem;font-weight:800;
     display:flex;align-items:center;justify-content:center;
     background:var(--tile);border:2px solid var(--tile-line);border-radius:14px;color:var(--ink);
     cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .08s}
@@ -137,8 +136,8 @@
   .tile.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
   .tile.used{opacity:0;pointer-events:none;width:0;height:0;margin:-4px;border:0}
   .drag-ghost{position:fixed;z-index:100;pointer-events:none;
-    background:var(--tile);border:2px solid var(--accent);border-radius:14px;
-    width:2.5em;height:2.5em;font-size:2rem;font-weight:800;
+    background:var(--tile);border:2px solid var(--accent);border-radius:12px;
+    width:2em;height:2em;font-size:1.5rem;font-weight:800;
     display:flex;align-items:center;justify-content:center;color:var(--ink);
     box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translate(-50%,-50%) scale(1.1)}
 
@@ -204,7 +203,7 @@
   </div>
 
   <div class="modes">
-    <button id="tab1" class="on" data-mode="1">🔤 ふりがなをドラッグ</button>
+    <button id="tab1" class="on" data-mode="1">✏️ ふりがなを書く</button>
     <button id="tab2" data-mode="2">🀄 かんじをドラッグ</button>
   </div>
 
@@ -384,9 +383,22 @@
   /* ============ elements ============ */
   var $=function(id){ return document.getElementById(id); };
   var stage=$("stage"), testSel=$("testSel"), tray=$("tray"), tiles=$("tiles"), dock=$("dock"), trayCap=$("trayCap");
-  function adjustPad(){ document.body.style.paddingBottom = (dock.offsetHeight + 16) + "px"; }
-  window.addEventListener("resize", adjustPad);
-  window.addEventListener("orientationchange", function(){ setTimeout(adjustPad,300); });
+  function adjustPad(){ /* アプリシェル化でページ余白は不要 */ }
+  // ワークシートを stage（残りの高さ）に収まるよう縮小（スクロール不要）
+  function fitStage(){
+    var vrow=stage.querySelector('.vrow'); if(!vrow) return;
+    vrow.style.transform="none";
+    var availW=stage.clientWidth, availH=stage.clientHeight;
+    var cw=vrow.scrollWidth, chh=vrow.scrollHeight;
+    if(!cw||!chh||!availH) return;
+    var scale=Math.min(1, availW/cw, availH/chh);
+    if(!isFinite(scale)||scale<=0) scale=1;
+    vrow.style.transformOrigin="center center";
+    vrow.style.transform="scale("+scale+")";
+  }
+  function relayout(){ fitStage(); }
+  window.addEventListener("resize", relayout);
+  window.addEventListener("orientationchange", function(){ setTimeout(relayout,300); });
   var score=$("score"), scorePt=$("scorePt"), scoreMsg=$("scoreMsg");
   var btnMark=$("btnMark"), btnRetry=$("btnRetry");
 
@@ -415,7 +427,8 @@
     fillSelector();
     if(state.mode===1){ renderMode1(); }
     else { renderMode2(); }
-    adjustPad();
+    relayout();
+    if(window.requestAnimationFrame) requestAnimationFrame(relayout);
     window.scrollTo(0,0);
   }
 
@@ -437,17 +450,13 @@
       h+= '<span class="vno">'+NUM[i]+'</span>';
       h+= '<div class="vsent vsent1">'+esc(it.before)+
           '<span class="tgtwrap"><span class="target">'+esc(it.answer)+'</span>'+
-          '<span class="ryzone" data-i="'+i+'"></span></span>'+
+          '<input class="ryin" type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="よみ"></span>'+
           esc(it.after)+'</div>';
       h+= '<div class="verdict" data-i="'+i+'"></div>';
       h+='</div>';
     }
     stage.className="sheetv"; stage.innerHTML='<div class="vrow">'+h+'</div>';
-    var pool=[];
-    for(var k=0;k<t.items.length;k++){ pool=pool.concat(t.items[k].yomi.split("")); }
-    trayCap.textContent="↓ ふりがな（ひらがな）を ドラッグ（またはタップ）して あてはめよう";
-    buildTiles(pool);
-    bindSlots();
+    tiles.innerHTML=""; tray.classList.remove("show"); // モード1は自由記述。下にひらがなを置かない
   }
 
   function renderMode2(){
@@ -628,9 +637,11 @@
   function gradeMode1(){
     var t=findTest(state.testId), correct=0;
     for(var i=0;i<t.items.length;i++){
-      var y=t.items[i].yomi, placed="", arr=state.zone[i]||[];
-      for(var s=0;s<arr.length;s++){ placed += tileChar(arr[s]); }
-      var ok = placed.length>0 && normYomi(placed)===normYomi(y);
+      var y=t.items[i].yomi;
+      var inp=stage.querySelector('input[data-i="'+i+'"]');
+      var v=inp?inp.value:"";
+      var ok = normYomi(v)!=="" && normYomi(v)===normYomi(y);
+      if(inp) inp.readOnly=true;
       var card=stage.querySelector('.item[data-i="'+i+'"]');
       card.classList.remove("correct","wrong"); card.classList.add(ok?"correct":"wrong");
       var vd=stage.querySelector('.verdict[data-i="'+i+'"]');
@@ -674,7 +685,7 @@
     btnMark.classList.add("hidden");
     btnRetry.classList.remove("hidden");
     clearSel();
-    adjustPad();
+    relayout();
     window.scrollTo({top:0,behavior:"smooth"});
   }
 
