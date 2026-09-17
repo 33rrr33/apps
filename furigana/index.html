@@ -90,17 +90,17 @@
   .item.correct .ansrow input,.item.wrong .ansrow input{background:var(--panel)}
 
   /* ---- mode2 (drag) ---- */
-  .sent2{font-size:1.35rem;line-height:2.6;word-break:break-word}
-  .grp{display:inline-flex;flex-direction:column;align-items:center;vertical-align:bottom;margin:0 1px}
-  .grp .ruby{font-size:.72rem;color:var(--accent);font-weight:800;line-height:1;height:1em;margin-bottom:3px}
-  .grp .row{display:inline-flex;align-items:flex-end;gap:1px}
-  .slot{display:inline-flex;align-items:center;justify-content:center;width:1.55em;height:1.7em;
+  .sent2{font-size:1.4rem;line-height:2.7;word-break:break-word}
+  .grp{position:relative;display:inline-block;vertical-align:baseline;margin:0 2px}
+  .grp .ruby{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:1px;
+    font-size:.72rem;color:var(--accent);font-weight:800;line-height:1;white-space:nowrap;pointer-events:none}
+  .grp .row{display:inline-block;white-space:nowrap}
+  .slot{display:inline-block;width:1.5em;height:1.55em;line-height:1.42em;text-align:center;
     border:2px dashed var(--tile-line);border-radius:8px;background:var(--bg);
-    font-size:1.35rem;font-weight:700;color:var(--ink);vertical-align:bottom}
+    font-size:1.4rem;font-weight:700;color:var(--ink);vertical-align:-0.34em}
   .slot.filled{border-style:solid;background:var(--tile);border-color:var(--accent)}
   .slot.selhi{border-color:var(--accent);background:var(--accent-soft)}
-  .slot .kana{color:var(--ink)}
-  .okuri{font-size:1.35rem;font-weight:700}
+  .okuri{font-size:1.4rem;font-weight:700;vertical-align:baseline}
   .grp.g-correct .slot{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
   .grp.g-wrong .slot{border-color:var(--ng);background:var(--ng-soft);color:var(--ng)}
   .fix{font-size:.75rem;color:var(--ng);font-weight:800;margin-top:2px;display:block}
@@ -143,13 +143,17 @@
   .sheet input.tx,.sheet textarea.tx{width:100%;font-family:inherit;font-size:1rem;padding:11px 12px;
     border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
   .sheet input.tx:focus,.sheet textarea.tx:focus{outline:none;border-color:var(--accent)}
-  .edrow{display:grid;grid-template-columns:26px 1fr;gap:8px;align-items:start;margin-bottom:10px}
-  .edrow .n{padding-top:10px;font-weight:800;color:var(--accent);text-align:center}
-  .edrow .fields{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .edrow .fields input{font-size:.92rem;padding:8px 9px;border-radius:10px;border:1.5px solid var(--line);
+  .edrow{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;
+    margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .edrow .n{padding-top:22px;font-weight:800;color:var(--accent);text-align:center;font-size:1.05rem}
+  .edrow .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+  .edrow label{display:flex;flex-direction:column;gap:4px;font-size:.72rem;font-weight:800;color:var(--sub)}
+  .edrow label.main{color:var(--accent)}
+  .edrow input{font-size:1.05rem;padding:11px 12px;border-radius:12px;border:2px solid var(--line);
     background:var(--bg);color:var(--ink);font-family:inherit;width:100%}
-  .edrow .fields input:focus{outline:none;border-color:var(--accent)}
-  .edrow .fields input::placeholder{color:var(--gray);font-size:.82rem}
+  .edrow label.main input{border-color:var(--accent);background:var(--accent-soft)}
+  .edrow input:focus{outline:none;border-color:var(--accent);background:var(--panel)}
+  .edrow input::placeholder{color:var(--gray);font-weight:400}
   .sheet .row2{display:flex;gap:10px;margin-top:18px}
   .sheet .row2 .btn{flex:1;justify-content:center;padding:13px}
   .status{font-size:.85rem;font-weight:700;margin:10px 0 0;min-height:1.2em}
@@ -434,7 +438,7 @@
           h+='<span class="okuri">'+esc(chars[c])+'</span>';
         }
       }
-      h+= '</span></span>';
+      h+= '&#8203;</span></span>';  // ゼロ幅スペースで行のベースラインをそろえる
       h+= esc(it.after)+'</div>';
       h+='</div>';
     }
@@ -695,10 +699,10 @@
     for(var i=0;i<10;i++){
       var it=items[i]||{before:"",answer:"",yomi:"",after:""};
       h+='<div class="edrow"><div class="n">'+NUM[i]+'</div><div class="fields">'+
-         '<input data-f="before" data-i="'+i+'" placeholder="前の文（任意）" value="'+esc(it.before)+'">'+
-         '<input data-f="after"  data-i="'+i+'" placeholder="後の文（任意）" value="'+esc(it.after)+'">'+
-         '<input data-f="answer" data-i="'+i+'" placeholder="漢字（例 移動）" value="'+esc(it.answer)+'">'+
-         '<input data-f="yomi"   data-i="'+i+'" placeholder="よみ（例 いどう）" value="'+esc(it.yomi)+'">'+
+         '<label class="main">漢字（ますに入る字）<input data-f="answer" data-i="'+i+'" placeholder="例 移動" value="'+esc(it.answer)+'"></label>'+
+         '<label class="main">よみ（ひらがな）<input data-f="yomi" data-i="'+i+'" placeholder="例 いどう" value="'+esc(it.yomi)+'"></label>'+
+         '<label>前の文（なくてもOK）<input data-f="before" data-i="'+i+'" placeholder="例 会場に" value="'+esc(it.before)+'"></label>'+
+         '<label>後の文（なくてもOK）<input data-f="after" data-i="'+i+'" placeholder="例 する。" value="'+esc(it.after)+'"></label>'+
          '</div></div>';
     }
     $("edRows").innerHTML=h;
