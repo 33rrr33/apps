@@ -390,7 +390,7 @@
     lineItems.forEach(function (t) { arr.push({ id: t.id, title: t.title, kind: "line", due: "", createdAt: t.createdAt || 0, local: true }); });
     return arr;
   }
-  function dueKey(t) { return t.due || "9999-99-99"; }
+  function dueKey(t) { return (t.due || "9999-99-99") + "T" + (t.time || "99:99"); }  // same day: timed first (by time), all-day last
   function sortTasks(a) { return a.slice().sort(function (x, y) { var dx = dueKey(x), dy = dueKey(y); if (dx !== dy) return dx < dy ? -1 : 1; return (x.createdAt || 0) - (y.createdAt || 0); }); }
   function renderTasks() {
     var box = $("taskList"), cnt = $("taskCount");
@@ -402,9 +402,10 @@
     function row(t) {
       var isOver = t.kind === "task" && t.due && t.due < TODAY;
       var dueBadge = t.due ? '<span class="t-due">' + fmtDueShort(t.due) + "</span>" : "";
+      var timeTag = t.time ? '<span class="t-time">' + t.time + "</span>" : "";
       return '<div class="task ' + (isOver ? "overdue" : "") + '" data-id="' + esc(t.id) + '" data-kind="' + t.kind + '">' +
         '<button class="check" data-act="toggle" aria-label="完了"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></button>' +
-        '<div class="t-body"><span class="t-title">' + esc(t.title) + "</span></div>" + dueBadge +
+        '<div class="t-body"><span class="t-title">' + timeTag + esc(t.title) + "</span></div>" + dueBadge +
         '<button class="del" data-act="del" aria-label="削除">×</button></div>';
     }
     var groups = [
@@ -446,15 +447,20 @@
   }
   function loadSchedule() {
     var b = todayBounds();
-    return Promise.all(displayCals.map(function (c) {
-      var u = "https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(c.id) +
+    function fetchInto(calId, primary, filterFn) {
+      var u = "https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(calId) +
         "/events?singleEvents=true&orderBy=startTime&maxResults=50&timeMin=" + encodeURIComponent(b.startTime) + "&timeMax=" + encodeURIComponent(b.endTime);
       return gfetch(u).then(function (d) {
         var evs = (d && d.items) || [];
-        evs.forEach(function (e) { e.__cal = c.id; e.__primary = c.primary; });
-        calEvents[c.id] = evs; calStatus[c.id] = "ok";
-      }).catch(function () { calEvents[c.id] = []; calStatus[c.id] = "err"; });
-    })).then(function () { touchStamp(); renderHero(); renderSchedule(); });
+        if (filterFn) evs = evs.filter(filterFn);
+        evs.forEach(function (e) { e.__cal = calId; e.__primary = primary; });
+        calEvents[calId] = evs; calStatus[calId] = "ok";
+      }).catch(function () { calEvents[calId] = []; calStatus[calId] = "err"; });
+    }
+    var ps = displayCals.map(function (c) { return fetchInto(c.id, c.primary, null); });
+    // timed タスク管理 items are tasks with a time — show them on the timeline too (all-day ones stay task-only)
+    if (taskCalId) ps.push(fetchInto(taskCalId, false, function (e) { return e.start && e.start.dateTime && !e.start.date; }));
+    return Promise.all(ps).then(function () { touchStamp(); renderHero(); renderSchedule(); });
   }
   function loadTasks() {
     if (!taskCalId) { calTasks = []; renderTasks(); return Promise.resolve(); }
@@ -464,8 +470,10 @@
     return gfetch(u).then(function (d) {
       var items = (d && d.items) || [];
       calTasks = items.filter(function (e) { return e.status !== "cancelled" && e.start; }).map(function (e) {
+        var timed = !!(e.start.dateTime && !e.start.date);
         var day = e.start.date || (e.start.dateTime || "").slice(0, 10);
-        return { id: e.id, title: e.summary || "(タスク)", kind: "task", due: day, calId: taskCalId, eventId: e.id, createdAt: new Date(e.created || Date.now()).getTime() };
+        var time = timed ? fmtTime(new Date(e.start.dateTime)) : "";
+        return { id: e.id, title: e.summary || "(タスク)", kind: "task", due: day, time: time, timed: timed, calId: taskCalId, eventId: e.id, htmlLink: e.htmlLink || "", createdAt: new Date(e.created || Date.now()).getTime() };
       });
       renderTasks();
     }).catch(function () { renderTasks(); });
@@ -506,7 +514,10 @@
     if (kind === "line") { lineItems = lineItems.filter(function (x) { return x.id !== id; }); lsLineSave(); renderTasks(); return; }
     var t = calTasks.filter(function (x) { return x.id === id; })[0];
     calTasks = calTasks.filter(function (x) { return x.id !== id; }); renderTasks();
-    if (t && t.eventId) { gcalDelete(t.calId, t.eventId).then(function () { loadTasks(); }).catch(function () { loadTasks(); }); }
+    if (t && t.eventId) {
+      var after = function () { loadTasks(); loadSchedule(); };  // also refresh the timeline (timed tasks live there too)
+      gcalDelete(t.calId, t.eventId).then(after).catch(after);
+    }
   });
 
   // ---------- add popup ----------
@@ -539,16 +550,17 @@
     if (!date) { note.textContent = "日付を選んでください。"; note.hidden = false; return; }
     $("tmSave").disabled = true; $("tmSave").textContent = "追加中…";
     var done = function () { $("tmSave").disabled = false; $("tmSave").textContent = "追加"; };
+    // Both timed and all-day entries go to the タスク管理 calendar so everything is a "task".
+    // Timed ones show in やること (with the time) AND on the きょうの予定 timeline.
+    if (!taskCalId) { done(); note.textContent = "「タスク管理」カレンダーが見つかりません。"; note.hidden = false; return; }
+    var reload = function () { loadTasks(); loadSchedule(); };
     if (start) {
-      var rCal = rCalId || taskCalId;
-      if (!rCal) { done(); note.textContent = "「R」カレンダーが見つかりません。"; note.hidden = false; return; }
-      gcalCreate(rCal, { summary: title, allDay: false, date: date, start: start, end: (end && end > start) ? end : addOneHour(start) })
-        .then(function () { done(); afterAdd(); setTimeout(loadSchedule, 400); })
+      gcalCreate(taskCalId, { summary: title, allDay: false, date: date, start: start, end: (end && end > start) ? end : addOneHour(start) })
+        .then(function () { done(); afterAdd(); setTimeout(reload, 400); })
         .catch(function () { done(); note.textContent = "追加できませんでした。"; note.hidden = false; });
     } else {
-      if (!taskCalId) { done(); note.textContent = "「タスク管理」カレンダーが見つかりません。"; note.hidden = false; return; }
       gcalCreate(taskCalId, { summary: title, allDay: true, date: date, endDate: date })
-        .then(function () { done(); afterAdd(); setTimeout(loadTasks, 400); })
+        .then(function () { done(); afterAdd(); setTimeout(reload, 400); })
         .catch(function () { done(); note.textContent = "追加できませんでした。"; note.hidden = false; });
     }
   }
