@@ -423,6 +423,8 @@
     var body = { summary: opts.summary };
     if (opts.allDay) { body.start = { date: opts.date }; body.end = { date: nextDayStr(opts.endDate || opts.date) }; }
     else { body.start = { dateTime: opts.date + "T" + opts.start + ":00+09:00", timeZone: TZ }; body.end = { dateTime: opts.date + "T" + opts.end + ":00+09:00", timeZone: TZ }; }
+    // notifications: timed → at the exact time (0 min); all-day task → 8:00 on the day (-480 min from midnight)
+    body.reminders = { useDefault: false, overrides: [{ method: "popup", minutes: opts.allDay ? -480 : 0 }] };
     return gfetch("https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(calId) + "/events", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   }
   function gcalDelete(calId, eventId) {
