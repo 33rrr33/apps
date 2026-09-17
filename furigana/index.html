@@ -218,7 +218,7 @@
     <label class="fl">APIキー</label>
     <input class="tx" id="apiKey" type="password" placeholder="AIza... / sk-ant-..." autocomplete="off">
     <label class="fl">モデル名（ふつうはそのままでOK）</label>
-    <input class="tx" id="apiModel" type="text" placeholder="gemini-2.5-flash">
+    <input class="tx" id="apiModel" type="text" placeholder="gemini-3.6-flash">
     <p class="note" id="keyHelp" style="margin-top:10px"></p>
     <div class="row2">
       <button class="btn ghost" id="setCancel">とじる</button>
@@ -638,7 +638,7 @@
   }
   function updateKeyHelp(){
     var prov=document.querySelector('input[name="prov"]:checked').value;
-    if(!$("apiModel").value){ $("apiModel").placeholder = prov==="gemini" ? "gemini-2.5-flash" : "claude-sonnet-4-5"; }
+    if(!$("apiModel").value){ $("apiModel").placeholder = prov==="gemini" ? "gemini-3.6-flash" : "claude-sonnet-5"; }
     $("keyHelp").innerHTML = prov==="gemini"
       ? '無料のキーは <a class="link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> で取得できます（AIza… で始まります）。'
       : 'キーは <a class="link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a> で取得できます（sk-ant-… で始まります）。';
@@ -784,8 +784,8 @@
     aiStatus('<span class="spin"></span>写真を読み取っています…（10〜30秒）',"busy");
     fileToBase64(file).then(function(b64){
       var mime=file.type||"image/jpeg";
-      if(prov==="gemini") return callGemini(key, model||"gemini-2.5-flash", b64, mime);
-      return callClaude(key, model||"claude-sonnet-4-5", b64, mime);
+      if(prov==="gemini") return callGemini(key, model||"gemini-3.6-flash", b64, mime);
+      return callClaude(key, model||"claude-sonnet-5", b64, mime);
     }).then(function(text){
       var obj=parseAI(text);
       if(!obj||!obj.items||!obj.items.length) throw new Error("読み取り結果が空でした");
