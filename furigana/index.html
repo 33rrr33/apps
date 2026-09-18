@@ -112,9 +112,12 @@
   .verdict.c{color:var(--ok)} .verdict.w{color:var(--ng)}
   .verdict .mark{font-size:1.2rem;margin-right:2px}
 
-  /* mode2: ますとルビ（縦書きではルビは右側に自動配置） */
-  ruby.grp{ruby-position:over;-webkit-ruby-position:before}
-  ruby.grp>rt{font-size:1.05rem;color:var(--accent);font-weight:800;letter-spacing:.04em;padding-left:5px}
+  /* mode2: ますと、右レーンにまとめた読み（ヒント）。縦書き */
+  .grp{white-space:nowrap}
+  .ryhint{position:absolute;top:0;bottom:0;right:0;width:2.2em;
+    writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;
+    display:flex;align-items:center;justify-content:center;white-space:nowrap;
+    font-size:1.15rem;font-weight:800;color:var(--accent);letter-spacing:.08em}
   .slot{display:inline-block;overflow:hidden;width:1.85em;height:1.85em;line-height:1.8em;text-align:center;
     border:2px dashed var(--tile-line);border-radius:10px;background:var(--bg);
     font-size:1.95rem;font-weight:700;color:var(--ink);margin:3px 0}
@@ -614,8 +617,8 @@
       var it=t.items[i];
       h+='<div class="item vcol" data-i="'+i+'">';
       h+= '<span class="vno">'+NUM[i]+'</span>';
-      h+= '<div class="vsent">'+esc(it.before);
-      h+= '<ruby class="grp" data-i="'+i+'"><span class="row">';
+      h+= '<div class="vsent vsent1">'+esc(it.before);
+      h+= '<span class="grp" data-i="'+i+'">';
       var chars=it.answer.split(""), slotIdx=0;
       for(var c=0;c<chars.length;c++){
         if(isKanji(chars[c])){
@@ -625,8 +628,10 @@
           h+='<span class="okuri">'+esc(chars[c])+'</span>';
         }
       }
-      h+= '</span><rt>'+esc(it.yomi)+'</rt></ruby>';
-      h+= esc(it.after)+'</div>';
+      h+= '</span>';
+      h+= esc(it.after);
+      h+= '<span class="ryhint">'+esc(it.yomi)+'</span>'; // 読み（ヒント）は右のレーンにまとめて縦書き
+      h+= '</div>';
       h+= '<div class="verdict" data-i="'+i+'"></div>';
       h+='</div>';
     }
