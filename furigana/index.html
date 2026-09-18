@@ -205,6 +205,14 @@
   .mrow .del{flex:0 0 auto;border:2px solid var(--ng);color:var(--ng);background:transparent;
     border-radius:10px;padding:7px 11px;font-weight:800;font-size:.85rem;font-family:inherit;cursor:pointer}
   .mrow .del:active{transform:scale(.96)}
+  /* はじめての人へ ステップ案内 */
+  .gdbody{background:var(--accent-soft);border:1px solid var(--line);border-radius:14px;padding:16px;min-height:150px}
+  .gdbody .gh{font-weight:800;font-size:1.15rem;color:var(--accent);margin:0 0 10px}
+  .gdbody .gb{font-size:1rem;line-height:1.9;margin:0 0 14px}
+  .gdbody .mock{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:0 0 14px;font-size:.9rem;color:var(--sub)}
+  .gdbody .mock b{color:var(--accent)}
+  .gdbody .gact{width:100%;justify-content:center;padding:15px;font-size:1.05rem;text-decoration:none}
+  #mGuide .nav .prog{color:var(--sub)}
   footer{max-width:680px;margin:26px auto 0;text-align:center;color:var(--sub);font-size:.74rem}
   footer a{color:var(--accent);font-weight:700;text-decoration:none}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--accent);border-right-color:transparent;
@@ -264,7 +272,8 @@
 <div class="modal" id="mSet">
   <div class="sheet">
     <h2>⚙︎ APIキーの登録（Google Gemini）</h2>
-    <p class="note">写真からテストを自動で作るには、Google Gemini のAPIキーが必要です。最初に一度だけ登録すれば、あとは写真を撮るだけです。キーはこの端末の中だけに保存されます。</p>
+    <p class="note">写真からテストを自動で作るには、Google Gemini のAPIキーが必要です。最初に一度だけ登録すれば、あとは写真を撮るだけです。キーはこの端末の中だけに保存されます。<br>※ キーを使わなくても、手入力（＋）でテストは作れます。</p>
+    <button class="btn primary" id="btnGuide" style="width:100%;justify-content:center;padding:14px;margin-bottom:6px">🔰 はじめての人へ：キーの取り方（無料）</button>
     <label class="fl">APIキー</label>
     <input class="tx" id="apiKey" type="password" placeholder="AIza..." autocomplete="off">
     <label class="fl">モデル名（ふつうはそのままでOK）</label>
@@ -307,6 +316,22 @@
   </div>
 </div>
 
+<!-- はじめての人へ：APIキーの取り方 ステップ案内モーダル -->
+<div class="modal" id="mGuide">
+  <div class="sheet">
+    <h2 id="gdTitle">🔰 はじめての人へ：キーの取り方</h2>
+    <p class="note">写真から自動でテストを作るための「かぎ（APIキー）」を、Googleで<b>無料</b>でもらう手順です。1ステップずつ進みます。<br>iPadなら、Safariの「Split View」で左にこの画面・右にGoogleを並べると楽です。</p>
+    <div id="gdBody" class="gdbody"></div>
+    <div class="nav" style="margin-top:12px">
+      <button class="btn" id="gdPrev">← まえ</button>
+      <div class="prog" id="gdProg">1 / 5</div>
+      <button class="btn primary" id="gdNext">つぎへ →</button>
+    </div>
+    <p class="status" id="gdStatus"></p>
+    <div class="row2" style="margin-top:4px"><button class="btn ghost" id="gdClose">とじる</button></div>
+  </div>
+</div>
+
 <!-- 配信（URLで児童に送る）モーダル -->
 <div class="modal" id="mShare">
   <div class="sheet">
@@ -338,8 +363,9 @@
       <button class="btn" id="btnLibrary" style="justify-content:center;padding:18px;font-size:1.1rem">🖼 写真から選ぶ</button>
     </div>
     <div id="phNeedKey" class="hidden" style="margin-top:6px">
-      <p class="status err" style="margin:0 0 10px">写真から作るには、先に Google Gemini のAPIキーを登録してください（最初の一度だけ）。</p>
-      <button class="btn primary" id="btnGoSet" style="width:100%;justify-content:center;padding:16px;font-size:1.05rem">⚙︎ APIキーを登録する</button>
+      <p class="status err" style="margin:0 0 10px">写真から作るには、先に Google Gemini のAPIキー（無料）が必要です（最初の一度だけ）。</p>
+      <button class="btn primary" id="btnGuide2" style="width:100%;justify-content:center;padding:16px;font-size:1.05rem;margin-bottom:8px">🔰 はじめての人へ：キーの取り方</button>
+      <button class="btn ghost" id="btnGoSet" style="width:100%;justify-content:center;padding:14px">⚙︎ もう持っている（登録画面へ）</button>
     </div>
     <p class="status" id="phStatus"></p>
     <div class="row2" style="margin-top:8px">
@@ -907,6 +933,59 @@
     setTimeout(function(){ mSet.classList.remove("show"); },700);
   });
 
+  /* ============ はじめての人へ：キーの取り方（ステップ案内） ============ */
+  var mGuide=$("mGuide"), gdIdx=0;
+  var AISTUDIO_URL="https://aistudio.google.com/app/apikey";
+  var GUIDE=[
+    { h:"① Google AI Studio をひらく",
+      b:"まず、キーを作るGoogleのページを新しいタブで開きます。<br>Googleアカウント（Gmailなど）でログインしてください。",
+      mock:"ボタンを押すと <b>aistudio.google.com</b> が新しいタブで開きます。",
+      act:{ label:"🔗 Google AI Studio をひらく", url:AISTUDIO_URL } },
+    { h:"② 「APIキーを作成」を押す",
+      b:"開いたページで <b>「Create API key」（＝APIキーを作成）</b> のボタンを押します。<br>初回は英語の利用規約が出ることがあるので、チェックを入れて同意してください。",
+      mock:"画面にある青いボタン：<b>Create API key</b>" },
+    { h:"③ 「新しいプロジェクトで作成」を選ぶ",
+      b:"<b>「Create API key in new project」（＝新しいプロジェクトで作成）</b> を選ぶと、すぐにキーが作られます。<br>（プロジェクトを選ぶ画面が出たら、どれでもOKです）",
+      mock:"選ぶ項目：<b>Create API key in new project</b>" },
+    { h:"④ キーをコピーする",
+      b:"<b>「AIza…」</b> で始まる文字が表示されます。これがキーです。<br>右にあるコピーボタン（📋）で、まるごとコピーしてください。",
+      mock:"表示されるキーの例：<b>AIzaSyxxxxxxxxxxxxxxxxxxxxxxx</b>" },
+    { h:"⑤ このアプリに貼り付ける",
+      b:"コピーしたキーを下の欄に貼り付けて「ほぞん」を押せば完了です。<br>次からは、写真を撮るだけでテストが作れます。",
+      paste:true }
+  ];
+  function renderGuide(){
+    var s=GUIDE[gdIdx], h="";
+    h+='<p class="gh">'+s.h+'</p>';
+    h+='<p class="gb">'+s.b+'</p>';
+    if(s.mock){ h+='<p class="mock">'+s.mock+'</p>'; }
+    if(s.act){ h+='<a class="btn primary gact" href="'+s.act.url+'" target="_blank" rel="noopener">'+esc(s.act.label)+'</a>'; }
+    if(s.paste){
+      h+='<input class="tx" id="gdKey" type="text" inputmode="latin" autocomplete="off" placeholder="ここに AIza... を貼り付け" value="'+esc(lsGet(LS_KEY,""))+'">';
+      h+='<button class="btn primary gact" id="gdSave">✔ これで完了（ほぞん）</button>';
+    }
+    $("gdBody").innerHTML=h;
+    $("gdProg").textContent=(gdIdx+1)+" / "+GUIDE.length;
+    $("gdPrev").classList.toggle("hidden", gdIdx===0);
+    $("gdNext").classList.toggle("hidden", gdIdx===GUIDE.length-1);
+    $("gdStatus").textContent="";
+    if(s.paste){
+      $("gdSave").addEventListener("click", function(){
+        var k=$("gdKey").value.trim(), st=$("gdStatus");
+        if(!/^AIza/.test(k)){ st.className="status err"; st.textContent="「AIza…」で始まるキーを貼り付けてください。"; return; }
+        lsSet(LS_KEY,k);
+        st.className="status ok"; st.textContent="ほぞんしました！これで写真からテストが作れます🎉";
+        setTimeout(function(){ mGuide.classList.remove("show"); }, 900);
+      });
+    }
+  }
+  function openGuide(){ gdIdx=0; renderGuide(); mGuide.classList.add("show"); }
+  $("btnGuide").addEventListener("click", openGuide);
+  $("btnGuide2").addEventListener("click", function(){ mPhoto.classList.remove("show"); openGuide(); });
+  $("gdPrev").addEventListener("click", function(){ if(gdIdx>0){ gdIdx--; renderGuide(); } });
+  $("gdNext").addEventListener("click", function(){ if(gdIdx<GUIDE.length-1){ gdIdx++; renderGuide(); } });
+  $("gdClose").addEventListener("click", function(){ mGuide.classList.remove("show"); });
+
   /* export / import */
   $("btnExport").addEventListener("click", function(){
     var data=JSON.stringify({ version:1, tests:loadUserTests() }, null, 2);
@@ -1231,7 +1310,7 @@
   });
 
   /* close modals on backdrop tap */
-  [mSet,mEdit,mPhoto,mShare].forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m) m.classList.remove("show"); }); });
+  [mSet,mEdit,mPhoto,mShare,mGuide].forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m) m.classList.remove("show"); }); });
 
   /* ============ init ============ */
   sharedTest = readShareFromUrl();
