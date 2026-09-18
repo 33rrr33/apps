@@ -84,17 +84,14 @@
     align-self:center;background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1.05rem}
   .vsent{position:relative;writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;white-space:nowrap;
     font-size:1.5rem;line-height:1.8;letter-spacing:.01em;flex:0 0 auto;text-align:start}
-  .vsent1{padding-right:2.4em} /* モード1のみ：読み欄のレーンを右に確保 */
   .vsent .target{color:var(--accent);font-weight:800;background:var(--accent-soft);border-radius:6px;padding:1px 2px}
 
-  /* mode1: 読みを漢字の右どなり（ふりがなの位置）に、かなタイルをドラッグして置く。
-     右側に専用レーン(padding-right)を確保し、そこへ絶対配置。漢字と重ならない */
-  .tgtwrap{position:relative;display:inline-block;vertical-align:top}
-  /* 読みは自由記述（縦書きのテキスト入力）。漢字の右どなり・上下中央。字数は見せない */
-  .ryin{position:absolute;top:50%;left:100%;transform:translateY(-50%);margin-left:4px;
+  /* mode1: 文（縦書き）の右どなりに読み欄を置く。読み欄は文の高さに合わせて伸び、
+     カードからはみ出さない（自由記述・字数は見せない） */
+  .vpair{display:flex;flex-direction:row;align-items:stretch;gap:6px}
+  .ryin{flex:0 0 auto;
     writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;
-    width:2.5em;height:9em;padding:6px 2px;font-family:inherit;font-size:1.2rem;font-weight:700;
-    line-height:1;
+    width:2.5em;min-height:4.2em;padding:8px 3px;font-family:inherit;font-size:1.2rem;font-weight:700;line-height:1.15;
     text-align:center;color:var(--ink);border:2px dashed var(--accent);border-radius:10px;
     background:var(--accent-soft);box-sizing:border-box}
   .ryin:focus{outline:none;border-style:solid;background:var(--panel)}
@@ -465,10 +462,10 @@
       var it=t.items[i];
       h+='<div class="item vcol" data-i="'+i+'">';
       h+= '<span class="vno">'+NUM[i]+'</span>';
-      h+= '<div class="vsent vsent1">'+esc(it.before)+
-          '<span class="tgtwrap"><span class="target">'+esc(it.answer)+'</span>'+
-          '<input class="ryin" type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="よみ"></span>'+
-          esc(it.after)+'</div>';
+      h+= '<div class="vpair">'+
+            '<div class="vsent">'+esc(it.before)+'<span class="target">'+esc(it.answer)+'</span>'+esc(it.after)+'</div>'+
+            '<input class="ryin" type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="よみ">'+
+          '</div>';
       h+= '<div class="verdict" data-i="'+i+'"></div>';
       h+='</div>';
     }
