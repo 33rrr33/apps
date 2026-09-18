@@ -15,7 +15,7 @@
 <!-- UDフォント（ユニバーサルデザイン書体・LDの子にも読みやすい） -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=BIZ+UDPGothic:wght@400;700&display=swap">
 <style>
   :root{
     --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
@@ -34,7 +34,7 @@
   /* アプリシェル: 画面の高さいっぱいの縦フレックス。ページ自体はスクロールしない */
   body{margin:0;padding:env(safe-area-inset-top) 12px 0;
     height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;
-    font-family:"UD デジタル教科書体 NP-R","UDデジタル教科書体 NP-R","UD Digi Kyokasho NP-R","UD Digi Kyokasho N-R","BIZ UDPGothic","BIZ UDPゴシック","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Noto Sans JP","Noto Sans CJK JP",sans-serif;
+    font-family:"UD デジタル教科書体 NP-R","UDデジタル教科書体 NP-R","UD Digi Kyokasho NP-R","UD Digi Kyokasho N-R","BIZ UDPGothic","BIZ UDPゴシック","BIZ UDGothic","BIZ UDゴシック","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Noto Sans JP","Noto Sans CJK JP",sans-serif;
     background:var(--bg);color:var(--ink);line-height:1.6;-webkit-text-size-adjust:100%;}
   header{flex:0 0 auto;max-width:680px;width:100%;margin:0 auto;padding:8px 4px 2px;text-align:center}
   h1{font-size:1.2rem;margin:0}
@@ -84,7 +84,8 @@
     align-self:center;background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1.05rem}
   .vsent{position:relative;writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;white-space:nowrap;
     font-size:1.5rem;line-height:1.8;letter-spacing:.01em;flex:0 0 auto;text-align:start}
-  .vsent .target{color:var(--accent);font-weight:800;background:var(--accent-soft);border-radius:6px;padding:1px 2px}
+  .vsent .target{color:var(--accent);font-weight:800;background:var(--accent-soft);border-radius:6px;
+    font-size:1.5em;padding:2px 3px} /* 読みを答える漢字は大きく目立たせる */
 
   /* mode1: 文（縦書き）の右どなりに読み欄を置く。読み欄は文の高さに合わせて伸び、
      カードからはみ出さない（自由記述・字数は見せない） */
