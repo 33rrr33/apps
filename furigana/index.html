@@ -179,6 +179,13 @@
   .status.err{color:var(--ng)} .status.ok{color:var(--ok)} .status.busy{color:var(--accent)}
   a.link{color:var(--accent);font-weight:700}
   .hidden{display:none!important}
+  /* 児童に届いたテストの見出し（配信URLで開いたとき） */
+  .notice{flex:0 0 auto;max-width:640px;width:100%;margin:6px auto 0;
+    background:var(--accent-soft);border:1px solid var(--line);border-radius:14px;
+    padding:10px 14px;text-align:center;font-weight:800;color:var(--accent);font-size:.98rem}
+  .notice.show{display:block}
+  /* 配信URLで開いた「児童モード」：先生用の操作は隠す */
+  body.shared .bar{display:none}
   footer{max-width:680px;margin:26px auto 0;text-align:center;color:var(--sub);font-size:.74rem}
   footer a{color:var(--accent);font-weight:700;text-decoration:none}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--accent);border-right-color:transparent;
@@ -196,10 +203,13 @@
   <div class="bar">
     <div class="grow"><select id="testSel" aria-label="テストをえらぶ"></select></div>
     <button class="btn primary" id="btnPhoto" title="写真からテストを作る">📷 写真でつくる</button>
+    <button class="btn" id="btnShare" title="このテストをURLで児童に配信">🔗 配信</button>
     <button class="btn icon" id="btnEdit" title="このテストを編集">✏️</button>
     <button class="btn icon" id="btnNew" title="新しく作る">＋</button>
     <button class="btn icon ghost" id="btnSet" title="設定">⚙︎</button>
   </div>
+
+  <div class="notice hidden" id="shareBanner"></div>
 
   <div class="modes">
     <button id="tab1" class="on" data-mode="1">✏️ ふりがなを書く</button>
@@ -266,6 +276,24 @@
       <button class="btn ghost" id="edDelete" style="color:var(--ng)">🗑 このテストを削除</button>
     </div>
     <p class="status" id="edStatus"></p>
+  </div>
+</div>
+
+<!-- 配信（URLで児童に送る）モーダル -->
+<div class="modal" id="mShare">
+  <div class="sheet">
+    <h2 id="shareTitle">🔗 テストを配信する</h2>
+    <p class="note">このURLを児童に送ると、児童の端末でも同じテストがすぐに開けて解答できます。（サーバー不要・URLだけで完結します）<br>Google Classroom・ロイロノート・メール・QRコードなどで配ってください。</p>
+    <label class="fl">配信用URL</label>
+    <input class="tx" id="shareUrl" type="text" readonly onclick="this.select()">
+    <div class="row2">
+      <button class="btn primary" id="btnCopyUrl">📋 URLをコピー</button>
+      <button class="btn" id="btnShareNative">📤 共有</button>
+    </div>
+    <p class="status" id="shareStatus"></p>
+    <div class="row2" style="margin-top:4px">
+      <button class="btn ghost" id="shareClose">とじる</button>
+    </div>
   </div>
 </div>
 
@@ -377,8 +405,41 @@
   function loadUserTests(){ try{ return JSON.parse(localStorage.getItem(LS_TESTS)||"[]"); }catch(e){ return []; } }
   function saveUserTests(a){ try{ localStorage.setItem(LS_TESTS, JSON.stringify(a)); }catch(e){} }
 
+  var sharedTest=null; // 配信URLで開いたテスト（この端末には保存しない）
   function allTests(){ return SAMPLES.concat(loadUserTests()); }
-  function findTest(id){ var a=allTests(); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return a[0]; }
+  function findTest(id){
+    if(id==="shared" && sharedTest) return sharedTest;
+    var a=allTests(); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return a[0];
+  }
+
+  /* ============ 配信（テストをURLに埋め込む）============ */
+  function b64urlEncode(str){
+    return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  }
+  function b64urlDecode(s){
+    s=s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="=";
+    return decodeURIComponent(escape(atob(s)));
+  }
+  function encodeTest(test){
+    var o={ t:test.title||"", i:(test.items||[]).map(function(it){ return [it.before||"",it.answer||"",it.yomi||"",it.after||""]; }) };
+    return b64urlEncode(JSON.stringify(o));
+  }
+  function decodeTest(str){
+    var o=JSON.parse(b64urlDecode(str));
+    var items=(o.i||[]).map(function(a){ return {before:a[0]||"",answer:a[1]||"",yomi:a[2]||"",after:a[3]||""}; });
+    while(items.length<10) items.push({before:"",answer:"",yomi:"",after:""});
+    return { id:"shared", title:o.t||"とどいたテスト", sample:false, items:items.slice(0,10) };
+  }
+  function buildShareUrl(test){
+    return location.origin+location.pathname+"#t="+encodeTest(test);
+  }
+  function readShareFromUrl(){
+    try{
+      var m=(location.hash||"").match(/[#&]t=([^&]+)/);
+      if(!m) return null;
+      return decodeTest(m[1]);
+    }catch(e){ return null; }
+  }
 
   /* ============ state ============ */
   var state = { mode:1, testId:null, graded:false, place:{}, zone:{}, sel:null };
@@ -1035,14 +1096,46 @@
     }
     return attempt(full, 0);
   }
+  /* ============ 配信モーダルの操作 ============ */
+  var mShare=$("mShare");
+  function openShare(test){
+    if(test.sample===undefined && !test.items){ return; }
+    $("shareUrl").value=buildShareUrl(test);
+    $("shareTitle").textContent="🔗 「"+(test.title||"テスト")+"」を配信";
+    $("shareStatus").textContent="";
+    $("btnShareNative").style.display = (navigator.share ? "" : "none");
+    mShare.classList.add("show");
+  }
+  $("btnShare").addEventListener("click", function(){ openShare(findTest(state.testId)); });
+  $("shareClose").addEventListener("click", function(){ mShare.classList.remove("show"); });
+  $("btnCopyUrl").addEventListener("click", function(){
+    var inp=$("shareUrl"); inp.focus(); inp.select(); try{ inp.setSelectionRange(0,99999); }catch(e){}
+    var ok=function(){ var s=$("shareStatus"); s.className="status ok"; s.textContent="URLをコピーしました。メール・Google Classroom・ロイロノートなどで児童に送ってください。"; };
+    var ng=function(){ var s=$("shareStatus"); s.className="status err"; s.textContent="コピーできませんでした。URLを長押しして手動でコピーしてください。"; };
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(inp.value).then(ok, function(){ try{ document.execCommand("copy"); ok(); }catch(e){ ng(); } }); }
+    else { try{ document.execCommand("copy"); ok(); }catch(e){ ng(); } }
+  });
+  $("btnShareNative").addEventListener("click", function(){
+    if(navigator.share){ navigator.share({ title:"ふりがなテスト", text:"ふりがなテストです。ひらいて こたえてね。", url:$("shareUrl").value }).catch(function(){}); }
+  });
+
   /* close modals on backdrop tap */
-  [mSet,mEdit,mPhoto].forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m) m.classList.remove("show"); }); });
+  [mSet,mEdit,mPhoto,mShare].forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m) m.classList.remove("show"); }); });
 
   /* ============ init ============ */
-  var last=lsGet(LS_LAST,"");
-  var ids=allTests().map(function(t){return t.id;});
-  state.testId = (last && ids.indexOf(last)>=0) ? last : SAMPLES[0].id;
-  render();
+  sharedTest = readShareFromUrl();
+  if(sharedTest){
+    // 配信URLで開いた「児童モード」：先生用の操作を隠し、届いたテストを表示
+    document.body.classList.add("shared");
+    var bn=$("shareBanner"); bn.textContent="せんせいから とどいたテスト：「"+sharedTest.title+"」"; bn.classList.add("show"); bn.classList.remove("hidden");
+    state.testId="shared";
+    render();
+  } else {
+    var last=lsGet(LS_LAST,"");
+    var ids=allTests().map(function(t){return t.id;});
+    state.testId = (last && ids.indexOf(last)>=0) ? last : SAMPLES[0].id;
+    render();
+  }
 })();
 </script>
 </body>
