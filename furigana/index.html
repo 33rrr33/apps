@@ -186,6 +186,12 @@
   .notice.show{display:block}
   /* 配信URLで開いた「児童モード」：先生用の操作は隠す */
   body.shared .bar{display:none}
+  /* 作ったテストの管理（設定内の一覧・削除） */
+  .mrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .mrow .t{flex:1;min-width:0;font-weight:700;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mrow .del{flex:0 0 auto;border:2px solid var(--ng);color:var(--ng);background:transparent;
+    border-radius:10px;padding:7px 11px;font-weight:800;font-size:.85rem;font-family:inherit;cursor:pointer}
+  .mrow .del:active{transform:scale(.96)}
   footer{max-width:680px;margin:26px auto 0;text-align:center;color:var(--sub);font-size:.74rem}
   footer a{color:var(--accent);font-weight:700;text-decoration:none}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--accent);border-right-color:transparent;
@@ -251,6 +257,10 @@
       <button class="btn primary" id="setSave">ほぞん</button>
     </div>
     <p class="status" id="setStatus"></p>
+    <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+    <label class="fl">作ったテストの管理（削除）</label>
+    <p class="note" style="margin:0 0 8px">じぶんで作った（写真から作った）テストを削除できます。収録テストは消えません。</p>
+    <div id="manageList"></div>
     <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
     <div class="row2" style="margin-top:0">
       <button class="btn ghost" id="btnExport">📤 バックアップ書き出し</button>
@@ -788,8 +798,31 @@
     $("apiKey").value=lsGet(LS_KEY,"");
     $("apiModel").value=lsGet(LS_MODEL,"");
     updateKeyHelp();
+    renderManageList();
     $("setStatus").textContent="";
     mSet.classList.add("show");
+  }
+  // 作ったテストの一覧＋削除
+  function renderManageList(){
+    var wrap=$("manageList"), us=loadUserTests();
+    if(!us.length){ wrap.innerHTML='<p class="note" style="margin:2px 0 0">まだ作ったテストはありません。</p>'; return; }
+    var h="";
+    for(var i=0;i<us.length;i++){ h+='<div class="mrow"><span class="t">'+esc(us[i].title)+'</span><button class="del" data-id="'+esc(us[i].id)+'">🗑 削除</button></div>'; }
+    wrap.innerHTML=h;
+    var btns=wrap.querySelectorAll('.del');
+    for(var b=0;b<btns.length;b++){ btns[b].addEventListener('click', onDeleteTest); }
+  }
+  function onDeleteTest(e){
+    var id=e.currentTarget.getAttribute('data-id');
+    var us=loadUserTests(), t=null;
+    for(var i=0;i<us.length;i++){ if(us[i].id===id) t=us[i]; }
+    if(!t) return;
+    if(!confirm("「"+t.title+"」を削除しますか？（もとに戻せません）")) return;
+    us=us.filter(function(x){ return x.id!==id; });
+    saveUserTests(us);
+    if(state.testId===id){ state.testId=SAMPLES[0].id; lsSet(LS_LAST,state.testId); }
+    renderManageList(); fillSelector(); render();
+    var s=$("setStatus"); s.className="status ok"; s.textContent="削除しました。";
   }
   function updateKeyHelp(){
     if(!$("apiModel").value){ $("apiModel").placeholder="gemini-3.6-flash"; }
