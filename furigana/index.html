@@ -81,7 +81,7 @@
     background:var(--panel);border:1px solid var(--line);border-radius:16px;
     padding:12px 8px 18px;box-shadow:var(--shadow)}
   /* 番号は白枠の上に固定し、文（と読み欄）はカードの縦中央に寄せる */
-  .vcol>.vpair,.vcol>.vsent{margin-block:auto}
+  .vcol>.vsent{margin-block:auto}
   /* 問題番号は白枠の上・中央（align-self:centerで水平中央、最初の子で上） */
   .vno{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
     align-self:center;background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1.05rem}
@@ -90,12 +90,12 @@
   .vsent .target{color:var(--accent);font-weight:800;background:var(--accent-soft);border-radius:6px;
     font-size:1.5em;padding:2px 3px} /* 読みを答える漢字は大きく目立たせる */
 
-  /* mode1: 文（縦書き）の右どなりに読み欄を置く。読み欄は文の高さに合わせて伸び、
-     カードからはみ出さない（自由記述・字数は見せない） */
-  .vpair{display:flex;flex-direction:row;align-items:stretch;gap:6px}
-  .ryin{flex:0 0 auto;
+  /* mode1: 文（縦書き）の右に読み欄のレーンを確保し、その中に読み欄を絶対配置。
+     Safariの「フレックス×縦書き」不具合を避け、読み欄は文の高さいっぱいに収まる（自由記述・字数は見せない） */
+  .vsent1{padding-right:3em}
+  .ryin{position:absolute;top:0;bottom:0;right:0;width:2.5em;
     writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;
-    width:2.5em;min-height:4.2em;padding:8px 3px;font-family:inherit;font-size:1.2rem;font-weight:700;line-height:1.15;
+    padding:8px 3px;font-family:inherit;font-size:1.2rem;font-weight:700;line-height:1.15;
     text-align:center;color:var(--ink);border:2px dashed var(--accent);border-radius:10px;
     background:var(--accent-soft);box-sizing:border-box}
   .ryin:focus{outline:none;border-style:solid;background:var(--panel)}
@@ -545,8 +545,7 @@
       var it=t.items[i];
       h+='<div class="item vcol" data-i="'+i+'">';
       h+= '<span class="vno">'+NUM[i]+'</span>';
-      h+= '<div class="vpair">'+
-            '<div class="vsent">'+esc(it.before)+'<span class="target">'+esc(it.answer)+'</span>'+esc(it.after)+'</div>'+
+      h+= '<div class="vsent vsent1">'+esc(it.before)+'<span class="target">'+esc(it.answer)+'</span>'+esc(it.after)+
             '<input class="ryin" type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="'+i+'" placeholder="よみ">'+
           '</div>';
       h+= '<div class="verdict" data-i="'+i+'"></div>';
