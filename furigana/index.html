@@ -77,14 +77,16 @@
   /* すべての白枠を同じ高さ(align-items:stretch)にそろえる */
   .vrow{display:flex;flex-direction:row;align-items:stretch;gap:10px;
     width:max-content;margin-inline:auto;padding:8px 14px 34px}
-  .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:40px;
+  .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:8px;
     background:var(--panel);border:1px solid var(--line);border-radius:16px;
     padding:12px 8px 18px;box-shadow:var(--shadow)}
+  /* 番号は白枠の上に固定し、文（と読み欄）はカードの縦中央に寄せる */
+  .vcol>.vpair,.vcol>.vsent{margin-block:auto}
   /* 問題番号は白枠の上・中央（align-self:centerで水平中央、最初の子で上） */
   .vno{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
     align-self:center;background:var(--accent-soft);color:var(--accent);border-radius:50%;font-weight:800;font-size:1.05rem}
   .vsent{position:relative;writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;white-space:nowrap;
-    font-size:1.5rem;line-height:1.8;letter-spacing:.01em;flex:0 0 auto;text-align:start}
+    font-size:1.5rem;line-height:1.8;letter-spacing:.01em;flex:0 0 auto;text-align:center} /* 縦書き文字を縦中央に */
   .vsent .target{color:var(--accent);font-weight:800;background:var(--accent-soft);border-radius:6px;
     font-size:1.5em;padding:2px 3px} /* 読みを答える漢字は大きく目立たせる */
 
