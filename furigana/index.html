@@ -77,6 +77,8 @@
   /* すべての白枠を同じ高さ(align-items:stretch)にそろえる */
   .vrow{display:flex;flex-direction:row;align-items:stretch;gap:10px;
     width:max-content;margin-inline:auto;padding:8px 14px 34px}
+  /* 1問ずつ表示：アクティブな1枚だけ見せる */
+  .sheetv .item:not(.active){display:none}
   .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:8px;
     background:var(--panel);border:1px solid var(--line);border-radius:16px;
     padding:12px 8px 18px;box-shadow:var(--shadow)}
@@ -130,6 +132,12 @@
     padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
   .tray{display:none;margin-bottom:8px}
   .tray.show{display:block}
+  .tilegrp{display:none} .tilegrp.active{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  /* 1問ずつのナビ（まえ / N/10 / つぎへ） */
+  .nav{max-width:680px;margin:0 auto 8px;display:flex;align-items:center;gap:10px}
+  .nav .btn{flex:1;justify-content:center;padding:13px}
+  .nav .prog{flex:0 0 auto;min-width:64px;text-align:center;font-weight:800;color:var(--sub);font-size:1rem}
+  .nav .btn.hidden{display:none}
   .tray .cap{font-size:.72rem;color:var(--sub);font-weight:700;margin:0 2px 6px}
   .tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-height:23vh;overflow:auto}
   .tile{width:2em;height:2em;font-size:1.5rem;font-weight:800;
@@ -239,8 +247,13 @@
     <p class="cap" id="trayCap">↓ かんじを ドラッグ（またはタップ）して あてはめよう</p>
     <div class="tiles" id="tiles"></div>
   </div>
+  <div class="nav" id="nav">
+    <button class="btn" id="btnPrev">← まえ</button>
+    <div class="prog" id="prog">1 / 10</div>
+    <button class="btn primary" id="btnNext">つぎへ →</button>
+  </div>
   <div class="actions" id="actions">
-    <button class="btn primary" id="btnMark">◯つけする</button>
+    <button class="btn primary hidden" id="btnMark">◯つけする</button>
     <button class="btn ghost hidden" id="btnRetry">もう一度</button>
   </div>
 </div>
@@ -459,7 +472,7 @@
   }
 
   /* ============ state ============ */
-  var state = { mode:1, testId:null, graded:false, place:{}, zone:{}, sel:null };
+  var state = { mode:1, testId:null, graded:false, place:{}, zone:{}, sel:null, idx:0 };
 
   /* ============ helpers ============ */
   function isKanji(ch){ return /[一-龯々〇㐀-䶿]/.test(ch); }
@@ -484,7 +497,7 @@
     var availW=stage.clientWidth, availH=stage.clientHeight;
     var cw=vrow.scrollWidth, chh=vrow.scrollHeight;
     if(!cw||!chh||!availH) return;
-    var scale=Math.min(1, availW/cw, availH/chh);
+    var scale=Math.min(2.2, availW/cw, availH/chh); // 1問だけなので画面に合わせて拡大もする
     if(!isFinite(scale)||scale<=0) scale=1;
     vrow.style.transformOrigin="center center";
     vrow.style.transform="scale("+scale+")";
@@ -516,25 +529,59 @@
 
   /* ============ render ============ */
   function render(){
-    state.graded=false; state.place={}; state.zone={}; state.sel=null;
+    state.graded=false; state.place={}; state.zone={}; state.sel=null; state.idx=0;
     score.classList.remove("show");
     btnRetry.classList.add("hidden");
-    btnMark.classList.remove("hidden");
+    btnMark.classList.add("hidden");
     btnMark.textContent="◯つけする";
     fillSelector();
     if(state.mode===1){ renderMode1(); }
     else { renderMode2(); }
-    relayout();
-    if(window.requestAnimationFrame) requestAnimationFrame(relayout);
+    showProblem(0);
     window.scrollTo(0,0);
   }
 
-  function buildTiles(pool){
-    pool=shuffle(pool);
-    var th="";
-    for(var p=0;p<pool.length;p++){ th+='<span class="tile" data-id="tile'+p+'">'+esc(pool[p])+'</span>'; }
+  // 1問ずつ表示。アクティブなカード（とmode2のタイル）だけ見せ、ナビを更新
+  function showProblem(i){
+    var N=findTest(state.testId).items.length;
+    state.idx=Math.max(0, Math.min(N-1, i));
+    var cards=stage.querySelectorAll('.item');
+    for(var c=0;c<cards.length;c++){ cards[c].classList.toggle('active', +cards[c].getAttribute('data-i')===state.idx); }
+    if(state.mode===2){
+      var grps=tiles.querySelectorAll('.tilegrp');
+      for(var g=0;g<grps.length;g++){ grps[g].classList.toggle('active', +grps[g].getAttribute('data-i')===state.idx); }
+      tray.classList.toggle('show', !state.graded);
+    }
+    if(typeof clearSel==="function") clearSel();
+    updateNav();
+    relayout();
+    if(window.requestAnimationFrame) requestAnimationFrame(relayout);
+  }
+  function updateNav(){
+    var N=findTest(state.testId).items.length, last=state.idx>=N-1, first=state.idx<=0;
+    $("prog").textContent=(state.idx+1)+" / "+N;
+    $("btnPrev").classList.toggle("hidden", first);
+    if(state.graded){
+      $("btnNext").classList.toggle("hidden", last);
+      btnMark.classList.add("hidden");
+      btnRetry.classList.remove("hidden");
+    } else {
+      btnRetry.classList.add("hidden");
+      $("btnNext").classList.toggle("hidden", last);
+      btnMark.classList.toggle("hidden", !last);
+    }
+  }
+
+  // mode2: 各問ごとにタイルのまとまりを作り、アクティブな問題のものだけ表示
+  function buildTiles(items){
+    var th="", n=0;
+    for(var i=0;i<items.length;i++){
+      var pool=shuffle(kanjiChars(items[i].answer));
+      th+='<div class="tilegrp" data-i="'+i+'">';
+      for(var p=0;p<pool.length;p++){ th+='<span class="tile" data-id="tile'+(n++)+'">'+esc(pool[p])+'</span>'; }
+      th+='</div>';
+    }
     tiles.innerHTML=th;
-    tray.classList.add("show");
     bindTiles();
   }
 
@@ -579,11 +626,9 @@
       h+='</div>';
     }
     stage.className="sheetv"; stage.innerHTML='<div class="vrow">'+h+'</div>';
-    // tiles = all kanji chars shuffled
-    var pool=[];
-    for(var k=0;k<t.items.length;k++){ pool=pool.concat(kanjiChars(t.items[k].answer)); }
+    // タイルは問題ごとのまとまりで作る（1問ずつ表示するため）
     trayCap.textContent="↓ かんじを ドラッグ（またはタップ）して あてはめよう";
-    buildTiles(pool);
+    buildTiles(t.items);
     bindSlots();
   }
 
@@ -778,10 +823,8 @@
     var m = pt===100 ? "全問せいかい！すごい！🌟" : correct>=Math.ceil(total*0.7) ? "よくできました！💮" : "もう一度ちょうせんしよう💪";
     scoreMsg.textContent = correct+" / "+total+" もん　"+m;
     score.classList.add("show");
-    btnMark.classList.add("hidden");
-    btnRetry.classList.remove("hidden");
-    clearSel();
-    relayout();
+    tray.classList.remove("show");
+    showProblem(0); // 最初の問題から見直せるように
     window.scrollTo({top:0,behavior:"smooth"});
   }
 
@@ -790,6 +833,8 @@
     if(state.mode===1) gradeMode1(); else gradeMode2();
   });
   btnRetry.addEventListener("click", render);
+  $("btnPrev").addEventListener("click", function(){ showProblem(state.idx-1); });
+  $("btnNext").addEventListener("click", function(){ showProblem(state.idx+1); });
   testSel.addEventListener("change", function(){ state.testId=testSel.value; lsSet(LS_LAST,state.testId); render(); });
   document.querySelectorAll(".modes button").forEach(function(b){
     b.addEventListener("click", function(){
