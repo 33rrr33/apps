@@ -58,6 +58,7 @@
   /* ---- mode tabs ---- */
   .modes{display:flex;gap:6px;background:var(--accent-soft);padding:5px;border-radius:16px;margin:8px 0 16px}
   .modes button{flex:1;border:none;background:transparent;color:var(--sub);font-family:inherit;
+    display:flex;align-items:center;justify-content:center;gap:5px;text-align:center;
     font-weight:700;font-size:.92rem;padding:11px 6px;border-radius:12px;cursor:pointer;transition:.12s}
   .modes button.on{background:var(--panel);color:var(--accent);box-shadow:var(--shadow)}
 
@@ -293,12 +294,15 @@
 <div class="modal" id="mShare">
   <div class="sheet">
     <h2 id="shareTitle">🔗 テストを配信する</h2>
-    <p class="note">このURLを児童に送ると、児童の端末でも同じテストがすぐに開けて解答できます。（サーバー不要・URLだけで完結します）<br>Google Classroom・ロイロノート・メール・QRコードなどで配ってください。</p>
+    <p class="note">このURLを児童に送ると、児童の端末でも同じテストがすぐに開けて解答できます。（サーバー不要・URLだけで完結します）<br>Google Classroom・ロイロノート・メール・QRコードなどで配ってください。<br>※テストごとにURLは変わります。同じ内容でも <b>🔄 新しいURLを作る</b> で毎回ちがうリンクにできます。</p>
     <label class="fl">配信用URL</label>
     <input class="tx" id="shareUrl" type="text" readonly onclick="this.select()">
     <div class="row2">
       <button class="btn primary" id="btnCopyUrl">📋 URLをコピー</button>
       <button class="btn" id="btnShareNative">📤 共有</button>
+    </div>
+    <div class="row2" style="margin-top:8px">
+      <button class="btn ghost" id="btnNewUrl">🔄 新しいURLを作る（別のリンク）</button>
     </div>
     <p class="status" id="shareStatus"></p>
     <div class="row2" style="margin-top:4px">
@@ -430,8 +434,9 @@
     s=s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="=";
     return decodeURIComponent(escape(atob(s)));
   }
-  function encodeTest(test){
+  function encodeTest(test, nonce){
     var o={ t:test.title||"", i:(test.items||[]).map(function(it){ return [it.before||"",it.answer||"",it.yomi||"",it.after||""]; }) };
+    if(nonce) o.n=nonce; // 別のリンクにしたいとき用の識別子（内容には影響しない）
     return b64urlEncode(JSON.stringify(o));
   }
   function decodeTest(str){
@@ -440,8 +445,8 @@
     while(items.length<10) items.push({before:"",answer:"",yomi:"",after:""});
     return { id:"shared", title:o.t||"とどいたテスト", sample:false, items:items.slice(0,10) };
   }
-  function buildShareUrl(test){
-    return location.origin+location.pathname+"#t="+encodeTest(test);
+  function buildShareUrl(test, nonce){
+    return location.origin+location.pathname+"#t="+encodeTest(test, nonce);
   }
   function readShareFromUrl(){
     try{
@@ -1130,16 +1135,23 @@
     return attempt(full, 0);
   }
   /* ============ 配信モーダルの操作 ============ */
-  var mShare=$("mShare");
+  var mShare=$("mShare"), shareTestRef=null;
   function openShare(test){
-    if(test.sample===undefined && !test.items){ return; }
-    $("shareUrl").value=buildShareUrl(test);
+    if(!test || !test.items){ return; }
+    shareTestRef=test;
+    $("shareUrl").value=buildShareUrl(test, ""); // まずは内容そのままのURL
     $("shareTitle").textContent="🔗 「"+(test.title||"テスト")+"」を配信";
     $("shareStatus").textContent="";
     $("btnShareNative").style.display = (navigator.share ? "" : "none");
     mShare.classList.add("show");
   }
   $("btnShare").addEventListener("click", function(){ openShare(findTest(state.testId)); });
+  $("btnNewUrl").addEventListener("click", function(){
+    if(!shareTestRef) return;
+    var nonce = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    $("shareUrl").value=buildShareUrl(shareTestRef, nonce);
+    var s=$("shareStatus"); s.className="status ok"; s.textContent="新しいURLを作りました。今度はこのURLを配ってください。";
+  });
   $("shareClose").addEventListener("click", function(){ mShare.classList.remove("show"); });
   $("btnCopyUrl").addEventListener("click", function(){
     var inp=$("shareUrl"); inp.focus(); inp.select(); try{ inp.setSelectionRange(0,99999); }catch(e){}
