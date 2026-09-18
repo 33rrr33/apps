@@ -216,6 +216,15 @@
   .gdtip{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);
     border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:.9rem;line-height:1.7;color:var(--ink)}
   .gdtip b{color:var(--accent)}
+  /* ガイドの図解（Googleの画面の見た目イメージ） */
+  .mockui{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+  .uibtn{display:inline-flex;align-items:center;gap:6px;background:#1a73e8;color:#fff;font-weight:800;
+    padding:9px 14px;border-radius:8px;font-size:.95rem;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .uimenu{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);
+    color:var(--ink);font-weight:700;padding:9px 12px;border-radius:8px;font-size:.9rem}
+  .uikey{background:#f1f3f4;color:#202124;border:1px solid #dadce0;border-radius:6px;padding:6px 10px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;font-weight:700;letter-spacing:.02em}
+  .uicopy{font-size:1.3rem}
   footer{max-width:680px;margin:26px auto 0;text-align:center;color:var(--sub);font-size:.74rem}
   footer a{color:var(--accent);font-weight:700;text-decoration:none}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--accent);border-right-color:transparent;
@@ -384,6 +393,7 @@
 
 <footer>
   ホーム画面に追加できます（共有 → 「ホーム画面に追加」）<br>
+  <a href="start.html">📣 他の先生に紹介（使い方・QR）</a>
   <a href="../">← 先生のアプリ一覧へ</a>
 </footer>
 
@@ -971,27 +981,28 @@
       mock:"ボタンを押すと <b>aistudio.google.com</b> の「APIキー」ページが新しいタブで開きます。",
       act:{ label:"🔗 キーを作るページをひらく", url:AISTUDIO_URL } },
     { h:"② 「APIキーを作成」を押す",
-      b:"開いたページで <b>「Create API key」（＝APIキーを作成）</b> のボタンを押します。<br>初回は英語の利用規約が出ることがあるので、チェックを入れて同意してください。",
-      mock:"画面にある青いボタン：<b>Create API key</b>" },
+      b:"開いたページで、この青いボタンを押します（英語で <b>Create API key</b>）。<br>初回は英語の利用規約が出ることがあるので、チェックを入れて同意してください。",
+      mock:'<div class="mockui">こんなボタン →<span class="uibtn">🔑 Create API key</span></div>' },
     { h:"③ 「新しいプロジェクトで作成」を選ぶ",
-      b:"<b>「Create API key in new project」（＝新しいプロジェクトで作成）</b> を選ぶと、すぐにキーが作られます。<br>（プロジェクトを選ぶ画面が出たら、どれでもOKです）",
-      mock:"選ぶ項目：<b>Create API key in new project</b>" },
+      b:"つづけて、この項目を選ぶと、すぐにキーが作られます（英語で <b>Create API key in new project</b>）。<br>プロジェクトを選ぶ画面が出たら、どれでもOKです。",
+      mock:'<div class="mockui">こんな項目 →<span class="uimenu">Create API key in new project ▸</span></div>' },
     { h:"④ キーをコピーする",
-      b:"<b>「AIza…」</b> で始まる文字が表示されます。これがキーです。<br>右にあるコピーボタン（📋）で、まるごとコピーしてください。",
-      mock:"表示されるキーの例：<b>AIzaSyxxxxxxxxxxxxxxxxxxxxxxx</b>" },
+      b:"<b>「AIza…」</b> で始まる文字が表示されます。これがキーです。<br>となりのコピーボタン（📋）で、まるごとコピーしてください。",
+      mock:'<div class="mockui"><span class="uikey">AIzaSy··············</span><span class="uicopy">📋</span></div>' },
     { h:"⑤ このアプリに貼り付ける",
-      b:"コピーしたキーを下の欄に貼り付けて「ほぞん」を押せば完了です。<br>次からは、写真を撮るだけでテストが作れます。",
+      b:"コピーしたキーを貼り付けて保存すれば完了です。<br>下の <b>「📋 コピーしたキーを貼り付け」</b> を押すと、自動で貼り付け＆保存できます（うまくいかないときは手入力欄に貼り付けて「ほぞん」）。",
       paste:true }
   ];
   function renderGuide(){
     var s=GUIDE[gdIdx], h="";
     h+='<p class="gh">'+s.h+'</p>';
     h+='<p class="gb">'+s.b+'</p>';
-    if(s.mock){ h+='<p class="mock">'+s.mock+'</p>'; }
+    if(s.mock){ h+='<div class="mock">'+s.mock+'</div>'; }
     if(s.act){ h+='<button class="btn primary gact" id="gdOpen">'+esc(s.act.label)+'</button>'; }
     if(s.paste){
+      h+='<button class="btn primary gact" id="gdPaste" style="margin-bottom:8px">📋 コピーしたキーを貼り付け</button>';
       h+='<input class="tx" id="gdKey" type="text" inputmode="latin" autocomplete="off" placeholder="ここに AIza... を貼り付け" value="'+esc(lsGet(LS_KEY,""))+'">';
-      h+='<button class="btn primary gact" id="gdSave">✔ これで完了（ほぞん）</button>';
+      h+='<button class="btn ghost gact" id="gdSave">✔ これで完了（ほぞん）</button>';
     }
     $("gdBody").innerHTML=h;
     // 「並べて見る方法」の端末別ヒントは①のときだけ出す
@@ -1003,12 +1014,23 @@
     $("gdStatus").textContent="";
     if(s.act){ var ob=$("gdOpen"); if(ob) ob.addEventListener("click", openAIStudio); }
     if(s.paste){
-      $("gdSave").addEventListener("click", function(){
-        var k=$("gdKey").value.trim(), st=$("gdStatus");
-        if(!/^AIza/.test(k)){ st.className="status err"; st.textContent="「AIza…」で始まるキーを貼り付けてください。"; return; }
-        lsSet(LS_KEY,k);
+      function saveKey(k){
+        k=(k||"").trim(); var st=$("gdStatus");
+        if(!/^AIza/.test(k)){ st.className="status err"; st.textContent="「AIza…」で始まるキーを貼り付けてください。"; return false; }
+        $("gdKey").value=k; lsSet(LS_KEY,k);
         st.className="status ok"; st.textContent="ほぞんしました！これで写真からテストが作れます🎉";
-        setTimeout(function(){ mGuide.classList.remove("show"); }, 900);
+        setTimeout(function(){ mGuide.classList.remove("show"); }, 900); return true;
+      }
+      $("gdSave").addEventListener("click", function(){ saveKey($("gdKey").value); });
+      $("gdPaste").addEventListener("click", function(){
+        var st=$("gdStatus");
+        if(navigator.clipboard && navigator.clipboard.readText){
+          navigator.clipboard.readText().then(function(t){
+            if(!saveKey(t)){ st.className="status err"; st.textContent="コピーしたキーが読み取れませんでした。下の欄に手で貼り付けて「ほぞん」を押してください。"; }
+          }, function(){ st.className="status err"; st.textContent="貼り付けの許可が必要です。下の欄を長押し→ペーストして「ほぞん」を押してください。"; });
+        } else {
+          st.className="status err"; st.textContent="この端末では自動貼り付けが使えません。下の欄に貼り付けて「ほぞん」を押してください。";
+        }
       });
     }
   }

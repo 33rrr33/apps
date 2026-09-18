@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ふりがなテスト｜使い方・紹介</title>
+<meta name="description" content="漢字の「読み」を答えるテストアプリ。写真から自動作成、URLで児童に配信。LDの子にもやさしい。">
+<link rel="icon" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+  :root{
+    --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
+    --accent:#c96f3f;--accent-soft:#fbeee4;--shadow:0 2px 12px rgba(90,70,40,.08);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;
+    --accent:#e0895a;--accent-soft:#3a2f26;--shadow:0 2px 14px rgba(0,0,0,.35);
+  }}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:0 16px calc(40px + env(safe-area-inset-bottom));padding-top:env(safe-area-inset-top);
+    font-family:"BIZ UDPGothic","BIZ UDPゴシック","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.8;-webkit-text-size-adjust:100%}
+  .wrap{max-width:720px;margin:0 auto}
+  header{text-align:center;padding:34px 6px 6px}
+  h1{font-size:1.9rem;margin:0 0 6px}
+  .lead{color:var(--sub);margin:0 auto;max-width:560px;font-size:1rem}
+  .cta{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:22px 0 8px}
+  a.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:800;font-size:1.05rem;
+    padding:15px 22px;border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line);
+    background:var(--panel);color:var(--ink);transition:transform .1s}
+  a.btn:active{transform:scale(.97)}
+  a.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);
+    padding:22px 20px;margin:18px 0}
+  h2{font-size:1.2rem;margin:0 0 14px}
+  .feat{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:560px){.feat{grid-template-columns:1fr 1fr 1fr}}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .card .em{font-size:2rem;line-height:1}
+  .card h3{font-size:1rem;margin:8px 0 4px}
+  .card p{font-size:.86rem;color:var(--sub);margin:0}
+  ol.steps{margin:0;padding-left:0;list-style:none;counter-reset:s}
+  ol.steps li{counter-increment:s;position:relative;padding:10px 0 10px 48px;border-bottom:1px solid var(--line)}
+  ol.steps li:last-child{border-bottom:none}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:10px;width:32px;height:32px;
+    display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);
+    border-radius:50%;font-weight:800}
+  ol.steps b{color:var(--accent)}
+  .qrbox{display:flex;flex-wrap:wrap;align-items:center;gap:20px;justify-content:center}
+  .qrbox img{width:180px;height:180px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px}
+  .qrbox .t{max-width:320px}
+  .note{color:var(--sub);font-size:.88rem}
+  .urlbox{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .urlbox input{flex:1;font-family:inherit;font-size:.9rem;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+  .urlbox button{font-family:inherit;font-weight:800;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:10px;padding:10px 14px;cursor:pointer}
+  footer{text-align:center;color:var(--sub);font-size:.82rem;margin-top:24px}
+  footer a{color:var(--accent);font-weight:700;text-decoration:none}
+  .badge{display:inline-block;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:.8rem;padding:4px 10px;border-radius:999px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge">先生向け・無料</div>
+    <h1>📖 ふりがなテスト</h1>
+    <p class="lead">漢字を「書く」テストが苦手な子（LDなど）のために、漢字の<b>読み（ふりがな）</b>を答えるテストアプリです。写真から自動でテストが作れて、URLで児童に配信できます。</p>
+    <div class="cta">
+      <a class="btn primary" href="./">▶ アプリをひらく</a>
+      <a class="btn" href="#howto">使い方を見る</a>
+    </div>
+  </header>
+
+  <section>
+    <h2>できること</h2>
+    <div class="feat">
+      <div class="card"><div class="em">📷</div><h3>写真から自動作成</h3><p>漢字プリントを撮るだけで、AIがテストを自動で作成（無料のGoogle Geminiキーを使用）。</p></div>
+      <div class="card"><div class="em">✏️🀄</div><h3>2つのモード</h3><p>「ふりがなを書く」（1問ずつ）と「かんじをドラッグ」（一覧）。◯つけまで自動。</p></div>
+      <div class="card"><div class="em">🔗</div><h3>URLで配信</h3><p>作ったテストはURLひとつで児童に配信。児童の端末はキー不要で解答できます。</p></div>
+    </div>
+  </section>
+
+  <section id="howto">
+    <h2>使い方（かんたん3ステップ）</h2>
+    <ol class="steps">
+      <li><b>ひらく</b>：「アプリをひらく」または下のQRから開く。収録テスト5つはすぐ使えます。</li>
+      <li><b>テストを用意</b>：写真から作る（📷 写真でつくる）か、手入力（＋）で作成。写真を使うには最初に一度だけ無料キーを登録（アプリ内「🔰 はじめての人へ」で案内）。</li>
+      <li><b>解く／配信</b>：その場で解いて◯つけ。児童に配るときは「🔗 配信」でURLをコピーして送る。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>スマホ・iPadで開く（QRコード）</h2>
+    <div class="qrbox">
+      <img src="qr.svg" alt="ふりがなテストのQRコード" width="180" height="180">
+      <div class="t">
+        <p class="note">カメラでこのQRを読み取ると、すぐにアプリが開きます。児童や同僚の先生に見せて読み取ってもらえます。</p>
+        <div class="urlbox">
+          <input id="appurl" type="text" readonly value="https://33rrr33.github.io/apps/furigana/" onclick="this.select()">
+          <button id="copyurl">コピー</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>よくある質問</h2>
+    <p style="margin:0 0 10px"><b>Q. APIキーは必ず必要？</b><br>いいえ。<b>写真からの自動作成を使うときだけ</b>必要です。手入力で作れば不要で、児童が解くのにも不要です。</p>
+    <p style="margin:0 0 10px"><b>Q. 料金は？</b><br>アプリは無料。写真作成に使うGoogle Geminiにも無料枠があります。</p>
+    <p style="margin:0"><b>Q. 個人情報は？</b><br>キーやテストはその端末の中だけに保存。配信URLにはテスト内容だけが入り、個人情報は送信しません。</p>
+  </section>
+
+  <footer>
+    <a href="./">▶ アプリをひらく</a><br>
+    <a href="../" style="display:inline-block;margin-top:8px">先生のアプリ一覧へ</a>
+  </footer>
+</div>
+<script>
+  document.getElementById('copyurl').addEventListener('click',function(){
+    var i=document.getElementById('appurl'); i.select();
+    var done=function(){ this && (this.textContent='コピー済み'); };
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(i.value).then(function(){document.getElementById('copyurl').textContent='コピー済み';},function(){}); }
+    else { try{document.execCommand('copy'); document.getElementById('copyurl').textContent='コピー済み';}catch(e){} }
+  });
+</script>
+</body>
+</html>
