@@ -77,8 +77,8 @@
   /* すべての白枠を同じ高さ(align-items:stretch)にそろえる */
   .vrow{display:flex;flex-direction:row;align-items:stretch;gap:10px;
     width:max-content;margin-inline:auto;padding:8px 14px 34px}
-  /* 1問ずつ表示：アクティブな1枚だけ見せる */
-  .sheetv .item:not(.active){display:none}
+  /* 1問ずつ表示（mode1のみ）：アクティブな1枚だけ見せる。mode2は全問表示 */
+  body.one .sheetv .item:not(.active){display:none}
   .vcol{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:8px;
     background:var(--panel);border:1px solid var(--line);border-radius:16px;
     padding:12px 8px 18px;box-shadow:var(--shadow)}
@@ -132,8 +132,7 @@
     padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
   .tray{display:none;margin-bottom:8px}
   .tray.show{display:block}
-  .tilegrp{display:none} .tilegrp.active{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-  /* 1問ずつのナビ（まえ / N/10 / つぎへ） */
+  /* 1問ずつのナビ（まえ / N/10 / つぎへ）: mode1のみ表示 */
   .nav{max-width:680px;margin:0 auto 8px;display:flex;align-items:center;gap:10px}
   .nav .btn{flex:1;justify-content:center;padding:13px}
   .nav .prog{flex:0 0 auto;min-width:64px;text-align:center;font-weight:800;color:var(--sub);font-size:1rem}
@@ -532,26 +531,34 @@
     state.graded=false; state.place={}; state.zone={}; state.sel=null; state.idx=0;
     score.classList.remove("show");
     btnRetry.classList.add("hidden");
-    btnMark.classList.add("hidden");
     btnMark.textContent="◯つけする";
     fillSelector();
-    if(state.mode===1){ renderMode1(); }
-    else { renderMode2(); }
-    showProblem(0);
+    if(state.mode===1){
+      // ふりがなを書く：1問ずつ
+      renderMode1();
+      document.body.classList.add("one");
+      $("nav").classList.remove("hidden");
+      btnMark.classList.add("hidden");
+      showProblem(0);
+    } else {
+      // かんじをドラッグ：10問すべて表示
+      renderMode2();
+      document.body.classList.remove("one");
+      $("nav").classList.add("hidden");
+      btnMark.classList.remove("hidden");
+      tray.classList.add("show");
+      relayout();
+      if(window.requestAnimationFrame) requestAnimationFrame(relayout);
+    }
     window.scrollTo(0,0);
   }
 
-  // 1問ずつ表示。アクティブなカード（とmode2のタイル）だけ見せ、ナビを更新
+  // mode1のみ：アクティブなカード1枚だけ見せ、ナビを更新
   function showProblem(i){
     var N=findTest(state.testId).items.length;
     state.idx=Math.max(0, Math.min(N-1, i));
     var cards=stage.querySelectorAll('.item');
     for(var c=0;c<cards.length;c++){ cards[c].classList.toggle('active', +cards[c].getAttribute('data-i')===state.idx); }
-    if(state.mode===2){
-      var grps=tiles.querySelectorAll('.tilegrp');
-      for(var g=0;g<grps.length;g++){ grps[g].classList.toggle('active', +grps[g].getAttribute('data-i')===state.idx); }
-      tray.classList.toggle('show', !state.graded);
-    }
     if(typeof clearSel==="function") clearSel();
     updateNav();
     relayout();
@@ -572,15 +579,13 @@
     }
   }
 
-  // mode2: 各問ごとにタイルのまとまりを作り、アクティブな問題のものだけ表示
+  // mode2: すべての漢字タイルをまとめて（シャッフルして）出す
   function buildTiles(items){
-    var th="", n=0;
-    for(var i=0;i<items.length;i++){
-      var pool=shuffle(kanjiChars(items[i].answer));
-      th+='<div class="tilegrp" data-i="'+i+'">';
-      for(var p=0;p<pool.length;p++){ th+='<span class="tile" data-id="tile'+(n++)+'">'+esc(pool[p])+'</span>'; }
-      th+='</div>';
-    }
+    var pool=[];
+    for(var i=0;i<items.length;i++){ pool=pool.concat(kanjiChars(items[i].answer)); }
+    pool=shuffle(pool);
+    var th="";
+    for(var p=0;p<pool.length;p++){ th+='<span class="tile" data-id="tile'+p+'">'+esc(pool[p])+'</span>'; }
     tiles.innerHTML=th;
     bindTiles();
   }
@@ -824,7 +829,13 @@
     scoreMsg.textContent = correct+" / "+total+" もん　"+m;
     score.classList.add("show");
     tray.classList.remove("show");
-    showProblem(0); // 最初の問題から見直せるように
+    if(state.mode===1){
+      showProblem(0); // 1問ずつ：最初から見直せるように（ナビ更新）
+    } else {
+      btnMark.classList.add("hidden");
+      btnRetry.classList.remove("hidden");
+    }
+    clearSel();
     window.scrollTo({top:0,behavior:"smooth"});
   }
 
