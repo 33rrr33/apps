@@ -949,9 +949,21 @@
   }
   function guideTip(){
     var k=deviceKind();
-    if(k==="ipad") return "📱 <b>iPadのコツ</b>：この画面を開いたまま、画面上部の <b>「•••」（マルチタスク）</b> を押して <b>Split View</b> を選ぶと、左にこの案内・右にGoogleを<b>並べて</b>見られます。むずかしければ、タブを行き来してもOKです。";
+    if(k==="ipad") return "📱 <b>iPadのコツ</b>：この画面を開いたまま、画面上部の <b>「•••」（マルチタスク）</b> を押して <b>Split View</b> を選ぶと、左にこの案内・右にGoogleを<b>並べて</b>見られます。（この分割だけはiPadの操作が必要です。むずかしければタブを行き来してもOK）";
     if(k==="phone") return "📱 <b>スマホのコツ</b>：ボタンでGoogleが別タブで開きます。タブや画面を行き来しながら進めてください。";
-    return "💻 <b>パソコンのコツ</b>：ボタンでGoogleが<b>別タブ／別ウィンドウ</b>で開きます。ウィンドウを<b>左右に並べる</b>と、この案内を見ながら操作できます（Windows：⊞＋←/→、Mac：ウィンドウ左上の緑ボタン長押し）。";
+    return "💻 <b>パソコンのコツ</b>：ボタンを押すと、Googleが<b>画面の右側</b>に自動で開きます（横に並びます）。ふさがっていたら、左右に並べてください。";
+  }
+  // PCでは右半分にウィンドウで開く（自動で横並び）。iPad等では通常のタブで開く
+  function openAIStudio(){
+    if(deviceKind()==="pc"){
+      try{
+        var aw=screen.availWidth||1280, ah=screen.availHeight||800;
+        var w=Math.max(520, Math.floor(aw/2));
+        var win=window.open(AISTUDIO_URL, "aistudio", "popup=yes,noopener,width="+w+",height="+ah+",left="+(aw-w)+",top=0");
+        if(win){ try{ win.focus(); }catch(e){} return; }
+      }catch(e){}
+    }
+    window.open(AISTUDIO_URL, "_blank", "noopener");
   }
   var GUIDE=[
     { h:"① キーを作るページをひらく",
@@ -976,7 +988,7 @@
     h+='<p class="gh">'+s.h+'</p>';
     h+='<p class="gb">'+s.b+'</p>';
     if(s.mock){ h+='<p class="mock">'+s.mock+'</p>'; }
-    if(s.act){ h+='<a class="btn primary gact" href="'+s.act.url+'" target="_blank" rel="noopener">'+esc(s.act.label)+'</a>'; }
+    if(s.act){ h+='<button class="btn primary gact" id="gdOpen">'+esc(s.act.label)+'</button>'; }
     if(s.paste){
       h+='<input class="tx" id="gdKey" type="text" inputmode="latin" autocomplete="off" placeholder="ここに AIza... を貼り付け" value="'+esc(lsGet(LS_KEY,""))+'">';
       h+='<button class="btn primary gact" id="gdSave">✔ これで完了（ほぞん）</button>';
@@ -989,6 +1001,7 @@
     $("gdPrev").classList.toggle("hidden", gdIdx===0);
     $("gdNext").classList.toggle("hidden", gdIdx===GUIDE.length-1);
     $("gdStatus").textContent="";
+    if(s.act){ var ob=$("gdOpen"); if(ob) ob.addEventListener("click", openAIStudio); }
     if(s.paste){
       $("gdSave").addEventListener("click", function(){
         var k=$("gdKey").value.trim(), st=$("gdStatus");
