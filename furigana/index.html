@@ -491,7 +491,11 @@
   }
   function relayout(){ fitStage(); }
   window.addEventListener("resize", relayout);
-  window.addEventListener("orientationchange", function(){ setTimeout(relayout,300); });
+  window.addEventListener("orientationchange", function(){ setTimeout(relayout,300); setTimeout(relayout,600); });
+  // iPad対策：フォント読み込み後・描画後にレイアウトを取り直す（初期表示のズレを防ぐ）
+  window.addEventListener("load", function(){ relayout(); setTimeout(relayout,200); setTimeout(relayout,800); });
+  try{ if(document.fonts && document.fonts.ready){ document.fonts.ready.then(function(){ relayout(); }); } }catch(e){}
+  try{ if(document.fonts && document.fonts.addEventListener){ document.fonts.addEventListener("loadingdone", relayout); } }catch(e){}
   var score=$("score"), scorePt=$("scorePt"), scoreMsg=$("scoreMsg");
   var btnMark=$("btnMark"), btnRetry=$("btnRetry");
 
