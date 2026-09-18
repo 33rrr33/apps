@@ -213,6 +213,9 @@
   .gdbody .mock b{color:var(--accent)}
   .gdbody .gact{width:100%;justify-content:center;padding:15px;font-size:1.05rem;text-decoration:none}
   #mGuide .nav .prog{color:var(--sub)}
+  .gdtip{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:.9rem;line-height:1.7;color:var(--ink)}
+  .gdtip b{color:var(--accent)}
   footer{max-width:680px;margin:26px auto 0;text-align:center;color:var(--sub);font-size:.74rem}
   footer a{color:var(--accent);font-weight:700;text-decoration:none}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--accent);border-right-color:transparent;
@@ -320,7 +323,8 @@
 <div class="modal" id="mGuide">
   <div class="sheet">
     <h2 id="gdTitle">🔰 はじめての人へ：キーの取り方</h2>
-    <p class="note">写真から自動でテストを作るための「かぎ（APIキー）」を、Googleで<b>無料</b>でもらう手順です。1ステップずつ進みます。<br>iPadなら、Safariの「Split View」で左にこの画面・右にGoogleを並べると楽です。</p>
+    <p class="note" id="gdNote">写真から自動でテストを作るための「かぎ（APIキー）」を、Googleで<b>無料</b>でもらう手順です。1ステップずつ進みます。</p>
+    <div class="gdtip" id="gdTip"></div>
     <div id="gdBody" class="gdbody"></div>
     <div class="nav" style="margin-top:12px">
       <button class="btn" id="gdPrev">← まえ</button>
@@ -936,11 +940,24 @@
   /* ============ はじめての人へ：キーの取り方（ステップ案内） ============ */
   var mGuide=$("mGuide"), gdIdx=0;
   var AISTUDIO_URL="https://aistudio.google.com/app/apikey";
+  // 端末を判定して「並べて見る方法」を出し分ける（iPad / iPhone / パソコン）
+  function deviceKind(){
+    var ua=navigator.userAgent||"";
+    if(/iPad/.test(ua) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1)) return "ipad";
+    if(/iPhone|iPod|Android/.test(ua)) return "phone";
+    return "pc";
+  }
+  function guideTip(){
+    var k=deviceKind();
+    if(k==="ipad") return "📱 <b>iPadのコツ</b>：この画面を開いたまま、画面上部の <b>「•••」（マルチタスク）</b> を押して <b>Split View</b> を選ぶと、左にこの案内・右にGoogleを<b>並べて</b>見られます。むずかしければ、タブを行き来してもOKです。";
+    if(k==="phone") return "📱 <b>スマホのコツ</b>：ボタンでGoogleが別タブで開きます。タブや画面を行き来しながら進めてください。";
+    return "💻 <b>パソコンのコツ</b>：ボタンでGoogleが<b>別タブ／別ウィンドウ</b>で開きます。ウィンドウを<b>左右に並べる</b>と、この案内を見ながら操作できます（Windows：⊞＋←/→、Mac：ウィンドウ左上の緑ボタン長押し）。";
+  }
   var GUIDE=[
-    { h:"① Google AI Studio をひらく",
-      b:"まず、キーを作るGoogleのページを新しいタブで開きます。<br>Googleアカウント（Gmailなど）でログインしてください。",
-      mock:"ボタンを押すと <b>aistudio.google.com</b> が新しいタブで開きます。",
-      act:{ label:"🔗 Google AI Studio をひらく", url:AISTUDIO_URL } },
+    { h:"① キーを作るページをひらく",
+      b:"まず、キーを作るページ（Google AI Studio）を新しいタブで開きます。<br>Googleアカウント（Gmailなど）でログインしてください。<br><small>※ 検索で「Gemini API キー」と調べても、同じページに行けます。</small>",
+      mock:"ボタンを押すと <b>aistudio.google.com</b> の「APIキー」ページが新しいタブで開きます。",
+      act:{ label:"🔗 キーを作るページをひらく", url:AISTUDIO_URL } },
     { h:"② 「APIキーを作成」を押す",
       b:"開いたページで <b>「Create API key」（＝APIキーを作成）</b> のボタンを押します。<br>初回は英語の利用規約が出ることがあるので、チェックを入れて同意してください。",
       mock:"画面にある青いボタン：<b>Create API key</b>" },
@@ -965,6 +982,9 @@
       h+='<button class="btn primary gact" id="gdSave">✔ これで完了（ほぞん）</button>';
     }
     $("gdBody").innerHTML=h;
+    // 「並べて見る方法」の端末別ヒントは①のときだけ出す
+    if(gdIdx===0){ $("gdTip").innerHTML=guideTip(); $("gdTip").style.display=""; }
+    else { $("gdTip").style.display="none"; }
     $("gdProg").textContent=(gdIdx+1)+" / "+GUIDE.length;
     $("gdPrev").classList.toggle("hidden", gdIdx===0);
     $("gdNext").classList.toggle("hidden", gdIdx===GUIDE.length-1);
