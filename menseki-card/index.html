@@ -239,6 +239,32 @@ const ICON={
   move: svg(`<polygon points="14,58 34,20 54,58" fill="${P}"/>
     <path d="M56,38 h22" stroke="${K}" stroke-width="4"/>
     <polygon points="78,32 90,38 78,44" fill="${K}"/>`),
+  henshin: svg(`<polygon points="20,58 44,16 90,16 66,58" fill="${B}"/>
+    <path d="M15,12 l3,8 8,3 -8,3 -3,8 -3,-8 -8,-3 8,-3z" fill="#f2b705"/>
+    <path d="M85,38 l2.4,6 6,2.4 -6,2.4 -2.4,6 -2.4,-6 -6,-2.4 6,-2.4z" fill="#f2b705"/>`),
+  bunshin: svg(`<polygon points="34,60 56,22 78,60" fill="#cdb4e6"/>
+    <polygon points="24,60 46,22 68,60" fill="#a877d1"/>
+    <polygon points="14,60 36,22 58,60" fill="${P}"/>`),
+  kiribari: svg(`<polygon points="14,58 28,22 28,58" fill="#bcdcfa"/>
+    <polygon points="46,58 60,22 92,22 78,58" fill="#7db8f2"/>
+    <polygon points="78,58 92,22 92,58" fill="none" stroke="${K}" stroke-width="2" ${DASH}/>
+    <path d="M30,26 q18,-14 40,-2" fill="none" stroke="${K}" stroke-width="3"/>
+    <polygon points="66,16 76,25 62,29" fill="${K}"/>`),
+  hoka: svg(`<polygon points="14,14 46,14 14,58" fill="${G}"/>
+    <polygon points="14,58 46,14 46,58" fill="#bfe6c4"/>
+    <line x1="14" y1="58" x2="46" y2="14" stroke="#fff" stroke-width="3"/>
+    <rect x="58" y="26" width="30" height="30" fill="none" stroke="${K}" stroke-width="2" ${DASH}/>
+    <polygon points="88,26 88,56 58,56" fill="${P}"/>`),
+  but: svg(`<rect x="8" y="16" width="84" height="40" rx="9" fill="#1f3a93"/>
+    <text x="50" y="46" text-anchor="middle" font-size="27" font-weight="900" fill="#ffd21a" font-family="Arial,sans-serif">BUT</text>`),
+  onaji: svg(`<polygon points="8,54 24,20 40,54" fill="${K}"/>
+    <text x="50" y="46" text-anchor="middle" font-size="24" font-weight="900" fill="${K}">=</text>
+    <polygon points="60,54 76,20 92,54" fill="${K}"/>`),
+  maeno: svg(`<path d="M12,24 q16,-6 30,0 v28 q-14,-6 -30,0z" fill="none" stroke="${K}" stroke-width="3"/>
+    <path d="M42,24 q16,-6 30,0 v28 q-14,-6 -30,0z" fill="none" stroke="${K}" stroke-width="3"/>
+    <line x1="42" y1="24" x2="42" y2="52" stroke="${K}" stroke-width="3"/>
+    <circle cx="84" cy="22" r="9" fill="none" stroke="#f2b705" stroke-width="3"/>
+    <line x1="80" y1="34" x2="88" y2="34" stroke="#f2b705" stroke-width="3"/>`),
   // 公式（図形）
   para: svg(`<polygon points="24,58 44,16 90,16 70,58" fill="${B}"/>`),
   tri: svg(`<polygon points="14,60 54,12 90,60" fill="${P}"/>`),
@@ -259,11 +285,18 @@ const CARDS={
   kangae:[
     {id:'sankaku-kiru', t:'三角形に切る', ic:'cutTri'},
     {id:'shikaku-suru', t:'四角形にする', ic:'makeQuad'},
-    {id:'waru2', t:'÷2なのか', ic:'half'},
-    {id:'zukei-soto', t:'図形の外', ic:'outside'},
+    {id:'kiribari', t:'切り貼り', ic:'kiribari'},
+    {id:'henshin', t:'変身！', ic:'henshin'},
+    {id:'bunshin', t:'分身！', ic:'bunshin'},
     {id:'onaji2', t:'同じ形を2つ', ic:'double'},
     {id:'ugokasu', t:'動かして考える', ic:'move'},
+    {id:'waru2', t:'÷2なのか', ic:'half'},
     {id:'hanbun', t:'半分にする', ic:'half'},
+    {id:'zukei-soto', t:'図形の外', ic:'outside'},
+    {id:'hoka', t:'ほかの見方', ic:'hoka'},
+    {id:'but', t:'形は違うけど', ic:'but'},
+    {id:'kokoonaji', t:'ここが同じ！', ic:'onaji'},
+    {id:'maeno', t:'前の時間で', ic:'maeno'},
   ],
   yougo:[
     {id:'teihen-takasa', t:'底辺と高さ', ic:'heightTri'},
