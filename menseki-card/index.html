@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>面積カード</title>
+<meta name="description" content="面積の学習カードをえらんで、立式と答えを説明できる授業ツール">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c96f3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="面積カード">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{
+    --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
+    --accent:#c96f3f;--accent-soft:#fbeee4;--shadow:0 2px 12px rgba(90,70,40,.10);
+    --frame:#35b6f6;        /* カードの青わく */
+    --cardbg:#ffffff;--cardink:#111111;
+    --ans:#137a4b;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;
+    --accent:#e0895a;--accent-soft:#3a2f26;--shadow:0 2px 14px rgba(0,0,0,.4);
+    --ans:#4fd497;
+  }}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    padding:0 14px calc(40px + env(safe-area-inset-bottom));
+    padding-top:env(safe-area-inset-top);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5;-webkit-text-size-adjust:100%;
+  }
+  header{max-width:900px;margin:0 auto;padding:20px 4px 4px;text-align:center}
+  h1{font-size:1.5rem;margin:0 0 2px}
+  .lead{color:var(--sub);margin:0;font-size:.82rem}
+  main{max-width:900px;margin:0 auto}
+  .back{display:inline-block;margin:10px 2px 0;color:var(--accent);font-weight:700;
+    text-decoration:none;font-size:.82rem}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;
+    box-shadow:var(--shadow);padding:16px;margin-top:16px}
+  .panel h2{font-size:1.02rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .panel .hint{color:var(--sub);font-size:.76rem;margin:0 0 10px}
+
+  /* ===== せつめいの流れ ===== */
+  #flowWrap{min-height:96px}
+  #flow{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x proximity}
+  #flow:empty::after{content:"↓ 下からカードをえらんでね";color:var(--sub);
+    font-size:.9rem;padding:24px 6px;display:block}
+  .fcard{position:relative;flex:0 0 auto;scroll-snap-align:start}
+  .arrowSep{flex:0 0 auto;align-self:center;color:var(--frame);font-size:1.4rem;font-weight:900;user-select:none}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .btn{border:2px solid var(--line);background:var(--panel);color:var(--ink);
+    border-radius:999px;padding:8px 14px;font-size:.82rem;font-weight:700;cursor:pointer}
+  .btn:active{transform:scale(.96)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.ghost{color:var(--sub)}
+
+  /* ===== カード見た目（印刷カード風・常に白） ===== */
+  .card{background:var(--cardbg);border:5px solid var(--frame);border-radius:14px;
+    display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;
+    box-shadow:0 1px 5px rgba(0,0,0,.12);transition:transform .1s}
+  .card:active{transform:scale(.96)}
+  .card .t{flex:1;font-weight:800;color:var(--cardink);letter-spacing:.01em}
+  .card .ic{flex:0 0 auto}
+  .card.on{outline:4px solid var(--accent);outline-offset:2px}
+
+  /* ライブラリのカード */
+  #lib .card{font-size:1.02rem}
+  #lib .ic{width:56px;height:40px}
+  .libgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (min-width:620px){.libgrid{grid-template-columns:1fr 1fr 1fr}}
+
+  /* 流れの中のカード（大きめ） */
+  .fcard .card{width:172px;height:96px;font-size:1.12rem;flex-direction:column;
+    align-items:flex-start;justify-content:center;padding:12px 14px}
+  .fcard .card .row{display:flex;align-items:center;gap:8px;width:100%}
+  .fcard .card .ic{width:44px;height:32px}
+  .fmini{display:flex;gap:6px;margin-top:8px}
+  .fmini button{border:none;background:rgba(0,0,0,.06);color:#333;border-radius:8px;
+    width:30px;height:26px;font-size:.9rem;font-weight:800;cursor:pointer;line-height:1}
+  .fmini button:active{transform:scale(.9)}
+  .fmini .x{background:#ffe1e1;color:#c0392b}
+
+  /* タブ */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .tab{border:2px solid var(--line);background:var(--panel);color:var(--sub);
+    border-radius:999px;padding:7px 16px;font-size:.85rem;font-weight:800;cursor:pointer}
+  .tab.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .libhead{font-size:.82rem;font-weight:800;color:var(--sub);margin:16px 2px 8px}
+
+  /* ===== 式と答え ===== */
+  .shapechips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{border:2px solid var(--line);background:var(--panel);color:var(--ink);
+    border-radius:999px;padding:8px 16px;font-size:.9rem;font-weight:800;cursor:pointer}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .calcgrid{display:grid;grid-template-columns:1fr;gap:14px}
+  @media (min-width:640px){.calcgrid{grid-template-columns:minmax(0,300px) 1fr}}
+  .figbox{background:var(--accent-soft);border-radius:14px;padding:8px;display:flex;
+    align-items:center;justify-content:center}
+  .figbox svg{width:100%;height:auto;max-width:300px}
+
+  .inputs{display:flex;flex-direction:column;gap:10px}
+  .inrow{display:flex;align-items:center;gap:10px}
+  .inrow label{flex:0 0 92px;font-weight:800;font-size:1rem}
+  .inrow input{flex:1;min-width:0;font-size:1.3rem;font-weight:800;text-align:center;
+    padding:8px;border:2px solid var(--line);border-radius:12px;background:var(--panel);
+    color:var(--ink)}
+  .inrow input:focus{outline:none;border-color:var(--accent)}
+  .inrow .unit{flex:0 0 auto;color:var(--sub);font-weight:800}
+
+  .formulaTag{display:inline-block;background:var(--accent-soft);color:var(--accent);
+    font-weight:800;border-radius:10px;padding:6px 12px;font-size:.95rem;margin-bottom:10px}
+
+  .eqbox{margin-top:6px;background:var(--panel);border:2px dashed var(--line);
+    border-radius:14px;padding:16px;text-align:center}
+  .eqlabel{font-size:.78rem;font-weight:800;color:var(--sub);letter-spacing:.08em}
+  .eq{font-size:clamp(1.4rem,6vw,2.1rem);font-weight:900;margin:6px 0 2px;word-break:break-word}
+  .ans{font-size:clamp(1.5rem,7vw,2.4rem);font-weight:900;color:var(--ans);margin-top:6px}
+  .ans.hidden .val{filter:blur(11px)}
+  .ans .val{transition:filter .18s}
+  .unitsel{margin-top:12px;display:flex;align-items:center;gap:8px;justify-content:center;
+    color:var(--sub);font-size:.82rem;font-weight:700}
+  .unitsel select{font-size:.9rem;font-weight:800;padding:5px 8px;border-radius:10px;
+    border:2px solid var(--line);background:var(--panel);color:var(--ink)}
+  footer{max-width:900px;margin:26px auto 0;text-align:center;color:var(--sub);font-size:.74rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>📐 面積カード</h1>
+  <p class="lead">カードをえらんで、立式と答えを説明しよう</p>
+</header>
+
+<main>
+  <a class="back" href="../">← アプリ一覧へ</a>
+
+  <!-- せつめいの流れ -->
+  <section class="panel">
+    <h2>🧩 せつめいの流れ</h2>
+    <p class="hint">えらんだカードが左から順にならびます。◀▶で入れかえ、✕で消せます。</p>
+    <div id="flowWrap"><div id="flow"></div></div>
+    <div class="toolbar">
+      <button class="btn ghost" id="clearFlow">ぜんぶ消す</button>
+    </div>
+  </section>
+
+  <!-- 式と答え -->
+  <section class="panel">
+    <h2>✏️ 式と答え</h2>
+    <p class="hint">図形をえらんで、数を入れると「式」と「答え」が出ます。</p>
+    <div class="shapechips" id="shapeChips"></div>
+    <div class="formulaTag" id="formulaTag"></div>
+    <div class="calcgrid">
+      <div class="figbox" id="figBox"></div>
+      <div>
+        <div class="inputs" id="inputs"></div>
+        <div class="eqbox">
+          <div class="eqlabel">しき（立式）</div>
+          <div class="eq" id="eq">- - -</div>
+          <div class="ans hidden" id="ans">答え <span class="val" id="ansVal">?</span></div>
+          <div class="unitsel">
+            <label>たんい
+              <select id="unit">
+                <option value="cm">cm（面積 cm²）</option>
+                <option value="m">m（面積 m²）</option>
+                <option value="mm">mm（面積 mm²）</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="toolbar" style="justify-content:center;margin-top:12px">
+          <button class="btn primary" id="toggleAns">答えを見る</button>
+          <button class="btn" id="resetCalc">数をけす</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- カードライブラリ -->
+  <section class="panel">
+    <h2>🃏 カードをえらぶ</h2>
+    <div class="tabs" id="tabs"></div>
+    <div id="lib"></div>
+  </section>
+
+  <footer>電子黒板・iPadで使えます。ホーム画面に追加してね。</footer>
+</main>
+
+<script>
+/* ============ SVGアイコン ============ */
+const NS='http://www.w3.org/2000/svg';
+const G='#4caf50', P='#7b2fbf', B='#2563eb', S='#f0857a', K='#111';
+function svg(inner){return `<svg class="ic" viewBox="0 0 100 72" xmlns="${NS}">${inner}</svg>`;}
+const DASH='stroke-dasharray="4 3"';
+const ICON={
+  // 用語
+  heightTri: svg(`<polygon points="20,58 60,14 92,58" fill="${G}"/>
+    <rect x="6" y="58" width="90" height="6" fill="${K}"/>
+    <line x1="60" y1="14" x2="60" y2="58" stroke="${K}" stroke-width="5"/>
+    <rect x="49" y="47" width="11" height="11" fill="none" stroke="${K}" stroke-width="2.5" ${DASH}/>`),
+  base: svg(`<polygon points="20,56 60,16 90,56" fill="${G}"/>
+    <line x1="14" y1="59" x2="94" y2="59" stroke="#e23" stroke-width="7"/>`),
+  height: svg(`<polygon points="20,58 62,16 92,58" fill="${G}"/>
+    <line x1="62" y1="16" x2="62" y2="58" stroke="${K}" stroke-width="5" ${DASH}/>
+    <rect x="51" y="47" width="11" height="11" fill="none" stroke="${K}" stroke-width="2.5"/>`),
+  diagRhombus: svg(`<polygon points="52,10 92,36 52,62 12,36" fill="${G}"/>
+    <line x1="12" y1="36" x2="92" y2="36" stroke="#fff" stroke-width="4" ${DASH}/>
+    <line x1="52" y1="10" x2="52" y2="62" stroke="#fff" stroke-width="4" ${DASH}/>`),
+  topBase: svg(`<polygon points="22,56 38,18 74,18 90,56" fill="${S}"/>
+    <line x1="38" y1="15" x2="74" y2="15" stroke="#e23" stroke-width="7"/>`),
+  bottomBase: svg(`<polygon points="22,56 38,18 74,18 90,56" fill="${S}"/>
+    <line x1="16" y1="59" x2="96" y2="59" stroke="#e23" stroke-width="7"/>`),
+  rightAngle: svg(`<polygon points="24,54 74,10 88,54" fill="${B}"/>
+    <line x1="56" y1="10" x2="56" y2="54" stroke="${K}" stroke-width="5"/>
+    <rect x="44" y="42" width="12" height="12" fill="none" stroke="#e23" stroke-width="3"/>`),
+  // 考え方
+  cutTri: svg(`<polygon points="14,60 14,12 62,12" fill="${G}"/>
+    <polygon points="14,60 62,12 62,60" fill="#bfe6c4"/>
+    <line x1="14" y1="60" x2="62" y2="12" stroke="#fff" stroke-width="4"/>
+    <path d="M74,20 l16,0 M74,44 l16,0" stroke="#f0857a" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="72" cy="20" r="6" fill="none" stroke="#f0857a" stroke-width="4"/>
+    <circle cx="72" cy="44" r="6" fill="none" stroke="#f0857a" stroke-width="4"/>`),
+  makeQuad: svg(`<rect x="20" y="14" width="46" height="46" fill="none" stroke="${K}" stroke-width="3" ${DASH}/>
+    <polygon points="66,14 66,60 20,60" fill="${P}"/>`),
+  half: svg(`<rect x="22" y="14" width="46" height="46" fill="none" stroke="${K}" stroke-width="3" ${DASH}/>
+    <polygon points="22,14 68,60 22,60" fill="${P}"/>
+    <text x="80" y="46" font-size="26" font-weight="900" fill="${K}">½</text>`),
+  outside: svg(`<polygon points="18,58 34,20 74,20 58,58" fill="#7db8f2"/>
+    <line x1="74" y1="20" x2="74" y2="58" stroke="${K}" stroke-width="4"/>
+    <line x1="18" y1="58" x2="82" y2="58" stroke="${K}" stroke-width="4"/>
+    <rect x="65" y="49" width="9" height="9" fill="none" stroke="${K}" stroke-width="2"/>`),
+  double: svg(`<polygon points="16,58 40,16 64,58" fill="${P}"/>
+    <polygon points="40,16 88,16 64,58" fill="${G}"/>`),
+  move: svg(`<polygon points="14,58 34,20 54,58" fill="${P}"/>
+    <path d="M56,38 h22" stroke="${K}" stroke-width="4"/>
+    <polygon points="78,32 90,38 78,44" fill="${K}"/>`),
+  // 公式（図形）
+  para: svg(`<polygon points="24,58 44,16 90,16 70,58" fill="${B}"/>`),
+  tri: svg(`<polygon points="14,60 54,12 90,60" fill="${P}"/>`),
+  trap: svg(`<polygon points="18,58 34,16 76,16 92,58" fill="${S}"/>`),
+  rhombus: svg(`<polygon points="52,10 92,36 52,62 12,36" fill="${G}"/>`),
+};
+
+/* ============ カードのデータ ============ */
+const CARDS={
+  koushiki:[
+    {id:'heikou-koushiki', t:'平行四辺形の公式', ic:'para', shape:'para'},
+    {id:'sankaku-koushiki', t:'三角形の公式', ic:'tri', shape:'tri'},
+    {id:'daikei-koushiki', t:'台形の公式', ic:'trap', shape:'trap'},
+    {id:'hishi-koushiki', t:'ひし形の公式', ic:'rhombus', shape:'rhombus'},
+    {id:'shiki-th', t:'底辺×高さ', ic:'para', shape:'para'},
+    {id:'shiki-th2', t:'底辺×高さ÷2', ic:'tri', shape:'tri'},
+  ],
+  kangae:[
+    {id:'sankaku-kiru', t:'三角形に切る', ic:'cutTri'},
+    {id:'shikaku-suru', t:'四角形にする', ic:'makeQuad'},
+    {id:'waru2', t:'÷2なのか', ic:'half'},
+    {id:'zukei-soto', t:'図形の外', ic:'outside'},
+    {id:'onaji2', t:'同じ形を2つ', ic:'double'},
+    {id:'ugokasu', t:'動かして考える', ic:'move'},
+    {id:'hanbun', t:'半分にする', ic:'half'},
+  ],
+  yougo:[
+    {id:'teihen-takasa', t:'底辺と高さ', ic:'heightTri'},
+    {id:'teihen', t:'底辺', ic:'base'},
+    {id:'takasa', t:'高さ', ic:'height'},
+    {id:'suichoku', t:'高さは垂直', ic:'rightAngle'},
+    {id:'taikakusen', t:'対角線', ic:'diagRhombus'},
+    {id:'jotei', t:'上底', ic:'topBase'},
+    {id:'katei', t:'下底', ic:'bottomBase'},
+  ],
+};
+const ALL={};
+Object.values(CARDS).flat().forEach(c=>ALL[c.id]=c);
+
+const CATS=[
+  {key:'all', name:'すべて'},
+  {key:'koushiki', name:'公式', label:'📏 公式'},
+  {key:'kangae', name:'考え方', label:'💡 考え方'},
+  {key:'yougo', name:'用語', label:'🔤 用語'},
+];
+const CATLABEL={koushiki:'📏 公式', kangae:'💡 考え方', yougo:'🔤 用語'};
+
+/* ============ 図形（式と答え） ============ */
+const SHAPES={
+  para:{name:'平行四辺形', formula:'底辺 × 高さ',
+    vars:[['底辺','base'],['高さ','h']],
+    expr:v=>`${v.base} × ${v.h}`, calc:v=>v.base*v.h},
+  tri:{name:'三角形', formula:'底辺 × 高さ ÷ 2',
+    vars:[['底辺','base'],['高さ','h']],
+    expr:v=>`${v.base} × ${v.h} ÷ 2`, calc:v=>v.base*v.h/2},
+  trap:{name:'台形', formula:'(上底 + 下底) × 高さ ÷ 2',
+    vars:[['上底','a'],['下底','b'],['高さ','h']],
+    expr:v=>`(${v.a} + ${v.b}) × ${v.h} ÷ 2`, calc:v=>(v.a+v.b)*v.h/2},
+  rhombus:{name:'ひし形', formula:'対角線 × 対角線 ÷ 2',
+    vars:[['対角線㋐','d1'],['対角線㋑','d2']],
+    expr:v=>`${v.d1} × ${v.d2} ÷ 2`, calc:v=>v.d1*v.d2/2},
+};
+
+/* ============ 状態 ============ */
+let flow=[];                 // 選んだカードidの配列（順番あり）
+let activeShape='para';
+let tab='all';
+let showAnswer=false;
+let unit='cm';
+let vals={};                 // shapeごとの入力値 { 'para:base':8, ... }
+
+/* ============ せつめいの流れ ============ */
+const flowEl=document.getElementById('flow');
+function renderFlow(){
+  flowEl.innerHTML='';
+  flow.forEach((id,i)=>{
+    const c=ALL[id];
+    const wrap=document.createElement('div');
+    wrap.className='fcard';
+    wrap.innerHTML=`
+      <div class="card">
+        <div class="row"><span class="t">${c.t}</span>${ICON[c.ic]}</div>
+        <div class="fmini">
+          <button data-a="left" ${i===0?'disabled':''}>◀</button>
+          <button data-a="right" ${i===flow.length-1?'disabled':''}>▶</button>
+          <button class="x" data-a="del">✕</button>
+        </div>
+      </div>`;
+    wrap.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const a=b.dataset.a;
+      if(a==='del') flow.splice(i,1);
+      else if(a==='left'){[flow[i-1],flow[i]]=[flow[i],flow[i-1]];}
+      else if(a==='right'){[flow[i+1],flow[i]]=[flow[i],flow[i+1]];}
+      renderFlow(); renderLib();
+    });
+    flowEl.appendChild(wrap);
+    if(i<flow.length-1){
+      const sep=document.createElement('div');
+      sep.className='arrowSep'; sep.textContent='→';
+      flowEl.appendChild(sep);
+    }
+  });
+}
+document.getElementById('clearFlow').onclick=()=>{flow=[];renderFlow();renderLib();};
+
+/* ============ カードライブラリ ============ */
+const tabsEl=document.getElementById('tabs');
+CATS.forEach(cat=>{
+  const b=document.createElement('button');
+  b.className='tab'+(cat.key===tab?' on':'');
+  b.textContent=cat.name; b.dataset.k=cat.key;
+  b.onclick=()=>{tab=cat.key;[...tabsEl.children].forEach(x=>x.classList.toggle('on',x.dataset.k===tab));renderLib();};
+  tabsEl.appendChild(b);
+});
+const libEl=document.getElementById('lib');
+function makeCardEl(c){
+  const el=document.createElement('div');
+  el.className='card'+(flow.includes(c.id)?' on':'');
+  el.innerHTML=`<span class="t">${c.t}</span>${ICON[c.ic]}`;
+  el.onclick=()=>{
+    flow.push(c.id);
+    if(c.shape){ setShape(c.shape); }
+    renderFlow(); renderLib();
+    // 追加したカードまでスクロール
+    flowEl.scrollTo({left:flowEl.scrollWidth,behavior:'smooth'});
+  };
+  return el;
+}
+function renderLib(){
+  libEl.innerHTML='';
+  const groups = tab==='all' ? ['koushiki','kangae','yougo'] : [tab];
+  groups.forEach(g=>{
+    if(tab==='all'){
+      const h=document.createElement('div');
+      h.className='libhead'; h.textContent=CATLABEL[g];
+      libEl.appendChild(h);
+    }
+    const grid=document.createElement('div');
+    grid.className='libgrid';
+    CARDS[g].forEach(c=>grid.appendChild(makeCardEl(c)));
+    libEl.appendChild(grid);
+  });
+}
+
+/* ============ 式と答え ============ */
+const shapeChipsEl=document.getElementById('shapeChips');
+Object.entries(SHAPES).forEach(([k,s])=>{
+  const b=document.createElement('button');
+  b.className='chip'+(k===activeShape?' on':'');
+  b.textContent=s.name; b.dataset.k=k;
+  b.onclick=()=>setShape(k);
+  shapeChipsEl.appendChild(b);
+});
+function setShape(k){
+  activeShape=k;
+  [...shapeChipsEl.children].forEach(x=>x.classList.toggle('on',x.dataset.k===k));
+  renderInputs(); renderCalc();
+}
+function vkey(vk){return activeShape+':'+vk;}
+function getVals(){
+  const s=SHAPES[activeShape], out={}; let full=true;
+  s.vars.forEach(([,vk])=>{
+    const raw=vals[vkey(vk)];
+    if(raw===undefined||raw===''||isNaN(Number(raw))){full=false;out[vk]='?';}
+    else out[vk]=Number(raw);
+  });
+  return {out,full};
+}
+const inputsEl=document.getElementById('inputs');
+function renderInputs(){
+  const s=SHAPES[activeShape];
+  document.getElementById('formulaTag').textContent='公式：'+s.formula;
+  inputsEl.innerHTML='';
+  s.vars.forEach(([label,vk])=>{
+    const row=document.createElement('div'); row.className='inrow';
+    const cur=vals[vkey(vk)]??'';
+    row.innerHTML=`<label>${label}</label>
+      <input type="number" inputmode="decimal" step="any" min="0" value="${cur}" placeholder="?">
+      <span class="unit" data-u>${unit}</span>`;
+    const inp=row.querySelector('input');
+    inp.oninput=()=>{vals[vkey(vk)]=inp.value;renderCalc();};
+    inputsEl.appendChild(row);
+  });
+}
+function fmt(n){return Number.isInteger(n)?n:Math.round(n*100)/100;}
+function renderCalc(){
+  const s=SHAPES[activeShape];
+  const {out,full}=getVals();
+  document.getElementById('eq').textContent = s.expr(out) + (full?` ＝ ${fmt(s.calc(out))}`:'');
+  const ans=document.getElementById('ans');
+  const ansVal=document.getElementById('ansVal');
+  ansVal.textContent = full ? `${fmt(s.calc(out))} ${unit}²` : '?';
+  ans.classList.toggle('hidden', !showAnswer || !full);
+  document.querySelectorAll('[data-u]').forEach(e=>e.textContent=unit);
+  drawFig();
+}
+document.getElementById('toggleAns').onclick=(e)=>{
+  showAnswer=!showAnswer;
+  e.target.textContent=showAnswer?'答えをかくす':'答えを見る';
+  renderCalc();
+};
+document.getElementById('resetCalc').onclick=()=>{
+  SHAPES[activeShape].vars.forEach(([,vk])=>delete vals[vkey(vk)]);
+  renderInputs(); renderCalc();
+};
+document.getElementById('unit').onchange=(e)=>{unit=e.target.value;renderInputs();renderCalc();};
+
+/* ============ ラベル付き図形 ============ */
+const figBox=document.getElementById('figBox');
+function L(name,vk,out){const v=out[vk];return `${name} ${v==='?'?'?':v+unit}`;}
+function drawFig(){
+  const {out}=getVals();
+  const t='font-size="13" font-weight="800" fill="'+getComputedStyle(document.body).color+'"';
+  const st='stroke="#2f2a24" stroke-width="2.5"';
+  let inner='';
+  if(activeShape==='para'){
+    inner=`<polygon points="70,150 120,50 260,50 210,150" fill="#7db8f2" ${st}/>
+      <line x1="120" y1="50" x2="120" y2="150" stroke="#2f2a24" stroke-width="2.5" ${DASH}/>
+      <rect x="120" y="138" width="12" height="12" fill="none" ${st}/>
+      <text x="150" y="172" text-anchor="middle" ${t}>${L('底辺','base',out)}</text>
+      <text x="112" y="105" text-anchor="end" ${t}>${L('高さ','h',out)}</text>`;
+  }else if(activeShape==='tri'){
+    inner=`<polygon points="60,155 175,45 275,155" fill="#c9a6e8" ${st}/>
+      <line x1="175" y1="45" x2="175" y2="155" stroke="#2f2a24" stroke-width="2.5" ${DASH}/>
+      <rect x="175" y="143" width="12" height="12" fill="none" ${st}/>
+      <text x="167" y="150" text-anchor="middle" ${t}>${L('底辺','base',out)}</text>
+      <text x="167" y="105" text-anchor="end" ${t}>${L('高さ','h',out)}</text>`;
+  }else if(activeShape==='trap'){
+    inner=`<polygon points="80,150 130,55 230,55 280,150" fill="#f2a99c" ${st}/>
+      <line x1="130" y1="55" x2="130" y2="150" stroke="#2f2a24" stroke-width="2.5" ${DASH}/>
+      <rect x="130" y="138" width="12" height="12" fill="none" ${st}/>
+      <text x="180" y="46" text-anchor="middle" ${t}>${L('上底','a',out)}</text>
+      <text x="180" y="172" text-anchor="middle" ${t}>${L('下底','b',out)}</text>
+      <text x="122" y="108" text-anchor="end" ${t}>${L('高さ','h',out)}</text>`;
+  }else{ // rhombus
+    inner=`<polygon points="170,40 275,110 170,180 65,110" fill="#8fd694" ${st}/>
+      <line x1="65" y1="110" x2="275" y2="110" stroke="#2f2a24" stroke-width="2.5" ${DASH}/>
+      <line x1="170" y1="40" x2="170" y2="180" stroke="#2f2a24" stroke-width="2.5" ${DASH}/>
+      <text x="170" y="205" text-anchor="middle" ${t}>${L('対角線㋐','d1',out)}</text>
+      <text x="292" y="114" text-anchor="end" ${t}>${L('㋑','d2',out)}</text>`;
+  }
+  figBox.innerHTML=`<svg viewBox="0 0 340 215" xmlns="${NS}">${inner}</svg>`;
+}
+
+/* ============ 起動 ============ */
+renderFlow();
+renderLib();
+setShape('para');
+</script>
+</body>
+</html>
