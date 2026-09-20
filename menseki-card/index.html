@@ -86,6 +86,19 @@
   .fmini .x{background:#ffe1e1;color:#c0392b}
 
   /* タブ */
+  /* ===== 理由づけ（だから、この公式） ===== */
+  .reason{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+  .reason select{font-size:1rem;font-weight:800;padding:9px 12px;border:2px solid var(--frame);
+    border-radius:12px;background:var(--panel);color:var(--ink);max-width:100%}
+  .rlab{font-weight:800;color:var(--accent);font-size:.95rem}
+  .rsentence{background:var(--accent-soft);border-radius:14px;padding:16px 18px;
+    font-size:clamp(1.05rem,4.4vw,1.45rem);font-weight:800;line-height:1.55}
+  .rsentence b{color:var(--accent)}
+  .fcard.reason .card{width:auto;min-width:206px;max-width:280px;height:96px;
+    align-items:flex-start;justify-content:center}
+  .rtext{font-weight:800;font-size:.95rem;line-height:1.4}
+  .dakara{color:var(--accent);margin:0 3px}
+
   .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
   .tab{border:2px solid var(--line);background:var(--panel);color:var(--sub);
     border-radius:999px;padding:7px 16px;font-size:.85rem;font-weight:800;cursor:pointer}
@@ -146,6 +159,23 @@
     <div id="flowWrap"><div id="flow"></div></div>
     <div class="toolbar">
       <button class="btn ghost" id="clearFlow">ぜんぶ消す</button>
+    </div>
+  </section>
+
+  <!-- 理由づけ -->
+  <section class="panel">
+    <h2>🧠 だから、この公式</h2>
+    <p class="hint">「この図形には〈要素〉が あるから、〈公式〉が つかえる」を作ろう。</p>
+    <div class="reason">
+      <select id="rYoso"></select>
+      <span class="rlab">が あるから</span>
+      <select id="rShiki"></select>
+      <span class="rlab">が つかえる！</span>
+    </div>
+    <div class="rsentence" id="rSentence"></div>
+    <div class="toolbar" style="margin-top:12px">
+      <button class="btn" id="rExample">✨ この図形のれいを入れる</button>
+      <button class="btn primary" id="rToFlow">せつめいの流れに入れる →</button>
     </div>
   </section>
 
@@ -347,19 +377,28 @@ let vals={};                 // shapeごとの入力値 { 'para:base':8, ... }
 const flowEl=document.getElementById('flow');
 function renderFlow(){
   flowEl.innerHTML='';
-  flow.forEach((id,i)=>{
-    const c=ALL[id];
+  flow.forEach((item,i)=>{
+    const isReason = typeof item==='object' && item.kind==='reason';
     const wrap=document.createElement('div');
-    wrap.className='fcard';
-    wrap.innerHTML=`
-      <div class="card">
-        <div class="row"><span class="t">${c.t}</span>${ICON[c.ic]}</div>
-        <div class="fmini">
+    wrap.className='fcard'+(isReason?' reason':'');
+    const mini=`<div class="fmini">
           <button data-a="left" ${i===0?'disabled':''}>◀</button>
           <button data-a="right" ${i===flow.length-1?'disabled':''}>▶</button>
           <button class="x" data-a="del">✕</button>
-        </div>
+        </div>`;
+    if(isReason){
+      const s=SHAPES[item.b];
+      wrap.innerHTML=`<div class="card">
+        <div class="rtext">${item.a}<span class="dakara">が あるから</span>${s.formula}<span class="dakara">が つかえる</span></div>
+        ${mini}
       </div>`;
+    }else{
+      const c=ALL[item];
+      wrap.innerHTML=`<div class="card">
+        <div class="row"><span class="t">${c.t}</span>${ICON[c.ic]}</div>
+        ${mini}
+      </div>`;
+    }
     wrap.querySelectorAll('button').forEach(b=>b.onclick=()=>{
       const a=b.dataset.a;
       if(a==='del') flow.splice(i,1);
@@ -428,6 +467,8 @@ Object.entries(SHAPES).forEach(([k,s])=>{
 function setShape(k){
   activeShape=k;
   [...shapeChipsEl.children].forEach(x=>x.classList.toggle('on',x.dataset.k===k));
+  const rs=document.getElementById('rShiki');
+  if(rs && rs.value!==k){ rs.value=k; renderSentence(); }
   renderInputs(); renderCalc();
 }
 function vkey(vk){return activeShape+':'+vk;}
@@ -516,10 +557,34 @@ function drawFig(){
   figBox.innerHTML=`<svg viewBox="0 0 340 215" xmlns="${NS}">${inner}</svg>`;
 }
 
+/* ============ 理由づけ（だから、この公式） ============ */
+const YOSO=['底辺と高さ','底辺','高さ','高さは垂直','対角線','上底と下底','上底','下底'];
+const REC={para:'底辺と高さ', tri:'底辺と高さ', trap:'上底と下底', rhombus:'対角線'};
+const rYoso=document.getElementById('rYoso');
+const rShiki=document.getElementById('rShiki');
+YOSO.forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;rYoso.appendChild(o);});
+Object.entries(SHAPES).forEach(([k,s])=>{const o=document.createElement('option');o.value=k;o.textContent=`${s.name}：${s.formula}`;rShiki.appendChild(o);});
+function renderSentence(){
+  const y=rYoso.value, s=SHAPES[rShiki.value];
+  document.getElementById('rSentence').innerHTML=
+    `この図形には <b>${y}</b> が あるから、<br><b>${s.name}の公式（${s.formula}）</b>が つかえる！`;
+}
+rYoso.onchange=renderSentence;
+rShiki.onchange=()=>{ setShape(rShiki.value); renderSentence(); };
+document.getElementById('rExample').onclick=()=>{
+  rYoso.value=REC[activeShape]; rShiki.value=activeShape; renderSentence();
+};
+document.getElementById('rToFlow').onclick=()=>{
+  flow.push({kind:'reason', a:rYoso.value, b:rShiki.value});
+  renderFlow(); renderLib();
+  flowEl.scrollTo({left:flowEl.scrollWidth,behavior:'smooth'});
+};
+
 /* ============ 起動 ============ */
 renderFlow();
 renderLib();
 setShape('para');
+renderSentence();
 </script>
 </body>
 </html>
