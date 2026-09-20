@@ -96,8 +96,10 @@
   .rsentence b{color:var(--accent)}
   /* カードで選ぶスロット */
   .slot{background:var(--cardbg);border:4px dashed var(--frame);border-radius:12px;
-    min-width:150px;min-height:58px;display:flex;align-items:center;gap:8px;
+    min-width:150px;min-height:58px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;
     padding:8px 12px;cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,.1)}
+  .slot .pill{background:var(--accent-soft);color:var(--accent);border:2px solid var(--accent);
+    border-radius:999px;padding:4px 12px;font-weight:800;font-size:.92rem;white-space:nowrap}
   .slot:active{transform:scale(.97)}
   .slot.filled{border-style:solid}
   .slot.active{outline:4px solid var(--accent);outline-offset:2px}
@@ -187,7 +189,7 @@
   <!-- 理由づけ -->
   <section class="panel">
     <h2>🧠 だから、この公式</h2>
-    <p class="hint">カードをタップしてえらぼう。「〈要素〉が あるから、〈公式〉が つかえる」</p>
+    <p class="hint">カードをタップしてえらぼう（要素は複数OK）。「〈要素〉が あるから、〈公式〉が つかえる」</p>
     <div class="reason">
       <div class="slot" id="slotYoso"></div>
       <span class="rlab">が あるから</span>
@@ -395,7 +397,7 @@ let tab='all';
 let showAnswer=false;
 let unit='cm';
 let vals={};                 // shapeごとの入力値 { 'para:base':8, ... }
-let reason={yoso:'底辺と高さ', shiki:'para'};  // 理由づけ（要素・公式）
+let reason={yosoList:['底辺と高さ'], shiki:'para'};  // 理由づけ（要素は複数・公式）
 let chooserFor=null;         // カード選び中のスロット
 
 /* ============ せつめいの流れ ============ */
@@ -596,7 +598,7 @@ const YOSO=[
   {t:'上底', ic:'topBase'},
   {t:'下底', ic:'bottomBase'},
 ];
-const REC={para:'底辺と高さ', tri:'底辺と高さ', trap:'上底と下底', rhombus:'対角線'};
+const REC={para:['底辺','高さ'], tri:['底辺','高さ'], trap:['上底','下底','高さ'], rhombus:['対角線']};
 // 公式スロット用カード（図形ごとに1枚）
 const KOUSHIKI4=['heikou-koushiki','sankaku-koushiki','daikei-koushiki','hishi-koushiki']
   .map(id=>CARDS.koushiki.find(c=>c.id===id));
@@ -606,10 +608,10 @@ const chooserEl=document.getElementById('chooser');
 
 function fillSlot(el,kind){
   if(kind==='yoso'){
-    const y=YOSO.find(x=>x.t===reason.yoso);
-    el.classList.toggle('filled',!!y);
-    el.innerHTML = y ? `<span class="t">${y.t}</span>${ICON[y.ic]}`
-                     : `<span class="ph">＋ 要素カードをえらぶ</span>`;
+    const list=reason.yosoList;
+    el.classList.toggle('filled', list.length>0);
+    el.innerHTML = list.length ? list.map(t=>`<span class="pill">${t}</span>`).join('')
+                              : `<span class="ph">＋ 要素カードをえらぶ（複数OK）</span>`;
   }else{
     const c=KOUSHIKI4.find(x=>x.shape===reason.shiki);
     el.classList.toggle('filled',!!c);
@@ -617,10 +619,11 @@ function fillSlot(el,kind){
                      : `<span class="ph">＋ 公式カードをえらぶ</span>`;
   }
 }
+function yosoText(){ return reason.yosoList.length ? reason.yosoList.join(' と ') : '？'; }
 function renderSentence(){
   const s=SHAPES[reason.shiki];
   document.getElementById('rSentence').innerHTML=
-    `この図形には <b>${reason.yoso}</b> が あるから、<br><b>${s.name}の公式（${s.formula}）</b>が つかえる！`;
+    `この図形には <b>${yosoText()}</b> が あるから、<br><b>${s.name}の公式（${s.formula}）</b>が つかえる！`;
 }
 function renderReason(){
   fillSlot(slotYosoEl,'yoso');
@@ -629,34 +632,47 @@ function renderReason(){
   slotShikiEl.classList.toggle('active',chooserFor==='shiki');
   renderSentence();
 }
-function openChooser(kind){
-  if(chooserFor===kind){ chooserFor=null; chooserEl.hidden=true; renderReason(); return; }
-  chooserFor=kind;
+function buildChooser(kind){
   const list = kind==='yoso' ? YOSO : KOUSHIKI4;
+  const title = kind==='yoso' ? '① 要素カードをえらぶ（複数えらべます）' : '② 公式カードをえらぶ';
   chooserEl.hidden=false;
-  chooserEl.innerHTML=`<p class="chtitle">${kind==='yoso'?'① 要素カードをえらぶ':'② 公式カードをえらぶ'}</p><div class="chgrid"></div>`;
+  chooserEl.innerHTML=`<p class="chtitle">${title}</p><div class="chgrid"></div>`
+    + (kind==='yoso' ? `<div class="toolbar" style="margin-top:12px"><button class="btn primary" id="chDone">これで決定 →</button><button class="btn ghost" id="chClear">要素をクリア</button></div>` : '');
   const grid=chooserEl.querySelector('.chgrid');
   list.forEach(c=>{
+    const on = kind==='yoso' ? reason.yosoList.includes(c.t) : (reason.shiki===c.shape);
     const el=document.createElement('div');
-    el.className='card';
+    el.className='card'+(on?' on':'');
     el.innerHTML=`<span class="t">${c.t}</span>${ICON[c.ic]}`;
     el.onclick=()=>{
-      if(kind==='yoso'){ reason.yoso=c.t; }
-      else { reason.shiki=c.shape; setShape(c.shape); }
-      chooserFor=null; chooserEl.hidden=true; renderReason();
+      if(kind==='yoso'){
+        const i=reason.yosoList.indexOf(c.t);
+        if(i>=0) reason.yosoList.splice(i,1); else reason.yosoList.push(c.t);
+        buildChooser('yoso'); renderReason();   // 複数選択：開いたまま
+      }else{
+        reason.shiki=c.shape; setShape(c.shape);
+        chooserFor=null; chooserEl.hidden=true; renderReason();
+      }
     };
     grid.appendChild(el);
   });
-  renderReason();
+  const done=chooserEl.querySelector('#chDone');
+  if(done) done.onclick=()=>{ chooserFor=null; chooserEl.hidden=true; renderReason(); };
+  const clr=chooserEl.querySelector('#chClear');
+  if(clr) clr.onclick=()=>{ reason.yosoList=[]; buildChooser('yoso'); renderReason(); };
+}
+function openChooser(kind){
+  if(chooserFor===kind){ chooserFor=null; chooserEl.hidden=true; renderReason(); return; }
+  chooserFor=kind; buildChooser(kind); renderReason();
 }
 slotYosoEl.onclick=()=>openChooser('yoso');
 slotShikiEl.onclick=()=>openChooser('shiki');
 document.getElementById('rExample').onclick=()=>{
-  reason.yoso=REC[activeShape]; reason.shiki=activeShape;
+  reason.yosoList=REC[activeShape].slice(); reason.shiki=activeShape;
   chooserFor=null; chooserEl.hidden=true; renderReason();
 };
 document.getElementById('rToFlow').onclick=()=>{
-  flow.push({kind:'reason', a:reason.yoso, b:reason.shiki});
+  flow.push({kind:'reason', a:yosoText(), b:reason.shiki});
   renderFlow(); renderLib();
   flowEl.scrollTo({left:flowEl.scrollWidth,behavior:'smooth'});
 };
