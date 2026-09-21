@@ -416,7 +416,7 @@ let tab='all';
 let showAnswer=false;
 let unit='cm';
 let vals={};                 // shapeごとの入力値 { 'para:base':8, ... }
-let reason={yosoList:['底辺と高さ'], shiki:'para'};  // 理由づけ（要素は複数・公式）
+let reason={yosoList:[], shiki:'para'};  // 理由づけ（見方・考え方は複数・公式）
 let chooserFor=null;         // カード選び中のスロット
 
 /* ============ せつめいの流れ ============ */
@@ -623,7 +623,7 @@ function fillSlot(el,kind){
     const list=reason.yosoList;
     el.classList.toggle('filled', list.length>0);
     el.innerHTML = list.length ? list.map(t=>`<span class="pill">${t}</span>`).join('')
-                              : `<span class="ph">＋ 見方・考え方カードをえらぶ（複数OK）</span>`;
+                              : `<span class="ph">＋ まず 見方・考え方カードをえらぶ（複数OK）</span>`;
   }else{
     const c=KOUSHIKI4.find(x=>x.shape===reason.shiki);
     el.classList.toggle('filled',!!c);
@@ -661,7 +661,7 @@ function buildChooser(kind){
           return `<div class="card${on?' on':''}" data-t="${c.t}"><span class="t">${c.t}</span>${ICON[c.ic]}</div>`;
         }).join('')+`</div>`;
     });
-    html+=`<div class="toolbar" style="margin-top:14px"><button class="btn primary" id="chDone">これで決定 →</button><button class="btn ghost" id="chClear">えらび直す</button></div>`;
+    html+=`<div class="toolbar" style="margin-top:14px"><button class="btn primary" id="chDone">決定 → だから公式をえらぶ</button><button class="btn ghost" id="chClear">えらび直す</button></div>`;
     chooserEl.innerHTML=html;
     chooserEl.querySelectorAll('.card').forEach(el=>{
       el.onclick=()=>{
@@ -670,7 +670,8 @@ function buildChooser(kind){
         buildChooser('yoso'); renderReason();   // 複数選択：開いたまま
       };
     });
-    chooserEl.querySelector('#chDone').onclick=()=>{ chooserFor=null; chooserEl.hidden=true; renderReason(); };
+    // 「決定」→ そのまま ②公式えらびへ進む
+    chooserEl.querySelector('#chDone').onclick=()=>{ chooserFor='shiki'; buildChooser('shiki'); renderReason(); };
     chooserEl.querySelector('#chClear').onclick=()=>{ reason.yosoList=[]; buildChooser('yoso'); renderReason(); };
   }else{
     chooserEl.innerHTML=`<p class="chtitle">② だから、この 公式 が つかえる</p><div class="chgrid"></div>`;
