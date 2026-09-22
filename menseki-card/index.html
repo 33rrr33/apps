@@ -125,6 +125,18 @@
   .chgroup{font-size:.8rem;font-weight:800;color:var(--sub);margin:12px 2px 8px}
   .arw{color:var(--accent);font-weight:900;margin:0 4px;white-space:nowrap}
   .rsentence .st{color:var(--sub);font-weight:800;margin-right:4px}
+  /* ウィザード（1つずつ） */
+  #wizard .step{margin-top:0}
+  #wizard .step + .connect{margin-top:12px}
+  .step.now{border-color:var(--accent);border-width:3px}
+  .step.done{background:var(--panel)}
+  .pill{background:var(--accent-soft);color:var(--accent);border:2px solid var(--accent);
+    border-radius:999px;padding:4px 12px;font-weight:800;font-size:.92rem;white-space:nowrap}
+  .chosen{display:flex;flex-wrap:wrap;gap:6px}
+  .chosen .sub{color:var(--sub);font-weight:700}
+  .btn.mini{padding:5px 12px;font-size:.74rem;margin-left:auto}
+  .choose{margin-top:4px}
+  .choose .ic{width:52px;height:38px}
   .fcard.reason .card{width:auto;min-width:206px;max-width:280px;height:96px;
     align-items:flex-start;justify-content:center}
   .rtext{font-weight:800;font-size:.95rem;line-height:1.4}
@@ -201,64 +213,52 @@
     </div>
   </section>
 
-  <!-- 考えの流れ（見方・考え方 → だから公式 → ということは立式） -->
+  <!-- 考えの流れ（1つずつ：用語 → 考え方 → 公式 → 立式） -->
   <section class="panel">
     <h2>🧭 考えの流れ</h2>
-    <p class="hint">① 見つけた見方・考え方 → だから ② この公式 → ということは ③ 立式</p>
+    <p class="hint">用語 → 考え方 → 公式 の順に、1つずつえらぼう。えらび終わったら「次へ」。</p>
 
-    <!-- ① 見方・考え方 -->
-    <div class="step">
-      <div class="stepno"><span class="badge">①</span> まず、見つけた <b>見方・考え方</b>（複数OK）</div>
-      <div class="slot" id="slotYoso"></div>
-    </div>
+    <!-- ①〜③ をここに順番に表示 -->
+    <div id="wizard"></div>
 
-    <div class="connect">だから</div>
-
-    <!-- ② 公式 -->
-    <div class="step">
-      <div class="stepno"><span class="badge">②</span> この <b>公式</b>が つかえる</div>
-      <div class="slot" id="slotShiki"></div>
-    </div>
-
-    <div class="chooser" id="chooser" hidden></div>
-
-    <div class="connect">ということは</div>
-
-    <!-- ③ 立式 -->
-    <div class="step">
-      <div class="stepno"><span class="badge">③</span> こう <b>立式</b>できる（数を入れよう）</div>
-      <div class="formulaTag" id="formulaTag"></div>
-      <div class="calcgrid">
-        <div class="figbox" id="figBox"></div>
-        <div>
-          <div class="inputs" id="inputs"></div>
-          <div class="eqbox">
-            <div class="eqlabel">しき（立式）</div>
-            <div class="eq" id="eq">- - -</div>
-            <div class="ans hidden" id="ans">答え <span class="val" id="ansVal">?</span></div>
-            <div class="unitsel">
-              <label>たんい
-                <select id="unit">
-                  <option value="cm">cm（面積 cm²）</option>
-                  <option value="m">m（面積 m²）</option>
-                  <option value="mm">mm（面積 mm²）</option>
-                </select>
-              </label>
+    <!-- ④ 立式（③公式まで決まったら出てくる） -->
+    <div id="step3" hidden>
+      <div class="connect">ということは</div>
+      <div class="step now">
+        <div class="stepno"><span class="badge">④</span> こう <b>立式</b>できる（数を入れよう）</div>
+        <div class="formulaTag" id="formulaTag"></div>
+        <div class="calcgrid">
+          <div class="figbox" id="figBox"></div>
+          <div>
+            <div class="inputs" id="inputs"></div>
+            <div class="eqbox">
+              <div class="eqlabel">しき（立式）</div>
+              <div class="eq" id="eq">- - -</div>
+              <div class="ans hidden" id="ans">答え <span class="val" id="ansVal">?</span></div>
+              <div class="unitsel">
+                <label>たんい
+                  <select id="unit">
+                    <option value="cm">cm（面積 cm²）</option>
+                    <option value="m">m（面積 m²）</option>
+                    <option value="mm">mm（面積 mm²）</option>
+                  </select>
+                </label>
+              </div>
             </div>
-          </div>
-          <div class="toolbar" style="justify-content:center;margin-top:12px">
-            <button class="btn primary" id="toggleAns">答えを見る</button>
-            <button class="btn" id="resetCalc">数をけす</button>
+            <div class="toolbar" style="justify-content:center;margin-top:12px">
+              <button class="btn primary" id="toggleAns">答えを見る</button>
+              <button class="btn" id="resetCalc">数をけす</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- まとめの文 -->
-    <div class="rsentence" id="rSentence"></div>
-    <div class="toolbar" style="margin-top:12px">
-      <button class="btn" id="rExample">✨ この図形のれいを入れる</button>
-      <button class="btn primary" id="rToFlow">この流れを上に入れる →</button>
+      <!-- まとめの文 -->
+      <div class="rsentence" id="rSentence"></div>
+      <div class="toolbar" style="margin-top:12px">
+        <button class="btn primary" id="rToFlow">この流れを上に入れる →</button>
+        <button class="btn ghost" id="wizReset">↺ はじめから</button>
+      </div>
     </div>
   </section>
 
@@ -417,8 +417,8 @@ let tab='all';
 let showAnswer=false;
 let unit='cm';
 let vals={};                 // shapeごとの入力値 { 'para:base':8, ... }
-let reason={yosoList:[], shiki:'para'};  // 理由づけ（見方・考え方は複数・公式）
-let chooserFor=null;         // カード選び中のスロット
+let sel={yougo:[], kangae:[], shiki:'para'};  // 選んだカード（用語・考え方は複数）
+let stage=0;                 // 0用語 1考え方 2公式 3立式
 
 /* ============ せつめいの流れ ============ */
 const flowEl=document.getElementById('flow');
@@ -502,12 +502,10 @@ function renderLib(){
   });
 }
 
-/* ============ 立式（③） ============ */
+/* ============ 立式（④） ============ */
 function setShape(k){
   activeShape=k;
-  reason.shiki=k;
-  const s=document.getElementById('slotShiki'); if(s) fillSlot(s,'shiki');
-  renderSentence();
+  sel.shiki=k;
   renderInputs(); renderCalc();
 }
 function vkey(vk){return activeShape+':'+vk;}
@@ -597,116 +595,111 @@ function drawFig(){
   figBox.innerHTML=`<svg viewBox="0 0 340 215" xmlns="${NS}">${inner}</svg>`;
 }
 
-/* ============ 考えの流れ（①見方・考え方 → ②公式 → ③立式）＝すべてカード ============ */
-// ① で選べるカード：見方・考え方（＋用語/要素）
-const STEP1GROUPS=[
-  {label:'💡 見方・考え方', cards:CARDS.kangae},
-  {label:'🔤 用語（要素）', cards:CARDS.yougo},
-];
-const TXT2ICON={};
-STEP1GROUPS.forEach(g=>g.cards.forEach(c=>{TXT2ICON[c.t]=c.ic;}));
-// 図形ごとの「れい」（見方＋要素）
-const REC={
-  para:['切り貼り','底辺と高さ'],
-  tri:['同じ形を2つ','底辺と高さ'],
-  trap:['同じ形を2つ','上底と下底'],
-  rhombus:['対角線'],
-};
-// ② 公式スロット用カード（図形ごとに1枚）
+/* ============ 考えの流れ（1つずつ：用語→考え方→公式→立式） ============ */
 const KOUSHIKI4=['heikou-koushiki','sankaku-koushiki','daikei-koushiki','hishi-koushiki']
   .map(id=>CARDS.koushiki.find(c=>c.id===id));
-const slotYosoEl=document.getElementById('slotYoso');
-const slotShikiEl=document.getElementById('slotShiki');
-const chooserEl=document.getElementById('chooser');
+// ステップ定義（この順に1つずつ出す）
+const WIZ=[
+  {key:'yougo',  badge:'①', title:'用語（要素）', cards:CARDS.yougo,  multi:true,  pre:null},
+  {key:'kangae', badge:'②', title:'見方・考え方', cards:CARDS.kangae, multi:true,  pre:'そして'},
+  {key:'shiki',  badge:'③', title:'公式',        cards:KOUSHIKI4,     multi:false, pre:'だから'},
+];
+const wizardEl=document.getElementById('wizard');
 
-function fillSlot(el,kind){
-  if(kind==='yoso'){
-    const list=reason.yosoList;
-    el.classList.toggle('filled', list.length>0);
-    el.innerHTML = list.length ? list.map(t=>`<span class="pill">${t}</span>`).join('')
-                              : `<span class="ph">＋ まず 見方・考え方カードをえらぶ（複数OK）</span>`;
-  }else{
-    const c=KOUSHIKI4.find(x=>x.shape===reason.shiki);
-    el.classList.toggle('filled',!!c);
-    el.innerHTML = c ? `<span class="t">${c.t}</span>${ICON[c.ic]}`
-                     : `<span class="ph">＋ 公式カードをえらぶ</span>`;
-  }
-}
-function yosoText(){ return reason.yosoList.length ? reason.yosoList.join('・') : '？'; }
 function eqText(){
-  const s=SHAPES[reason.shiki], {out,full}=getVals();
+  const s=SHAPES[sel.shiki], {out,full}=getVals();
   return s.expr(out) + (full ? ` ＝ ${fmt(s.calc(out))}` : '');
 }
 function renderSentence(){
-  const s=SHAPES[reason.shiki];
-  document.getElementById('rSentence').innerHTML=
-    `<span class="st">①</span><b>${yosoText()}</b> <span class="arw">だから→</span> `+
-    `<span class="st">②</span><b>${s.name}の公式（${s.formula}）</b> <span class="arw">ということは→</span> `+
-    `<span class="st">③</span><b>${eqText()}</b>`;
+  const rs=document.getElementById('rSentence'); if(!rs) return;
+  const s=SHAPES[sel.shiki];
+  const yg=sel.yougo.length?sel.yougo.join('・'):'—';
+  const kg=sel.kangae.length?sel.kangae.join('・'):'—';
+  rs.innerHTML=
+    `<span class="st">①用語</span> <b>${yg}</b>　<span class="st">②考え方</span> <b>${kg}</b><br>`+
+    `<span class="arw">だから→</span> <b>${s.name}の公式（${s.formula}）</b> `+
+    `<span class="arw">ということは→</span> <b>${eqText()}</b>`;
 }
-function renderReason(){
-  fillSlot(slotYosoEl,'yoso');
-  fillSlot(slotShikiEl,'shiki');
-  slotYosoEl.classList.toggle('active',chooserFor==='yoso');
-  slotShikiEl.classList.toggle('active',chooserFor==='shiki');
+
+// 完了したステップ（まとめ表示）
+function summaryStep(st,idx){
+  const wrap=document.createElement('div'); wrap.className='step done';
+  let chosen;
+  if(st.key==='shiki'){
+    const c=KOUSHIKI4.find(x=>x.shape===sel.shiki);
+    chosen=c?`<span class="pill">${c.t}</span>`:'<span class="sub">（未えらび）</span>';
+  }else{
+    chosen=sel[st.key].length ? sel[st.key].map(t=>`<span class="pill">${t}</span>`).join('')
+                              : '<span class="sub">（なし）</span>';
+  }
+  wrap.innerHTML=`<div class="stepno"><span class="badge">${st.badge}</span> ${st.title}
+      <button class="btn ghost mini" data-edit>なおす</button></div>
+    <div class="chosen">${chosen}</div>`;
+  wrap.querySelector('[data-edit]').onclick=()=>{ stage=idx; renderWizard(); };
+  return wrap;
+}
+
+// いまえらぶステップ（カードを表示）
+function chooserStep(st,idx){
+  const wrap=document.createElement('div'); wrap.className='step now';
+  const grid=st.cards.map(c=>{
+    const on = st.key==='shiki' ? sel.shiki===c.shape : sel[st.key].includes(c.t);
+    return `<div class="card${on?' on':''}" data-t="${c.t}"${c.shape?` data-shape="${c.shape}"`:''}>`+
+           `<span class="t">${c.t}</span>${ICON[c.ic]}</div>`;
+  }).join('');
+  const nextBtn = st.multi
+    ? `<div class="toolbar" style="margin-top:12px"><button class="btn primary" data-next>次へ →</button>`+
+      `<button class="btn ghost" data-clear>クリア</button></div>`
+    : `<p class="hint" style="margin:10px 0 0">カードをえらぶと次へすすみます。</p>`;
+  wrap.innerHTML=`<div class="stepno"><span class="badge">${st.badge}</span> ${st.title}をえらぶ`+
+    `${st.multi?'（複数OK）':''}</div><div class="libgrid choose">${grid}</div>${nextBtn}`;
+  wrap.querySelectorAll('.card').forEach(el=>{
+    el.onclick=()=>{
+      if(st.key==='shiki'){
+        setShape(el.dataset.shape); stage=3; renderWizard();
+      }else{
+        const tx=el.dataset.t, a=sel[st.key], i=a.indexOf(tx);
+        if(i>=0)a.splice(i,1); else a.push(tx);
+        renderWizard();
+      }
+    };
+  });
+  const nx=wrap.querySelector('[data-next]'); if(nx) nx.onclick=()=>{ stage=idx+1; renderWizard(); };
+  const cl=wrap.querySelector('[data-clear]'); if(cl) cl.onclick=()=>{ sel[st.key]=[]; renderWizard(); };
+  return wrap;
+}
+
+function renderWizard(){
+  wizardEl.innerHTML='';
+  WIZ.forEach((st,idx)=>{
+    if(idx>stage) return;                       // まだ出さない
+    if(idx>0 && st.pre){
+      const c=document.createElement('div'); c.className='connect'; c.textContent=st.pre;
+      wizardEl.appendChild(c);
+    }
+    wizardEl.appendChild(idx<stage ? summaryStep(st,idx) : chooserStep(st,idx));
+  });
+  const s3=document.getElementById('step3');
+  s3.hidden = stage<3;
+  if(stage>=3){ renderInputs(); renderCalc(); }
   renderSentence();
 }
-function buildChooser(kind){
-  chooserEl.hidden=false;
-  if(kind==='yoso'){
-    let html=`<p class="chtitle">① 見つけた 見方・考え方 をえらぶ（複数えらべます）</p>`;
-    STEP1GROUPS.forEach(g=>{
-      html+=`<div class="chgroup">${g.label}</div><div class="chgrid">`+
-        g.cards.map(c=>{
-          const on=reason.yosoList.includes(c.t);
-          return `<div class="card${on?' on':''}" data-t="${c.t}"><span class="t">${c.t}</span>${ICON[c.ic]}</div>`;
-        }).join('')+`</div>`;
-    });
-    html+=`<div class="toolbar" style="margin-top:14px"><button class="btn primary" id="chDone">決定 → だから公式をえらぶ</button><button class="btn ghost" id="chClear">えらび直す</button></div>`;
-    chooserEl.innerHTML=html;
-    chooserEl.querySelectorAll('.card').forEach(el=>{
-      el.onclick=()=>{
-        const tx=el.dataset.t, i=reason.yosoList.indexOf(tx);
-        if(i>=0) reason.yosoList.splice(i,1); else reason.yosoList.push(tx);
-        buildChooser('yoso'); renderReason();   // 複数選択：開いたまま
-      };
-    });
-    // 「決定」→ そのまま ②公式えらびへ進む
-    chooserEl.querySelector('#chDone').onclick=()=>{ chooserFor='shiki'; buildChooser('shiki'); renderReason(); };
-    chooserEl.querySelector('#chClear').onclick=()=>{ reason.yosoList=[]; buildChooser('yoso'); renderReason(); };
-  }else{
-    chooserEl.innerHTML=`<p class="chtitle">② だから、この 公式 が つかえる</p><div class="chgrid"></div>`;
-    const grid=chooserEl.querySelector('.chgrid');
-    KOUSHIKI4.forEach(c=>{
-      const el=document.createElement('div');
-      el.className='card'+(reason.shiki===c.shape?' on':'');
-      el.innerHTML=`<span class="t">${c.t}</span>${ICON[c.ic]}`;
-      el.onclick=()=>{ reason.shiki=c.shape; setShape(c.shape); chooserFor=null; chooserEl.hidden=true; renderReason(); };
-      grid.appendChild(el);
-    });
-  }
-}
-function openChooser(kind){
-  if(chooserFor===kind){ chooserFor=null; chooserEl.hidden=true; renderReason(); return; }
-  chooserFor=kind; buildChooser(kind); renderReason();
-}
-slotYosoEl.onclick=()=>openChooser('yoso');
-slotShikiEl.onclick=()=>openChooser('shiki');
-document.getElementById('rExample').onclick=()=>{
-  reason.yosoList=REC[activeShape].slice(); reason.shiki=activeShape;
-  chooserFor=null; chooserEl.hidden=true; setShape(activeShape); renderReason();
-};
+
 document.getElementById('rToFlow').onclick=()=>{
-  flow.push({kind:'reason', a:yosoText(), b:reason.shiki, eq:eqText()});
+  const a=[...sel.yougo,...sel.kangae].join('・')||'—';
+  flow.push({kind:'reason', a, b:sel.shiki, eq:eqText()});
   renderFlow(); renderLib();
   flowEl.scrollTo({left:flowEl.scrollWidth,behavior:'smooth'});
+};
+document.getElementById('wizReset').onclick=()=>{
+  sel.yougo=[]; sel.kangae=[]; stage=0; renderWizard();
 };
 
 /* ============ 起動 ============ */
 renderFlow();
 renderLib();
 setShape('para');
-renderReason();
+renderWizard();
 </script>
 </body>
 </html>
