@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>作家の時間</title>
+<meta name="description" content="言葉の宝箱の言葉をつかって、毎日10分「作家の時間」。タイピング練習にも。">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c96f3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="作家の時間">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=BIZ+UDPMincho&display=swap">
+<style>
+  :root{
+    --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
+    --accent:#c96f3f;--accent-soft:#fbeee4;--shadow:0 2px 12px rgba(90,70,40,.08);
+    --hito:#2f6fbf;--hito-soft:#e6effa;
+    --mono:#d0702a;--mono-soft:#fcefe3;
+    --kimo:#2a8a5e;--kimo-soft:#e3f3ea;
+    --gold:#d9a521;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;
+    --accent:#e0895a;--accent-soft:#3a2f26;--shadow:0 2px 14px rgba(0,0,0,.35);
+    --hito:#7fb0ef;--hito-soft:#24303f;
+    --mono:#f0a466;--mono-soft:#3b2d22;
+    --kimo:#6fcf9f;--kimo-soft:#213229;
+    --gold:#f0c34e;
+  }}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:env(safe-area-inset-top) 16px calc(40px + env(safe-area-inset-bottom));
+    font-family:"UD デジタル教科書体 NP-R","UD Digi Kyokasho NP-R","BIZ UDPGothic","BIZ UDPゴシック","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Noto Sans JP",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.7;-webkit-text-size-adjust:100%;}
+  button,input,select,textarea{font-family:inherit;color:inherit}
+  .wrap{max-width:760px;margin:0 auto}
+  header.top{display:flex;align-items:center;gap:10px;padding:14px 0 6px}
+  header.top h1{font-size:1.25rem;margin:0;flex:1;display:flex;align-items:center;gap:8px}
+  .gradeBadge{font-size:.8rem;font-weight:700;background:var(--accent-soft);color:var(--accent);
+    border-radius:999px;padding:4px 12px;border:none;cursor:pointer}
+  .back{border:none;background:var(--panel);border-radius:12px;padding:8px 12px;font-weight:700;
+    box-shadow:var(--shadow);cursor:pointer}
+  .hidden{display:none!important}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;
+    box-shadow:var(--shadow);margin:14px 0}
+  .btn{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:12px 16px;
+    font-weight:700;font-size:1rem;cursor:pointer;box-shadow:var(--shadow);transition:transform .1s}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.small{padding:7px 11px;font-size:.85rem;border-radius:11px}
+  .btn.ghost{background:transparent;box-shadow:none}
+  .btn.danger{color:#c0392b}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .sub{color:var(--sub);font-size:.85rem}
+  h2{font-size:1.1rem;margin:0 0 8px}
+
+  /* ---- home ---- */
+  .hero{text-align:center;padding:26px 18px}
+  .hero .big{font-size:3rem;line-height:1}
+  .hero h2{font-size:1.4rem;margin:10px 0 4px}
+  .startBtn{font-size:1.25rem;padding:16px 30px;margin-top:14px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:1.5rem}
+  .stat span{font-size:.75rem;color:var(--sub)}
+  .menu{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .menu button{text-align:left;padding:16px;border-radius:18px;border:1px solid var(--line);background:var(--panel);
+    box-shadow:var(--shadow);cursor:pointer}
+  .menu button .e{font-size:1.8rem}
+  .menu button b{display:block;margin-top:4px}
+  .menu button small{color:var(--sub)}
+
+  /* ---- grade picker ---- */
+  .grades{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  .grades button{font-size:1.4rem;font-weight:700;padding:22px 0;border-radius:18px;border:2px solid var(--line);
+    background:var(--panel);cursor:pointer;box-shadow:var(--shadow)}
+  .grades button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  input.text{width:100%;font-size:1.05rem;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel)}
+
+  /* ---- steps ---- */
+  .steps{display:flex;gap:6px;margin:6px 0 4px}
+  .steps div{flex:1;text-align:center;font-size:.78rem;font-weight:700;padding:7px 4px;border-radius:10px;
+    background:var(--panel);border:1px solid var(--line);color:var(--sub)}
+  .steps div.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* ---- lesson ---- */
+  .lesson{border-left:6px solid var(--gold)}
+  .lesson .tag{display:inline-block;font-size:.75rem;font-weight:700;color:var(--gold);letter-spacing:.05em}
+  .lesson h3{font-size:1.3rem;margin:4px 0 10px}
+  .lesson ul{margin:6px 0;padding-left:1.3em}
+  .lesson li{margin:4px 0}
+  .lesson .ex{background:var(--accent-soft);border-radius:12px;padding:10px 14px;margin:10px 0}
+  .lesson .try{font-weight:700;margin-top:12px}
+  .lessonList{display:grid;gap:8px;margin-top:10px}
+  .lessonList button{text-align:left;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);cursor:pointer}
+  .lessonList button.on{border-color:var(--gold);background:var(--accent-soft)}
+
+  /* ---- word cards ---- */
+  .words{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media (max-width:560px){.words{grid-template-columns:1fr}}
+  .wcard{border-radius:16px;padding:12px 12px 10px;border:2px solid var(--line);background:var(--panel);position:relative;cursor:pointer;
+    transition:transform .15s}
+  .wcard:active{transform:scale(.98)}
+  .wcard .cat{font-size:.72rem;font-weight:700}
+  .wcard .w{font-size:1.35rem;font-weight:700;margin:4px 0 2px;display:flex;align-items:center;gap:6px;word-break:keep-all}
+  .wcard .mark{font-size:1.1rem}
+  .wcard .swap{position:absolute;top:8px;right:8px;border:none;background:transparent;color:var(--sub);font-size:.75rem;cursor:pointer;padding:4px}
+  .wcard.hito{border-color:var(--hito-soft)} .wcard.hito .cat,.wcard.hito .mark{color:var(--hito)}
+  .wcard.mono{border-color:var(--mono-soft)} .wcard.mono .cat,.wcard.mono .mark{color:var(--mono)}
+  .wcard.kimo{border-color:var(--kimo-soft)} .wcard.kimo .cat,.wcard.kimo .mark{color:var(--kimo)}
+  .wcard.used.hito{background:var(--hito-soft);border-color:var(--hito)}
+  .wcard.used.mono{background:var(--mono-soft);border-color:var(--mono)}
+  .wcard.used.kimo{background:var(--kimo-soft);border-color:var(--kimo)}
+  .wcard.used{animation:pop .35s}
+  @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+  .wcard .hint{font-size:.72rem;color:var(--sub)}
+
+  /* ---- writing ---- */
+  .writeHead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .timer{font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;min-width:4.2em}
+  .timer.done{color:var(--kimo)}
+  .bar{flex:1;height:10px;background:var(--line);border-radius:99px;overflow:hidden;min-width:120px}
+  .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .5s linear}
+  .count{font-weight:700}
+  textarea.paper{width:100%;min-height:42vh;font-size:1.2rem;line-height:2.1;padding:14px 16px;border-radius:14px;
+    border:1px solid var(--line);background:
+      repeating-linear-gradient(to bottom,transparent 0,transparent calc(2.1em - 1px),var(--line) calc(2.1em - 1px),var(--line) 2.1em);
+    background-color:var(--panel);background-attachment:local;background-position:0 14px;resize:vertical;outline:none}
+  textarea.paper:focus{border-color:var(--accent)}
+  .msg{border-radius:14px;padding:12px 16px;margin:10px 0;font-weight:700}
+  .msg.good{background:var(--kimo-soft);color:var(--kimo)}
+  .msg.info{background:var(--accent-soft);color:var(--accent)}
+  .bonus{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{display:inline-flex;align-items:center;gap:4px;font-size:.85rem;border-radius:999px;padding:3px 10px;border:1px solid var(--line);background:var(--panel)}
+  .chip.hito{color:var(--hito);border-color:var(--hito);background:var(--hito-soft)}
+  .chip.mono{color:var(--mono);border-color:var(--mono);background:var(--mono-soft)}
+  .chip.kimo{color:var(--kimo);border-color:var(--kimo);background:var(--kimo-soft)}
+  .chip.off{color:var(--sub)}
+  .topics{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .topics button{font-size:.85rem;border-radius:999px;padding:5px 12px;border:1px dashed var(--line);background:transparent;cursor:pointer}
+
+  /* ---- result ---- */
+  .result{text-align:center}
+  .result .big{font-size:3.2rem}
+  .result .num{font-size:2.2rem;font-weight:700;color:var(--accent)}
+
+  /* ---- note ---- */
+  .entry{display:block;width:100%;text-align:left;cursor:pointer;background:var(--panel);border:1px solid var(--line);
+    border-radius:16px;padding:14px;margin:10px 0;box-shadow:var(--shadow)}
+  .entry .t{font-weight:700;font-size:1.05rem}
+  .entry .p{color:var(--sub);font-size:.88rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .entry .m{font-size:.75rem;color:var(--sub);margin-top:4px}
+  .pubBadge{font-size:.7rem;background:var(--gold);color:#fff;border-radius:6px;padding:1px 6px;margin-left:6px}
+
+  /* ---- box ---- */
+  .tabs{display:flex;gap:6px;background:var(--accent-soft);padding:5px;border-radius:14px;margin:10px 0}
+  .tabs button{flex:1;border:none;background:transparent;padding:8px 4px;border-radius:10px;font-weight:700;cursor:pointer;color:var(--sub);font-size:.88rem}
+  .tabs button.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+  .boxList{display:flex;flex-wrap:wrap;gap:8px}
+  .prog{height:12px;background:var(--line);border-radius:99px;overflow:hidden;margin:6px 0 12px}
+  .prog i{display:block;height:100%}
+
+  /* ---- publish ---- */
+  .types{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  @media (max-width:600px){.types{grid-template-columns:repeat(3,1fr)}}
+  .types button{border:2px solid var(--line);background:var(--panel);border-radius:12px;padding:8px 4px;cursor:pointer;font-size:.78rem;font-weight:700}
+  .types button.on{border-color:var(--accent);background:var(--accent-soft)}
+  .types svg{display:block;margin:0 auto 4px}
+  #book{background:#fff;color:#222;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.15);margin:16px auto;overflow:auto}
+  .pg{padding:28px 30px;min-height:420px;position:relative;font-family:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    font-size:17px;line-height:2;border-bottom:1px dashed #ccc}
+  .pg:last-child{border-bottom:none}
+  .pg .ttl{font-size:26px;font-weight:700;text-align:center;margin:20px 0 6px}
+  .pg .au{text-align:center;color:#555;margin-bottom:20px}
+  .pg .pic{border:2px dashed #bbb;border-radius:8px;height:200px;display:flex;align-items:center;justify-content:center;color:#aaa;font-family:sans-serif;font-size:13px;margin:6px 0 14px}
+  .pg p{margin:0;text-indent:1em;white-space:pre-wrap}
+  .pg .no{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:12px;color:#999}
+  .vert .pg{writing-mode:vertical-rl;min-height:0;height:520px;overflow-x:auto}
+  .vert .pg .ttl{margin:0 0 0 18px}
+  .vert .pg .au{margin:0 0 0 24px}
+  .vert .pg .pic{width:200px;height:auto;margin:0 0 0 18px}
+  .vert .pg .no{writing-mode:horizontal-tb}
+  .ehon .pg{min-height:360px}
+  .ehon .pg .pic{height:220px}
+  /* 作家先生（大きく見せる） */
+  #stage{position:fixed;inset:0;background:var(--bg);z-index:50;overflow:auto;padding:30px 6vw calc(30px + env(safe-area-inset-bottom))}
+  #stage .t{font-size:clamp(28px,5vw,52px);font-weight:700;text-align:center}
+  #stage .a{text-align:center;color:var(--sub);margin-bottom:20px}
+  #stage .b{font-size:clamp(22px,3.4vw,38px);line-height:1.9;white-space:pre-wrap}
+  #stage .close{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px}
+  mark.hl{border-radius:4px;padding:0 2px;font-weight:700;background:var(--accent-soft);color:inherit}
+  mark.hl.hito{background:var(--hito-soft)} mark.hl.mono{background:var(--mono-soft)} mark.hl.kimo{background:var(--kimo-soft)}
+
+  .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);
+    padding:10px 18px;border-radius:999px;font-weight:700;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none}
+  .toast.on{opacity:1}
+  details summary{cursor:pointer;font-weight:700}
+  .teacher p{margin:6px 0}
+  footer{text-align:center;color:var(--sub);font-size:.72rem;margin-top:30px}
+
+  @media print{
+    body{background:#fff;padding:0}
+    body *{visibility:hidden}
+    #book,#book *{visibility:visible}
+    #book{position:absolute;left:0;top:0;width:100%;box-shadow:none;margin:0}
+    .pg{page-break-after:always;border:none;min-height:90vh}
+    .vert .pg{height:90vh}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <button class="back hidden" id="backBtn" onclick="go('home')">← もどる</button>
+  <h1 id="appTitle">✏️ 作家の時間</h1>
+  <button class="gradeBadge" id="gradeBadge" onclick="go('setup')"></button>
+</header>
+
+<!-- ===== 学年えらび ===== -->
+<section id="v-setup" class="hidden">
+  <div class="card">
+    <h2>なんねんせい？</h2>
+    <div class="grades" id="gradeBtns"></div>
+    <h2 style="margin-top:22px">さっかめい（作家名）</h2>
+    <p class="sub" style="margin:0 0 8px">作品にのる名前です。ペンネームでもOK。</p>
+    <input class="text" id="nameIn" maxlength="20" placeholder="れい：ひかり">
+    <div class="row" style="margin-top:18px"><button class="btn primary" onclick="saveSetup()">これでOK</button></div>
+  </div>
+  <details class="card">
+    <summary>データのほぞん（バックアップ）</summary>
+    <p class="sub">書いたものは、このたんまつの中だけにほぞんされます。たんまつを変えるときや、ブラウザのデータを消す前に「書き出し」をしておきましょう。</p>
+    <div class="row">
+      <button class="btn small" onclick="exportData()">⬇ 書き出し</button>
+      <label class="btn small">⬆ 読みこみ<input type="file" accept=".json,application/json" class="hidden" onchange="importData(this)"></label>
+      <button class="btn small danger" onclick="wipeData()">ぜんぶ消す</button>
+    </div>
+  </details>
+</section>
+
+<!-- ===== ホーム ===== -->
+<section id="v-home" class="hidden">
+  <div class="card hero">
+    <div class="big">📚✏️</div>
+    <h2 id="helloTxt"></h2>
+    <div class="sub" id="todayTxt"></div>
+    <button class="btn primary startBtn" onclick="startToday()" id="startBtn">きょうの作家の時間をはじめる</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="stDays">0</b><span id="stDaysL">書いた日</span></div>
+    <div class="stat"><b id="stChars">0</b><span>書いた文字</span></div>
+    <div class="stat"><b id="stWords">0</b><span id="stWordsL">つかった言葉</span></div>
+  </div>
+  <div class="menu" style="margin-top:14px">
+    <button onclick="go('note')"><span class="e">📓</span><b>作家ノート</b><small>書いたものを読む・つづきを書く・出版する</small></button>
+    <button onclick="go('box')"><span class="e">🗝️</span><b>言葉の宝箱</b><small>あつめた言葉を見る</small></button>
+    <button onclick="go('lessons')"><span class="e">🎓</span><b>作家のわざ</b><small>レッスンをえらんで読む</small></button>
+    <button onclick="go('teacher')"><span class="e">🧑‍🏫</span><b>先生へ</b><small>作家の時間とつかい方</small></button>
+  </div>
+</section>
+
+<!-- ===== きょうの作家の時間 ===== -->
+<section id="v-today" class="hidden">
+  <div class="steps"><div id="s1">① レッスン</div><div id="s2">② きょうの言葉</div><div id="s3">③ ひたすら書く</div></div>
+
+  <div id="t-lesson">
+    <div class="card lesson" id="lessonCard"></div>
+    <div class="row">
+      <button class="btn primary" onclick="todayStep(2)">つぎへ →</button>
+      <button class="btn ghost small" onclick="toggleLessonPick()">ほかのレッスンにする</button>
+    </div>
+    <div class="lessonList hidden" id="lessonPick"></div>
+  </div>
+
+  <div id="t-words" class="hidden">
+    <div class="card">
+      <h2 id="wordsHead">きょうの言葉</h2>
+      <p class="sub" id="wordsSub" style="margin-top:0"></p>
+      <div class="words" id="todayWords"></div>
+    </div>
+    <div class="row">
+      <button class="btn" onclick="todayStep(1)">← レッスン</button>
+      <button class="btn primary" onclick="todayStep(3)">書きはじめる ✏️</button>
+    </div>
+  </div>
+
+  <div id="t-write" class="hidden">
+    <div class="card" style="padding:14px">
+      <div class="words" id="writeWords"></div>
+      <div class="sub" style="margin-top:6px" id="tapHint"></div>
+    </div>
+    <div class="card" style="padding:14px">
+      <div class="writeHead">
+        <div class="timer" id="timer">10:00</div>
+        <div class="bar"><i id="timerBar"></i></div>
+        <div class="count"><span id="charCount">0</span> 文字</div>
+      </div>
+      <div id="timeMsg"></div>
+      <input class="text" id="titleIn" placeholder="だいめい（あとでつけてもOK）" style="margin:10px 0 8px">
+      <textarea class="paper" id="paper" placeholder="ここに書こう。字をうちはじめるとタイマーがスタートするよ。"></textarea>
+      <div class="sub" style="margin-top:8px">書くことにまよったら…</div>
+      <div class="topics" id="topics"></div>
+      <div id="bonusWrap" class="hidden" style="margin-top:12px">
+        <div class="sub">ほかにもつかえた宝箱の言葉 ✨</div>
+        <div class="bonus" id="bonus"></div>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn" onclick="todayStep(2)">← 言葉</button>
+      <button class="btn primary" onclick="finishToday()">📓 作家ノートにしまう</button>
+    </div>
+  </div>
+
+  <div id="t-done" class="hidden">
+    <div class="card result">
+      <div class="big">🎉</div>
+      <h2 id="doneHead">よく書けたね！</h2>
+      <div><span class="num" id="doneChars">0</span> 文字</div>
+      <div class="bonus" id="doneWords" style="justify-content:center;margin-top:12px"></div>
+      <p class="sub" id="doneNote"></p>
+      <div class="row" style="justify-content:center">
+        <button class="btn" onclick="go('home')">ホームへ</button>
+        <button class="btn primary" onclick="openEntry(lastSavedId)">つづきを書く・出版する</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 作家ノート ===== -->
+<section id="v-note" class="hidden">
+  <div class="card"><h2>📓 作家ノート</h2><p class="sub" style="margin:0">書いたものがたまっていきます。気に入った作品は、なおして「出版」しよう。</p></div>
+  <div id="noteList"></div>
+</section>
+
+<!-- ===== ノートの1ページ ===== -->
+<section id="v-entry" class="hidden">
+  <div class="card">
+    <div class="sub" id="eMeta"></div>
+    <input class="text" id="eTitle" placeholder="だいめい" style="margin:8px 0">
+    <textarea class="paper" id="eText" style="min-height:36vh"></textarea>
+    <div class="row" style="margin-top:6px"><span class="count"><span id="eCount">0</span> 文字</span></div>
+    <div class="bonus" id="eWords" style="margin-top:8px"></div>
+  </div>
+  <details class="card">
+    <summary>🔧 なおすときのヒント（修正・校正）</summary>
+    <ul>
+      <li><b>つけたす</b>：気持ちや様子がつたわるように、言葉や文をふやそう。</li>
+      <li><b>けずる</b>：同じことのくり返しや、いらない文はないかな？</li>
+      <li><b>入れかえる</b>：同じ言葉が続いていたら、宝箱からにた言葉をさがそう。</li>
+      <li><b>見なおす</b>：「、」「。」、かぎ（「」）、字のまちがいはないかな？</li>
+    </ul>
+  </details>
+  <div class="row">
+    <button class="btn primary" onclick="goPublish()">📖 出版する</button>
+    <button class="btn" onclick="showStage(curEntryId)">🎤 作家先生（大きく見せる）</button>
+    <button class="btn small" onclick="downloadTxt()">⬇ テキストで保存</button>
+    <button class="btn small danger" onclick="deleteEntry()">消す</button>
+  </div>
+</section>
+
+<!-- ===== 出版 ===== -->
+<section id="v-publish" class="hidden">
+  <div class="card">
+    <h2>📖 出版する</h2>
+    <p class="sub" style="margin-top:0">げんこう用紙をえらぼう。印刷して、絵をかいたり表紙をつけたりできます。</p>
+    <div class="types" id="types"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" onclick="window.print()">🖨 印刷する</button>
+      <button class="btn" onclick="markPublished()">⭐ 出版ずみにする</button>
+    </div>
+  </div>
+  <div id="book"></div>
+</section>
+
+<!-- ===== 言葉の宝箱 ===== -->
+<section id="v-box" class="hidden">
+  <div class="card">
+    <h2>🗝️ 言葉の宝箱</h2>
+    <p class="sub" style="margin:0">つかった言葉は ◆ に色がつきます。ぜんぶ色をつけられるかな？</p>
+    <div class="tabs" id="boxGrade"></div>
+    <div class="tabs" id="boxCat"></div>
+    <div class="sub" id="boxProgTxt"></div>
+    <div class="prog"><i id="boxProg"></i></div>
+    <div class="boxList" id="boxList"></div>
+  </div>
+</section>
+
+<!-- ===== レッスン一覧 ===== -->
+<section id="v-lessons" class="hidden">
+  <div class="card"><h2>🎓 作家のわざ</h2><p class="sub" style="margin:0">毎日1つずつ、レッスンが順番に出てきます。ここではいつでも読めます。</p>
+    <div class="lessonList" id="allLessons"></div></div>
+  <div class="card lesson hidden" id="lessonView"></div>
+</section>
+
+<!-- ===== 先生へ ===== -->
+<section id="v-teacher" class="hidden">
+  <div class="card teacher">
+    <h2>🧑‍🏫 先生へ：このアプリのねらい</h2>
+    <p><b>作家の時間（ライティング・ワークショップ）</b>は、子どもが本物の「作家」として、自分で決めた内容を書き、作品を出版する学び方です。基本の流れは、<b>ミニレッスン → ひたすら書く → 共有（ふりかえり）</b>です。</p>
+    <p>このアプリは、樋口綾香先生の朝学習の形（<b>ミニレッスン5分＋書く10分</b>）に合わせています。そこに、教科書巻末の「言葉の宝箱」の言葉を毎日3語（人物・事物・気持ち）入れました。<b>読むときに学んだ言葉を、書くときにつかえる言葉にする</b>ためです。</p>
+    <h2 style="margin-top:16px">大事にしていること</h2>
+    <ul>
+      <li><b>書く内容は子どもが決める</b>。今日の言葉は「つかえたらすごい」というお誘いで、強制ではありません。</li>
+      <li><b>つかった言葉に色がつく</b>。教科書の「言葉の上の◇に色をぬろう」と同じしかけで、自動で判定します。漢字に変換したときなどは判定できないことがあります。その場合は、言葉カードをタップすると手でぬれます。</li>
+      <li><b>作家ノート</b>に毎日の文章がたまり、つづきから書けます。先生がチェックするためのものではありません。</li>
+      <li><b>出版</b>：5種類のげんこう用紙（絵本型・横書き挿絵あり／なし・縦書き挿絵あり／なし）で印刷できます。</li>
+      <li><b>作家先生</b>：ふりかえりの時間に、作品を大きく表示して紹介できます。</li>
+      <li>同じ日・同じ学年なら、クラス全員に同じ「今日の言葉」が出ます。共有の時間に、同じ言葉を使った作品を読みくらべられます。</li>
+    </ul>
+    <h2 style="margin-top:16px">レッスンの順番</h2>
+    <p>3〜6年は、樋口先生の連載の流れ（①中心人物 → ②事件 → ③事件の解決 → ④冒頭 → ⑤比喩）を土台にしています。そのあとに「気持ちを行動で見せる」「会話文」「五感」「言いかえ」「結末」「修正」「題名」が続きます。1・2年は、ひらがな中心のやさしい版です。</p>
+    <h2 style="margin-top:16px">データについて</h2>
+    <p>書いた文章は<b>その端末のブラウザの中だけ</b>に保存され、外には送られません。端末を変えるときやブラウザのデータを消す前には、学年えらびの画面の「書き出し」でバックアップしてください。</p>
+    <p class="sub">参考：プロジェクト・ワークショップ編『作家の時間』（新評論）、樋口綾香「すてきやん通信」（小学館 みんなの教育技術）、光村図書 国語教科書「言葉の宝箱」</p>
+  </div>
+</section>
+
+<footer>作家の時間 ✏️ ことばの宝箱</footer>
+</div>
+
+<div id="stage" class="hidden"><button class="btn close" onclick="hideStage()">✕ とじる</button><div class="t" id="stT"></div><div class="a" id="stA"></div><div class="b" id="stB"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   言葉の宝箱（光村図書 国語 1〜6年）
+   h=人物 m=事物・様子 k=気持ち・心情
+   ============================================================ */
+var BOX = {
+ 1:{h:"あかるい げんき しずか やさしい こわがり がんばりや",
+    m:"かんたん むずかしい あたらしい ふるい のんびり のろのろ さむい つめたい すずしい あつい あたたかい かたい やわらかい ひろい せまい ていねい きれい あぶない",
+    k:"おもしろい たのしい つまらない わくわくする うきうきする うれしい かなしい よろこぶ おどろく びっくりする どきどきする こわい こまる はずかしい くるしい かわいそう がっかりする"},
+ 2:{h:"たくましい ゆうきのある しっかりもの うっかり 正直 まじめ まけずぎらい たよりになる のびのび おとなしい 一生けんめい おだやか 親切 思いやりのある おこりっぽい きびしい がまん強い こつこつ いじわる わがまま",
+    m:"めずらしい 人気 とくべつ すばやい うつくしい にがい すっぱい からい はっきりした くわしい 細かい ぬるい ひんやり まぶしい 目立つ どっしりした きゅうくつ べんり やく立つ さわがしい にぎやか りっぱ すばらしい せっせと あっというま なめらか しっとり かわいらしい にあう",
+    k:"気に入る まんぞく くやしい ざんねん 気になる わすれられない うらやましい きんちょう はらが立つ あきれる しあわせ 気分がいい きげんがいい まよう すっきり 力強い 心強い にがて きつい さびしい じまん あんしん ほっとする ふあん しんぱい ひやひやする へいき おびえる おそろしい たいくつ あきる じしんがある 本気 くたびれる つかれる はんせい あわてる あせる はらはらする おちつく うっとり"},
+ 3:{h:"すなお 温かい ねばり強い 気が長い 気が短い 気が小さい おくびょう 弱気 強気 陽気 いさましい たのもしい たよりない がんこ 注意深い そそっかしい おさない 心が広い 自分勝手 活発",
+    m:"生き生きとした はげしい のどか なごやか 広々とした ひっそりとした 分かりやすい 分かりにくい 身近 親しみがある 見事 がっしり 人なつこい あやしい はだ寒い うす暗い ごうか ぜいたく ふべん またたくま 思いがけない とつぜん じわじわ せいかく 大げさ 重苦しい わずか きちょう",
+    k:"さわやか ゆかい めでたい てれる なつかしい 心にのこる 心が動く 心にしみる 心細い 心がおどる ゆめのよう 運がいい なやむ 感動 かんしゃ そわそわする うずうずする 落ち着かない すねる かっとなる いかり ふきげん いらいらする こうふん つらい 感心 待ち遠しい むちゅう はり切る いよく的 めんどう 物足りない 注目する 引きつけられる このむ とくいになる ぎょっとする はっとする 目を丸くする ぞっとする こわごわ ぞくぞくする おそるおそる おそれる なさけない 申しわけない 期待 心がくもる こだわる ひっし せいいっぱい 決心する"},
+ 4:{h:"ゆうかん 行動力のある 責任感が強い 無責任 がむしゃら 用心深い のんき せっかち 器用 熱心 根気強い しんぼう強い 強がり ずうずうしい 友好的 なみだもろい あっさり 気がきく 気まぐれ 冷ややか",
+    m:"かんぺき 着実 十分 さすが ――を上回る 二つとない このうえない かんじん ずばぬける すさまじい おく深い 印象的 あざやか くっきり かすか うっすら 広大 流行 がんじょう かろやか かなわない おとる 弱点 重大 重要 かけがえのない くらべものにならない えいきょうが大きい しんせん 独特 特色のある ユーモアのある 色とりどり ここちよい 品がいい 上品 はなやか みりょく的 清潔 望ましい 予想どおり たしか ゆたか そうぞうしい 静まり返った ひそか どんより 気味が悪い さかんに めまぐるしい じょじょに ひたすら ゆるやか なだらか まばら 具体的",
+    k:"親しむ 関心をもつ きょうみ深い 打ちこむ 熱中 目がはなせない いたわる こうかい むねがいたむ ためらう じれったい 手にあせをにぎる しぶしぶ にくい 意外 目をうたがう 不気味 思いこむ なごむ ゆとりがある ゆったりする かんげき むねを打たれる ほこらしい なっとくする 心がはずむ むねがはずむ まい上がる うかれる あっけにとられる 目からうろこが落ちる 同情 共感 気にかかる 気落ちする 頭をかかえる 心が晴れる 気が晴れる 気がすむ かたの荷が下りる かたの力をぬく 気を引きしめる 冷やあせをかく むっとする はら立たしい へそを曲げる しんぼうする こらえる 心のささえとなる いやされる 心温まる"},
+ 5:{h:"気のいい 愛想がよい あいきょうのある いさぎよい じゅんすい いせいがいい びんかん むじゃき 情け深い はくじょう 不器用 強情 自由気まま しんちょう きちょうめん えんりょ深い ひかえめ けんきょ おおらか おっとり 冷静 どきょうがある 堂々とした 才能のある すぐれた 力量のある はつらつとした",
+    m:"良好 良質 優良 最適 良心的 とぼしい 無数 雑然 整然 古風 ごうかい まさる 引けをとらない 一、二を争う 評価が高い みずみずしい すがすがしい 目新しい 名高い 評判がいい 価値がある とてつもない 強烈 すみやか しっくり なじむ 順調 自然 不自然 重々しい 鮮明 確実 明らか 代表的 神秘的 しげき的 ばつぐん そまつ そぼく ほのか 有効 効果的 一般的 特殊 特有",
+    k:"こいしい あぜんとする 息をのむ うろたえる 後ろめたい とまどう 高ぶる ほれぼれする ときめく 心をゆさぶる 声がはずむ こみ上げる 晴れやか ほほえましい 気が遠くなる 気が進まない 気が引ける 気がめいる 気が重い 気が軽くなる 気をしずめる 気に留める 心に留める 尊重する くじける 快い 軽快 とりはだが立つ むねが高鳴る 顔を赤らめる 張りつめる 安らぐ 苦々しい 切ない しんみり 気の毒 息苦しい いたいたしい 実感する 痛感する 興味しんしん 背すじが寒くなる 息がつまる 無我夢中 熱が冷める 決意 印象に残る あこがれる"},
+ 6:{h:"率直 快活 竹を割ったよう 誠実 楽天的 楽観的 悲観的 気難しい 積極的 消極的 えんりょがち 論理的 感情的 熱意のある ひたむき 厳格 もの静か するどい 優柔不断 未熟 個性的 ひいでる ――に強い",
+    m:"いちじるしい ひときわ たとえようがない 計り知れない 一目りょうぜん 簡潔 簡素 質素 にわかに 見合う 申し分ない 適切 好ましい 不都合 不つり合い 明確 的確 不確か あいまい まれ 一長一短がある 典型的 不向き 不規則 雄大 ささやか かた苦しい 筋の通った 不可欠 同一 共通 抽象的 現実的 理想的 手がこんだ けっさく もろい せんさい 風流 味わいがある 味気ない 明快 まばゆい 香ばしい ありのまま",
+    k:"一目置く 好感をもつ 思い入れがある 我を忘れる 専念 わき目もふらず 没頭する 満ち足りる 心にひびく かんめいを受ける したう いとおしい 愛着がある いきどおる 気が楽になる 痛快 胸がすく 胸にひびく 胸にせまる 胸がいっぱいになる 胸をふくらませる 待ち望む 解放感 こしが重い 荷が重い 印象深い 圧倒される 動揺する 意気ごむ 気がかり 気にさわる 痛ましい いたたまれない もどかしい たまらない なやましい わずらわしい なごりおしい 心残り 忘れがたい よいんが残る ほのぼのする くつろぐ 苦心 悲痛 失望 幸福 もの悲しい"}
+};
+for (var g in BOX) for (var c in BOX[g]) BOX[g][c] = BOX[g][c].split(" ");
+
+var CATS = {
+  h:{cls:"hito", low:"人を あらわす ことば", high:"人物を表す言葉", short:"人物"},
+  m:{cls:"mono", low:"ものの ようすを あらわす ことば", high:"事物・様子を表す言葉", short:"様子"},
+  k:{cls:"kimo", low:"気もちを あらわす ことば", high:"気持ちを表す言葉", short:"気持ち"}
+};
+
+/* 漢字で書いたときにも見つけられるように（よく使う言葉だけ） */
+var ALT = {
+ "あかるい":"明るい","げんき":"元気","しずか":"静か","やさしい":"優しい","こわがり":"怖がり","がんばりや":"頑張り屋|がんばり屋",
+ "かんたん":"簡単","むずかしい":"難しい","あたらしい":"新しい","ふるい":"古い","さむい":"寒い","つめたい":"冷たい","すずしい":"涼しい",
+ "あつい":"暑い|熱い|厚い","あたたかい":"暖かい|温かい","かたい":"固い|硬い|堅い","やわらかい":"柔らかい|軟らかい","ひろい":"広い","せまい":"狭い",
+ "ていねい":"丁寧","きれい":"綺麗","あぶない":"危ない","おもしろい":"面白い","たのしい":"楽しい","うれしい":"嬉しい","かなしい":"悲しい",
+ "よろこぶ":"喜ぶ","おどろく":"驚く","こわい":"怖い|恐い","こまる":"困る","はずかしい":"恥ずかしい","くるしい":"苦しい","かわいそう":"可哀想|可哀そう",
+ "たくましい":"逞しい","ゆうきのある":"勇気のある|勇気がある","まじめ":"真面目","まけずぎらい":"負けず嫌い","たよりになる":"頼りになる",
+ "一生けんめい":"一生懸命","がまん強い":"我慢強い","いじわる":"意地悪","きびしい":"厳しい","おだやか":"穏やか",
+ "めずらしい":"珍しい","とくべつ":"特別","すばやい":"素早い","うつくしい":"美しい","にがい":"苦い","からい":"辛い","くわしい":"詳しい",
+ "まぶしい":"眩しい","べんり":"便利","やく立つ":"役立つ|役に立つ|やくに立つ","さわがしい":"騒がしい","すばらしい":"素晴らしい",
+ "かわいらしい":"可愛らしい","にあう":"似合う","まんぞく":"満足","くやしい":"悔しい","ざんねん":"残念","わすれられない":"忘れられない",
+ "うらやましい":"羨ましい","きんちょう":"緊張","はらが立つ":"腹が立つ","しあわせ":"幸せ","まよう":"迷う","さびしい":"寂しい|淋しい",
+ "じまん":"自慢","あんしん":"安心","ふあん":"不安","しんぱい":"心配","へいき":"平気","おそろしい":"恐ろしい","たいくつ":"退屈","あきる":"飽きる",
+ "じしんがある":"自信がある","つかれる":"疲れる","はんせい":"反省","あわてる":"慌てる","あせる":"焦る","おちつく":"落ち着く",
+ "おくびょう":"臆病","がんこ":"頑固","おさない":"幼い","なつかしい":"懐かしい","かんしゃ":"感謝","こうふん":"興奮","つらい":"辛い",
+ "むちゅう":"夢中","ひっし":"必死","せいいっぱい":"精一杯|精いっぱい","めんどう":"面倒","ゆかい":"愉快","なやむ":"悩む","いかり":"怒り",
+ "ふきげん":"不機嫌","せいかく":"正確","ぜいたく":"贅沢","ふべん":"不便","ごうか":"豪華","とつぜん":"突然","きちょう":"貴重",
+ "はげしい":"激しい","あやしい":"怪しい","いさましい":"勇ましい","たのもしい":"頼もしい","たよりない":"頼りない","はり切る":"張り切る",
+ "ゆうかん":"勇敢","のんき":"呑気","かんぺき":"完璧","しんせん":"新鮮","がんじょう":"頑丈","はなやか":"華やか","ゆたか":"豊か",
+ "かすか":"微か","みりょく的":"魅力的","かんげき":"感激","こうかい":"後悔","ほこらしい":"誇らしい","なっとくする":"納得する",
+ "しんちょう":"慎重","きちょうめん":"几帳面","けんきょ":"謙虚","むじゃき":"無邪気","びんかん":"敏感","じゅんすい":"純粋","いさぎよい":"潔い",
+ "ばつぐん":"抜群","そぼく":"素朴","そまつ":"粗末","こいしい":"恋しい","とまどう":"戸惑う","けっさく":"傑作","せんさい":"繊細","あいまい":"曖昧",
+ "するどい":"鋭い","いとおしい":"愛おしい","くつろぐ":"寛ぐ"
+};
+
+/* ============================================================
+   作家のわざ（ミニレッスン）
+   3〜6年は樋口綾香先生の連載（①〜⑤）を土台に構成
+   ============================================================ */
+var LESSONS_HIGH = [
+ {t:"魅力的な中心人物を考えよう", c:"h",
+  b:["お話の中心になる人物を「中心人物」といいます。","中心人物を魅力的にするには、次のことを考えよう。"],
+  li:["得意なこと","苦手なこと","強力な仲間やアイテム","悩みや課題"],
+  ex:"『スイミー』の冒頭には、すんでいる場所・仲間・色・得意なこと（泳ぐのがだれよりもはやかった）が、わかりやすく書かれているよ。",
+  tr:"今日の「人物を表す言葉」を使って、自分の中心人物をしょうかいする文を書いてみよう。"},
+ {t:"悩みや課題と事件をつなげよう", c:"k",
+  b:["お話の中で起こる困った出来事を「事件」といいます。","事件と中心人物の悩みは、深くつながっています。"],
+  li:["事件が起きて、悩みや課題が生まれる（『スイミー』）","もともと悩みや課題があって、事件が起きる（『モチモチの木』）"],
+  ex:"「広い海のどこかで、幸せにくらしていた」と書いてあるから、マグロがやってきた事件がよりショックに感じられるんだね。",
+  tr:"中心人物にどんな事件が起きるか考えて、書きはじめてみよう。"},
+ {t:"事件の解決を考えよう", c:"k",
+  b:["事件の解決は、お話のいちばんの山場（クライマックス）です。中心人物の気持ちや考え方が変わったり、成長したりします。"],
+  li:["中心人物の特徴と結びつける","対人物などとの会話文を入れる","気持ちの揺れ動きを表す"],
+  ex:"スイミーは「ぼくが、目になろう」と言う。ほかの魚とちがう黒い体（特徴）が、事件の解決につながっているね。",
+  tr:"今日の「気持ちを表す言葉」を使って、気持ちが変わっていく様子を書いてみよう。"},
+ {t:"物語の冒頭を工夫しよう", c:"m",
+  b:["冒頭（書き出し）には、次のことを入れるとよいです。"],
+  li:["時・場所・人物","人物の特徴","事件へのつながり（伏線）"],
+  ex:"もっと読者を引きつけるには…\n・作品の大事なことを印象づける会話文から始める\n・読者に語りかける\n・作品につながる「外側のお話」を書く",
+  tr:"今日の「様子を表す言葉」を使って、場面の様子がうかぶ書き出しを書いてみよう。"},
+ {t:"比喩表現を使おう", c:"k",
+  b:["比喩には「直喩」「暗喩」「擬人法」があります。今日は直喩。","「まるで〜のような」と、たとえていることがはっきりわかる表現です。"],
+  li:["りんごのように赤いほほ","にじ色のゼリーのようなくらげ（『スイミー』）","むねがはりさけるような悲しみ（気持ちもたとえられる！）"],
+  ex:"「うれしい」「くやしい」「こわい」も、「〜のような」でたとえてみよう。",
+  tr:"今日の言葉のどれかと「〜のような」を組み合わせて書いてみよう。"},
+ {t:"気持ちを行動で見せよう", c:"k",
+  b:["「うれしかった」と書くかわりに、体の動きや表情で気持ちを見せると、読者は人物の気持ちを自分で想像できます。"],
+  li:["うれしい → 思わずその場でとびはねた","きんちょう → 手のひらがじっとりとあせばんだ","がっかり → かたをおとして、足もとの石をけった"],
+  ex:"気持ちの言葉＋行動の両方を書くと、もっと伝わるよ。\n「ほっとした。ぼくはその場にすわりこんだ。」",
+  tr:"今日の「気持ちを表す言葉」を、行動といっしょに書いてみよう。"},
+ {t:"会話文で人物を動かそう", c:"h",
+  b:["「　」で人物に話させると、その人の性格が伝わり、場面が動き出します。"],
+  li:["せっかちな人 →「早く！ もう行くよ！」","のんきな人 →「まあ、なんとかなるって。」","会話のあとに、だれが・どんなふうに言ったかをそえる"],
+  ex:"「だいじょうぶだよ。」と、兄はぼくのかたに手をおいた。",
+  tr:"今日の「人物を表す言葉」の人なら、どんなふうに話すかな？ 会話文を書いてみよう。"},
+ {t:"五感で様子を書こう", c:"m",
+  b:["見たことだけでなく、聞こえた音・におい・手ざわり・味も書くと、読者がその場にいるように感じます。"],
+  li:["見る：夕日で、まどがオレンジ色にそまった","聞く：遠くで、カラスがかあと鳴いた","におい・さわる・味わう"],
+  ex:"「様子を表す言葉」は、五感とセットで使うと生きるよ。",
+  tr:"今日の「様子を表す言葉」と五感を使って、ひとつの場面を書いてみよう。"},
+ {t:"言葉を言いかえよう", c:"k",
+  b:["同じ言葉が何度も出てくると、文章が単調になります。にた意味の言葉に言いかえてみよう。"],
+  li:["うれしい → 心がおどる／胸がいっぱいになる／まい上がる","おどろく → 目を丸くする／息をのむ／あっけにとられる","すごい → ずばぬける／申し分ない／見事"],
+  ex:"言葉の宝箱は、言いかえの言葉さがしにぴったり。",
+  tr:"今までに書いた文の中で、言いかえられる言葉をさがしてみよう。"},
+ {t:"結末を工夫しよう", c:"k",
+  b:["お話の終わり方で、読み終わったあとの気持ちが変わります。"],
+  li:["中心人物が最初とどう変わったかを見せる","はじめの場面とつなげる","よいん（あとに残る気持ち）を残す"],
+  ex:"「あの日の海の色を、ぼくは今でもおぼえている。」",
+  tr:"今書いているお話の結末を、２つ考えてくらべてみよう。"},
+ {t:"読み返して直そう（修正）", c:null,
+  b:["作家は、何度も読み返して作品をよくしていきます。"],
+  li:["つけたす：説明が足りないところは？","けずる：くり返しやいらない文は？","入れかえる：順番を変えるとわかりやすくなる？","最後に、字や「、」「。」をたしかめる（校正）"],
+  ex:"声に出して読むと、直したいところが見つかりやすいよ。",
+  tr:"作家ノートの作品をひとつ選んで、読み返して直してみよう。"},
+ {t:"読みたくなる題名をつけよう", c:null,
+  b:["題名は、読者が最初に出会う言葉です。"],
+  li:["中心人物の名前を入れる（『スイミー』）","事件や大事な物を入れる（『まいごのかぎ』）","なぞを残す・語りかける（『ずうっと、ずっと、大すきだよ』）"],
+  ex:"題名を３つ考えて、友だちにどれが読みたいか聞いてみよう。",
+  tr:"今日書いた文章に題名をつけよう。"}
+];
+var LESSONS_LOW = [
+ {t:"だれの おはなし？", c:"h",
+  b:["おはなしの しゅじんこうを きめよう。"],
+  li:["とくいな こと","にがてな こと","なかよしの ともだち"],
+  ex:"スイミーは、みんなが あかいのに 一ぴきだけ まっくろ。およぐのは だれよりも はやかった。",
+  tr:"きょうの「人を あらわす ことば」で、しゅじんこうを しょうかいしよう。"},
+ {t:"なにが おきた？", c:"k",
+  b:["おはなしでは、こまった ことが おきるよ。"],
+  li:["だれに おきた？","どんな こまった こと？","そのとき どんな 気もち？"],
+  ex:"おおきな まぐろが きて、あかい さかなたちを のみこんで しまった。",
+  tr:"きょうの「気もちを あらわす ことば」で、こまった ときの 気もちを かこう。"},
+ {t:"いつ・どこで・だれが", c:"m",
+  b:["かきだしには、この 三つを かくと わかりやすいよ。"],
+  li:["いつ（あさ・なつやすみ）","どこで（こうえん・うみ）","だれが"],
+  ex:"「あきの はれた ひ、こうえんで、ぼくは ふしぎな ねこに あった。」",
+  tr:"きょうの「ものの ようすを あらわす ことば」を かきだしに いれよう。"},
+ {t:"「 」で はなさせよう", c:"h",
+  b:["じんぶつに はなさせると、おはなしが いきいき するよ。"],
+  li:["はなした ことばは「 」に いれる","だれが いったかも かこう"],
+  ex:"「いっしょに あそぼう。」と、くまさんが いいました。",
+  tr:"しゅじんこうに なにか はなさせて みよう。"},
+ {t:"〜のような（たとえ）", c:"m",
+  b:["「〜のような」「〜みたい」で たとえると、ようすが よく わかるよ。"],
+  li:["りんごのように あかい ほっぺ","わたあめのような くも","おひさまみたいに あたたかい てのひら"],
+  ex:"「つめたい」「やわらかい」も たとえて みよう。",
+  tr:"きょうの ことばを「〜のような」と いっしょに つかって みよう。"},
+ {t:"気もちを うごきで あらわそう", c:"k",
+  b:["「うれしい」の かわりに、からだの うごきを かくと つたわるよ。"],
+  li:["うれしい → ぴょんぴょん とびはねた","かなしい → なみだが ぽろっと こぼれた","どきどき → むねが どきどき した"],
+  ex:"気もちの ことば ＋ うごき で かくと もっと いいね。",
+  tr:"きょうの「気もちを あらわす ことば」と うごきを いっしょに かこう。"},
+ {t:"みて・きいて・さわって", c:"m",
+  b:["みた ことの ほかに、きこえた おと・におい・さわった かんじも かこう。"],
+  li:["みた：あかい はっぱ","きいた：かさかさ","さわった：ざらざら"],
+  ex:"「つめたい」「やわらかい」は さわった かんじの ことばだね。",
+  tr:"きょうの「ものの ようすを あらわす ことば」で、ようすを かこう。"},
+ {t:"にっきを かこう", c:"k",
+  b:["きょう あった ことを かいて みよう。"],
+  li:["いつ","どこで","だれと","なにを した","どう おもった"],
+  ex:"「どう おもった」に きょうの 気もちの ことばを つかおう。",
+  tr:"きょうの ことばを つかって、さいきん あった ことを かこう。"},
+ {t:"おわりを かんがえよう", c:"k",
+  b:["さいごに しゅじんこうは どう なったかな？"],
+  li:["こまった ことは どう なった？","さいごの 気もちは？"],
+  ex:"「スイミーたちは、ひるの かがやく ひかりの 中を およぎ、おおきな さかなを おいだした。」",
+  tr:"おはなしの おわりを かいて みよう。"},
+ {t:"よみかえそう", c:null,
+  b:["かけたら こえに だして よんで みよう。"],
+  li:["「、」「。」は ついて いるかな","「 」は ついて いるかな","じの まちがいは ないかな"],
+  ex:"よみかえすと、もっと よく なるところが みつかるよ。",
+  tr:"作家ノートの おはなしを ひとつ よみかえして なおそう。"}
+];
+
+var TOPICS_HIGH = ["お話をつくる","きのうあったこと","わすれられない日","好きなもの・好きなこと","もしも○○だったら","中心人物の日記","今日の言葉から想像する"];
+var TOPICS_LOW = ["おはなしを つくる","きのう あった こと","すきな もの","もしも ○○ だったら","たのしかった こと"];
+
+/* ============================================================
+   保存
+   ============================================================ */
+var LS = "sakka-no-jikan-v1";
+var st = load();
+function load(){
+  var d = null;
+  try{ d = JSON.parse(localStorage.getItem(LS)); }catch(e){}
+  d = d || {};
+  d.grade = d.grade || 0; d.name = d.name || "";
+  d.entries = d.entries || []; d.used = d.used || {}; d.lessonIdx = d.lessonIdx || 0;
+  d.today = d.today || null;
+  return d;
+}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){ toast("ほぞんできませんでした"); } }
+
+function low(){ return st.grade && st.grade <= 2; }
+function L(a,b){ return low() ? a : b; }
+function lessons(){ return low() ? LESSONS_LOW : LESSONS_HIGH; }
+function todayKey(){ var d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function $(id){ return document.getElementById(id); }
+function toast(t){ var e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(function(){e.classList.remove("on");},1800); }
+
+/* ============================================================
+   言葉の判定（活用形も見つける）
+   ============================================================ */
+function kata(s){ return s.replace(/[ぁ-ゖ]/g,function(c){return String.fromCharCode(c.charCodeAt(0)+0x60);}); }
+function reEsc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+var FOLLOW = {"う":"う|わ|い|っ|え|お","く":"く|か|き|い|け|こ","ぐ":"ぐ|が|ぎ|い|げ|ご","す":"す|さ|し|せ|そ","つ":"つ|た|ち|っ|て|と",
+  "ぬ":"ぬ|な|に|ん|ね|の","ぶ":"ぶ|ば|び|ん|べ|ぼ","む":"む|ま|み|ん|め|も","る":"る|ら|り|れ|ろ|っ|た|て|な|ま|よ|ず|さ"};
+function formPattern(f){
+  if (/する$/.test(f) && f.length>2) return reEsc(f.slice(0,-2))+"(?:し|す|さ|せ)";
+  var last=f.slice(-1), stem=f.slice(0,-1);
+  if (last==="い" && stem.length>=2){
+    if (stem.length<=2) return reEsc(stem)+"(?:い|かった|くて|くな|さ)";
+    return reEsc(stem)+"(?:い|く|か|け|さ|そ)";
+  }
+  // 「あきる」「つかれる」のような一段動詞は「あきら…」などと取りちがえないように
+  if (last==="る" && /[いきぎしじちぢにひびぴみりえけげせぜてでねへべぺめれ]$/.test(stem) && stem.length>=2) return reEsc(stem)+"(?:る|た|て|な|ま|よ|ず|ろ|させ|られ)";
+  if (FOLLOW[last] && stem.length>=2) return reEsc(stem)+"(?:"+FOLLOW[last]+")";
+  return reEsc(f);
+}
+var matcherCache = {};
+function matchers(grade){
+  if (matcherCache[grade]) return matcherCache[grade];
+  var list=[];
+  for (var g=1; g<=grade; g++) for (var c in BOX[g]) BOX[g][c].forEach(function(w){
+    var base=w.replace(/^――/,"");
+    var forms=[base]; if (ALT[base]) forms=forms.concat(ALT[base].split("|"));
+    if (/[ぁ-ゖ]/.test(base)) forms.push(/する$/.test(base) ? kata(base.slice(0,-2))+"する" : kata(base));
+    var re=new RegExp(forms.map(formPattern).join("|"));
+    list.push({w:w,c:c,g:g,re:re});
+  });
+  matcherCache[grade]=list; return list;
+}
+function findWords(text, grade){
+  if (!text) return [];
+  return matchers(grade||st.grade).filter(function(m){ return m.re.test(text); });
+}
+
+/* ============================================================
+   画面きりかえ
+   ============================================================ */
+var VIEWS=["setup","home","today","note","entry","publish","box","lessons","teacher"];
+var cur="home";
+function go(v){
+  if (cur==="today" && v!=="today") pauseTimer();
+  if (cur==="entry" && v!=="entry") saveEntry();
+  cur=v;
+  VIEWS.forEach(function(x){ $("v-"+x).classList.toggle("hidden", x!==v); });
+  $("backBtn").classList.toggle("hidden", v==="home" || (v==="setup" && !st.grade));
+  $("gradeBadge").classList.toggle("hidden", !st.grade || v==="setup");
+  $("gradeBadge").textContent = st.grade ? st.grade+"年"+(st.name?"・"+st.name:"") : "";
+  if (v==="entry" || v==="publish") $("backBtn").setAttribute("onclick", v==="publish" ? "openEntry(curEntryId)" : "go('note')");
+  else $("backBtn").setAttribute("onclick","go('home')");
+  window.scrollTo(0,0);
+  ({setup:renderSetup, home:renderHome, note:renderNote, box:renderBox, lessons:renderLessons}[v]||function(){})();
+}
+
+/* ---- setup ---- */
+var pickGrade=0;
+function renderSetup(){
+  pickGrade=st.grade;
+  var h=""; for (var g=1; g<=6; g++) h+='<button data-g="'+g+'" class="'+(g===pickGrade?"on":"")+'" onclick="pickG('+g+')">'+g+'年</button>';
+  $("gradeBtns").innerHTML=h; $("nameIn").value=st.name;
+}
+function pickG(g){ pickGrade=g; Array.prototype.forEach.call(document.querySelectorAll("#gradeBtns button"),function(b){ b.classList.toggle("on", +b.dataset.g===g); }); }
+function saveSetup(){
+  if (!pickGrade){ toast("学年をえらんでね"); return; }
+  if (st.grade!==pickGrade){ st.today=null; st.lessonIdx = 0; }
+  st.grade=pickGrade; st.name=$("nameIn").value.trim(); save(); go("home");
+}
+
+/* ---- home ---- */
+function renderHome(){
+  $("helloTxt").textContent = (st.name? st.name+L(" さっか、"," 作家、") : "") + L("きょうも かこう！","今日も書こう！");
+  var d=new Date(), wd="日月火水木金土"[d.getDay()];
+  var doneToday = st.entries.some(function(e){ return e.day===todayKey(); });
+  $("todayTxt").textContent = (d.getMonth()+1)+"月"+d.getDate()+"日（"+wd+"）" + (doneToday? L("　きょうは もう かいたよ ✨","　今日はもう書いたよ ✨") : "");
+  $("startBtn").textContent = doneToday ? L("もう いちど かく","もう一度書く") : L("きょうの 作家の時間を はじめる","今日の作家の時間をはじめる");
+  var days={}, chars=0; st.entries.forEach(function(e){ days[e.day]=1; chars+=(e.text||"").length; });
+  $("stDays").textContent=Object.keys(days).length;
+  $("stChars").textContent=chars;
+  var total=0, got=0; for (var c in BOX[st.grade]) BOX[st.grade][c].forEach(function(w){ total++; if (st.used[w]) got++; });
+  $("stWords").textContent=got+"/"+total;
+  $("stWordsL").textContent=st.grade+L("ねんの ことば","年の宝箱の言葉");
+}
+
+/* ============================================================
+   きょうの作家の時間
+   ============================================================ */
+function rng(seed){ var h=2166136261; for (var i=0;i<seed.length;i++){ h^=seed.charCodeAt(i); h=Math.imul(h,16777619); } return function(){ h+=0x6D2B79F5; var t=h; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
+function pickWord(c, n){
+  var list=BOX[st.grade][c], r=rng(todayKey()+"|"+st.grade+"|"+c), order=list.map(function(w,i){return i;});
+  for (var i=order.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)); var t=order[i]; order[i]=order[j]; order[j]=t; }
+  return list[order[n % order.length]];
+}
+var T=null; // 今日のセッション
+function startToday(){
+  if (!st.grade){ go("setup"); return; }
+  if (!st.today || st.today.day!==todayKey() || st.today.grade!==st.grade || st.today.finished){
+    st.today={day:todayKey(), grade:st.grade, swap:{h:0,m:0,k:0}, manual:{}, lesson:st.lessonIdx % lessons().length,
+      text:"", title:"", elapsed:0, finished:false};
+    save();
+  }
+  T=st.today;
+  go("today");
+  $("paper").value=T.text; $("titleIn").value=T.title;
+  todayStep(T.text ? 3 : 1);
+}
+function todayWords(){ return ["h","m","k"].map(function(c){ return {c:c, w:pickWord(c, T.swap[c])}; }); }
+
+function todayStep(n){
+  ["t-lesson","t-words","t-write","t-done"].forEach(function(id,i){ $(id).classList.toggle("hidden", i+1!==n); });
+  for (var i=1;i<=3;i++) $("s"+i).classList.toggle("on", i===n);
+  $("s1").textContent=L("① レッスン","① レッスン"); $("s2").textContent=L("② きょうの ことば","② 今日の言葉"); $("s3").textContent=L("③ かく","③ ひたすら書く");
+  if (n===1) renderLessonCard($("lessonCard"), lessons()[T.lesson], T.lesson);
+  if (n===2) renderTodayWords();
+  if (n===3) renderWrite();
+  if (n!==3) pauseTimer();
+  window.scrollTo(0,0);
+}
+function renderLessonCard(el, ls, idx){
+  var cat = ls.c ? CATS[ls.c] : null;
+  el.innerHTML = '<span class="tag">'+L("さっかの わざ","作家のわざ")+' '+(idx+1)+'</span>'+
+    '<h3>'+esc(ls.t)+'</h3>'+
+    ls.b.map(function(p){return '<p style="margin:4px 0">'+esc(p)+'</p>';}).join("")+
+    '<ul>'+ls.li.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul>'+
+    (ls.ex?'<div class="ex">'+esc(ls.ex).replace(/\n/g,"<br>")+'</div>':"")+
+    '<div class="try">✏️ '+esc(ls.tr)+'</div>'+
+    (cat?'<div class="sub" style="margin-top:6px">'+L("つかう ことば：","とくに使える言葉：")+'<b style="color:var(--'+cat.cls+')">'+L(cat.low,cat.high)+'</b></div>':"");
+}
+function toggleLessonPick(){
+  var el=$("lessonPick"); el.classList.toggle("hidden");
+  el.innerHTML = lessons().map(function(ls,i){ return '<button class="'+(i===T.lesson?"on":"")+'" onclick="setLesson('+i+')">'+(i+1)+'. '+esc(ls.t)+'</button>'; }).join("");
+}
+function setLesson(i){ T.lesson=i; save(); $("lessonPick").classList.add("hidden"); renderLessonCard($("lessonCard"), lessons()[i], i); }
+
+function wordCardHTML(o, usedNow, withSwap){
+  var cat=CATS[o.c], used=usedNow;
+  return '<div class="wcard '+cat.cls+(used?' used':'')+'" onclick="toggleManual(\''+o.c+'\')">'+
+    (withSwap?'<button class="swap" onclick="event.stopPropagation();swapWord(\''+o.c+'\')">🔄 '+L("かえる","かえる")+'</button>':"")+
+    '<div class="cat">'+L(cat.low,cat.high)+'</div>'+
+    '<div class="w"><span class="mark">'+(used?"◆":"◇")+'</span>'+esc(o.w)+'</div>'+
+    '<div class="hint">'+(used? L("つかえた！","使えた！") : (st.used[o.w]? L("まえにも つかったね","前にも使ったね") : ""))+'</div></div>';
+}
+function renderTodayWords(){
+  $("wordsHead").textContent=L("きょうの ことば","今日の言葉");
+  $("wordsSub").textContent=L("この ことばを つかって かけたら すごい！ ぜんぶ つかわなくても いいよ。","使えたらすごい！ 全部使わなくてもOK。言葉の意味がわからなかったら、国語辞典で調べてみよう。");
+  $("todayWords").innerHTML = todayWords().map(function(o){ return wordCardHTML(o, false, true); }).join("");
+}
+function swapWord(c){ T.swap[c]++; save(); renderTodayWords(); }
+
+/* ---- 書く ---- */
+var timerId=null, LIMIT=600;
+function renderWrite(){
+  $("topics").innerHTML=(low()?TOPICS_LOW:TOPICS_HIGH).map(function(t){return '<button onclick="useTopic(this)">'+esc(t)+'</button>';}).join("");
+  $("tapHint").textContent=L("つかった ことばは じどうで いろが つくよ。つかなかったら カードを タップしてね。","使った言葉は自動で色がつきます。漢字にしてつかないときは、カードをタップしてね。");
+  $("titleIn").placeholder=L("だいめい（あとで つけても いいよ）","題名（あとでつけてもOK）");
+  $("paper").placeholder=L("ここに かこう。もじを うつと タイマーが スタートするよ。","ここに書こう。字を打ちはじめるとタイマーがスタートするよ。");
+  updateWrite(true); drawTimer();
+  setTimeout(function(){ $("paper").focus(); }, 50);
+}
+function useTopic(b){ if (!$("paper").value) toast(b.textContent+" — "+L("いいね！ かいて みよう","いいね！書いてみよう")); }
+var prevUsed={};
+function updateWrite(silent){
+  var text=$("paper").value; T.text=text; T.title=$("titleIn").value;
+  $("charCount").textContent=text.replace(/\s/g,"").length;
+  var found=findWords(text), foundSet={}; found.forEach(function(m){ foundSet[m.w]=m; });
+  var tw=todayWords();
+  $("writeWords").innerHTML = tw.map(function(o){ return wordCardHTML(o, !!foundSet[o.w] || !!T.manual[o.c], false); }).join("");
+  tw.forEach(function(o){ var u=!!foundSet[o.w]; if (u && !prevUsed[o.w] && !silent) toast("◆ "+o.w+L(" を つかえたね！"," を使えたね！")); prevUsed[o.w]=u; });
+  var todaySet={}; tw.forEach(function(o){ todaySet[o.w]=1; });
+  var extra=found.filter(function(m){ return !todaySet[m.w]; });
+  $("bonusWrap").classList.toggle("hidden", !extra.length);
+  $("bonus").innerHTML=extra.map(function(m){ return '<span class="chip '+CATS[m.c].cls+'">◆ '+esc(m.w)+(m.g!==st.grade?' <small>'+m.g+'年</small>':'')+'</span>'; }).join("");
+  save();
+}
+function toggleManual(c){
+  if (cur!=="today" || $("t-write").classList.contains("hidden")) return;
+  T.manual[c]=!T.manual[c]; save(); updateWrite(true);
+}
+$("paper").addEventListener("input", function(){ if (!timerId && T.elapsed<LIMIT && this.value.length) startTimer(); clearTimeout(updateWrite.t); updateWrite.t=setTimeout(function(){updateWrite(false);},250); });
+$("titleIn").addEventListener("input", function(){ T.title=this.value; save(); });
+
+function startTimer(){
+  if (timerId) return;
+  var last=Date.now();
+  timerId=setInterval(function(){
+    var now=Date.now(); T.elapsed+= (now-last)/1000; last=now;
+    if (T.elapsed>=LIMIT){ T.elapsed=LIMIT; pauseTimer(); chime(); }
+    drawTimer(); save();
+  },500);
+}
+function pauseTimer(){ if (timerId){ clearInterval(timerId); timerId=null; } }
+function drawTimer(){
+  if (!T) return;
+  var left=Math.max(0, Math.ceil(LIMIT-T.elapsed));
+  $("timer").textContent = left? Math.floor(left/60)+":"+("0"+left%60).slice(-2) : L("おわり！","10分！");
+  $("timer").classList.toggle("done", !left);
+  $("timerBar").style.width = Math.min(100, T.elapsed/LIMIT*100)+"%";
+  $("timeMsg").innerHTML = left? "" : '<div class="msg good">'+L("10ぷん たったよ！ つづけて かいても いいよ。おわったら「作家ノートに しまう」を おそう。","10分たったよ！ 続けて書いてもOK。終わったら「作家ノートにしまう」を押そう。")+'</div>';
+}
+function chime(){
+  try{ var a=new (window.AudioContext||window.webkitAudioContext)(); [660,880].forEach(function(f,i){ var o=a.createOscillator(), g=a.createGain(); o.frequency.value=f; o.connect(g); g.connect(a.destination);
+    g.gain.setValueAtTime(.0001,a.currentTime+i*.25); g.gain.exponentialRampToValueAtTime(.2,a.currentTime+i*.25+.02); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+i*.25+.6);
+    o.start(a.currentTime+i*.25); o.stop(a.currentTime+i*.25+.65); }); }catch(e){}
+}
+
+var lastSavedId=null;
+function finishToday(){
+  updateWrite(true);
+  var text=T.text.trim();
+  if (!text){ toast(L("まだ なにも かいて いないよ","まだ何も書いていないよ")); return; }
+  pauseTimer();
+  var found=findWords(text), tw=todayWords(), usedList=[];
+  found.forEach(function(m){ usedList.push(m.w); });
+  tw.forEach(function(o){ if (T.manual[o.c] && usedList.indexOf(o.w)<0) usedList.push(o.w); });
+  usedList.forEach(function(w){ st.used[w]=(st.used[w]||0)+1; });
+  var e={id:"e"+Date.now(), day:T.day, date:new Date().toISOString(), grade:st.grade, title:T.title.trim(), text:T.text,
+    words:tw.map(function(o){return o.w;}), used:usedList, lesson:lessons()[T.lesson].t, published:false, minutes:Math.round(T.elapsed/60)};
+  st.entries.unshift(e); lastSavedId=e.id;
+  st.lessonIdx = (T.lesson+1) % lessons().length;
+  T.finished=true; save();
+  $("doneHead").textContent=L("よく かけたね！","よく書けたね！");
+  $("doneChars").textContent=text.replace(/\s/g,"").length;
+  var catOf={}; tw.forEach(function(o){ catOf[o.w]=o.c; }); found.forEach(function(m){ catOf[m.w]=m.c; });
+  $("doneWords").innerHTML = usedList.length ? usedList.map(function(w){ return '<span class="chip '+CATS[catOf[w]||"k"].cls+'">◆ '+esc(w)+'</span>'; }).join("")
+    : '<span class="sub">'+L("つぎは きょうの ことばも つかって みよう","次は今日の言葉も使ってみよう")+'</span>';
+  $("doneNote").textContent=L("つぎの レッスンは「"+lessons()[st.lessonIdx].t+"」だよ。","次のレッスンは「"+lessons()[st.lessonIdx].t+"」。");
+  todayStep(4);
+}
+
+/* ============================================================
+   作家ノート
+   ============================================================ */
+function fmtDate(iso){ var d=new Date(iso); return (d.getMonth()+1)+"/"+d.getDate(); }
+function renderNote(){
+  if (!st.entries.length){ $("noteList").innerHTML='<div class="card sub">'+L("まだ なにも ないよ。きょうの 作家の時間で かいて みよう！","まだ何もありません。今日の作家の時間で書いてみよう！")+'</div>'; return; }
+  $("noteList").innerHTML = st.entries.map(function(e){
+    var first=(e.text||"").trim().split("\n")[0];
+    return '<button class="entry" onclick="openEntry(\''+e.id+'\')"><div class="t">'+esc(e.title||L("（だいめい なし）","（題名なし）"))+(e.published?'<span class="pubBadge">出版</span>':'')+'</div>'+
+      '<div class="p">'+esc(first)+'</div><div class="m">'+fmtDate(e.date)+'・'+(e.text||"").replace(/\s/g,"").length+L("もじ","文字")+(e.used&&e.used.length?'・◆'+e.used.length:"")+'</div></button>';
+  }).join("");
+}
+var curEntryId=null;
+function getEntry(id){ for (var i=0;i<st.entries.length;i++) if (st.entries[i].id===id) return st.entries[i]; return null; }
+function openEntry(id){
+  var e=getEntry(id); if (!e) return; curEntryId=id; go("entry");
+  $("eMeta").textContent=fmtDate(e.date)+"　"+L("きょうの ことば：","今日の言葉：")+(e.words||[]).join("・")+"　／　"+(e.lesson||"");
+  $("eTitle").value=e.title||""; $("eText").value=e.text||""; refreshEntry();
+}
+function refreshEntry(){
+  var t=$("eText").value; $("eCount").textContent=t.replace(/\s/g,"").length;
+  var found=findWords(t, getEntry(curEntryId).grade);
+  $("eWords").innerHTML=found.map(function(m){ return '<span class="chip '+CATS[m.c].cls+'">◆ '+esc(m.w)+'</span>'; }).join("");
+}
+$("eText").addEventListener("input", function(){ clearTimeout(refreshEntry.t); refreshEntry.t=setTimeout(function(){ refreshEntry(); saveEntry(); },300); });
+$("eTitle").addEventListener("input", saveEntry);
+function saveEntry(){
+  var e=getEntry(curEntryId); if (!e) return;
+  var before=findWords(e.text, e.grade).map(function(m){return m.w;});
+  e.title=$("eTitle").value; e.text=$("eText").value;
+  findWords(e.text, e.grade).forEach(function(m){ if (before.indexOf(m.w)<0){ st.used[m.w]=(st.used[m.w]||0)+1; if ((e.used||[]).indexOf(m.w)<0) (e.used=e.used||[]).push(m.w); } });
+  save();
+}
+function deleteEntry(){
+  if (!confirm(L("ほんとうに けしますか？","本当に消しますか？"))) return;
+  st.entries=st.entries.filter(function(e){return e.id!==curEntryId;}); save(); go("note");
+}
+function downloadTxt(){
+  saveEntry(); var e=getEntry(curEntryId);
+  var blob=new Blob([(e.title?e.title+"\n"+(st.name?"作・"+st.name+"\n":"")+"\n":"")+e.text],{type:"text/plain"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=(e.title||"作品")+".txt"; a.click();
+}
+
+/* ---- 作家先生 ---- */
+function showStage(id){
+  saveEntry(); var e=getEntry(id); if (!e) return;
+  $("stT").textContent=e.title||""; $("stA").textContent=st.name? "作・"+st.name : "";
+  var html=esc(e.text);
+  findWords(e.text, e.grade).forEach(function(m){ html=html.replace(new RegExp(m.re.source,"g"), function(x){ return '<mark class="hl '+CATS[m.c].cls+'">'+x+'</mark>'; }); });
+  $("stB").innerHTML=html; $("stage").classList.remove("hidden");
+}
+function hideStage(){ $("stage").classList.add("hidden"); }
+
+/* ============================================================
+   出版（5しゅるいの げんこう用紙）
+   ============================================================ */
+var PTYPES=[
+  {id:"ehon", n:"絵本型", d:"横・絵2"},
+  {id:"y1", n:"横書き", d:"絵1"},
+  {id:"y0", n:"横書き", d:"絵なし"},
+  {id:"t1", n:"縦書き", d:"絵1"},
+  {id:"t0", n:"縦書き", d:"絵なし"}
+];
+var ptype="ehon";
+function typeIcon(id){
+  var v=id[0]==="t", pics=id==="ehon"?2:(id.slice(-1)==="1"?1:0), s='<svg width="44" height="54" viewBox="0 0 44 54"><rect x="1" y="1" width="42" height="52" rx="3" fill="none" stroke="currentColor" stroke-opacity=".4"/>';
+  if (id==="ehon"){ s+='<rect x="6" y="6" width="32" height="18" rx="2" fill="currentColor" fill-opacity=".15"/>'; for (var i=0;i<3;i++) s+='<line x1="6" x2="38" y1="'+(30+i*6)+'" y2="'+(30+i*6)+'" stroke="currentColor" stroke-opacity=".5"/>'; }
+  else if (!v){ var y=6; if (pics){ s+='<rect x="6" y="6" width="32" height="14" rx="2" fill="currentColor" fill-opacity=".15"/>'; y=26; } for (;y<48;y+=6) s+='<line x1="6" x2="38" y1="'+y+'" y2="'+y+'" stroke="currentColor" stroke-opacity=".5"/>'; }
+  else { var x=37; if (pics){ s+='<rect x="24" y="6" width="14" height="42" rx="2" fill="currentColor" fill-opacity=".15"/>'; x=19; } for (;x>5;x-=6) s+='<line x1="'+x+'" x2="'+x+'" y1="6" y2="48" stroke="currentColor" stroke-opacity=".5"/>'; }
+  return s+'</svg>';
+}
+function goPublish(){ saveEntry(); go("publish"); renderPublish(); }
+function renderPublish(){
+  $("types").innerHTML=PTYPES.map(function(p){ return '<button class="'+(p.id===ptype?"on":"")+'" onclick="ptype=\''+p.id+'\';renderPublish()">'+typeIcon(p.id)+p.n+'<br><span class="sub">'+p.d+'</span></button>'; }).join("");
+  var e=getEntry(curEntryId), title=esc(e.title||""), au=st.name? "作・"+esc(st.name) : "";
+  var paras=(e.text||"").split(/\n+/).map(function(s){return s.trim();}).filter(Boolean);
+  var book=$("book"); book.className = ptype[0]==="t" ? "vert" : (ptype==="ehon"?"ehon":"");
+  var pic='<div class="pic">'+L("ここに えを かこう","ここに絵をかこう")+'</div>', h="";
+  if (ptype==="ehon"){
+    // 文を1ページ約90字ずつに分け、ページごとに絵の枠
+    var pages=[], buf="";
+    paras.forEach(function(p){ if (buf && (buf+p).length>90){ pages.push(buf); buf=""; } buf+= (buf?"\n":"")+p; });
+    if (buf) pages.push(buf);
+    h+='<div class="pg"><div class="ttl">'+title+'</div><div class="au">'+au+'</div>'+pic+'</div>';
+    pages.forEach(function(p,i){ h+='<div class="pg">'+pic+p.split("\n").map(function(x){return '<p>'+esc(x)+'</p>';}).join("")+'<div class="no">'+(i+1)+'</div></div>'; });
+  } else {
+    // 縦書きは1ページ約300字ずつに分ける（印刷ではみ出さないように）
+    var chunks=[paras], first=true;
+    if (ptype[0]==="t"){ chunks=[]; var cur=[], n=0; paras.forEach(function(p){ if (cur.length && n+p.length>300){ chunks.push(cur); cur=[]; n=0; } cur.push(p); n+=p.length; }); if (cur.length) chunks.push(cur); if (!chunks.length) chunks=[[]]; }
+    chunks.forEach(function(ch,i){
+      h+='<div class="pg">'+(i===0?'<div class="ttl">'+title+'</div><div class="au">'+au+'</div>'+(ptype.slice(-1)==="1"?pic:""):"")+
+        ch.map(function(x){return '<p>'+esc(x)+'</p>';}).join("")+(chunks.length>1?'<div class="no">'+(i+1)+'</div>':"")+'</div>';
+    });
+  }
+  book.innerHTML=h;
+}
+function markPublished(){ var e=getEntry(curEntryId); e.published=true; save(); toast(L("しゅっぱん した よ！ ⭐","出版しました ⭐")); }
+
+/* ============================================================
+   言葉の宝箱
+   ============================================================ */
+var boxG=0, boxC="h";
+function renderBox(){
+  if (!boxG) boxG=st.grade;
+  var gh=""; for (var g=1; g<=6; g++) gh+='<button class="'+(g===boxG?"on":"")+'" onclick="boxG='+g+';renderBox()">'+g+'年</button>';
+  $("boxGrade").innerHTML=gh;
+  $("boxCat").innerHTML=["h","m","k"].map(function(c){ return '<button class="'+(c===boxC?"on":"")+'" onclick="boxC=\''+c+'\';renderBox()">'+CATS[c].short+'</button>'; }).join("");
+  var list=BOX[boxG][boxC], got=list.filter(function(w){return st.used[w];}).length;
+  $("boxProgTxt").textContent=(boxG<=2?CATS[boxC].low:CATS[boxC].high)+"　◆ "+got+" / "+list.length;
+  $("boxProg").style.width=(got/list.length*100)+"%"; $("boxProg").style.background="var(--"+CATS[boxC].cls+")";
+  $("boxList").innerHTML=list.map(function(w){ var n=st.used[w]; return '<span class="chip '+(n?CATS[boxC].cls:"off")+'">'+(n?"◆":"◇")+" "+esc(w)+(n>1?' <small>×'+n+'</small>':'')+'</span>'; }).join("");
+}
+
+/* ---- レッスン一覧 ---- */
+function renderLessons(){
+  $("allLessons").innerHTML=lessons().map(function(ls,i){ return '<button onclick="viewLesson('+i+')">'+(i+1)+'. '+esc(ls.t)+'</button>'; }).join("");
+  $("lessonView").classList.add("hidden");
+}
+function viewLesson(i){ var el=$("lessonView"); el.classList.remove("hidden"); renderLessonCard(el, lessons()[i], i); el.scrollIntoView({behavior:"smooth"}); }
+
+/* ---- バックアップ ---- */
+function exportData(){
+  var blob=new Blob([JSON.stringify(st,null,1)],{type:"application/json"}), a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="sakka-no-jikan-"+todayKey()+".json"; a.click();
+}
+function importData(inp){
+  var f=inp.files[0]; if (!f) return; var r=new FileReader();
+  r.onload=function(){ try{ var d=JSON.parse(r.result); if (!d.entries) throw 0; if (!confirm("いまのデータを、このファイルの中身に入れかえますか？")) return; localStorage.setItem(LS, JSON.stringify(d)); st=load(); toast("読みこみました"); go("home"); }catch(e){ toast("読みこめませんでした"); } };
+  r.readAsText(f);
+}
+function wipeData(){ if (!confirm("書いたものも、あつめた言葉も、ぜんぶ消えます。いいですか？")) return; try{ localStorage.removeItem(LS); }catch(e){} st=load(); go("setup"); }
+
+/* ---- start ---- */
+go(st.grade ? "home" : "setup");
+</script>
+</body>
+</html>
