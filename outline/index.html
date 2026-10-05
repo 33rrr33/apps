@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>アウトラインメーカー</title>
+<meta name="description" content="画像やPDFを読み込むと自動でアウトライン（ベクターパス）を作成。ノードを修正してSVGで書き出し、Illustratorで開けます。">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c96f3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="アウトライン">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{
+    --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
+    --accent:#c96f3f;--accent-soft:#fbeee4;--shadow:0 2px 12px rgba(90,70,40,.08);
+    --stage:#e9e5de;--stage2:#f4f1ec;--sel:#1e88e5;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;
+    --accent:#e0895a;--accent-soft:#3a2f26;--shadow:0 2px 14px rgba(0,0,0,.35);
+    --stage:#3a352e;--stage2:#45403a;--sel:#64b5f6;
+  }}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5;-webkit-text-size-adjust:100%;
+    display:flex;flex-direction:column;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  button,input,select{font-family:inherit;color:inherit;font-size:inherit}
+  .hidden{display:none!important}
+
+  header{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:1.1rem;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .back{text-decoration:none;color:inherit;font-weight:700;border-radius:10px;padding:6px 10px;background:var(--bg)}
+
+  .btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 12px;
+    font-weight:700;cursor:pointer;white-space:nowrap;line-height:1.2}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn:disabled{opacity:.4;cursor:default;transform:none}
+  .btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+  .app{flex:1;display:flex;min-height:0}
+  aside{width:300px;flex:none;overflow-y:auto;padding:14px 16px 24px;border-right:1px solid var(--line);background:var(--panel)}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+
+  aside h2{font-size:.85rem;color:var(--sub);margin:16px 0 8px;letter-spacing:.05em}
+  aside h2:first-child{margin-top:0}
+  .drop{border:2px dashed var(--line);border-radius:14px;padding:14px;text-align:center;cursor:pointer;font-size:.9rem;color:var(--sub)}
+  .drop b{color:var(--ink)}
+  .drop.over{border-color:var(--accent);background:var(--accent-soft)}
+  .fileinfo{font-size:.8rem;color:var(--sub);margin-top:6px;word-break:break-all}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg label{flex:1;text-align:center;padding:7px 4px;cursor:pointer;font-weight:700;font-size:.9rem}
+  .seg input{display:none}
+  .seg label:has(input:checked){background:var(--accent);color:#fff}
+  .field{margin:12px 0}
+  .field .lab{display:flex;justify-content:space-between;font-size:.85rem;font-weight:700}
+  .field .lab span{color:var(--sub);font-weight:400}
+  .field .hint{font-size:.72rem;color:var(--sub)}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .check{display:flex;align-items:center;gap:8px;font-size:.88rem;margin:8px 0;cursor:pointer}
+  .check input{width:18px;height:18px;accent-color:var(--accent)}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  select{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 8px}
+  .help{font-size:.78rem;color:var(--sub);background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:18px}
+  .help b{color:var(--ink)}
+  .help kbd{font-family:inherit;border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--panel);font-size:.72rem}
+
+  .toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .toolbar .sep{width:1px;height:24px;background:var(--line);margin:0 2px}
+  .toolbar .btn{padding:7px 10px;font-size:.85rem}
+  .colorbtn{display:inline-flex;align-items:center;gap:6px}
+  .colorbtn input{width:28px;height:24px;border:none;padding:0;background:none;cursor:pointer}
+  .stage{flex:1;position:relative;overflow:hidden;min-height:260px;touch-action:none;
+    background-color:var(--stage);
+    background-image:linear-gradient(45deg,var(--stage2) 25%,transparent 25%,transparent 75%,var(--stage2) 75%),
+      linear-gradient(45deg,var(--stage2) 25%,transparent 25%,transparent 75%,var(--stage2) 75%);
+    background-size:20px 20px;background-position:0 0,10px 10px}
+  .stage svg{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-select:none}
+  .stage.t-hand{cursor:grab}
+  .stage.panning{cursor:grabbing}
+  #art path{cursor:pointer}
+  #art.outline path{fill:none!important;stroke:#222;stroke-width:1px;vector-effect:non-scaling-stroke;pointer-events:all}
+  .paper{fill:#fff}
+  .ov-sel{fill:none;stroke:var(--sel);stroke-width:2px;vector-effect:non-scaling-stroke;pointer-events:none}
+  .ov-path{fill:none;stroke:var(--sel);stroke-width:1px;vector-effect:non-scaling-stroke;pointer-events:none}
+  .anchor{fill:#fff;stroke:var(--sel);stroke-width:1.2px;vector-effect:non-scaling-stroke;cursor:move}
+  .anchor.on{fill:var(--sel)}
+  .ctrl{fill:var(--sel);stroke:#fff;stroke-width:1px;vector-effect:non-scaling-stroke;cursor:move}
+  .hline{stroke:var(--sel);stroke-width:1px;vector-effect:non-scaling-stroke;pointer-events:none}
+  .marquee{fill:rgba(30,136,229,.08);stroke:var(--sel);stroke-dasharray:4 3;stroke-width:1px;vector-effect:non-scaling-stroke;pointer-events:none}
+
+  .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px}
+  .empty .box{background:var(--panel);border-radius:20px;box-shadow:var(--shadow);padding:26px 22px;text-align:center;max-width:420px}
+  .empty .big{font-size:2.6rem;line-height:1}
+  .empty p{margin:10px 0;color:var(--sub);font-size:.9rem}
+  .busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18);font-weight:700}
+  .busy span{background:var(--panel);padding:12px 20px;border-radius:14px;box-shadow:var(--shadow)}
+  .status{display:flex;gap:14px;flex-wrap:wrap;padding:6px 12px;font-size:.78rem;color:var(--sub);border-top:1px solid var(--line);background:var(--panel)}
+  .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);
+    background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.88rem;
+    opacity:0;pointer-events:none;transition:opacity .2s;z-index:10;max-width:calc(100% - 32px)}
+  .toast.show{opacity:.95}
+
+  /* タブレット縦・スマホ：縦に並べる */
+  @media (max-width:860px){
+    .app{flex-direction:column}
+    aside{width:auto;border-right:none;border-top:1px solid var(--line);order:2;flex:none;overflow:visible}
+    .main{order:1;flex:none;height:68dvh}
+    .toolbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .toolbar>*{flex:none}
+    body{display:block}
+    .app{display:flex}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../">←</a>
+  <h1>✒️ アウトラインメーカー</h1>
+  <button class="btn primary" id="btnExport" disabled>SVGで保存</button>
+</header>
+
+<div class="app">
+  <aside>
+    <h2>① 読み込み</h2>
+    <div class="drop" id="drop"><b>画像・PDFを選ぶ</b><br>またはドロップ／貼り付け</div>
+    <input type="file" id="file" accept="image/*,application/pdf,.pdf" hidden>
+    <div class="fileinfo" id="fileinfo"></div>
+    <div class="field hidden" id="pdfRow">
+      <div class="row"><span style="font-size:.85rem;font-weight:700">PDFのページ</span><select id="pdfPage"></select></div>
+    </div>
+
+    <h2>② アウトライン化の設定</h2>
+    <div class="seg">
+      <label><input type="radio" name="mode" value="mono" checked>白黒</label>
+      <label><input type="radio" name="mode" value="color">カラー</label>
+    </div>
+
+    <div class="field" id="fThr">
+      <div class="lab">しきい値 <span id="vThr"></span></div>
+      <input type="range" id="thr" min="1" max="254" value="128">
+      <div class="row" style="justify-content:space-between">
+        <span class="hint">右にするほど黒い部分が増える</span>
+        <button class="btn" id="btnAuto" style="padding:3px 8px;font-size:.75rem">自動</button>
+      </div>
+      <label class="check"><input type="checkbox" id="inv">白黒を反転</label>
+    </div>
+
+    <div class="field hidden" id="fColors">
+      <div class="lab">色数 <span id="vColors"></span></div>
+      <input type="range" id="colors" min="2" max="16" value="6">
+    </div>
+
+    <div class="field">
+      <div class="lab">精度 <span id="vDetail"></span></div>
+      <input type="range" id="detail" min="1" max="5" value="2">
+      <div class="hint">左＝ノード少なめ・なめらか ／ 右＝形に忠実・ノード多め</div>
+    </div>
+
+    <div class="field">
+      <div class="lab">ゴミ除去 <span id="vOmit"></span></div>
+      <input type="range" id="omit" min="0" max="80" value="8">
+      <div class="hint">小さな点やノイズを取りのぞきます</div>
+    </div>
+
+    <div class="field">
+      <div class="lab">ぼかし（ギザギザ軽減） <span id="vBlur"></span></div>
+      <input type="range" id="blur" min="0" max="6" value="1">
+    </div>
+
+    <div class="field">
+      <div class="lab">解像度 <span id="vRes"></span></div>
+      <input type="range" id="res" min="400" max="2400" step="100" value="1200">
+      <div class="hint">大きいほど細かく取れますが、時間がかかります</div>
+    </div>
+
+    <label class="check"><input type="checkbox" id="nobg" checked>背景（白・背景色）を除く</label>
+
+    <button class="btn" id="btnRetrace" style="width:100%;margin-top:6px" disabled>この設定で作り直す</button>
+
+    <div class="help">
+      <b>③ 修正のしかた</b><br>
+      <b>選択</b>：パスをクリックで選択（<kbd>Shift</kbd>で追加）、ドラッグで移動、何もない所をドラッグで範囲選択。色の変更・削除ができます。<br>
+      <b>ノード</b>：パスをクリックすると点（ノード）が出ます。点をドラッグで変形、ダブルクリックで点を追加、<kbd>Delete</kbd>で点を削除。<br>
+      <b>表示</b>：ホイール／2本指で移動、<kbd>Ctrl</kbd>+ホイール／ピンチで拡大。<kbd>Space</kbd>を押しながらドラッグでも移動。<br>
+      <b>ショートカット</b>：<kbd>V</kbd>選択 <kbd>A</kbd>ノード <kbd>H</kbd>手のひら <kbd>Ctrl+Z</kbd>元に戻す <kbd>Ctrl+Y</kbd>アウトライン表示<br><br>
+      保存した <b>SVG</b> は Illustrator の「ファイル → 開く」でそのまま開け、パスとして編集できます。
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="toolbar">
+      <button class="btn on" data-tool="select" title="選択 (V)">⬉ 選択</button>
+      <button class="btn" data-tool="node" title="ノード編集 (A)">◇ ノード</button>
+      <button class="btn" data-tool="hand" title="手のひら (H)">✋</button>
+      <span class="sep"></span>
+      <button class="btn" id="btnUndo" title="元に戻す (Ctrl+Z)" disabled>↶</button>
+      <button class="btn" id="btnRedo" title="やり直し (Ctrl+Shift+Z)" disabled>↷</button>
+      <span class="sep"></span>
+      <span class="ctx-select row" style="gap:6px">
+        <label class="btn colorbtn" title="選んだパスの色">塗り<input type="color" id="fill" value="#000000"></label>
+        <button class="btn" id="btnSameColor" title="同じ色のパスをすべて選択">同じ色を選択</button>
+        <button class="btn" id="btnFront" title="最前面へ">前面へ</button>
+        <button class="btn" id="btnDelete" title="削除 (Delete)">🗑 削除</button>
+      </span>
+      <span class="ctx-node row hidden" style="gap:6px">
+        <button class="btn" id="btnCurve" title="選んだ点の前の線を 直線⇔曲線 に切り替え">直線⇔曲線</button>
+        <button class="btn" id="btnDelNode" title="選んだ点を削除 (Delete)">点を削除</button>
+      </span>
+      <span class="sep"></span>
+      <button class="btn" id="btnZoomOut" title="縮小">－</button>
+      <button class="btn" id="btnFit" title="全体を表示">全体</button>
+      <button class="btn" id="btnZoomIn" title="拡大">＋</button>
+      <span class="sep"></span>
+      <button class="btn" id="btnOutline" title="線だけで表示 (Ctrl+Y)">アウトライン表示</button>
+      <label class="btn colorbtn" title="元画像を下に表示">元画像
+        <input type="range" id="under" min="0" max="100" value="0" style="width:70px;accent-color:var(--accent)">
+      </label>
+    </div>
+    <div class="stage t-select" id="stage">
+      <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+        <g id="world">
+          <rect class="paper" id="paper" x="0" y="0" width="0" height="0"/>
+          <image id="under-img" x="0" y="0" opacity="0" preserveAspectRatio="none" style="pointer-events:none"/>
+          <g id="art"></g>
+          <g id="overlay"></g>
+        </g>
+      </svg>
+      <div class="empty" id="empty">
+        <div class="box">
+          <div class="big">✒️</div>
+          <p>画像（JPG・PNG など）や PDF を読み込むと、<br>自動でアウトライン（パス）を作ります。</p>
+          <div class="row" style="justify-content:center">
+            <button class="btn primary" id="btnOpen">ファイルを選ぶ</button>
+            <button class="btn" id="btnSample">サンプルで試す</button>
+          </div>
+        </div>
+      </div>
+      <div class="busy hidden" id="busy"><span id="busyMsg">アウトライン化しています…</span></div>
+    </div>
+    <div class="status" id="status"><span>ファイルを読み込んでください</span></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="imagetracer.js"></script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const SVGNS = 'http://www.w3.org/2000/svg';
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+
+const st = {
+  src: null,          // 元画像（canvas）
+  name: 'outline',
+  W: 0, H: 0,         // トレース座標系の大きさ
+  shapes: [],         // [{fill:'#000000', subs:[[{x,y,cx?,cy?}, ...], ...]}]
+  sel: new Set(),     // 選択中のパス番号
+  nodeShape: -1,      // ノード編集中のパス
+  selNodes: new Set(),// "サブパス:点" のキー
+  tool: 'select',
+  view: { x: 0, y: 0, s: 1 },
+  undo: [], redo: [],
+  edited: false,      // トレース後に手で修正したか
+  pdf: null,
+};
+
+/* ---------- 小物 ---------- */
+let toastTimer;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+function busy(on, msg){
+  $('#busyMsg').textContent = msg || 'アウトライン化しています…';
+  $('#busy').classList.toggle('hidden', !on);
+}
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+const r2 = v => Math.round(v * 100) / 100;
+const hex = c => '#' + [c.r, c.g, c.b].map(v => Math.max(0, Math.min(255, v | 0)).toString(16).padStart(2, '0')).join('');
+
+/* ---------- 読み込み ---------- */
+$('#drop').onclick = $('#btnOpen').onclick = () => $('#file').click();
+$('#file').onchange = e => { const f = e.target.files[0]; if (f) loadFile(f); e.target.value = ''; };
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+document.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) loadFile(f); });
+document.addEventListener('paste', e => {
+  const it = [...(e.clipboardData || {}).items || []].find(i => i.type.startsWith('image/'));
+  if (it) loadFile(it.getAsFile());
+});
+
+async function loadFile(f){
+  st.name = (f.name || 'image').replace(/\.[^.]+$/, '') || 'image';
+  $('#fileinfo').textContent = f.name || '貼り付けた画像';
+  try {
+    if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '')) {
+      busy(true, 'PDFを読み込んでいます…'); await nextFrame();
+      await loadPdf(f);
+    } else {
+      $('#pdfRow').classList.add('hidden'); st.pdf = null;
+      const img = await loadImage(f);
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      setSource(c);
+    }
+  } catch (err) {
+    console.error(err); busy(false);
+    toast('読み込めませんでした：' + (err.message || err));
+  }
+}
+function loadImage(f){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(f), img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('この画像形式は開けません')); };
+    img.src = url;
+  });
+}
+function loadScript(src){
+  return new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src;
+    s.onload = res; s.onerror = () => rej(new Error('PDF読み込み機能を取得できません（ネット接続を確認）'));
+    document.head.appendChild(s);
+  });
+}
+async function loadPdf(f){
+  if (!window.pdfjsLib) {
+    await loadScript(PDFJS + 'pdf.min.js');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
+  }
+  const buf = await f.arrayBuffer();
+  st.pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const sel = $('#pdfPage'); sel.innerHTML = '';
+  for (let i = 1; i <= st.pdf.numPages; i++) sel.add(new Option(i + ' / ' + st.pdf.numPages, i));
+  $('#pdfRow').classList.toggle('hidden', st.pdf.numPages < 2);
+  await renderPdfPage(1);
+}
+async function renderPdfPage(n){
+  busy(true, 'PDFを読み込んでいます…'); await nextFrame();
+  const page = await st.pdf.getPage(n);
+  const v1 = page.getViewport({ scale: 1 });
+  const scale = Math.min(4, 2400 / Math.max(v1.width, v1.height));
+  const vp = page.getViewport({ scale });
+  const c = document.createElement('canvas');
+  c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  setSource(c);
+}
+$('#pdfPage').onchange = e => renderPdfPage(+e.target.value);
+
+$('#btnSample').onclick = () => {
+  const c = document.createElement('canvas'); c.width = 900; c.height = 600;
+  const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, 900, 600);
+  x.fillStyle = '#111';
+  x.font = 'bold 300px "Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif';
+  x.textBaseline = 'middle'; x.fillText('あ', 40, 300);
+  // 星
+  x.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? 70 : 160, a = -Math.PI / 2 + i * Math.PI / 5;
+    x.lineTo(560 + r * Math.cos(a), 220 + r * Math.sin(a));
+  }
+  x.closePath(); x.fillStyle = '#e0a020'; x.fill();
+  // ドーナツ
+  x.beginPath(); x.arc(700, 450, 110, 0, Math.PI * 2); x.arc(700, 450, 55, 0, Math.PI * 2, true);
+  x.fillStyle = '#2f6fbf'; x.fill();
+  x.font = 'bold 56px sans-serif'; x.fillStyle = '#c0392b'; x.fillText('OUTLINE', 360, 520);
+  st.name = 'sample'; $('#fileinfo').textContent = 'サンプル画像';
+  $('#pdfRow').classList.add('hidden'); st.pdf = null;
+  setRadio('color'); $('#colors').value = 5; syncLabels();
+  setSource(c);
+};
+
+function setSource(c){
+  st.src = c;
+  st.edited = false; st.undo = []; st.redo = []; st.shapes = [];
+  autoThreshold();
+  trace({ fit: true });
+}
+
+/* ---------- 設定 ---------- */
+function setRadio(v){ $$('input[name=mode]').forEach(r => r.checked = r.value === v); }
+function settings(){
+  return {
+    mode: $('input[name=mode]:checked').value,
+    thr: +$('#thr').value, inv: $('#inv').checked,
+    colors: +$('#colors').value,
+    detail: +$('#detail').value,
+    omit: +$('#omit').value,
+    blur: +$('#blur').value,
+    res: +$('#res').value,
+    nobg: $('#nobg').checked,
+  };
+}
+function syncLabels(){
+  const s = settings();
+  $('#vThr').textContent = s.thr;
+  $('#vColors').textContent = s.colors + '色';
+  $('#vDetail').textContent = ['ざっくり', 'なめらか', 'ふつう', 'こまかい', 'とてもこまかい'][s.detail - 1];
+  $('#vOmit').textContent = s.omit;
+  $('#vBlur').textContent = s.blur ? s.blur : 'なし';
+  $('#vRes').textContent = s.res + 'px';
+  $('#fThr').classList.toggle('hidden', s.mode !== 'mono');
+  $('#fColors').classList.toggle('hidden', s.mode !== 'color');
+}
+let retraceTimer;
+$$('aside input').forEach(el => {
+  if (el.id === 'file') return;
+  el.addEventListener('input', () => {
+    syncLabels();
+    if (!st.src) return;
+    clearTimeout(retraceTimer);
+    // 手で修正した後は自動で作り直さない（ボタンで作り直す）
+    if (st.edited) { $('#btnRetrace').classList.add('primary'); return; }
+    retraceTimer = setTimeout(() => trace(), el.type === 'range' ? 350 : 0);
+  });
+});
+$('#btnRetrace').onclick = () => trace();
+$('#btnAuto').onclick = () => { autoThreshold(); $('#thr').dispatchEvent(new Event('input')); };
+syncLabels();
+
+/* ---------- 画像処理 ---------- */
+function scaledImageData(){
+  const s = settings();
+  const k = Math.min(1, s.res / Math.max(st.src.width, st.src.height));
+  const w = Math.max(1, Math.round(st.src.width * k)), h = Math.max(1, Math.round(st.src.height * k));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+  x.imageSmoothingQuality = 'high';
+  x.drawImage(st.src, 0, 0, w, h);
+  return { canvas: c, data: x.getImageData(0, 0, w, h) };
+}
+function autoThreshold(){ // 大津の方法
+  const { data } = scaledImageData(), d = data.data, hist = new Array(256).fill(0);
+  for (let i = 0; i < d.length; i += 4) hist[(d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0]++;
+  const total = d.length / 4; let sum = 0;
+  for (let i = 0; i < 256; i++) sum += i * hist[i];
+  let sumB = 0, wB = 0, best = 0, thr = 128;
+  for (let t = 0; t < 256; t++) {
+    wB += hist[t]; if (!wB) continue;
+    const wF = total - wB; if (!wF) break;
+    sumB += t * hist[t];
+    const mB = sumB / wB, mF = (sum - sumB) / wF, between = wB * wF * (mB - mF) ** 2;
+    if (between > best) { best = between; thr = t; }
+  }
+  $('#thr').value = Math.max(1, Math.min(254, thr + 1)); syncLabels();
+}
+function boxBlur(d, w, h, r){
+  const n = 2 * r + 1, tmp = new Float32Array(w * h * 3), out = d;
+  for (let y = 0; y < h; y++) for (let c = 0; c < 3; c++) {
+    let s = 0;
+    for (let x = -r; x <= r; x++) s += d[(y * w + Math.min(w - 1, Math.max(0, x))) * 4 + c];
+    for (let x = 0; x < w; x++) {
+      tmp[(y * w + x) * 3 + c] = s / n;
+      s += d[(y * w + Math.min(w - 1, x + r + 1)) * 4 + c] - d[(y * w + Math.max(0, x - r)) * 4 + c];
+    }
+  }
+  for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) {
+    let s = 0;
+    for (let y = -r; y <= r; y++) s += tmp[(Math.min(h - 1, Math.max(0, y)) * w + x) * 3 + c];
+    for (let y = 0; y < h; y++) {
+      out[(y * w + x) * 4 + c] = s / n;
+      s += tmp[(Math.min(h - 1, y + r + 1) * w + x) * 3 + c] - tmp[(Math.max(0, y - r) * w + x) * 3 + c];
+    }
+  }
+}
+// 色数ぶんの代表色を決める（遠い色から順に選んで k-means で整える）
+function makePalette(d, k){
+  const step = Math.max(1, Math.floor(d.length / 4 / 30000)), px = [];
+  for (let i = 0; i < d.length; i += 4 * step) px.push([d[i], d[i + 1], d[i + 2]]);
+  const dist = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+  // 1色目は左上の色（たいてい背景色）
+  const cents = [px[0].slice()];
+  const md = px.map(p => dist(p, cents[0]));
+  while (cents.length < k) {
+    let bi = 0; for (let i = 1; i < px.length; i++) if (md[i] > md[bi]) bi = i;
+    if (md[bi] === 0) break;
+    cents.push(px[bi].slice());
+    for (let i = 0; i < px.length; i++) md[i] = Math.min(md[i], dist(px[i], cents[cents.length - 1]));
+  }
+  for (let it = 0; it < 8; it++) {
+    const acc = cents.map(() => [0, 0, 0, 0]);
+    for (const p of px) {
+      let bi = 0, bd = Infinity;
+      for (let j = 0; j < cents.length; j++) { const dd = dist(p, cents[j]); if (dd < bd) { bd = dd; bi = j; } }
+      const a = acc[bi]; a[0] += p[0]; a[1] += p[1]; a[2] += p[2]; a[3]++;
+    }
+    acc.forEach((a, j) => { if (a[3]) cents[j] = [a[0] / a[3], a[1] / a[3], a[2] / a[3], a[3]]; });
+  }
+  return cents.map(c => ({ r: Math.round(c[0]), g: Math.round(c[1]), b: Math.round(c[2]), a: 255, n: c[3] || 0 }));
+}
+// 輪郭のまわりにできる「2色の中間色」（アンチエイリアス）を色の候補から外す
+function pickPalette(d, k){
+  const cand = makePalette(d, k + 3), total = cand.reduce((s, c) => s + (c.n || 0), 0) || 1;
+  const isEdge = (c, ci) => {
+    if ((c.n || 0) / total > 0.06) return false;
+    for (let i = 0; i < cand.length; i++) for (let j = i + 1; j < cand.length; j++) {
+      if (i === ci || j === ci) continue;
+      const a = cand[i], b = cand[j];
+      if ((a.n || 0) < c.n || (b.n || 0) < c.n) continue;
+      const ab = [b.r - a.r, b.g - a.g, b.b - a.b], len = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2;
+      if (len < 60 ** 2) continue;
+      const t = ((c.r - a.r) * ab[0] + (c.g - a.g) * ab[1] + (c.b - a.b) * ab[2]) / len;
+      if (t < 0.12 || t > 0.88) continue;
+      const dd = (a.r + ab[0] * t - c.r) ** 2 + (a.g + ab[1] * t - c.g) ** 2 + (a.b + ab[2] * t - c.b) ** 2;
+      if (dd < 28 ** 2) return true;
+    }
+    return false;
+  };
+  const keep = cand.filter((c, i) => !isEdge(c, i)).sort((a, b) => (b.n || 0) - (a.n || 0)).slice(0, k);
+  return keep.map(c => ({ r: c.r, g: c.g, b: c.b, a: 255 }));
+}
+// 各ピクセルを代表色にそろえる。輪郭上のピクセルは、近くの「べた塗り部分」の色からだけ選ぶ
+function snapToPalette(d, w, h, pal){
+  const N = w * h, idx = new Uint8Array(N), flat = new Uint8Array(N);
+  const near = (i, set) => {
+    let bi = -1, bd = Infinity;
+    for (let j = 0; j < pal.length; j++) {
+      if (set && !set.has(j)) continue;
+      const p = pal[j], dd = (p.r - d[i * 4]) ** 2 + (p.g - d[i * 4 + 1]) ** 2 + (p.b - d[i * 4 + 2]) ** 2;
+      if (dd < bd) { bd = dd; bi = j; }
+    }
+    return bi;
+  };
+  for (let i = 0; i < N; i++) idx[i] = near(i);
+  const diff = (a, b) => Math.abs(d[a * 4] - d[b * 4]) + Math.abs(d[a * 4 + 1] - d[b * 4 + 1]) + Math.abs(d[a * 4 + 2] - d[b * 4 + 2]);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x;
+    let m = 0;
+    if (x > 0) m = Math.max(m, diff(i, i - 1));
+    if (x < w - 1) m = Math.max(m, diff(i, i + 1));
+    if (y > 0) m = Math.max(m, diff(i, i - w));
+    if (y < h - 1) m = Math.max(m, diff(i, i + w));
+    flat[i] = m < 36 ? 1 : 0;
+  }
+  const out = new Uint8Array(idx);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x;
+    if (flat[i]) continue;
+    for (let r = 2; r <= 4; r++) {
+      const set = new Set();
+      for (let yy = Math.max(0, y - r); yy <= Math.min(h - 1, y + r); yy++)
+        for (let xx = Math.max(0, x - r); xx <= Math.min(w - 1, x + r); xx++) {
+          const j = yy * w + xx; if (flat[j]) set.add(idx[j]);
+        }
+      if (set.size) { out[i] = near(i, set); break; }
+    }
+  }
+  for (let i = 0; i < N; i++) { const p = pal[out[i]]; d[i * 4] = p.r; d[i * 4 + 1] = p.g; d[i * 4 + 2] = p.b; d[i * 4 + 3] = 255; }
+}
+function nearest(pal, r, g, b){
+  let bi = 0, bd = Infinity;
+  pal.forEach((p, j) => { const dd = Math.abs(p.r - r) + Math.abs(p.g - g) + Math.abs(p.b - b); if (dd < bd) { bd = dd; bi = j; } });
+  return bi;
+}
+
+/* ---------- トレース ---------- */
+async function trace(opt = {}){
+  if (!st.src) return;
+  busy(true); await nextFrame();
+  try {
+    const s = settings();
+    const { canvas, data } = scaledImageData();
+    const w = data.width, h = data.height, d = data.data;
+    if (s.blur) { boxBlur(d, w, h, s.blur); boxBlur(d, w, h, s.blur); }
+    let pal, bgIndex = -1;
+    if (s.mode === 'mono') {
+      for (let i = 0; i < d.length; i += 4) {
+        const g = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+        const v = ((g < s.thr) !== s.inv) ? 0 : 255;
+        d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+      }
+      pal = [{ r: 0, g: 0, b: 0, a: 255 }, { r: 255, g: 255, b: 255, a: 255 }];
+      bgIndex = 1;
+    } else {
+      pal = pickPalette(d, s.colors);
+      // 背景色＝ふちで一番多い色
+      const cnt = new Array(pal.length).fill(0);
+      const add = (x, y) => { const i = (y * w + x) * 4; cnt[nearest(pal, d[i], d[i + 1], d[i + 2])]++; };
+      for (let x = 0; x < w; x++) { add(x, 0); add(x, h - 1); }
+      for (let y = 0; y < h; y++) { add(0, y); add(w - 1, y); }
+      bgIndex = cnt.indexOf(Math.max(...cnt));
+      snapToPalette(d, w, h, pal);
+    }
+    const lt = [4, 2, 1, 0.5, 0.25][s.detail - 1];
+    const td = ImageTracer.imagedataToTracedata(data, {
+      ltres: lt, qtres: lt, pathomit: s.omit, rightangleenhance: true,
+      pal: pal.map(p => ({ ...p })), colorquantcycles: 1,
+      mincolorratio: 0, blurradius: 0, layering: 0, roundcoords: 2,
+    });
+    const shapes = [];
+    td.layers.forEach((layer, li) => {
+      if (s.nobg && li === bgIndex) return;
+      const fill = hex(td.palette[li]);
+      layer.forEach(p => {
+        if (p.isholepath || !p.segments.length) return;
+        const subs = [toNodes(p.segments)];
+        p.holechildren.forEach(hi => { const hp = layer[hi]; if (hp && hp.segments.length) subs.push(toNodes(hp.segments)); });
+        shapes.push({ fill, subs: subs.filter(n => n.length >= 2) });
+      });
+    });
+    if (st.shapes.length) pushUndo();
+    const wasEdited = st.edited;
+    st.W = w; st.H = h;
+    st.shapes = shapes.filter(sh => sh.subs.length);
+    st.edited = false;
+    clearSel();
+    $('#paper').setAttribute('width', w); $('#paper').setAttribute('height', h);
+    const ui = $('#under-img');
+    ui.setAttribute('width', w); ui.setAttribute('height', h);
+    ui.setAttribute('href', canvas.toDataURL('image/png'));
+    $('#empty').classList.add('hidden');
+    $('#btnExport').disabled = false; $('#btnRetrace').disabled = false;
+    $('#btnRetrace').classList.remove('primary');
+    renderArt();
+    if (opt.fit) fit();
+    if (wasEdited) toast('作り直しました（↶ で修正前に戻せます）');
+  } catch (err) {
+    console.error(err); toast('アウトライン化に失敗しました：' + (err.message || err));
+  }
+  busy(false);
+}
+// ImageTracer の線分 → 点の輪（点 i ＝ 線分 i の終点、cx/cy は2次曲線の制御点）
+function toNodes(segs){
+  return segs.map(g => g.type === 'Q'
+    ? { x: g.x3, y: g.y3, cx: g.x2, cy: g.y2 }
+    : { x: g.x2, y: g.y2 });
+}
+
+/* ---------- 描画 ---------- */
+function subD(n){
+  let d = 'M' + r2(n[n.length - 1].x) + ' ' + r2(n[n.length - 1].y);
+  for (const p of n) d += p.cx !== undefined
+    ? 'Q' + r2(p.cx) + ' ' + r2(p.cy) + ' ' + r2(p.x) + ' ' + r2(p.y)
+    : 'L' + r2(p.x) + ' ' + r2(p.y);
+  return d + 'Z';
+}
+const shapeD = sh => sh.subs.map(subD).join('');
+function renderArt(){
+  const g = $('#art'); g.textContent = '';
+  const frag = document.createDocumentFragment();
+  st.shapes.forEach((sh, i) => {
+    const p = document.createElementNS(SVGNS, 'path');
+    p.setAttribute('d', shapeD(sh)); p.setAttribute('fill', sh.fill);
+    p.setAttribute('fill-rule', 'evenodd'); p.dataset.i = i;
+    frag.appendChild(p);
+  });
+  g.appendChild(frag);
+  renderOverlay(); updateStatus(); updateButtons();
+}
+function updateShapeEl(i){
+  const el = $('#art').children[i];
+  if (el) { el.setAttribute('d', shapeD(st.shapes[i])); el.setAttribute('fill', st.shapes[i].fill); }
+}
+function el(tag, attrs, parent){
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function renderOverlay(){
+  const ov = $('#overlay'); ov.textContent = '';
+  if (st.tool === 'node' && st.shapes[st.nodeShape]) {
+    const sh = st.shapes[st.nodeShape], s = st.view.s, a = 7 / s, cr = 4 / s;
+    el('path', { d: shapeD(sh), class: 'ov-path' }, ov);
+    // 選んだ点のまわりの制御点を表示
+    sh.subs.forEach((n, si) => n.forEach((p, i) => {
+      const pv = n[(i - 1 + n.length) % n.length];
+      const showOwn = p.cx !== undefined && (st.selNodes.has(si + ':' + i) || st.selNodes.has(si + ':' + ((i - 1 + n.length) % n.length)));
+      if (showOwn) {
+        el('line', { x1: pv.x, y1: pv.y, x2: p.cx, y2: p.cy, class: 'hline' }, ov);
+        el('line', { x1: p.x, y1: p.y, x2: p.cx, y2: p.cy, class: 'hline' }, ov);
+        el('circle', { cx: p.cx, cy: p.cy, r: cr, class: 'ctrl', 'data-k': 'c', 'data-s': si, 'data-n': i }, ov);
+      }
+    }));
+    sh.subs.forEach((n, si) => n.forEach((p, i) => {
+      el('rect', { x: p.x - a / 2, y: p.y - a / 2, width: a, height: a,
+        class: 'anchor' + (st.selNodes.has(si + ':' + i) ? ' on' : ''), 'data-k': 'a', 'data-s': si, 'data-n': i }, ov);
+    }));
+  } else if (st.sel.size) {
+    st.sel.forEach(i => { if (st.shapes[i]) el('path', { d: shapeD(st.shapes[i]), class: 'ov-sel' }, ov); });
+  }
+  if (marquee) el('rect', { x: Math.min(marquee.x0, marquee.x1), y: Math.min(marquee.y0, marquee.y1),
+    width: Math.abs(marquee.x1 - marquee.x0), height: Math.abs(marquee.y1 - marquee.y0), class: 'marquee' }, ov);
+}
+function updateStatus(){
+  if (!st.src) return;
+  let nodes = 0; st.shapes.forEach(sh => sh.subs.forEach(n => nodes += n.length));
+  const parts = [st.W + '×' + st.H + 'px', 'パス ' + st.shapes.length, 'ノード ' + nodes.toLocaleString(),
+    '表示 ' + Math.round(st.view.s * 100) + '%'];
+  if (st.tool === 'node' && st.nodeShape >= 0) parts.push('選択中の点 ' + st.selNodes.size);
+  else if (st.sel.size) parts.push('選択中 ' + st.sel.size);
+  $('#status').innerHTML = parts.map(p => '<span>' + p + '</span>').join('');
+}
+function updateButtons(){
+  $('#btnUndo').disabled = !st.undo.length; $('#btnRedo').disabled = !st.redo.length;
+  const hasSel = st.sel.size > 0;
+  ['#btnDelete', '#btnSameColor', '#btnFront'].forEach(s => $(s).disabled = !hasSel);
+  $('#btnCurve').disabled = $('#btnDelNode').disabled = !st.selNodes.size;
+  if (hasSel) $('#fill').value = st.shapes[[...st.sel][0]].fill;
+  $('.ctx-select').classList.toggle('hidden', st.tool === 'node');
+  $('.ctx-node').classList.toggle('hidden', st.tool !== 'node');
+}
+function refresh(){ renderOverlay(); updateStatus(); updateButtons(); }
+
+/* ---------- 表示（拡大・移動） ---------- */
+function applyView(){
+  const v = st.view;
+  $('#world').setAttribute('transform', `translate(${v.x} ${v.y}) scale(${v.s})`);
+  renderOverlay(); updateStatus();
+}
+function fit(){
+  if (!st.W) return;
+  const r = $('#stage').getBoundingClientRect(), pad = 24;
+  const s = Math.min((r.width - pad * 2) / st.W, (r.height - pad * 2) / st.H);
+  st.view = { s, x: (r.width - st.W * s) / 2, y: (r.height - st.H * s) / 2 };
+  applyView();
+}
+function zoomAt(f, cx, cy){
+  const v = st.view, ns = Math.max(0.05, Math.min(64, v.s * f));
+  v.x = cx - (cx - v.x) * ns / v.s; v.y = cy - (cy - v.y) * ns / v.s; v.s = ns;
+  applyView();
+}
+function zoomCenter(f){ const r = $('#stage').getBoundingClientRect(); zoomAt(f, r.width / 2, r.height / 2); }
+$('#btnFit').onclick = fit;
+$('#btnZoomIn').onclick = () => zoomCenter(1.4);
+$('#btnZoomOut').onclick = () => zoomCenter(1 / 1.4);
+window.addEventListener('resize', () => { if (st.W) applyView(); });
+$('#stage').addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = $('#stage').getBoundingClientRect();
+  if (e.ctrlKey || e.metaKey) zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX - r.left, e.clientY - r.top);
+  else { st.view.x -= e.deltaX; st.view.y -= e.deltaY; applyView(); }
+}, { passive: false });
+function toWorld(e){
+  const r = $('#stage').getBoundingClientRect();
+  return { x: (e.clientX - r.left - st.view.x) / st.view.s, y: (e.clientY - r.top - st.view.y) / st.view.s };
+}
+
+/* ---------- ツール ---------- */
+function setTool(t){
+  st.tool = t;
+  $$('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+  $('#stage').className = 'stage t-' + t;
+  if (t === 'node') {
+    st.nodeShape = st.sel.size === 1 ? [...st.sel][0] : -1;
+    st.selNodes.clear();
+  } else if (t === 'select' && st.nodeShape >= 0) {
+    st.sel = new Set([st.nodeShape]);
+  }
+  refresh();
+}
+$$('[data-tool]').forEach(b => b.onclick = () => setTool(b.dataset.tool));
+function clearSel(){ st.sel.clear(); st.nodeShape = -1; st.selNodes.clear(); }
+
+/* ---------- 元に戻す ---------- */
+function snapshot(){ return JSON.stringify(st.shapes); }
+function pushUndo(){
+  st.undo.push(snapshot()); if (st.undo.length > 40) st.undo.shift();
+  st.redo = [];
+}
+function markEdited(){ st.edited = true; }
+function undo(){
+  if (!st.undo.length) return;
+  st.redo.push(snapshot()); st.shapes = JSON.parse(st.undo.pop());
+  clearSel(); renderArt(); markEdited();
+}
+function redo(){
+  if (!st.redo.length) return;
+  st.undo.push(snapshot()); st.shapes = JSON.parse(st.redo.pop());
+  clearSel(); renderArt(); markEdited();
+}
+$('#btnUndo').onclick = undo; $('#btnRedo').onclick = redo;
+
+/* ---------- 選択ツールの操作 ---------- */
+function bbox(sh){
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  sh.subs.forEach(n => n.forEach(p => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }));
+  return { x0, y0, x1, y1 };
+}
+function deleteSelected(){
+  if (!st.sel.size) return;
+  pushUndo(); markEdited();
+  st.shapes = st.shapes.filter((_, i) => !st.sel.has(i));
+  clearSel(); renderArt();
+}
+$('#btnDelete').onclick = deleteSelected;
+$('#fill').addEventListener('input', e => {
+  if (!st.sel.size) return;
+  if (!$('#fill').dataset.live) { pushUndo(); $('#fill').dataset.live = 1; }
+  markEdited();
+  st.sel.forEach(i => { st.shapes[i].fill = e.target.value; updateShapeEl(i); });
+});
+$('#fill').addEventListener('change', () => { delete $('#fill').dataset.live; });
+$('#btnSameColor').onclick = () => {
+  const cols = new Set([...st.sel].map(i => st.shapes[i].fill));
+  st.sel = new Set(st.shapes.map((sh, i) => cols.has(sh.fill) ? i : -1).filter(i => i >= 0));
+  refresh();
+};
+$('#btnFront').onclick = () => {
+  if (!st.sel.size) return;
+  pushUndo(); markEdited();
+  const picked = st.shapes.filter((_, i) => st.sel.has(i));
+  st.shapes = st.shapes.filter((_, i) => !st.sel.has(i)).concat(picked);
+  st.sel = new Set(picked.map((_, k) => st.shapes.length - picked.length + k));
+  renderArt();
+};
+
+/* ---------- ノード編集 ---------- */
+function deleteNodes(){
+  const sh = st.shapes[st.nodeShape]; if (!sh || !st.selNodes.size) return;
+  pushUndo(); markEdited();
+  sh.subs = sh.subs.map((n, si) => {
+    const keep = [];
+    n.forEach((p, i) => {
+      if (st.selNodes.has(si + ':' + i)) return;
+      // 前の点が消えたら、この点へは直線でつなぐ
+      const prevGone = st.selNodes.has(si + ':' + ((i - 1 + n.length) % n.length));
+      keep.push(prevGone ? { x: p.x, y: p.y } : p);
+    });
+    return keep;
+  }).filter(n => n.length >= 3);
+  st.selNodes.clear();
+  if (!sh.subs.length) { st.shapes.splice(st.nodeShape, 1); st.nodeShape = -1; renderArt(); return; }
+  updateShapeEl(st.nodeShape); refresh(); updateStatus();
+}
+$('#btnDelNode').onclick = deleteNodes;
+$('#btnCurve').onclick = () => {
+  const sh = st.shapes[st.nodeShape]; if (!sh || !st.selNodes.size) return;
+  pushUndo(); markEdited();
+  st.selNodes.forEach(k => {
+    const [si, i] = k.split(':').map(Number), n = sh.subs[si], p = n[i], pv = n[(i - 1 + n.length) % n.length];
+    if (p.cx !== undefined) { delete p.cx; delete p.cy; }
+    else {
+      // 線の中央から少し外側に制御点を置いて曲線にする
+      const mx = (p.x + pv.x) / 2, my = (p.y + pv.y) / 2, dx = p.x - pv.x, dy = p.y - pv.y;
+      p.cx = mx - dy * 0.25; p.cy = my + dx * 0.25;
+    }
+  });
+  updateShapeEl(st.nodeShape); refresh();
+};
+// ダブルクリックした位置にいちばん近い線分を分割して点を追加
+function insertNodeAt(w){
+  const sh = st.shapes[st.nodeShape]; if (!sh) return;
+  let best = { d: Infinity };
+  sh.subs.forEach((n, si) => n.forEach((p, i) => {
+    const a = n[(i - 1 + n.length) % n.length];
+    for (let t = 0.05; t < 1; t += 0.05) {
+      const q = segPoint(a, p, t), d = (q.x - w.x) ** 2 + (q.y - w.y) ** 2;
+      if (d < best.d) best = { d, si, i, t };
+    }
+  }));
+  if (best.d > (20 / st.view.s) ** 2) return;
+  pushUndo(); markEdited();
+  const n = sh.subs[best.si], p = n[best.i], a = n[(best.i - 1 + n.length) % n.length], t = best.t;
+  let np;
+  if (p.cx !== undefined) {
+    const q1 = { x: a.x + (p.cx - a.x) * t, y: a.y + (p.cy - a.y) * t };
+    const q2 = { x: p.cx + (p.x - p.cx) * t, y: p.cy + (p.y - p.cy) * t };
+    np = { x: q1.x + (q2.x - q1.x) * t, y: q1.y + (q2.y - q1.y) * t, cx: q1.x, cy: q1.y };
+    p.cx = q2.x; p.cy = q2.y;
+  } else np = { x: a.x + (p.x - a.x) * t, y: a.y + (p.y - a.y) * t };
+  n.splice(best.i, 0, np);
+  st.selNodes = new Set([best.si + ':' + best.i]);
+  updateShapeEl(st.nodeShape); refresh();
+}
+function segPoint(a, p, t){
+  if (p.cx === undefined) return { x: a.x + (p.x - a.x) * t, y: a.y + (p.y - a.y) * t };
+  const u = 1 - t;
+  return { x: u * u * a.x + 2 * u * t * p.cx + t * t * p.x, y: u * u * a.y + 2 * u * t * p.cy + t * t * p.y };
+}
+
+/* ---------- ポインター操作 ---------- */
+const pointers = new Map();
+let drag = null, marquee = null, pinch = null, spaceDown = false, lastTap = { t: 0, x: 0, y: 0 };
+const stage = $('#stage');
+
+stage.addEventListener('pointerdown', e => {
+  if (!st.W) return;
+  stage.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2) { // 2本指：拡大・移動（いまの操作は取り消す）
+    if (drag && drag.undoPushed) { st.shapes = JSON.parse(st.undo.pop()); renderArt(); }
+    drag = null; marquee = null; renderOverlay();
+    const [a, b] = [...pointers.values()];
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
+    return;
+  }
+  if (pointers.size > 2) return;
+  const w = toWorld(e), t = e.target;
+  // ダブルタップ判定（iPad用）
+  const now = Date.now(), dbl = now - lastTap.t < 350 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 12;
+  lastTap = { t: now, x: e.clientX, y: e.clientY };
+
+  if (st.tool === 'hand' || spaceDown || e.button === 1) {
+    drag = { type: 'pan', sx: e.clientX, sy: e.clientY, vx: st.view.x, vy: st.view.y };
+    stage.classList.add('panning'); return;
+  }
+  const idx = t.dataset && t.dataset.i !== undefined && t.parentNode.id === 'art' ? +t.dataset.i : -1;
+
+  if (st.tool === 'select') {
+    if (idx >= 0) {
+      if (e.shiftKey) { st.sel.has(idx) ? st.sel.delete(idx) : st.sel.add(idx); }
+      else if (!st.sel.has(idx)) st.sel = new Set([idx]);
+      if (dbl && !e.shiftKey) { st.sel = new Set([idx]); setTool('node'); return; }
+      drag = { type: 'move', w0: w, last: w, undoPushed: false };
+    } else {
+      if (!e.shiftKey) st.sel.clear();
+      marquee = { x0: w.x, y0: w.y, x1: w.x, y1: w.y, add: e.shiftKey, base: new Set(st.sel) };
+    }
+    refresh(); return;
+  }
+  if (st.tool === 'node') {
+    const k = t.dataset && t.dataset.k;
+    if (k === 'a' || k === 'c') {
+      const key = t.dataset.s + ':' + t.dataset.n;
+      if (k === 'a') {
+        if (e.shiftKey) { st.selNodes.has(key) ? st.selNodes.delete(key) : st.selNodes.add(key); }
+        else if (!st.selNodes.has(key)) st.selNodes = new Set([key]);
+      }
+      drag = { type: k === 'a' ? 'nodes' : 'ctrl', s: +t.dataset.s, n: +t.dataset.n, last: w, undoPushed: false };
+      refresh(); return;
+    }
+    if (idx >= 0) {
+      if (idx === st.nodeShape) {
+        if (dbl) { insertNodeAt(w); return; }
+      } else { st.nodeShape = idx; st.selNodes.clear(); st.sel = new Set([idx]); }
+      refresh();
+    } else {
+      if (dbl && st.nodeShape >= 0) { insertNodeAt(w); return; }
+      if (!e.shiftKey) st.selNodes.clear();
+      marquee = { x0: w.x, y0: w.y, x1: w.x, y1: w.y, nodes: true, base: new Set(st.selNodes) };
+      refresh();
+    }
+  }
+});
+stage.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y), cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+    const r = stage.getBoundingClientRect();
+    st.view.x += cx - pinch.cx; st.view.y += cy - pinch.cy;
+    zoomAt(d / pinch.d, cx - r.left, cy - r.top);
+    pinch = { d, cx, cy }; return;
+  }
+  const w = toWorld(e);
+  if (drag) {
+    if (drag.type === 'pan') {
+      st.view.x = drag.vx + e.clientX - drag.sx; st.view.y = drag.vy + e.clientY - drag.sy; applyView(); return;
+    }
+    const dx = w.x - drag.last.x, dy = w.y - drag.last.y;
+    if (!dx && !dy) return;
+    if (!drag.undoPushed) { pushUndo(); markEdited(); drag.undoPushed = true; }
+    drag.last = w;
+    if (drag.type === 'move') {
+      st.sel.forEach(i => { moveShape(st.shapes[i], dx, dy); updateShapeEl(i); });
+    } else if (drag.type === 'nodes') {
+      const sh = st.shapes[st.nodeShape];
+      st.selNodes.forEach(key => {
+        const [si, i] = key.split(':').map(Number), n = sh.subs[si], p = n[i], nx = n[(i + 1) % n.length];
+        p.x += dx; p.y += dy;
+        // となりの曲線の制御点も半分だけついてくる
+        if (p.cx !== undefined) { p.cx += dx / 2; p.cy += dy / 2; }
+        if (nx.cx !== undefined) { nx.cx += dx / 2; nx.cy += dy / 2; }
+      });
+      updateShapeEl(st.nodeShape);
+    } else if (drag.type === 'ctrl') {
+      const p = st.shapes[st.nodeShape].subs[drag.s][drag.n];
+      p.cx += dx; p.cy += dy; updateShapeEl(st.nodeShape);
+    }
+    renderOverlay(); return;
+  }
+  if (marquee) { marquee.x1 = w.x; marquee.y1 = w.y; applyMarquee(); refresh(); }
+});
+function endPointer(e){
+  pointers.delete(e.pointerId);
+  if (pinch) { if (pointers.size < 2) pinch = null; drag = null; return; }
+  if (drag && drag.type === 'pan') stage.classList.remove('panning');
+  if (drag && drag.undoPushed) updateStatus();
+  drag = null;
+  if (marquee) { marquee = null; refresh(); }
+}
+stage.addEventListener('pointerup', endPointer);
+stage.addEventListener('pointercancel', endPointer);
+stage.addEventListener('dblclick', e => e.preventDefault());
+
+function moveShape(sh, dx, dy){
+  sh.subs.forEach(n => n.forEach(p => {
+    p.x += dx; p.y += dy;
+    if (p.cx !== undefined) { p.cx += dx; p.cy += dy; }
+  }));
+}
+function applyMarquee(){
+  const x0 = Math.min(marquee.x0, marquee.x1), x1 = Math.max(marquee.x0, marquee.x1);
+  const y0 = Math.min(marquee.y0, marquee.y1), y1 = Math.max(marquee.y0, marquee.y1);
+  if (marquee.nodes) {
+    const sh = st.shapes[st.nodeShape]; if (!sh) return;
+    st.selNodes = new Set(marquee.base);
+    sh.subs.forEach((n, si) => n.forEach((p, i) => {
+      if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) st.selNodes.add(si + ':' + i);
+    }));
+  } else {
+    st.sel = new Set(marquee.base);
+    st.shapes.forEach((sh, i) => {
+      const b = bbox(sh);
+      if (b.x0 >= x0 && b.x1 <= x1 && b.y0 >= y0 && b.y1 <= y1) st.sel.add(i);
+    });
+  }
+}
+
+/* ---------- キーボード ---------- */
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input[type=text],input[type=number],select')) return;
+  const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+  if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && k === 'y' && !e.shiftKey) { e.preventDefault(); toggleOutline(); return; }
+  if (mod && k === 's') { e.preventDefault(); exportSvg(); return; }
+  if (mod && k === '0') { e.preventDefault(); fit(); return; }
+  if (mod && k === 'a') {
+    e.preventDefault();
+    if (st.tool === 'node' && st.shapes[st.nodeShape]) {
+      st.selNodes = new Set(); st.shapes[st.nodeShape].subs.forEach((n, si) => n.forEach((_, i) => st.selNodes.add(si + ':' + i)));
+    } else { if (st.tool !== 'select') setTool('select'); st.sel = new Set(st.shapes.map((_, i) => i)); }
+    refresh(); return;
+  }
+  if (mod) return;
+  if (e.target.matches('input')) e.target.blur();
+  if (k === ' ') { if (!spaceDown) { spaceDown = true; stage.classList.add('t-hand'); } e.preventDefault(); return; }
+  if (k === 'v') setTool('select');
+  else if (k === 'a') setTool('node');
+  else if (k === 'h') setTool('hand');
+  else if (k === 'delete' || k === 'backspace') { e.preventDefault(); st.tool === 'node' ? deleteNodes() : deleteSelected(); }
+  else if (k === 'escape') { clearSel(); refresh(); }
+  else if (k.startsWith('arrow')) {
+    e.preventDefault();
+    const step = (e.shiftKey ? 10 : 1) / Math.max(1, st.view.s);
+    const dx = k === 'arrowleft' ? -step : k === 'arrowright' ? step : 0;
+    const dy = k === 'arrowup' ? -step : k === 'arrowdown' ? step : 0;
+    if (st.tool === 'select' && st.sel.size) {
+      pushUndo(); markEdited();
+      st.sel.forEach(i => { moveShape(st.shapes[i], dx, dy); updateShapeEl(i); });
+      refresh();
+    }
+  }
+});
+document.addEventListener('keyup', e => {
+  if (e.key === ' ') { spaceDown = false; stage.classList.remove('t-hand'); stage.classList.add('t-' + st.tool); }
+});
+
+/* ---------- 表示切替 ---------- */
+function toggleOutline(){
+  const on = $('#art').classList.toggle('outline');
+  $('#btnOutline').classList.toggle('on', on);
+}
+$('#btnOutline').onclick = toggleOutline;
+$('#under').addEventListener('input', e => $('#under-img').setAttribute('opacity', e.target.value / 100));
+
+/* ---------- 書き出し ---------- */
+function exportSvg(){
+  if (!st.shapes.length) { toast('書き出すパスがありません'); return; }
+  // 同じ色が続くパスをグループにまとめる（重なり順はそのまま）
+  let body = '', prev = null, gi = 0;
+  st.shapes.forEach(sh => {
+    if (sh.fill !== prev) {
+      if (prev !== null) body += '  </g>\n';
+      body += `  <g id="color-${++gi}_${sh.fill.slice(1)}">\n`; prev = sh.fill;
+    }
+    body += `    <path fill="${sh.fill}" fill-rule="evenodd" d="${shapeD(sh)}"/>\n`;
+  });
+  body += '  </g>\n';
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${st.W}" height="${st.H}" viewBox="0 0 ${st.W} ${st.H}">\n${body}</svg>\n`;
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = st.name + '_outline.svg';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('SVGを保存しました。Illustratorで開けます');
+}
+$('#btnExport').onclick = exportSvg;
+updateButtons();
+</script>
+</body>
+</html>
