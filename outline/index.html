@@ -101,6 +101,27 @@
   .busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18);font-weight:700}
   .busy span{background:var(--panel);padding:12px 20px;border-radius:14px;box-shadow:var(--shadow)}
   .status{display:flex;gap:14px;flex-wrap:wrap;padding:6px 12px;font-size:.78rem;color:var(--sub);border-top:1px solid var(--line);background:var(--panel)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+  .modal[hidden]{display:none}
+  .mbox{background:var(--panel);border-radius:18px;box-shadow:var(--shadow);padding:20px;width:min(640px,100%);max-height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+  .mhead{display:flex;align-items:center;gap:10px}
+  .mhead h3{margin:0;font-size:1.1rem;flex:1}
+  .xbtn{border:none;background:var(--bg);border-radius:10px;width:34px;height:34px;font-size:1.1rem;cursor:pointer}
+  .fname{display:flex;align-items:center;gap:6px;font-size:.88rem;font-weight:700;flex-wrap:wrap}
+  .fname input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);font-weight:400}
+  .ways{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:560px){.ways{grid-template-columns:1fr}}
+  .way{border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .way.rec{border-color:var(--accent);background:var(--accent-soft)}
+  .way h4{margin:0;font-size:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .badge{font-size:.7rem;background:var(--accent);color:#fff;border-radius:999px;padding:2px 8px}
+  .way ol{margin:0;padding-left:1.3em;font-size:.85rem;display:flex;flex-direction:column;gap:4px}
+  .way ol b{color:var(--accent)}
+  .way .btn{width:100%;padding:12px;font-size:1rem;margin-top:auto}
+  .way .note{font-size:.78rem;color:var(--sub);margin:0}
+  .mbox details{font-size:.8rem;color:var(--sub)}
+  .mbox details summary{cursor:pointer}
+  .mbox textarea{width:100%;height:140px;margin-top:8px;font:12px/1.4 ui-monospace,Menlo,monospace;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink);resize:vertical}
   .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);
     background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.88rem;
     opacity:0;pointer-events:none;transition:opacity .2s;z-index:10;max-width:calc(100% - 32px)}
@@ -122,7 +143,7 @@
 <header>
   <a class="back" href="../">←</a>
   <h1>✒️ アウトラインメーカー</h1>
-  <button class="btn primary" id="btnExport" disabled>SVGで保存</button>
+  <button class="btn primary" id="btnExport" disabled>💾 保存する</button>
 </header>
 
 <div class="app">
@@ -189,7 +210,7 @@
       <b>ノード</b>：パスをクリックすると点（ノード）が出ます。点をドラッグで変形、ダブルクリックで点を追加、<kbd>Delete</kbd>で点を削除。<br>
       <b>表示</b>：ホイール／2本指で移動、<kbd>Ctrl</kbd>+ホイール／ピンチで拡大。<kbd>Space</kbd>を押しながらドラッグでも移動。<br>
       <b>ショートカット</b>：<kbd>V</kbd>選択 <kbd>A</kbd>ノード <kbd>H</kbd>手のひら <kbd>Ctrl+Z</kbd>元に戻す <kbd>Ctrl+Y</kbd>アウトライン表示<br><br>
-      保存した <b>SVG</b> は Illustrator の「ファイル → 開く」でそのまま開け、パスとして編集できます。
+      右上の<b>「保存する」</b>から、SVGファイルで保存するか、Illustratorに直接貼り付けられます。どちらもパスとして編集できます。
     </div>
   </aside>
 
@@ -244,6 +265,39 @@
       <div class="busy hidden" id="busy"><span id="busyMsg">アウトライン化しています…</span></div>
     </div>
     <div class="status" id="status"><span>ファイルを読み込んでください</span></div>
+  </div>
+</div>
+<div class="modal" id="svgModal" hidden>
+  <div class="mbox" role="dialog" aria-labelledby="mTitle">
+    <div class="mhead"><h3 id="mTitle">💾 保存する</h3><button class="xbtn" id="btnClose" aria-label="閉じる">✕</button></div>
+    <div class="ways">
+      <div class="way rec" id="wayFile">
+        <h4>A. ファイルで保存 <span class="badge">おすすめ</span></h4>
+        <div class="fname"><label for="fileName">ファイル名</label><input id="fileName" type="text"><span>.svg</span></div>
+        <ol>
+          <li>下の<b>「ファイルを保存」</b>を押す</li>
+          <li>ダウンロードフォルダに保存されます</li>
+          <li>Illustratorで<b>ファイル → 開く</b>から、保存したファイルを選ぶ</li>
+        </ol>
+        <button class="btn primary" id="btnSaveFile">ファイルを保存</button>
+        <p class="note hidden" id="fileNote"></p>
+      </div>
+      <div class="way" id="wayPaste">
+        <h4>B. Illustratorに直接貼り付け</h4>
+        <ol>
+          <li>下の<b>「コピー」</b>を押す</li>
+          <li>Illustratorで新規ドキュメントを開く</li>
+          <li><b>Ctrl＋V</b>（Macは<b>⌘＋V</b>）で貼り付け</li>
+        </ol>
+        <button class="btn" id="btnCopy">コピー</button>
+        <p class="note">ファイルを作らずにすぐ使いたいとき向け</p>
+      </div>
+    </div>
+    <details>
+      <summary>うまくいかないとき（SVGデータを表示）</summary>
+      このデータをすべて選択してコピーし、メモ帳などに貼って「〇〇.svg」という名前で保存しても使えます。
+      <textarea id="svgText" readonly></textarea>
+    </details>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -1025,11 +1079,11 @@ function applyMarquee(){
 
 /* ---------- キーボード ---------- */
 document.addEventListener('keydown', e => {
-  if (e.target.matches('input[type=text],input[type=number],select')) return;
+  if (e.target.matches('input[type=text],input[type=number],select,textarea')) return;
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if (mod && k === 'y' && !e.shiftKey) { e.preventDefault(); toggleOutline(); return; }
-  if (mod && k === 's') { e.preventDefault(); exportSvg(); return; }
+  if (mod && k === 's') { e.preventDefault(); if (st.shapes.length) exportSvg(); return; }
   if (mod && k === '0') { e.preventDefault(); fit(); return; }
   if (mod && k === 'a') {
     e.preventDefault();
@@ -1045,7 +1099,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'a') setTool('node');
   else if (k === 'h') setTool('hand');
   else if (k === 'delete' || k === 'backspace') { e.preventDefault(); st.tool === 'node' ? deleteNodes() : deleteSelected(); }
-  else if (k === 'escape') { clearSel(); refresh(); }
+  else if (k === 'escape') { if (!$('#svgModal').hidden) $('#svgModal').hidden = true; else { clearSel(); refresh(); } }
   else if (k.startsWith('arrow')) {
     e.preventDefault();
     const step = (e.shiftKey ? 10 : 1) / Math.max(1, st.view.s);
@@ -1085,14 +1139,40 @@ function exportSvg(){
   body += '  </g>\n';
   const svg = `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<svg xmlns="http://www.w3.org/2000/svg" width="${st.W}" height="${st.H}" viewBox="0 0 ${st.W} ${st.H}">\n${body}</svg>\n`;
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = st.name + '_outline.svg';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  toast('SVGを保存しました。Illustratorで開けます');
+  $('#svgText').value = svg;
+  $('#fileName').value = st.name + '_outline';
+  $('#btnCopy').textContent = 'コピー';
+  $('#fileNote').classList.add('hidden');
+  $('#svgModal').hidden = false;
 }
 $('#btnExport').onclick = exportSvg;
+function fileNote(msg){ const n = $('#fileNote'); n.textContent = msg; n.classList.remove('hidden'); }
+$('#btnSaveFile').onclick = () => {
+  const name = ($('#fileName').value.trim() || 'outline').replace(/\.svg$/i, '').replace(/[\\/:*?"<>|]/g, '_') + '.svg';
+  const blob = new Blob([$('#svgText').value], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  fileNote('✓ 「' + name + '」を保存しました。Illustratorの ファイル → 開く で開けます。');
+  toast('保存しました');
+};
+function copySvg(){
+  const ta = $('#svgText'), btn = $('#btnCopy');
+  const fallback = () => {
+    $('.mbox details').open = true; ta.focus(); ta.select();
+    toast('自動でコピーできませんでした。選択された文字を Ctrl+C（⌘+C）でコピーしてください');
+  };
+  try {
+    navigator.clipboard.writeText(ta.value).then(() => {
+      btn.textContent = '✓ コピーしました';
+      toast('コピーしました。Illustratorで Ctrl+V（⌘+V）してください');
+    }, fallback);
+  } catch (e) { fallback(); }
+}
+$('#btnCopy').onclick = copySvg;
+$('#btnClose').onclick = () => { $('#svgModal').hidden = true; };
+$('#svgModal').addEventListener('pointerdown', e => { if (e.target.id === 'svgModal') $('#svgModal').hidden = true; });
 updateButtons();
 </script>
 </body>
