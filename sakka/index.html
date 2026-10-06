@@ -408,11 +408,10 @@
     <div class="stat"><b id="stChars">0</b><span>書いた文字</span></div>
     <div class="stat"><b id="stWords">0</b><span id="stWordsL">つかった言葉</span></div>
   </div>
-  <div class="menu" style="margin-top:14px">
+  <div class="menu" style="margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
     <button onclick="go('shelf')"><span class="e">📚</span><b id="mShelf">わたしの本</b><small>書いたお話を読む・続きを書く・本を印刷</small></button>
     <button onclick="go('box')"><span class="e">🗝️</span><b>言葉の宝箱</b><small>あつめた言葉を見る</small></button>
     <button onclick="go('lessons')"><span class="e">🎓</span><b>作家のわざ</b><small>レッスンを読む</small></button>
-    <button onclick="go('teacher')"><span class="e">🧑‍🏫</span><b>先生へ</b><small>作家の時間とつかい方</small></button>
   </div>
 </section>
 
@@ -541,32 +540,7 @@
     <div class="lessonList" id="allLessons"></div></div>
   <div class="card lesson hidden" id="lessonView"></div>
 </section>
-<!-- ===== 先生へ ===== -->
-<section id="v-teacher" class="hidden">
-  <div class="card teacher">
-    <h2>🧑‍🏫 先生へ：このアプリのねらい</h2>
-    <p><b>作家の時間（ライティング・ワークショップ）</b>は、子どもが本物の「作家」として、自分で決めた内容を書き、作品を出版する学び方です。基本の流れは、<b>ミニレッスン → ひたすら書く → 共有（ふりかえり）</b>です。</p>
-    <p>このアプリは、樋口綾香先生の朝学習の形（<b>ミニレッスン5分＋書く10分</b>）に合わせています。そこに、教科書巻末の「言葉の宝箱」の言葉を毎日3語（人物・事物・気持ち）入れました。<b>読むときに学んだ言葉を、書くときにつかえる言葉にする</b>ためです。</p>
-    <h2 style="margin-top:16px">2つの書き方</h2>
-    <p><b>📱 iPadで書く</b>：「人物」か「物」を選ぶと、<b>書き出しの例文が入った縦書きの画面</b>が開きます。横には言葉の宝箱の言葉（意味つき）と表現技法がいつも出ています。書けたら「本にしまう」で、お話が<b>自分の本（短編集）</b>に1話ずつたまります。あとから「続きを書く」で、どのお話も続きから書けます。「本を印刷する」で、表紙・もくじ・全部のお話が入った縦書きの本を印刷できます。</p>
-    <p><b>📝 紙に書く</b>：おだいを出して、テレビにうつしたりタイマーを使ったりできます。「原稿用紙を印刷」で、<b>書き出しがもう書いてある縦書きの原稿用紙</b>（言葉と表現技法のメモつき）を印刷できます。2枚目からは続き用です。</p>
-    <h2 style="margin-top:16px">大事にしていること</h2>
-    <ul>
-      <li><b>書く内容は子どもが決める</b>。今日の言葉は「つかえたらすごい」というお誘いで、強制ではありません。</li>
-      <li><b>つかった言葉に色がつく</b>。教科書の「言葉の上の◇に色をぬろう」と同じしかけで、自動で判定します。漢字に変換したときなどは判定できないことがあります。その場合は、言葉カードをタップすると手でぬれます。</li>
-      <li><b>作家ノート</b>に毎日の文章がたまり、つづきから書けます。先生がチェックするためのものではありません。</li>
-      <li><b>出版</b>：5種類のげんこう用紙（絵本型・横書き挿絵あり／なし・縦書き挿絵あり／なし）で印刷できます。</li>
-      <li><b>作家先生</b>：ふりかえりの時間に、作品を大きく表示して紹介できます。</li>
-      <li>同じ日・同じ学年なら、クラス全員に同じ「今日の言葉」が出ます。共有の時間に、同じ言葉を使った作品を読みくらべられます。</li>
-    </ul>
-    <h2 style="margin-top:16px">レッスンの順番</h2>
-    <p>3〜6年は、樋口先生の連載の流れ（①中心人物 → ②事件 → ③事件の解決 → ④冒頭 → ⑤比喩）を土台にしています。そのあとに「気持ちを行動で見せる」「会話文」「五感」「言いかえ」「結末」「修正」「題名」が続きます。1・2年は、ひらがな中心のやさしい版です。</p>
-    <h2 style="margin-top:16px">データについて</h2>
-    <p>書いた文章は<b>その端末のブラウザの中だけ</b>に保存され、外には送られません。端末を変えるときやブラウザのデータを消す前には、学年えらびの画面の「書き出し」でバックアップしてください。</p>
-    <p class="sub">参考：プロジェクト・ワークショップ編『作家の時間』（新評論）、樋口綾香「すてきやん通信」（小学館 みんなの教育技術）、光村図書 国語教科書「言葉の宝箱」</p>
-  </div>
-</section>
-<footer>作家の時間 ✏️ ことばの宝箱　ver.2026-10-08a</footer>
+<footer>作家の時間 ✏️ ことばの宝箱　ver.2026-10-08b</footer>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -893,7 +867,7 @@ function getEntry(id){ for (var i=0;i<st.entries.length;i++) if (st.entries[i].i
 /* ============================================================
    画面きりかえ
    ============================================================ */
-var VIEWS=["setup","home","gacha","write","done","shelf","read","print","box","lessons","teacher"];
+var VIEWS=["setup","home","gacha","write","done","shelf","read","print","box","lessons"];
 var cur="home", MODE="paper";
 function go(v){
   if (cur==="write" && v!=="write") saveDraft();
