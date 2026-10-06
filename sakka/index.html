@@ -221,8 +221,10 @@
   .gcard .emnote{font-size:.78rem;color:var(--sub);margin-top:6px}
   .gcard .emnote::before{content:"";display:inline-block;width:1.4em;height:.8em;background:#ffe27a;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .gwords{display:grid;gap:12px}
-  .gwords .gcard .main{font-size:2.2rem;text-align:center;margin:8px 0}
-  body.big .gwords .gcard .main{font-size:clamp(2.6rem,7vw,5.5rem)}
+  .gcard.hito .main,.gcard.mono .main{font-size:2.2rem;text-align:center;margin:8px 0}
+  body.big .gcard.hito .main,body.big .gcard.mono .main{font-size:clamp(2.2rem,3.9vw,4.2rem)}
+  .gcard.hito .main,.gcard.mono .main{word-break:normal}
+  .gcard .main .dia{white-space:nowrap}
   .gchoose{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
   @media (max-width:520px){.gchoose{grid-template-columns:1fr}}
   .gchoose button{font-size:1.6rem;font-weight:700;padding:30px 10px;border-radius:22px;cursor:pointer;box-shadow:var(--shadow);border:3px solid}
@@ -504,7 +506,7 @@
   </div>
 </section>
 
-<footer>作家の時間 ✏️ ことばの宝箱　ver.2026-10-06d</footer>
+<footer>作家の時間 ✏️ ことばの宝箱　ver.2026-10-06e</footer>
 </div>
 
 <div id="stage" class="hidden"><button class="btn close" onclick="hideStage()">✕ とじる</button><div class="t" id="stT"></div><div class="a" id="stA"></div><div class="b" id="stB"></div></div>
@@ -1152,9 +1154,9 @@ var FOCUS = {
   m:{low:"ものを かく", high:"物を書く", e:"🍎"}
 };
 var GKEYS=[
+ {k:"kaki", low:"かきだし", high:"書き出し"},
  {k:"word", low:"ことばの たからばこ", high:"言葉の宝箱"},
- {k:"waza", low:"ひょうげんの わざ", high:"表現技法"},
- {k:"kaki", low:"かきだし", high:"書き出し"}
+ {k:"waza", low:"ひょうげんの わざ", high:"表現技法"}
 ];
 var GL=null; // いま出ているおだい
 function gFocus(){ return st.gFocus==="m" ? "m" : "h"; }
@@ -1195,14 +1197,15 @@ function setFocus(f){ st.gFocus=f; save(); newGL(); renderGacha(); }
 function gToggle(k,on){ st.gOff=st.gOff||{}; st.gOff[k]=!on; save(); drawCards(); }
 function gCardHTML(k){
   var o=GKEYS.filter(function(x){return x.k===k;})[0], v=GL[k], f=gFocus(), cls, lab, body;
-  if (k==="word"){ cls=CATS[f].cls; lab=L(CATS[f].low,CATS[f].high); body='<div class="main">◇ '+esc(v)+'</div>'+(MEAN[v]?'<div class="mean">'+L("いみ：","意味：")+esc(MEAN[v])+'</div>':''); }
+  if (k==="word"){ cls=CATS[f].cls; lab=L(CATS[f].low,CATS[f].high); body='<div class="main"><span class="dia">◇ '+esc(v.slice(0,2))+'</span>'+esc(v.slice(2))+'</div>'+(MEAN[v]?'<div class="mean">'+L("いみ：","意味：")+esc(MEAN[v])+'</div>':''); }
   else if (k==="waza"){ cls="waza"; lab=L(o.low,o.high); body='<div class="main">'+esc(v.t)+'</div><div class="desc">'+esc(v.d)+'</div><div class="ex">'+L("れい：","例：")+emHTML(exOf(v))+'</div><div class="emnote">'+L("いろの ところが ひょうげんの わざ","色のところが表現技法")+'</div>'; }
   else { cls="kaki"; lab=L(o.low,o.high); body='<div class="main">'+esc(v.t)+'</div><div class="ex">'+L("れい：","例：")+esc(exOf(v))+'</div>'; }
   return '<div class="gcard '+cls+'" id="gc-'+k+'"><div class="lab">'+lab+'</div>'+body+
     '<button class="re" onclick="drawOne(\''+k+'\')">🔄</button></div>';
 }
 function drawCards(){
-  var top=["word"].filter(gOn), rest=["waza","kaki"].filter(gOn);
+  // 書き出しをいちばん上に、その下に言葉の宝箱と表現技法をならべる
+  var top=["kaki"].filter(gOn), rest=["word","waza"].filter(gOn);
   $("gWords").innerHTML=top.map(gCardHTML).join("");
   $("gTop").className="gcards"+(rest.length===2?" c2":"");
   $("gTop").innerHTML=rest.map(gCardHTML).join("");
