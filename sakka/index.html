@@ -342,6 +342,8 @@
   .bbody p{margin:0;text-indent:1em;white-space:pre-wrap}
   .bbody p.cont{text-indent:0}
   .bbody .sTitle{font-size:1.5em;font-weight:700;margin:0 0 0 1.4em;padding-top:2em;text-indent:0}
+  .bbody .sTitle.withAu{margin-left:0.4em}
+  .bbody .sAu{margin:0 0 0 1.6em;padding-bottom:2em;text-indent:0;text-align:end;font-size:1.05em}
   .bbody .sNo{font-size:.8em;color:#7c7367;margin:0;padding-top:2em;text-indent:0}
   .bpno{position:absolute;bottom:12mm;left:0;right:0;text-align:center;font-size:10pt;color:#888;font-family:"BIZ UDPMincho",serif}
   .cover .bbody{display:flex;flex-direction:column;justify-content:center;align-items:center}
@@ -540,7 +542,7 @@
     <div class="lessonList" id="allLessons"></div></div>
   <div class="card lesson hidden" id="lessonView"></div>
 </section>
-<footer>作家の時間 ✏️ ことばの宝箱　ver.2026-10-08b</footer>
+<footer>作家の時間 ✏️ ことばの宝箱　ver.2026-10-08c</footer>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1004,6 +1006,10 @@ $("wTitle").addEventListener("input", function(){ clearTimeout(saveDraft.t); sav
 function saveStory(){
   var text=edText().replace(/\s+$/,"");
   if (!charLen(text)){ toast(L("まだ なにも かいて いないよ","まだ何も書いていないよ")); return; }
+  if (!st.name){
+    var nm=prompt(L("さっかめい（あなたの なまえ）を おしえて","作家名（あなたの名前）を教えてね"), "");
+    if (nm && nm.trim()){ st.name=nm.trim(); save(); }
+  }
   var title=$("wTitle").value.trim();
   if (!title){
     var t=prompt(L("だいめいを つけよう","題名をつけよう"), "");
@@ -1052,7 +1058,7 @@ function openRead(id){
   var e=getEntry(id); if (!e) return; curId=id; go("read");
   var no=storiesAsc().indexOf(e)+1;
   $("rMeta").textContent=L("だい"+no+"わ","第"+no+"話")+"・"+fmtDate(e.date)+L(" に かいた"," に書いた")+((e.sessions||1)>1?"・"+e.sessions+L("かい かいた","回書いた"):"")+"・"+charLen(e.text)+L("じ","字")+(e.kaki?"・"+L("かきだし：","書き出し：")+e.kaki:"");
-  $("rTitle").textContent=e.title||L("（だいめいなし）","（題名なし）");
+  $("rTitle").innerHTML=esc(e.title||L("（だいめいなし）","（題名なし）"))+(st.name?'<span style="font-size:.7em;font-weight:400;color:var(--sub);margin-left:12px">'+esc(st.name)+'</span>':'');
   var rt=$("rText"); rt.textContent=e.text; rt.classList.toggle("horiz", !!st.horiz);
   $("rWords").innerHTML=(e.used||[]).map(function(w){ return '<span class="chip">◆ '+esc(w)+'</span>'; }).join("");
   $("rCont").textContent=L("✏️ つづきを かく","✏️ 続きを書く");
@@ -1157,7 +1163,8 @@ async function openBook(){
   for (var i=0;i<list.length;i++){
     var e=list[i]; body=newPage(); starts.push(pageNo);
     var no=document.createElement("p"); no.className="sNo"; no.textContent="第"+zen(i+1)+"話"; body.appendChild(no);
-    var h=document.createElement("p"); h.className="sTitle"; h.textContent=zen(e.title||"（題名なし）"); body.appendChild(h);
+    var h=document.createElement("p"); h.className="sTitle"+(st.name?" withAu":""); h.textContent=zen(e.title||"（題名なし）"); body.appendChild(h);
+    if (st.name){ var au=document.createElement("p"); au.className="sAu"; au.textContent=zen(st.name); body.appendChild(au); }
     var paras=zen(e.text||"").split("\n");
     for (var j=0;j<paras.length;j++){
       var txt=paras[j], cls="";
