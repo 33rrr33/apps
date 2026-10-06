@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>いんさつ ステーション</title>
+<meta name="description" content="PDFや しゃしんを せんせいに おくる">
+<meta name="theme-color" content="#c96f3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="いんさつ">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{--bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;--accent:#c96f3f;--accent-soft:#fbeee4;
+    --ok:#2e8b57;--ok-soft:#e5f3ea;--ng:#c0392b;--ng-soft:#fbe9e7;--shadow:0 2px 12px rgba(90,70,40,.08)}
+  @media (prefers-color-scheme:dark){:root{--bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;--accent:#e0895a;--accent-soft:#3a2f26;
+    --ok:#5fce8f;--ok-soft:#243a2d;--ng:#f0857a;--ng-soft:#3a2723;--shadow:0 2px 14px rgba(0,0,0,.35)}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:env(safe-area-inset-top) 16px calc(30px + env(safe-area-inset-bottom));background:var(--bg);color:var(--ink);
+    font-family:"UD デジタル教科書体 NP-R","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Noto Sans JP",sans-serif;line-height:1.6}
+  .wrap{max-width:640px;margin:0 auto}
+  h1{text-align:center;font-size:1.4rem;margin:18px 0 6px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);margin:14px 0}
+  .lab{font-weight:700;margin:0 0 8px;font-size:1.05rem}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .pick{display:grid;gap:8px}
+  .pick.g6{grid-template-columns:repeat(6,1fr)} .pick.g8{grid-template-columns:repeat(8,1fr)} .pick.g10{grid-template-columns:repeat(10,1fr)}
+  @media (max-width:520px){.pick.g8{grid-template-columns:repeat(4,1fr)} .pick.g10{grid-template-columns:repeat(5,1fr)}}
+  .pick button{font-size:1.15rem;font-weight:700;padding:12px 0;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+  .pick button.on{border-color:var(--accent);background:var(--accent);color:#fff}
+  .who{font-size:1.6rem;font-weight:700;text-align:center;color:var(--accent)}
+  .file{display:block;text-align:center;border:3px dashed var(--line);border-radius:18px;padding:26px 10px;cursor:pointer;font-weight:700;font-size:1.15rem}
+  .file input{display:none}
+  .file .big{font-size:2.6rem;display:block}
+  .flist{margin:10px 0 0;padding:0;list-style:none}
+  .flist li{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;background:var(--accent-soft);margin:6px 0;font-size:.95rem}
+  .flist li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .flist button{border:none;background:transparent;font-size:1.1rem;cursor:pointer;color:var(--sub)}
+  .send{display:block;width:100%;font-size:1.5rem;font-weight:700;padding:18px;border:none;border-radius:18px;background:var(--accent);color:#fff;cursor:pointer;box-shadow:var(--shadow)}
+  .send:disabled{opacity:.4}
+  .msg{text-align:center;padding:24px 10px}
+  .msg .big{font-size:4rem;line-height:1}
+  .msg h2{margin:10px 0 4px}
+  .bar{height:14px;border-radius:99px;background:var(--line);overflow:hidden;margin:14px 0 6px}
+  .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+  .btn{font-size:1.1rem;font-weight:700;padding:12px 20px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+  .hidden{display:none!important}
+  .err{background:var(--ng-soft);color:var(--ng);border-radius:12px;padding:10px 14px;font-weight:700;margin-top:10px}
+  .sub{color:var(--sub);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🖨️ いんさつ ステーション</h1>
+
+  <!-- リンクが まだ ない -->
+  <div id="noCfg" class="card msg hidden">
+    <div class="big">🔗</div>
+    <h2>せんせいの リンクから ひらいてね</h2>
+    <p class="sub">せんせいが くばった QRコードや リンクを ひらくと つかえるように なります。</p>
+  </div>
+
+  <div id="main" class="hidden">
+    <div class="card">
+      <p class="lab">なんねん？</p>
+      <div class="pick g6" id="pNen"></div>
+      <p class="lab" style="margin-top:14px">なんくみ？</p>
+      <div class="pick g8" id="pKumi"></div>
+      <p class="lab" style="margin-top:14px">なんばん？</p>
+      <div class="pick g10" id="pBan"></div>
+    </div>
+
+    <div class="card">
+      <div class="who" id="who">―</div>
+      <label class="file" style="margin-top:12px">
+        <span class="big">📄📷</span>PDFや しゃしんを えらぶ
+        <input type="file" id="fileIn" accept="application/pdf,image/*" multiple>
+      </label>
+      <ul class="flist" id="flist"></ul>
+      <div id="err1"></div>
+    </div>
+
+    <button class="send" id="sendBtn" disabled onclick="send()">📨 おくる</button>
+  </div>
+
+  <div id="busy" class="card msg hidden">
+    <div class="big">📨</div>
+    <h2 id="busyT">おくっています…</h2>
+    <div class="bar"><i id="busyBar"></i></div>
+    <p class="sub">がめんを とじないでね</p>
+  </div>
+
+  <div id="done" class="card msg hidden">
+    <div class="big">🎉</div>
+    <h2>おくれたよ！</h2>
+    <p id="doneTxt"></p>
+    <button class="btn" onclick="reset()">もう ひとつ おくる</button>
+  </div>
+</div>
+
+<script src="lib/pdf-lib.min.js"></script>
+<script src="common.js"></script>
+<script>
+var CFG = null, PUB = null, sel = PS.lsGet("ps-kid-who") || {}, files = [];
+function $(id){ return document.getElementById(id); }
+function show(id){ ["noCfg","main","busy","done"].forEach(function(x){ $(x).classList.toggle("hidden", x!==id); }); window.scrollTo(0,0); }
+
+// 先生のリンク（#c=...）を受け取って、この iPad に おぼえる
+(function(){
+  var m = location.hash.match(/c=([A-Za-z0-9_-]+)/);
+  if (m){ try { var c = PS.decLink(m[1]); if (c.o && c.r && c.t && c.f){ PS.lsSet("ps-kid-cfg", c); } } catch(e){} history.replaceState(null, "", location.pathname); }
+  CFG = PS.lsGet("ps-kid-cfg");
+})();
+
+function pick(el, key, n, from){
+  var h=""; for (var i=from||1; i<=n; i++) h+='<button data-v="'+i+'" class="'+(sel[key]===i?"on":"")+'">'+i+'</button>';
+  el.innerHTML=h;
+  el.onclick=function(e){ var b=e.target.closest("button"); if(!b) return; sel[key]=+b.dataset.v; PS.lsSet("ps-kid-who", sel); render(); };
+}
+function render(){
+  pick($("pNen"),"nen",6); pick($("pKumi"),"kumi",8); pick($("pBan"),"ban",40);
+  var ok = sel.nen && sel.kumi && sel.ban;
+  $("who").textContent = ok ? sel.nen+"ねん "+sel.kumi+"くみ "+sel.ban+"ばん" : "なんねん・なんくみ・なんばん を えらんでね";
+  $("flist").innerHTML = files.map(function(f,i){ return '<li>'+(/pdf/i.test(f.type)||/\.pdf$/i.test(f.name)?"📄":"📷")+'<span>'+f.name.replace(/[<>&]/g,"")+'</span><button onclick="files.splice('+i+',1);render()">✕</button></li>'; }).join("");
+  $("sendBtn").disabled = !(ok && files.length);
+}
+$("fileIn").onchange=function(){ files = files.concat(Array.prototype.slice.call(this.files)); this.value=""; $("err1").innerHTML=""; render(); };
+
+function prog(t, p){ $("busyT").textContent=t; $("busyBar").style.width=p+"%"; }
+async function send(){
+  show("busy"); prog("じゅんびしています…", 10);
+  try{
+    if (!PUB){
+      var raw = await PS.getRaw(CFG, "config.json");
+      if (!raw) throw new Error("せんせいの じゅんびが まだです");
+      var conf = JSON.parse(new TextDecoder().decode(raw));
+      if (await PS.fingerprint(conf.pub) !== CFG.f) throw new Error("リンクが ちがいます。せんせいに きいてね");
+      PUB = await PS.importPub(conf.pub);
+    }
+    prog("PDFに しています…", 30);
+    var pdf = await PS.filesToPdf(files);
+    if (pdf.bytes.length > 25*1024*1024) throw new Error("ファイルが おおきすぎます（25MBまで）");
+    prog("かぎを かけています…", 50);
+    var meta = { nen:sel.nen, kumi:sel.kumi, ban:sel.ban, name:files.map(function(f){return f.name;}).join("、"), pages:pdf.pages, at:new Date().toISOString() };
+    var s = await PS.seal(PUB, pdf.bytes, meta);
+    var id = Date.now()+"-"+Math.random().toString(36).slice(2,8);
+    prog("おくっています…", 65);
+    await PS.putFile(CFG, "inbox/"+id+".bin", PS.bufToB64(s.bin), "pdf");
+    prog("もうすこし…", 90);
+    await PS.putFile(CFG, "inbox/"+id+".json", PS.bufToB64(PS.enc.encode(JSON.stringify(s.head))), "info");
+    prog("おくれた！", 100);
+    $("doneTxt").textContent = sel.nen+"ねん "+sel.kumi+"くみ "+sel.ban+"ばん・"+pdf.pages+"ページ";
+    files=[]; show("done");
+  }catch(e){
+    show("main"); render();
+    var m = e.status===401||e.status===403||e.status===404 ? "せんせいの リンクの きげんが きれているかも。せんせいに きいてね" : (e.message||"おくれませんでした");
+    $("err1").innerHTML='<div class="err">⚠️ '+m.replace(/[<>&]/g,"")+'<br>もういちど 「おくる」を おしてね</div>';
+  }
+}
+function reset(){ show("main"); render(); }
+
+if (!CFG) show("noCfg"); else { show("main"); render(); }
+</script>
+</body>
+</html>

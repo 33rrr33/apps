@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>印刷ステーション（先生）</title>
+<meta name="description" content="児童が送ったPDFを、番号順にまとめて印刷">
+<meta name="theme-color" content="#c96f3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="印刷先生">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{--bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;--accent:#c96f3f;--accent-soft:#fbeee4;
+    --ok:#2e8b57;--ok-soft:#e5f3ea;--ng:#c0392b;--ng-soft:#fbe9e7;--shadow:0 2px 12px rgba(90,70,40,.08)}
+  @media (prefers-color-scheme:dark){:root{--bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;--accent:#e0895a;--accent-soft:#3a2f26;
+    --ok:#5fce8f;--ok-soft:#243a2d;--ng:#f0857a;--ng-soft:#3a2723;--shadow:0 2px 14px rgba(0,0,0,.35)}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:env(safe-area-inset-top) 16px calc(40px + env(safe-area-inset-bottom));background:var(--bg);color:var(--ink);
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Noto Sans JP",sans-serif;line-height:1.6}
+  .wrap{max-width:820px;margin:0 auto}
+  header{display:flex;align-items:center;gap:8px;padding:14px 0 4px;flex-wrap:wrap}
+  header h1{font-size:1.25rem;margin:0;flex:1}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);margin:12px 0}
+  h2{font-size:1.05rem;margin:0 0 8px}
+  .btn{font-family:inherit;font-size:.95rem;font-weight:700;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.big{font-size:1.1rem;padding:14px 20px}
+  .btn.danger{color:var(--ng)}
+  .btn:disabled{opacity:.45}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .sub{color:var(--sub);font-size:.85rem}
+  input.text{font-family:inherit;width:100%;font-size:1rem;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+  .step{display:flex;gap:12px;align-items:flex-start;margin:14px 0}
+  .step .n{flex:0 0 34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .step .b{flex:1}
+  .step ol{margin:6px 0 0;padding-left:1.2em}
+  .hidden{display:none!important}
+  .err{background:var(--ng-soft);color:var(--ng);border-radius:10px;padding:10px 12px;font-weight:700;margin-top:10px}
+  .okmsg{background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:10px 12px;font-weight:700;margin-top:10px}
+  table{width:100%;border-collapse:collapse}
+  td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left;font-size:.95rem;vertical-align:middle}
+  th{font-size:.78rem;color:var(--sub);font-weight:700}
+  td.who{font-weight:700;font-size:1.1rem;white-space:nowrap}
+  td.nm{word-break:break-all}
+  tr.printed td{opacity:.5}
+  .new{font-size:.7rem;background:var(--accent);color:#fff;border-radius:6px;padding:1px 6px;margin-left:4px}
+  input[type=checkbox]{width:22px;height:22px}
+  .ready{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));background:var(--ok-soft);border:2px solid var(--ok);border-radius:16px;padding:12px 14px;margin-top:12px;box-shadow:var(--shadow)}
+  .ready a{font-size:1.15rem}
+  .live{font-size:.78rem;color:var(--sub)}
+  .live::before{content:"●";color:var(--ok);margin-right:4px}
+  .missing{margin-top:8px;font-size:.9rem}
+  .missing b{color:var(--ng)}
+  #qrBox svg{width:min(320px,80vw);height:auto;display:block;margin:10px auto;background:#fff;border-radius:8px}
+  .linkTxt{font-size:.75rem;word-break:break-all;background:var(--accent-soft);border-radius:8px;padding:8px;margin:6px 0}
+  details summary{cursor:pointer;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🖨️ 印刷ステーション</h1>
+  <button class="btn hidden" id="qrBtn" onclick="showQR()">📱 児童用QR</button>
+  <button class="btn hidden" id="setBtn" onclick="toggleSettings()">⚙️</button>
+</header>
+
+<!-- ===== はじめての準備 ===== -->
+<section id="vSetup" class="hidden">
+  <div class="card">
+    <h2>はじめての準備（1回だけ・約5分）</h2>
+    <p class="sub" style="margin-top:0">児童のPDFは、先生のGitHubにつくる<b>非公開の保管庫</b>に入ります。サーバーはいりません。PDFは送る前に暗号化されるので、先生のパスワードなしでは中を見られません。</p>
+    <div class="step"><div class="n">1</div><div class="b">
+      <b>保管庫をつくる</b>
+      <div class="row" style="margin:6px 0"><a class="btn primary" target="_blank" rel="noopener" href="https://github.com/new?name=print-box&visibility=private&description=%E5%8D%B0%E5%88%B7%E3%82%B9%E3%83%86%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E4%BF%9D%E7%AE%A1%E5%BA%AB%EF%BC%88%E3%81%95%E3%82%8F%E3%82%89%E3%81%AA%E3%81%84%E3%81%A7%E3%81%AD%EF%BC%89">GitHubで保管庫をつくる ↗</a></div>
+      <div class="sub">名前「print-box」・「Private」が入った画面が開きます。いちばん下の <b>Create repository</b> を押すだけです。</div>
+    </div></div>
+    <div class="step"><div class="n">2</div><div class="b">
+      <b>鍵（トークン）をつくる</b>
+      <div class="row" style="margin:6px 0"><a class="btn primary" target="_blank" rel="noopener" href="https://github.com/settings/personal-access-tokens/new?name=%E5%8D%B0%E5%88%B7%E3%82%B9%E3%83%86%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3&description=print-box%E3%81%AB%E3%81%A0%E3%81%91%E4%BD%BF%E3%81%86%E9%8D%B5&expires_in=366&contents=write">GitHubで鍵をつくる ↗</a></div>
+      <ol class="sub">
+        <li>「Repository access」で <b>Only select repositories</b> を選び、<b>print-box</b> を選ぶ</li>
+        <li>いちばん下の <b>Generate token</b> を押す</li>
+        <li>出てきた <b>github_pat_…</b> をコピーする（あとでは見られません）</li>
+      </ol>
+    </div></div>
+    <div class="step"><div class="n">3</div><div class="b">
+      <b>鍵をはりつける</b>
+      <input class="text" id="tokIn" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:6px">
+      <div class="row" style="margin-top:8px"><button class="btn primary" onclick="checkToken()">つぎへ</button></div>
+      <div id="repoPick"></div>
+      <div id="setupErr"></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ===== パスワードを決める（初回） ===== -->
+<section id="vNewPw" class="hidden">
+  <div class="card">
+    <h2>先生のパスワードを決める</h2>
+    <p class="sub" style="margin-top:0">PDFを開くためのパスワードです。<b>わすれると、送られたPDFは開けません</b>（作り直せば、また使えます）。8文字以上にしてください。</p>
+    <input class="text" type="password" id="pw1" placeholder="パスワード" autocomplete="new-password">
+    <input class="text" type="password" id="pw2" placeholder="もう一度" autocomplete="new-password" style="margin-top:8px">
+    <label class="sub" style="display:block;margin-top:10px"><input type="checkbox" id="remember1" checked style="width:18px;height:18px;vertical-align:-3px"> このiPadではパスワードを覚えておく</label>
+    <div class="row" style="margin-top:12px"><button class="btn primary big" onclick="createPw()">はじめる</button></div>
+    <div id="pwErr"></div>
+  </div>
+</section>
+
+<!-- ===== パスワードで開く ===== -->
+<section id="vUnlock" class="hidden">
+  <div class="card">
+    <h2>🔒 パスワードを入れてください</h2>
+    <input class="text" type="password" id="pw0" placeholder="パスワード" autocomplete="current-password" onkeydown="if(event.key==='Enter')doUnlock()">
+    <label class="sub" style="display:block;margin-top:10px"><input type="checkbox" id="remember0" checked style="width:18px;height:18px;vertical-align:-3px"> このiPadではパスワードを覚えておく</label>
+    <div class="row" style="margin-top:12px"><button class="btn primary big" onclick="doUnlock()">ひらく</button></div>
+    <div id="unErr"></div>
+  </div>
+</section>
+
+<!-- ===== 一覧 ===== -->
+<section id="vMain" class="hidden">
+  <div class="card" id="settings" style="display:none">
+    <h2>⚙️ 設定</h2>
+    <div class="row"><span>クラスの人数</span><input class="text" id="sizeIn" type="number" min="0" max="45" style="width:90px" placeholder="35"><span class="sub">（まだの番号を出します）</span></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" onclick="showTeacherLink()">🔑 ほかのiPadで開くリンク</button>
+      <button class="btn" onclick="lockNow()">🔒 パスワードを忘れさせる</button>
+      <button class="btn danger" onclick="resetAll()">はじめからやり直す</button>
+    </div>
+    <div id="tLink"></div>
+    <p class="sub">保管庫：<span id="repoName"></span></p>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">届いたもの <span id="cnt"></span></h2>
+      <span class="live" id="live">自動で更新中</span>
+    </div>
+    <div class="missing" id="missing"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" onclick="selectAll()">☑ ぜんぶえらぶ</button>
+      <button class="btn primary big" id="printBtn" onclick="preparePrint()">🖨 えらんだものをまとめて印刷</button>
+    </div>
+    <div style="overflow-x:auto;margin-top:6px">
+      <table><thead><tr><th></th><th>年・組・番</th><th>ファイル</th><th>ページ</th><th>時こく</th><th></th></tr></thead><tbody id="list"></tbody></table>
+    </div>
+    <p class="sub" id="empty">まだ届いていません。児童用QRを配ってください。</p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn danger" onclick="deletePrinted()">印刷したものを消す</button>
+      <button class="btn danger" onclick="deleteSelected()">えらんだものを消す</button>
+    </div>
+    <div id="mainErr"></div>
+  </div>
+  <div class="ready hidden" id="ready"></div>
+</section>
+
+<!-- ===== 児童用QR ===== -->
+<section id="vQR" class="hidden">
+  <div class="card" style="text-align:center">
+    <h2>📱 児童用のQRコード</h2>
+    <p class="sub">児童のiPadのカメラで読みとって開きます。一度開けば、そのiPadが覚えます（ホーム画面に追加すると便利）。</p>
+    <div id="qrBox"></div>
+    <div class="linkTxt" id="kidLink"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn" onclick="copyText(KIDURL)">リンクをコピー</button>
+      <button class="btn primary" onclick="go('vMain')">もどる</button>
+    </div>
+    <p class="sub">TeamsやOneNoteでリンクを配ってもOKです。</p>
+  </div>
+</section>
+</div>
+
+<script src="lib/pdf-lib.min.js"></script>
+<script src="lib/qrcode.js"></script>
+<script src="common.js"></script>
+<script>
+var T = PS.lsGet("ps-teacher") || {};      // {o,r,t,pk?,size?}
+var CONF = null, PRIV = null, KIDURL = "";
+var items = {};       // id -> {id, meta, key, head, jsonSha, binSha, bin}
+var printed = PS.lsGet("ps-printed") || {}, chosen = {};
+var pollTimer = null, OPENED = new Date().toISOString();  // 開いてから届いたものに NEW
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function err(id, m){ $(id).innerHTML = m ? '<div class="err">⚠️ '+esc(m)+'</div>' : ""; }
+function go(v){
+  ["vSetup","vNewPw","vUnlock","vMain","vQR"].forEach(function(x){ $(x).classList.toggle("hidden", x!==v); });
+  var inApp = v==="vMain" || v==="vQR";
+  $("qrBtn").classList.toggle("hidden", !inApp); $("setBtn").classList.toggle("hidden", !inApp);
+  if (v==="vMain") startPoll(); else stopPoll();
+  window.scrollTo(0,0);
+}
+function saveT(){ PS.lsSet("ps-teacher", T); }
+
+// ほかのiPad用リンク（#t=...）
+(function(){
+  var m = location.hash.match(/t=([A-Za-z0-9_-]+)/);
+  if (m){ try { var c = PS.decLink(m[1]); if (c.o && c.r && c.t){ T = {o:c.o, r:c.r, t:c.t, size:c.size}; saveT(); } } catch(e){} history.replaceState(null, "", location.pathname); }
+})();
+
+/* ---------- 起動 ---------- */
+async function boot(){
+  if (!T.t || !T.o){ go("vSetup"); return; }
+  try{
+    var raw = await PS.getRaw(T, "config.json");
+    if (!raw){ go("vNewPw"); return; }
+    CONF = JSON.parse(new TextDecoder().decode(raw));
+    if (T.pk){ PRIV = await PS.importPriv(T.pk); await enterMain(); }
+    else go("vUnlock");
+  }catch(e){
+    go("vSetup");
+    err("setupErr", (e.status===401 ? "鍵（トークン）の期限が切れたか、消されています。②からもう一度つくってください。" : e.message));
+  }
+}
+
+/* ---------- 準備 ---------- */
+async function checkToken(){
+  err("setupErr"); $("repoPick").innerHTML="";
+  var t = $("tokIn").value.trim();
+  if (!/^(github_pat_|ghp_)/.test(t)){ err("setupErr","github_pat_ ではじまる鍵をはりつけてください"); return; }
+  try{
+    var repos = await PS.privateRepos(t);
+    if (!repos.length){ err("setupErr","この鍵で使える非公開の保管庫が見つかりません。②で print-box を選んだか確かめてください。"); return; }
+    var pb = repos.filter(function(r){ return r.name==="print-box"; });
+    if (repos.length===1 || pb.length===1){ useRepo(t, (pb[0]||repos[0]).full_name); return; }
+    $("repoPick").innerHTML = '<p class="sub">どの保管庫を使いますか？</p>' + repos.map(function(r){ return '<button class="btn" style="margin:4px" onclick="useRepo(\''+t+'\',\''+r.full_name+'\')">'+esc(r.full_name)+'</button>'; }).join("");
+  }catch(e){ err("setupErr", e.status===401 ? "鍵が正しくないようです。コピーしなおしてください。" : e.message); }
+}
+function useRepo(t, full){ var p=full.split("/"); T={o:p[0], r:p[1], t:t, size:T.size}; saveT(); boot(); }
+
+async function createPw(){
+  err("pwErr"); var a=$("pw1").value, b=$("pw2").value;
+  if (a.length<8){ err("pwErr","8文字以上にしてください"); return; }
+  if (a!==b){ err("pwErr","2つのパスワードがちがいます"); return; }
+  try{
+    var r = await PS.makeConfig(a);
+    await PS.putFile(T, "config.json", PS.bufToB64(PS.enc.encode(JSON.stringify(r.config))), "setup");
+    CONF = r.config; PRIV = r.privateKey;
+    if ($("remember1").checked){ T.pk = r.pkcs8; saveT(); }
+    await enterMain(); showQR();
+  }catch(e){ err("pwErr", e.message); }
+}
+async function doUnlock(){
+  err("unErr");
+  try{
+    var r = await PS.unlock(CONF, $("pw0").value);
+    PRIV = r.privateKey; if ($("remember0").checked){ T.pk = r.pkcs8; saveT(); }
+    $("pw0").value=""; await enterMain();
+  }catch(e){ err("unErr", e.message); }
+}
+async function enterMain(){
+  KIDURL = PS.appBase() + "#c=" + PS.encLink({o:T.o, r:T.r, t:T.t, f: await PS.fingerprint(CONF.pub)});
+  $("repoName").textContent = T.o+"/"+T.r; $("sizeIn").value = T.size||"";
+  go("vMain"); render(); refresh();
+}
+
+/* ---------- 一覧 ---------- */
+function startPoll(){ stopPoll(); pollTimer=setInterval(function(){ if (document.visibilityState==="visible") refresh(); }, 12000); }
+function stopPoll(){ if (pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
+document.addEventListener("visibilitychange", function(){ if (document.visibilityState==="visible" && pollTimer) refresh(); });
+var refreshing=false;
+async function refresh(){
+  if (refreshing) return; refreshing=true;
+  try{
+    var files = await PS.listDir(T, "inbox"), byId = {};
+    files.forEach(function(f){ var m=f.name.match(/^(.+)\.(json|bin)$/); if (!m) return; (byId[m[1]]=byId[m[1]]||{})[m[2]]=f; });
+    // なくなったものは一覧から消す
+    Object.keys(items).forEach(function(id){ if (!byId[id] || !byId[id].json) delete items[id]; });
+    var ids = Object.keys(byId).filter(function(id){ return byId[id].json && byId[id].bin && !items[id]; });
+    for (var i=0;i<ids.length;i++){
+      var id=ids[i], f=byId[id];
+      try{
+        var head = JSON.parse(new TextDecoder().decode(await PS.getRaw(T, f.json.path)));
+        var o = await PS.openHead(PRIV, head);
+        items[id] = {id:id, meta:o.meta, key:o.key, head:head, jsonSha:f.json.sha, binSha:f.bin.sha, jsonPath:f.json.path, binPath:f.bin.path};
+      }catch(e){ items[id] = {id:id, bad:true, jsonSha:f.json.sha, binSha:f.bin.sha, jsonPath:f.json.path, binPath:f.bin.path, meta:{}}; }
+    }
+    Object.keys(items).forEach(function(id){ if (byId[id]){ items[id].binSha=byId[id].bin ? byId[id].bin.sha : items[id].binSha; } });
+    err("mainErr"); $("live").textContent="自動で更新中";
+    render();
+  }catch(e){
+    $("live").textContent="つながっていません";
+    if (e.status===401) err("mainErr","鍵（トークン）の期限が切れています。設定の「はじめからやり直す」で②からつくり直してください。");
+  }finally{ refreshing=false; }
+}
+function sorted(){
+  return Object.keys(items).map(function(k){return items[k];}).sort(function(a,b){
+    var x=a.meta, y=b.meta; return (x.nen||99)-(y.nen||99) || (x.kumi||99)-(y.kumi||99) || (x.ban||99)-(y.ban||99) || String(x.at).localeCompare(String(y.at));
+  });
+}
+function fmtTime(iso){ if(!iso) return ""; var d=new Date(iso); return (d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2); }
+function render(){
+  var list=sorted();
+  $("cnt").textContent = list.length ? "（"+list.length+"）" : "";
+  $("empty").classList.toggle("hidden", !!list.length);
+  $("list").innerHTML = list.map(function(it){
+    var m=it.meta, isNew = !printed[it.id] && String(m.at) > OPENED;
+    if (it.bad) return '<tr><td><input type="checkbox" '+(chosen[it.id]?"checked":"")+' onchange="chosen[\''+it.id+'\']=this.checked"></td><td colspan="4" class="sub">開けないファイル（パスワードを作り直す前に送られたもの）</td><td></td></tr>';
+    return '<tr class="'+(printed[it.id]?"printed":"")+'"><td><input type="checkbox" '+(chosen[it.id]?"checked":"")+' onchange="chosen[\''+it.id+'\']=this.checked;updBtn()"></td>'+
+      '<td class="who">'+m.nen+'-'+m.kumi+'-'+m.ban+(isNew?'<span class="new">NEW</span>':'')+(printed[it.id]?' <span class="sub">印刷ずみ</span>':'')+'</td>'+
+      '<td class="nm">'+esc(m.name||"")+'</td><td>'+(m.pages||"")+'</td><td class="sub">'+fmtTime(m.at)+'</td>'+
+      '<td><button class="btn" onclick="prepareOne(\''+it.id+'\')">ひらく</button></td></tr>';
+  }).join("");
+  // まだの番号
+  var size=+T.size||0, el=$("missing");
+  if (size && list.length){
+    var cnt={}; list.forEach(function(it){ if(it.meta.nen){ var k=it.meta.nen+"-"+it.meta.kumi; cnt[k]=(cnt[k]||0)+1; } });
+    var cls=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];})[0];
+    var have={}; list.forEach(function(it){ if (it.meta.nen+"-"+it.meta.kumi===cls) have[it.meta.ban]=1; });
+    var miss=[]; for (var i=1;i<=size;i++) if(!have[i]) miss.push(i);
+    el.innerHTML = cls ? (cls.replace("-","年")+"組："+(miss.length? 'まだ <b>'+miss.join("・")+'</b>番' : '<span style="color:var(--ok);font-weight:700">全員そろいました 🎉</span>')) : "";
+  } else el.innerHTML="";
+  updBtn();
+}
+function updBtn(){ var n=Object.keys(chosen).filter(function(k){return chosen[k] && items[k];}).length; $("printBtn").textContent = "🖨 えらんだものをまとめて印刷"+(n?"（"+n+"）":""); $("printBtn").disabled=!n; }
+function selectAll(){ var all=Object.keys(items).every(function(k){return chosen[k];}); chosen={}; if(!all) Object.keys(items).forEach(function(k){ if(!items[k].bad) chosen[k]=true; }); render(); }
+
+/* ---------- 印刷 ---------- */
+var lastUrl=null;
+async function getPdf(it){
+  if (!it.bin){ var buf = await PS.getRaw(T, it.binPath); if (!buf) throw new Error("ファイルが見つかりません"); it.bin = await PS.openBin(it.key, it.head, buf); }
+  return it.bin;
+}
+async function prepare(ids, label){
+  var r=$("ready"); r.classList.remove("hidden"); r.innerHTML='⏳ 準備しています…（'+ids.length+'件）';
+  try{
+    var list=sorted().filter(function(it){ return ids.indexOf(it.id)>=0 && !it.bad; }), bufs=[];
+    for (var i=0;i<list.length;i++){ r.innerHTML='⏳ 準備しています… '+(i+1)+' / '+list.length; bufs.push(await getPdf(list[i])); }
+    var bytes = bufs.length===1 ? bufs[0] : await PS.mergePdfs(bufs);
+    if (lastUrl) URL.revokeObjectURL(lastUrl);
+    lastUrl = URL.createObjectURL(new Blob([bytes], {type:"application/pdf"}));
+    list.forEach(function(it){ printed[it.id]=1; }); PS.lsSet("ps-printed", printed);
+    r.innerHTML='<div class="row" style="justify-content:space-between"><b>✅ '+esc(label)+'（'+list.length+'件）</b>'+
+      '<a class="btn primary big" href="'+lastUrl+'" target="_blank" rel="noopener">🖨 ひらいて印刷</a>'+
+      '<button class="btn" onclick="$(\'ready\').classList.add(\'hidden\')">とじる</button></div>'+
+      '<div class="sub">開いたら、共有ボタン（□↑）→「プリント」で印刷します。</div>';
+    render();
+  }catch(e){ r.innerHTML='<div class="err">⚠️ '+esc(e.message)+'</div>'; }
+}
+function preparePrint(){ var ids=Object.keys(chosen).filter(function(k){return chosen[k] && items[k];}); if (ids.length) prepare(ids, "番号順にまとめました"); }
+function prepareOne(id){ var m=items[id].meta; prepare([id], m.nen+"-"+m.kumi+"-"+m.ban); }
+
+/* ---------- 消す ---------- */
+async function removeIds(ids){
+  for (var i=0;i<ids.length;i++){
+    var it=items[ids[i]]; if (!it) continue;
+    await PS.deleteFile(T, it.jsonPath, it.jsonSha);
+    await PS.deleteFile(T, it.binPath, it.binSha);
+    delete items[ids[i]]; delete chosen[ids[i]]; delete printed[ids[i]];
+  }
+  PS.lsSet("ps-printed", printed); render();
+}
+async function deletePrinted(){
+  var ids=Object.keys(items).filter(function(k){return printed[k];});
+  if (!ids.length){ alert("印刷したものはありません"); return; }
+  if (!confirm("印刷した "+ids.length+" 件を消します。いいですか？")) return;
+  try{ await removeIds(ids); }catch(e){ err("mainErr", e.message); }
+}
+async function deleteSelected(){
+  var ids=Object.keys(chosen).filter(function(k){return chosen[k] && items[k];});
+  if (!ids.length){ alert("えらんでください"); return; }
+  if (!confirm(ids.length+" 件を消します。いいですか？")) return;
+  try{ await removeIds(ids); }catch(e){ err("mainErr", e.message); }
+}
+
+/* ---------- QR・設定 ---------- */
+function showQR(){ $("qrBox").innerHTML=PS.qrSvg(KIDURL, 5); $("kidLink").textContent=KIDURL; go("vQR"); }
+function toggleSettings(){ var s=$("settings"); s.style.display = s.style.display==="none" ? "" : "none"; }
+$("sizeIn").addEventListener("change", function(){ T.size=+this.value||0; saveT(); render(); });
+function showTeacherLink(){
+  var url = PS.appBase()+"teacher.html#t="+PS.encLink({o:T.o, r:T.r, t:T.t, size:T.size||0});
+  $("tLink").innerHTML='<p class="sub">⚠️ このリンクは先生だけが使ってください（開くにはパスワードも必要です）。</p><div class="linkTxt">'+esc(url)+'</div><button class="btn" onclick="copyText(\''+url+'\')">コピー</button>';
+}
+function lockNow(){ delete T.pk; saveT(); PRIV=null; items={}; go("vUnlock"); }
+function resetAll(){
+  if (!confirm("このiPadの設定を消して、はじめからやり直します。保管庫の中身は消えません。いいですか？")) return;
+  PS.lsDel("ps-teacher"); PS.lsDel("ps-printed"); T={}; items={}; PRIV=null; go("vSetup");
+}
+function copyText(t){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ alert("コピーしました"); }, function(){ prompt("コピーしてください", t); }); }
+
+boot();
+</script>
+</body>
+</html>
