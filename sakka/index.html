@@ -219,6 +219,13 @@
   .gwords{display:grid;gap:12px}
   .gwords .gcard .main{font-size:2.2rem;text-align:center;margin:8px 0}
   body.big .gwords .gcard .main{font-size:clamp(2.6rem,7vw,5.5rem)}
+  .gchoose{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  @media (max-width:520px){.gchoose{grid-template-columns:1fr}}
+  .gchoose button{font-size:1.6rem;font-weight:700;padding:30px 10px;border-radius:22px;cursor:pointer;box-shadow:var(--shadow);border:3px solid}
+  .gchoose button span{display:block;font-size:3.4rem;line-height:1.1;margin-bottom:8px}
+  .gchoose button small{display:block;font-size:.85rem;font-weight:400;color:var(--sub);margin-top:6px}
+  .gchoose .hito{border-color:var(--hito);background:var(--hito-soft);color:var(--hito)}
+  .gchoose .mono{border-color:var(--mono);background:var(--mono-soft);color:var(--mono)}
   .gfocus{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 2px}
   .gfocus button{font-size:1.15rem;font-weight:700;padding:14px 8px;border-radius:16px;border:2px solid var(--line);background:var(--panel);cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;gap:8px}
   .gfocus button span{font-size:1.5rem}
@@ -309,6 +316,12 @@
 
 <!-- ===== おだいガチャ（紙に書く） ===== -->
 <section id="v-gacha" class="hidden">
+  <div id="gChoose" class="card hero">
+    <div class="big">✏️</div>
+    <h2 id="gChooseQ">なにについて書く？</h2>
+    <div class="gchoose" id="gChooseBtns"></div>
+  </div>
+  <div id="gMain">
   <div class="gHead">
     <div class="gopts grow" id="gOpts"></div>
     <button class="btn small" id="bigBtn" onclick="toggleBig()">📺 大きく</button>
@@ -325,6 +338,7 @@
       <button class="btn small" onclick="gTimerStart(15)">15分</button>
       <button class="btn small ghost" onclick="gTimerStop()">とめる</button>
     </div>
+  </div>
   </div>
 </section>
 
@@ -486,7 +500,7 @@
   </div>
 </section>
 
-<footer>作家の時間 ✏️ ことばの宝箱</footer>
+<footer>作家の時間 ✏️ ことばの宝箱　ver.2026-10-06c</footer>
 </div>
 
 <div id="stage" class="hidden"><button class="btn close" onclick="hideStage()">✕ とじる</button><div class="t" id="stT"></div><div class="a" id="stA"></div><div class="b" id="stB"></div></div>
@@ -742,6 +756,7 @@ var cur="home";
 function go(v){
   if (cur==="today" && v!=="today") pauseTimer();
   if (cur==="entry" && v!=="entry") saveEntry();
+  if (v==="gacha" && cur!=="gacha") gChosen=false;
   cur=v;
   VIEWS.forEach(function(x){ $("v-"+x).classList.toggle("hidden", x!==v); });
   $("backBtn").classList.toggle("hidden", v==="home" || (v==="setup" && !st.grade));
@@ -1148,14 +1163,24 @@ function gPick(k, avoid){
 function exOf(v){ return typeof v.ex==="string" ? v.ex : v.ex[gFocus()]; }
 function gOn(k){ return !st.gOff || !st.gOff[k]; }
 function newGL(){ GL={grade:st.grade, focus:gFocus()}; GKEYS.forEach(function(o){ GL[o.k]=gPick(o.k); }); }
+var gChosen=false;
 function renderGacha(){
   if (!st.grade){ go("setup"); return; }
+  $("gChoose").classList.toggle("hidden", gChosen);
+  $("gMain").classList.toggle("hidden", !gChosen);
+  if (!gChosen){
+    $("gChooseQ").textContent=L("なにに ついて かく？","何について書く？");
+    $("gChooseBtns").innerHTML=["h","m"].map(function(f){ return '<button class="'+CATS[f].cls+'" onclick="chooseFocus(\''+f+'\')"><span>'+FOCUS[f].e+'</span>'+L(FOCUS[f].low,FOCUS[f].high)+
+      '<small>'+L(f==="h"?"ひとや どうぶつの ことを かく":"ものや ばしょの ようすを かく", f==="h"?"人や動物・登場人物について書く":"物・場所・景色の様子を書く")+'</small></button>'; }).join("");
+    return;
+  }
   $("gFocus").innerHTML=["h","m"].map(function(f){ return '<button class="'+(f===gFocus()?"on "+CATS[f].cls:"")+'" onclick="setFocus(\''+f+'\')"><span>'+FOCUS[f].e+'</span>'+L(FOCUS[f].low,FOCUS[f].high)+'</button>'; }).join("");
   $("gOpts").innerHTML=GKEYS.map(function(o){ return '<label><input type="checkbox" '+(gOn(o.k)?"checked":"")+' onchange="gToggle(\''+o.k+'\',this.checked)">'+L(o.low,o.high)+'</label>'; }).join("");
   $("drawBtn").textContent=L("🎲 おだいを ひく","🎲 おだいを引く");
   if (!GL || GL.grade!==st.grade || GL.focus!==gFocus()) newGL();
   drawCards();
 }
+function chooseFocus(f){ gChosen=true; st.gFocus=f; save(); newGL(); renderGacha(); window.scrollTo(0,0); spin(GKEYS.map(function(o){return o.k;}).filter(gOn)); }
 function setFocus(f){ st.gFocus=f; save(); newGL(); renderGacha(); spin(GKEYS.map(function(o){return o.k;}).filter(gOn)); }
 function gToggle(k,on){ st.gOff=st.gOff||{}; st.gOff[k]=!on; save(); drawCards(); }
 function gCardHTML(k){
