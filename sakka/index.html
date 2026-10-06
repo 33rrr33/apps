@@ -216,8 +216,14 @@
   .gcard.kimo{border-color:var(--kimo)} .gcard.kimo .lab{color:var(--kimo)}
   .gcard.spin .main,.gcard.spin .desc,.gcard.spin .ex{opacity:.45;filter:blur(1px)}
   .gcard.land{animation:pop .4s}
-  .gwords{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  @media (max-width:600px){.gwords{grid-template-columns:1fr}}
+  .gwords{display:grid;gap:12px}
+  .gwords .gcard .main{font-size:2.2rem;text-align:center;margin:8px 0}
+  body.big .gwords .gcard .main{font-size:clamp(2.6rem,7vw,5.5rem)}
+  .gfocus{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 2px}
+  .gfocus button{font-size:1.15rem;font-weight:700;padding:14px 8px;border-radius:16px;border:2px solid var(--line);background:var(--panel);cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;gap:8px}
+  .gfocus button span{font-size:1.5rem}
+  .gfocus button.on.hito{border-color:var(--hito);background:var(--hito-soft);color:var(--hito)}
+  .gfocus button.on.mono{border-color:var(--mono);background:var(--mono-soft);color:var(--mono)}
   .gtimer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .gtimer .t{font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums;min-width:4.5em}
   .gtimer .t.done{color:var(--kimo)}
@@ -307,9 +313,10 @@
     <div class="gopts grow" id="gOpts"></div>
     <button class="btn small" id="bigBtn" onclick="toggleBig()">📺 大きく</button>
   </div>
+  <div class="gfocus" id="gFocus"></div>
   <button class="btn primary drawBtn" id="drawBtn" onclick="drawAll()">🎲 おだいを引く</button>
-  <div class="gcards c2" id="gTop"></div>
-  <div class="gwords" id="gWords" style="margin-top:12px"></div>
+  <div class="gwords" id="gWords"></div>
+  <div class="gcards c2" id="gTop" style="margin-top:12px"></div>
   <div class="card" style="margin-top:12px;padding:12px 16px">
     <div class="gtimer">
       <span class="t" id="gTime">--:--</span>
@@ -461,7 +468,7 @@
     <p><b>作家の時間（ライティング・ワークショップ）</b>は、子どもが本物の「作家」として、自分で決めた内容を書き、作品を出版する学び方です。基本の流れは、<b>ミニレッスン → ひたすら書く → 共有（ふりかえり）</b>です。</p>
     <p>このアプリは、樋口綾香先生の朝学習の形（<b>ミニレッスン5分＋書く10分</b>）に合わせています。そこに、教科書巻末の「言葉の宝箱」の言葉を毎日3語（人物・事物・気持ち）入れました。<b>読むときに学んだ言葉を、書くときにつかえる言葉にする</b>ためです。</p>
     <h2 style="margin-top:16px">紙に書くとき：おだいガチャ</h2>
-    <p>ホームの「🎲 おだいを引く」で、<b>表現技法・書き出し・言葉の宝箱（人物・様子・気持ち）</b>をランダムに出せます。「📺 大きく」でテレビや黒板にうつし、タイマー（5／10／15分）を動かして、子どもは作家ノートや原稿用紙に書きます。出すおだいはチェックで選べて、カードごとに🔄で引き直せます。表現技法は学年に合わせて出し分けます（隠喩・対句は5年から、体言止めは4年から、倒置法は3年から）。</p>
+    <p>ホームの「🎲 おだいを引く」で、まず<b>「人物を書く」か「物を書く」か</b>を選びます。すると、<b>言葉の宝箱の言葉（人物か様子）・表現技法・書き出し</b>が1つずつランダムに出ます。表現技法と書き出しも、選んだほうに合うものだけが出ます。「📺 大きく」でテレビや黒板にうつし、タイマー（5／10／15分）を動かして、子どもは作家ノートや原稿用紙に書きます。出すおだいはチェックで選べて、カードごとに🔄で引き直せます。表現技法は学年に合わせて出し分けます（隠喩・対句は5年から、体言止めは4年から、倒置法は3年から）。</p>
     <h2 style="margin-top:16px">大事にしていること</h2>
     <ul>
       <li><b>書く内容は子どもが決める</b>。今日の言葉は「つかえたらすごい」というお誘いで、強制ではありません。</li>
@@ -1055,101 +1062,115 @@ function importData(inp){
 function wipeData(){ if (!confirm("書いたものも、あつめた言葉も、ぜんぶ消えます。いいですか？")) return; try{ localStorage.removeItem(LS); }catch(e){} st=load(); go("setup"); }
 
 /* ============================================================
-   おだいガチャ：表現技法・書き出し・言葉の宝箱をランダムに
-   g: その学年から出す（高学年向けの技法は低学年に出さない）
+   おだいガチャ：人物か物かを選び、言葉・表現技法・書き出しを1つずつ
+   f: h=人物向け m=物向け hm=どちらも ／ g: その学年から出す
+   ex: 文字列、または {h:人物の例, m:物の例}
    ============================================================ */
 var WAZA_LOW = [
- {t:"〜のような（たとえ）", d:"ほかの ものに たとえて、ようすを つたえよう。", ex:"わたあめのような くも"},
- {t:"おとや ようすの ことば", d:"ざあざあ・きらきら・どきどき などを つかおう。", ex:"あめが ざあざあ ふって きた。"},
- {t:"「 」で はなさせる", d:"じんぶつが はなした ことばを かこう。", ex:"「まって！」と、ぼくは さけんだ。"},
- {t:"くりかえし", d:"おなじ ことばを くりかえして、きもちを つよく しよう。", ex:"はしって、はしって、はしった。"},
- {t:"気もちを うごきで", d:"「うれしい」の かわりに、からだの うごきを かこう。", ex:"ぴょんぴょん とびはねた。"},
- {t:"よびかけ", d:"よむ 人に はなしかけて みよう。", ex:"ねえ、きいて。きょう すごい ことが あったんだ。"},
- {t:"いろを いれる", d:"いろの ことばで、ようすが よく わかるよ。", ex:"まっかな ゆうひが、うみに しずんだ。"},
- {t:"みた・きいた・におい", d:"めや みみや はなで かんじた ことを かこう。", ex:"パンの いい においが して きた。"},
- {t:"ものが 人みたいに", d:"ものや どうぶつが 人のように うごいたり はなしたり するよ。", ex:"かぜが まどを トントンと たたいた。"}
+ {t:"〜のような（たとえ）", f:"hm", d:"ほかの ものに たとえて、ようすを つたえよう。", ex:{h:"おひさまみたいな えがお", m:"わたあめのような くも"}},
+ {t:"くりかえし", f:"hm", d:"おなじ ことばを くりかえして、つよく つたえよう。", ex:{h:"はしって、はしって、はしった。", m:"ずっと、ずっと、ふって いた。"}},
+ {t:"よびかけ", f:"hm", d:"よむ 人に はなしかけて みよう。", ex:{h:"ねえ、きいて。ぼくの ともだちの はなし。", m:"みて みて、この いし すごいでしょ。"}},
+ {t:"「 」で はなさせる", f:"h", d:"じんぶつが はなした ことばを かこう。", ex:"「まって！」と、ぼくは さけんだ。"},
+ {t:"気もちを うごきで", f:"h", d:"「うれしい」の かわりに、からだの うごきを かこう。", ex:"ぴょんぴょん とびはねた。"},
+ {t:"かおの ようす", f:"h", d:"かおや めや くちの ようすを かこう。", ex:"めを まるくして、くちを ぽかんと あけた。"},
+ {t:"おとや ようすの ことば", f:"m", d:"ざあざあ・きらきら・ふわふわ などを つかおう。", ex:"あめが ざあざあ ふって きた。"},
+ {t:"いろを いれる", f:"m", d:"いろの ことばで、ようすが よく わかるよ。", ex:"まっかな ゆうひが、うみに しずんだ。"},
+ {t:"みた・きいた・さわった", f:"m", d:"め・みみ・はな・てで かんじた ことを かこう。", ex:"さわると、つるつるで つめたかった。"},
+ {t:"ものが 人みたいに", f:"m", d:"ものが 人のように うごいたり はなしたり するよ。", ex:"かぜが まどを トントンと たたいた。"}
 ];
 var WAZA_HIGH = [
- {t:"直喩（〜のような）", d:"「まるで〜のような」と、たとえていることがはっきりわかる比喩。", ex:"まるで宝石のような星空。／むねがはりさけるような悲しみ。"},
- {t:"隠喩（暗喩）", d:"「ような」を使わずに、言い切ってたとえる比喩。", ex:"教室は動物園だ。／彼の心は氷だった。", g:5},
- {t:"擬人法", d:"人でないものを、人のように動かしたり話させたりする。", ex:"風が、そっとまどをノックした。"},
- {t:"オノマトペ", d:"音や様子を表す言葉（擬音語・擬態語）を使う。", ex:"雨がしとしとふる。むねがドキドキした。"},
- {t:"倒置法", d:"言葉の順番を入れかえて、伝えたいことを強める。", ex:"ぼくはわすれない、あの日の約束を。", g:3},
- {t:"反復（くり返し）", d:"同じ言葉をくり返して、気持ちやリズムを強める。", ex:"走った。走った。ただ、走った。"},
- {t:"体言止め", d:"文の終わりを名詞で止めて、余韻を残す。", ex:"見上げると、満天の星。", g:4},
- {t:"対句", d:"形のにた言葉を並べて、リズムよくくらべる。", ex:"空は青く、海は深い。", g:5},
- {t:"呼びかけ・問いかけ", d:"読者に話しかけたり、問いかけたりする。", ex:"きみは、本当のゆう気を知っているかい。"},
- {t:"気持ちを行動で見せる", d:"気持ちの言葉を使わず、動作や表情で伝える。", ex:"ぼくは、こぶしをぎゅっとにぎりしめた。"},
- {t:"会話文", d:"「　」で人物に話させて、性格や気持ちを伝える。", ex:"「だいじょうぶ。」と、姉は小さくわらった。"},
- {t:"五感を使う", d:"見る・聞く・かぐ・さわる・味わうで様子を書く。", ex:"しおのにおいが、鼻のおくまでとどいた。"},
- {t:"色を入れる", d:"色の言葉で、場面をあざやかにする。", ex:"真っ赤な夕日が、町をオレンジ色にそめた。"},
- {t:"心の中の声", d:"人物が心の中で思ったことを書く。", ex:"（どうしよう。もう、にげられない。）"}
+ {t:"直喩（〜のような）", f:"hm", d:"「まるで〜のような」と、たとえていることがはっきりわかる比喩。", ex:{h:"まるで太陽のような笑顔。", m:"まるで宝石のような星空。"}},
+ {t:"隠喩（暗喩）", f:"hm", g:5, d:"「ような」を使わずに、言い切ってたとえる比喩。", ex:{h:"彼は、クラスの太陽だ。", m:"夜の町は、光の海だった。"}},
+ {t:"倒置法", f:"hm", g:3, d:"言葉の順番を入れかえて、伝えたいことを強める。", ex:{h:"ぼくはわすれない、あの日の約束を。", m:"美しかった、あの夕焼けは。"}},
+ {t:"反復（くり返し）", f:"hm", d:"同じ言葉をくり返して、気持ちやリズムを強める。", ex:{h:"走った。走った。ただ、走った。", m:"雪は、ふる、ふる、町をうめるように。"}},
+ {t:"呼びかけ・問いかけ", f:"hm", d:"読者に話しかけたり、問いかけたりする。", ex:{h:"きみは、本当のゆう気を知っているかい。", m:"こんな石、見たことがありますか。"}},
+ {t:"気持ちを行動で見せる", f:"h", d:"気持ちの言葉を使わず、動作や表情で伝える。", ex:"ぼくは、こぶしをぎゅっとにぎりしめた。"},
+ {t:"会話文", f:"h", d:"「　」で人物に話させて、性格や気持ちを伝える。", ex:"「だいじょうぶ。」と、姉は小さくわらった。"},
+ {t:"心の中の声", f:"h", d:"人物が心の中で思ったことを書く。", ex:"（どうしよう。もう、にげられない。）"},
+ {t:"くせや見た目で性格を見せる", f:"h", d:"外見・くせ・持ち物から、どんな人かを想像させる。", ex:"祖父はいつも、ポケットにあめ玉を三つ入れている。"},
+ {t:"二人をくらべる（対比）", f:"h", d:"ちがう二人を並べて、それぞれの特徴を目立たせる。", ex:"兄は大声でわらい、弟はだまってうつむいた。"},
+ {t:"擬人法", f:"m", d:"人でないものを、人のように動かしたり話させたりする。", ex:"風が、そっとまどをノックした。"},
+ {t:"オノマトペ", f:"m", d:"音や様子を表す言葉（擬音語・擬態語）を使う。", ex:"雨がしとしとふる。パンはふわふわだ。"},
+ {t:"体言止め", f:"m", g:4, d:"文の終わりを名詞で止めて、余韻を残す。", ex:"見上げると、満天の星。"},
+ {t:"対句", f:"m", g:5, d:"形のにた言葉を並べて、リズムよくくらべる。", ex:"空は青く、海は深い。"},
+ {t:"五感を使う", f:"m", d:"見る・聞く・かぐ・さわる・味わうで様子を書く。", ex:"しおのにおいが、鼻のおくまでとどいた。"},
+ {t:"色を入れる", f:"m", d:"色の言葉で、場面をあざやかにする。", ex:"真っ赤な夕日が、町をオレンジ色にそめた。"}
 ];
 var KAKI_LOW = [
- {t:"「 」から はじめる", ex:"「あっ、なにか いる！」"},
- {t:"おとから はじめる", ex:"ドーン！ おおきな おとが した。"},
- {t:"いつ・どこで から", ex:"なつやすみの あさ、ぼくは うみに いた。"},
- {t:"気もちから はじめる", ex:"きょうは、とっても うれしい ひだった。"},
- {t:"むかしむかし…", ex:"むかしむかし、ある もりに、ちいさな くまが すんで いました。"},
- {t:"しつもんから はじめる", ex:"みんなは、くもに のった ことが ありますか。"},
- {t:"ようすから はじめる", ex:"そらは まっさおで、くもが ひとつも なかった。"},
- {t:"しゅじんこうの しょうかい", ex:"ぼくの なまえは たける。はしるのが だいすきな 二ねんせいだ。"}
+ {t:"いつ・どこで から", f:"hm", ex:{h:"なつやすみの あさ、ぼくは こうえんで ともだちを まって いた。", m:"なつやすみの あさ、うみべで ふしぎな かいを みつけた。"}},
+ {t:"むかしむかし…", f:"hm", ex:{h:"むかしむかし、ある もりに、ちいさな くまが すんで いました。", m:"むかしむかし、ある むらに、ふしぎな つぼが ありました。"}},
+ {t:"しつもんから はじめる", f:"hm", ex:{h:"みんなの クラスには、おもしろい 人は いますか。", m:"みんなは、くもに のった ことが ありますか。"}},
+ {t:"「 」から はじめる", f:"h", ex:"「あっ、まって！」と、いもうとが さけんだ。"},
+ {t:"気もちから はじめる", f:"h", ex:"きょうは、とっても うれしい ひだった。"},
+ {t:"しゅじんこうの しょうかい", f:"h", ex:"ぼくの なまえは たける。はしるのが だいすきな 二ねんせいだ。"},
+ {t:"おとから はじめる", f:"m", ex:"ドーン！ おおきな おとが した。"},
+ {t:"ようすから はじめる", f:"m", ex:"そらは まっさおで、くもが ひとつも なかった。"},
+ {t:"ものの しょうかいから", f:"m", ex:"ぼくの たからものは、あおい ビーだまだ。"}
 ];
 var KAKI_HIGH = [
- {t:"会話文から始める", ex:"「ねえ、あの光、何だと思う？」"},
- {t:"音から始める", ex:"ガシャーン！ 静かな教室に、大きな音がひびいた。"},
- {t:"時から始める", ex:"それは、夏休み最後の日のことだった。"},
- {t:"場所・情景から始める", ex:"山のふもとに、だれも住んでいない古い家があった。"},
- {t:"気持ちから始める", ex:"ぼくは、今日ほどくやしい日はなかった。"},
- {t:"読者への問いかけ", ex:"みなさんは、本当にこわい思いをしたことがありますか。"},
- {t:"結末から始める", ex:"あの日、ぼくはクラスのヒーローになった。でも、はじめはそうではなかった。"},
- {t:"なぞから始める", ex:"その箱だけは、だれも開けてはいけないことになっていた。"},
- {t:"人物紹介から始める", ex:"ぼくの姉は、世界一のせっかちだ。"},
- {t:"天気から始める", ex:"朝から、しとしとと雨がふり続いていた。"},
- {t:"心の中の声から始める", ex:"（どうして、ぼくだけ……。）"},
- {t:"昔話風に始める", ex:"むかしむかし、ある山おくの村に、ふしぎな力をもつ少女がいました。"}
+ {t:"時から始める", f:"hm", ex:{h:"それは、夏休み最後の日のことだった。ぼくは一人で駅にいた。", m:"それは、夏休み最後の日のことだった。庭に、見たことのない花がさいた。"}},
+ {t:"読者への問いかけ", f:"hm", ex:{h:"みなさんは、本当に強い人に会ったことがありますか。", m:"みなさんは、音の出る石を見たことがありますか。"}},
+ {t:"昔話風に始める", f:"hm", ex:{h:"むかしむかし、ある山おくの村に、ふしぎな力をもつ少女がいました。", m:"むかしむかし、ある城に、だれにも開けられない箱がありました。"}},
+ {t:"会話文から始める", f:"h", ex:"「ねえ、あの光、何だと思う？」"},
+ {t:"気持ちから始める", f:"h", ex:"ぼくは、今日ほどくやしい日はなかった。"},
+ {t:"結末から始める", f:"h", ex:"あの日、ぼくはクラスのヒーローになった。でも、はじめはそうではなかった。"},
+ {t:"人物紹介から始める", f:"h", ex:"ぼくの姉は、世界一のせっかちだ。"},
+ {t:"人物の行動から始める", f:"h", ex:"ゆうたは、毎朝だれよりも早く校門をくぐる。"},
+ {t:"心の中の声から始める", f:"h", ex:"（どうして、ぼくだけ……。）"},
+ {t:"音から始める", f:"m", ex:"ガシャーン！ 静かな教室に、大きな音がひびいた。"},
+ {t:"場所・情景から始める", f:"m", ex:"山のふもとに、だれも住んでいない古い家があった。"},
+ {t:"天気から始める", f:"m", ex:"朝から、しとしとと雨がふり続いていた。"},
+ {t:"なぞから始める", f:"m", ex:"その箱だけは、だれも開けてはいけないことになっていた。"},
+ {t:"物の紹介から始める", f:"m", ex:"おばあちゃんの家には、古いふりこ時計がある。"}
 ];
+var FOCUS = {
+  h:{low:"人を かく", high:"人物を書く", e:"🧑"},
+  m:{low:"ものを かく", high:"物を書く", e:"🍎"}
+};
 var GKEYS=[
+ {k:"word", low:"ことばの たからばこ", high:"言葉の宝箱"},
  {k:"waza", low:"ひょうげんの わざ", high:"表現技法"},
- {k:"kaki", low:"かきだし", high:"書き出し"},
- {k:"h", low:"人を あらわす ことば", high:"人物を表す言葉"},
- {k:"m", low:"ようすを あらわす ことば", high:"様子を表す言葉"},
- {k:"k", low:"気もちを あらわす ことば", high:"気持ちを表す言葉"}
+ {k:"kaki", low:"かきだし", high:"書き出し"}
 ];
 var GL=null; // いま出ているおだい
+function gFocus(){ return st.gFocus==="m" ? "m" : "h"; }
 function gPool(k){
-  if (k==="waza") return (low()?WAZA_LOW:WAZA_HIGH).filter(function(x){ return !x.g || x.g<=st.grade; });
-  if (k==="kaki") return low()?KAKI_LOW:KAKI_HIGH;
-  return BOX[st.grade][k];
+  var f=gFocus();
+  if (k==="word") return BOX[st.grade][f];
+  var src = k==="waza" ? (low()?WAZA_LOW:WAZA_HIGH) : (low()?KAKI_LOW:KAKI_HIGH);
+  return src.filter(function(x){ return x.f.indexOf(f)>=0 && (!x.g || x.g<=st.grade); });
 }
 function gPick(k, avoid){
   var pool=gPool(k), x;
   for (var i=0;i<8;i++){ x=pool[Math.floor(Math.random()*pool.length)]; if (x!==avoid) break; }
   return x;
 }
+function exOf(v){ return typeof v.ex==="string" ? v.ex : v.ex[gFocus()]; }
 function gOn(k){ return !st.gOff || !st.gOff[k]; }
+function newGL(){ GL={grade:st.grade, focus:gFocus()}; GKEYS.forEach(function(o){ GL[o.k]=gPick(o.k); }); }
 function renderGacha(){
   if (!st.grade){ go("setup"); return; }
+  $("gFocus").innerHTML=["h","m"].map(function(f){ return '<button class="'+(f===gFocus()?"on "+CATS[f].cls:"")+'" onclick="setFocus(\''+f+'\')"><span>'+FOCUS[f].e+'</span>'+L(FOCUS[f].low,FOCUS[f].high)+'</button>'; }).join("");
   $("gOpts").innerHTML=GKEYS.map(function(o){ return '<label><input type="checkbox" '+(gOn(o.k)?"checked":"")+' onchange="gToggle(\''+o.k+'\',this.checked)">'+L(o.low,o.high)+'</label>'; }).join("");
   $("drawBtn").textContent=L("🎲 おだいを ひく","🎲 おだいを引く");
-  if (!GL || GL.grade!==st.grade){ GL={grade:st.grade}; GKEYS.forEach(function(o){ GL[o.k]=gPick(o.k); }); }
+  if (!GL || GL.grade!==st.grade || GL.focus!==gFocus()) newGL();
   drawCards();
 }
+function setFocus(f){ st.gFocus=f; save(); newGL(); renderGacha(); spin(GKEYS.map(function(o){return o.k;}).filter(gOn)); }
 function gToggle(k,on){ st.gOff=st.gOff||{}; st.gOff[k]=!on; save(); drawCards(); }
 function gCardHTML(k){
-  var o=GKEYS.filter(function(x){return x.k===k;})[0], v=GL[k], cls={waza:"waza",kaki:"kaki",h:"hito",m:"mono",k:"kimo"}[k], body;
-  if (k==="waza") body='<div class="main">'+esc(v.t)+'</div><div class="desc">'+esc(v.d)+'</div><div class="ex">'+L("れい：","例：")+esc(v.ex)+'</div>';
-  else if (k==="kaki") body='<div class="main">'+esc(v.t)+'</div><div class="ex">'+L("れい：","例：")+esc(v.ex)+'</div>';
-  else body='<div class="main">◇ '+esc(v)+'</div>';
-  return '<div class="gcard '+cls+'" id="gc-'+k+'"><div class="lab">'+L(o.low,o.high)+'</div>'+body+
+  var o=GKEYS.filter(function(x){return x.k===k;})[0], v=GL[k], f=gFocus(), cls, lab, body;
+  if (k==="word"){ cls=CATS[f].cls; lab=L(CATS[f].low,CATS[f].high); body='<div class="main">◇ '+esc(v)+'</div>'; }
+  else if (k==="waza"){ cls="waza"; lab=L(o.low,o.high); body='<div class="main">'+esc(v.t)+'</div><div class="desc">'+esc(v.d)+'</div><div class="ex">'+L("れい：","例：")+esc(exOf(v))+'</div>'; }
+  else { cls="kaki"; lab=L(o.low,o.high); body='<div class="main">'+esc(v.t)+'</div><div class="ex">'+L("れい：","例：")+esc(exOf(v))+'</div>'; }
+  return '<div class="gcard '+cls+'" id="gc-'+k+'"><div class="lab">'+lab+'</div>'+body+
     '<button class="re" onclick="drawOne(\''+k+'\')">🔄</button></div>';
 }
 function drawCards(){
-  var top=["waza","kaki"].filter(gOn), w=["h","m","k"].filter(gOn);
-  $("gTop").className="gcards"+(top.length===2?" c2":"");
-  $("gTop").innerHTML=top.map(gCardHTML).join("");
-  $("gWords").style.gridTemplateColumns = w.length && window.innerWidth>600 ? "repeat("+w.length+",1fr)" : "";
-  $("gWords").innerHTML=w.map(gCardHTML).join("");
+  var top=["word"].filter(gOn), rest=["waza","kaki"].filter(gOn);
+  $("gWords").innerHTML=top.map(gCardHTML).join("");
+  $("gTop").className="gcards"+(rest.length===2?" c2":"");
+  $("gTop").innerHTML=rest.map(gCardHTML).join("");
 }
 var spinning=false;
 function spin(keys){
