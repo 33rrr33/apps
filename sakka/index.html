@@ -195,6 +195,43 @@
   mark.hl{border-radius:4px;padding:0 2px;font-weight:700;background:var(--accent-soft);color:inherit}
   mark.hl.hito{background:var(--hito-soft)} mark.hl.mono{background:var(--mono-soft)} mark.hl.kimo{background:var(--kimo-soft)}
 
+  /* ---- おだいガチャ ---- */
+  .gHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 4px}
+  .gHead .grow{flex:1}
+  .gopts{display:flex;flex-wrap:wrap;gap:6px}
+  .gopts label{font-size:.82rem;font-weight:700;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 11px;cursor:pointer;user-select:none}
+  .gopts input{margin:0 4px 0 0;vertical-align:-1px}
+  .drawBtn{font-size:1.3rem;padding:16px 26px;width:100%;margin:10px 0 4px}
+  .gcards{display:grid;gap:12px}
+  .gcard{background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:14px 16px 16px;position:relative;box-shadow:var(--shadow)}
+  .gcard .lab{font-size:.8rem;font-weight:700;letter-spacing:.03em}
+  .gcard .main{font-size:1.7rem;font-weight:700;line-height:1.35;margin:6px 0 4px;word-break:keep-all;overflow-wrap:anywhere}
+  .gcard .desc{color:var(--sub);font-size:.95rem}
+  .gcard .ex{background:var(--accent-soft);border-radius:12px;padding:8px 12px;margin-top:8px;font-size:1.02rem}
+  .gcard .re{position:absolute;top:10px;right:10px;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:4px 9px;font-size:.8rem;font-weight:700;cursor:pointer}
+  .gcard.waza{border-color:var(--gold)} .gcard.waza .lab{color:var(--gold)}
+  .gcard.kaki{border-color:#8a63c9} .gcard.kaki .lab{color:#8a63c9}
+  .gcard.hito{border-color:var(--hito)} .gcard.hito .lab{color:var(--hito)}
+  .gcard.mono{border-color:var(--mono)} .gcard.mono .lab{color:var(--mono)}
+  .gcard.kimo{border-color:var(--kimo)} .gcard.kimo .lab{color:var(--kimo)}
+  .gcard.spin .main,.gcard.spin .desc,.gcard.spin .ex{opacity:.45;filter:blur(1px)}
+  .gcard.land{animation:pop .4s}
+  .gwords{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media (max-width:600px){.gwords{grid-template-columns:1fr}}
+  .gtimer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .gtimer .t{font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums;min-width:4.5em}
+  .gtimer .t.done{color:var(--kimo)}
+  /* 大きく表示（黒板・テレビにうつす） */
+  body.big .wrap{max-width:none}
+  body.big .gcard .main{font-size:clamp(2rem,4.6vw,3.6rem)}
+  body.big .gcard .desc{font-size:clamp(1rem,1.9vw,1.5rem)}
+  body.big .gcard .ex{font-size:clamp(1.1rem,2.2vw,1.8rem)}
+  body.big .gcard .lab{font-size:clamp(.9rem,1.5vw,1.2rem)}
+  body.big .gtimer .t{font-size:clamp(2rem,5vw,4rem)}
+  body.big header.top,body.big footer,body.big .gopts{display:none}
+  .gcards.c2{grid-template-columns:1fr 1fr}
+  @media (max-width:700px){.gcards.c2{grid-template-columns:1fr}}
+
   .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);
     padding:10px 18px;border-radius:999px;font-weight:700;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none}
   .toast.on{opacity:1}
@@ -248,7 +285,8 @@
     <div class="big">📚✏️</div>
     <h2 id="helloTxt"></h2>
     <div class="sub" id="todayTxt"></div>
-    <button class="btn primary startBtn" onclick="startToday()" id="startBtn">きょうの作家の時間をはじめる</button>
+    <button class="btn primary startBtn" onclick="go('gacha')" id="gachaBtn">🎲 おだいを引く（紙に書く）</button>
+    <div style="margin-top:10px"><button class="btn small" onclick="startToday()" id="startBtn">⌨️ タブレットで書く</button></div>
   </div>
   <div class="stats">
     <div class="stat"><b id="stDays">0</b><span id="stDaysL">書いた日</span></div>
@@ -260,6 +298,26 @@
     <button onclick="go('box')"><span class="e">🗝️</span><b>言葉の宝箱</b><small>あつめた言葉を見る</small></button>
     <button onclick="go('lessons')"><span class="e">🎓</span><b>作家のわざ</b><small>レッスンをえらんで読む</small></button>
     <button onclick="go('teacher')"><span class="e">🧑‍🏫</span><b>先生へ</b><small>作家の時間とつかい方</small></button>
+  </div>
+</section>
+
+<!-- ===== おだいガチャ（紙に書く） ===== -->
+<section id="v-gacha" class="hidden">
+  <div class="gHead">
+    <div class="gopts grow" id="gOpts"></div>
+    <button class="btn small" id="bigBtn" onclick="toggleBig()">📺 大きく</button>
+  </div>
+  <button class="btn primary drawBtn" id="drawBtn" onclick="drawAll()">🎲 おだいを引く</button>
+  <div class="gcards c2" id="gTop"></div>
+  <div class="gwords" id="gWords" style="margin-top:12px"></div>
+  <div class="card" style="margin-top:12px;padding:12px 16px">
+    <div class="gtimer">
+      <span class="t" id="gTime">--:--</span>
+      <button class="btn small" onclick="gTimerStart(5)">5分</button>
+      <button class="btn small" onclick="gTimerStart(10)">10分</button>
+      <button class="btn small" onclick="gTimerStart(15)">15分</button>
+      <button class="btn small ghost" onclick="gTimerStop()">とめる</button>
+    </div>
   </div>
 </section>
 
@@ -402,6 +460,8 @@
     <h2>🧑‍🏫 先生へ：このアプリのねらい</h2>
     <p><b>作家の時間（ライティング・ワークショップ）</b>は、子どもが本物の「作家」として、自分で決めた内容を書き、作品を出版する学び方です。基本の流れは、<b>ミニレッスン → ひたすら書く → 共有（ふりかえり）</b>です。</p>
     <p>このアプリは、樋口綾香先生の朝学習の形（<b>ミニレッスン5分＋書く10分</b>）に合わせています。そこに、教科書巻末の「言葉の宝箱」の言葉を毎日3語（人物・事物・気持ち）入れました。<b>読むときに学んだ言葉を、書くときにつかえる言葉にする</b>ためです。</p>
+    <h2 style="margin-top:16px">紙に書くとき：おだいガチャ</h2>
+    <p>ホームの「🎲 おだいを引く」で、<b>表現技法・書き出し・言葉の宝箱（人物・様子・気持ち）</b>をランダムに出せます。「📺 大きく」でテレビや黒板にうつし、タイマー（5／10／15分）を動かして、子どもは作家ノートや原稿用紙に書きます。出すおだいはチェックで選べて、カードごとに🔄で引き直せます。表現技法は学年に合わせて出し分けます（隠喩・対句は5年から、体言止めは4年から、倒置法は3年から）。</p>
     <h2 style="margin-top:16px">大事にしていること</h2>
     <ul>
       <li><b>書く内容は子どもが決める</b>。今日の言葉は「つかえたらすごい」というお誘いで、強制ではありません。</li>
@@ -670,7 +730,7 @@ function findWords(text, grade){
 /* ============================================================
    画面きりかえ
    ============================================================ */
-var VIEWS=["setup","home","today","note","entry","publish","box","lessons","teacher"];
+var VIEWS=["setup","home","gacha","today","note","entry","publish","box","lessons","teacher"];
 var cur="home";
 function go(v){
   if (cur==="today" && v!=="today") pauseTimer();
@@ -683,7 +743,8 @@ function go(v){
   if (v==="entry" || v==="publish") $("backBtn").setAttribute("onclick", v==="publish" ? "openEntry(curEntryId)" : "go('note')");
   else $("backBtn").setAttribute("onclick","go('home')");
   window.scrollTo(0,0);
-  ({setup:renderSetup, home:renderHome, note:renderNote, box:renderBox, lessons:renderLessons}[v]||function(){})();
+  if (v!=="gacha" && document.body.classList.contains("big")) toggleBig();
+  ({setup:renderSetup, home:renderHome, gacha:renderGacha, note:renderNote, box:renderBox, lessons:renderLessons}[v]||function(){})();
 }
 
 /* ---- setup ---- */
@@ -706,7 +767,8 @@ function renderHome(){
   var d=new Date(), wd="日月火水木金土"[d.getDay()];
   var doneToday = st.entries.some(function(e){ return e.day===todayKey(); });
   $("todayTxt").textContent = (d.getMonth()+1)+"月"+d.getDate()+"日（"+wd+"）" + (doneToday? L("　きょうは もう かいたよ ✨","　今日はもう書いたよ ✨") : "");
-  $("startBtn").textContent = doneToday ? L("もう いちど かく","もう一度書く") : L("きょうの 作家の時間を はじめる","今日の作家の時間をはじめる");
+  $("gachaBtn").textContent = L("🎲 おだいを ひく（かみに かく）","🎲 おだいを引く（紙に書く）");
+  $("startBtn").textContent = L("⌨️ タブレットで かく","⌨️ タブレットで書く");
   var days={}, chars=0; st.entries.forEach(function(e){ days[e.day]=1; chars+=(e.text||"").length; });
   $("stDays").textContent=Object.keys(days).length;
   $("stChars").textContent=chars;
@@ -991,6 +1053,127 @@ function importData(inp){
   r.readAsText(f);
 }
 function wipeData(){ if (!confirm("書いたものも、あつめた言葉も、ぜんぶ消えます。いいですか？")) return; try{ localStorage.removeItem(LS); }catch(e){} st=load(); go("setup"); }
+
+/* ============================================================
+   おだいガチャ：表現技法・書き出し・言葉の宝箱をランダムに
+   g: その学年から出す（高学年向けの技法は低学年に出さない）
+   ============================================================ */
+var WAZA_LOW = [
+ {t:"〜のような（たとえ）", d:"ほかの ものに たとえて、ようすを つたえよう。", ex:"わたあめのような くも"},
+ {t:"おとや ようすの ことば", d:"ざあざあ・きらきら・どきどき などを つかおう。", ex:"あめが ざあざあ ふって きた。"},
+ {t:"「 」で はなさせる", d:"じんぶつが はなした ことばを かこう。", ex:"「まって！」と、ぼくは さけんだ。"},
+ {t:"くりかえし", d:"おなじ ことばを くりかえして、きもちを つよく しよう。", ex:"はしって、はしって、はしった。"},
+ {t:"気もちを うごきで", d:"「うれしい」の かわりに、からだの うごきを かこう。", ex:"ぴょんぴょん とびはねた。"},
+ {t:"よびかけ", d:"よむ 人に はなしかけて みよう。", ex:"ねえ、きいて。きょう すごい ことが あったんだ。"},
+ {t:"いろを いれる", d:"いろの ことばで、ようすが よく わかるよ。", ex:"まっかな ゆうひが、うみに しずんだ。"},
+ {t:"みた・きいた・におい", d:"めや みみや はなで かんじた ことを かこう。", ex:"パンの いい においが して きた。"},
+ {t:"ものが 人みたいに", d:"ものや どうぶつが 人のように うごいたり はなしたり するよ。", ex:"かぜが まどを トントンと たたいた。"}
+];
+var WAZA_HIGH = [
+ {t:"直喩（〜のような）", d:"「まるで〜のような」と、たとえていることがはっきりわかる比喩。", ex:"まるで宝石のような星空。／むねがはりさけるような悲しみ。"},
+ {t:"隠喩（暗喩）", d:"「ような」を使わずに、言い切ってたとえる比喩。", ex:"教室は動物園だ。／彼の心は氷だった。", g:5},
+ {t:"擬人法", d:"人でないものを、人のように動かしたり話させたりする。", ex:"風が、そっとまどをノックした。"},
+ {t:"オノマトペ", d:"音や様子を表す言葉（擬音語・擬態語）を使う。", ex:"雨がしとしとふる。むねがドキドキした。"},
+ {t:"倒置法", d:"言葉の順番を入れかえて、伝えたいことを強める。", ex:"ぼくはわすれない、あの日の約束を。", g:3},
+ {t:"反復（くり返し）", d:"同じ言葉をくり返して、気持ちやリズムを強める。", ex:"走った。走った。ただ、走った。"},
+ {t:"体言止め", d:"文の終わりを名詞で止めて、余韻を残す。", ex:"見上げると、満天の星。", g:4},
+ {t:"対句", d:"形のにた言葉を並べて、リズムよくくらべる。", ex:"空は青く、海は深い。", g:5},
+ {t:"呼びかけ・問いかけ", d:"読者に話しかけたり、問いかけたりする。", ex:"きみは、本当のゆう気を知っているかい。"},
+ {t:"気持ちを行動で見せる", d:"気持ちの言葉を使わず、動作や表情で伝える。", ex:"ぼくは、こぶしをぎゅっとにぎりしめた。"},
+ {t:"会話文", d:"「　」で人物に話させて、性格や気持ちを伝える。", ex:"「だいじょうぶ。」と、姉は小さくわらった。"},
+ {t:"五感を使う", d:"見る・聞く・かぐ・さわる・味わうで様子を書く。", ex:"しおのにおいが、鼻のおくまでとどいた。"},
+ {t:"色を入れる", d:"色の言葉で、場面をあざやかにする。", ex:"真っ赤な夕日が、町をオレンジ色にそめた。"},
+ {t:"心の中の声", d:"人物が心の中で思ったことを書く。", ex:"（どうしよう。もう、にげられない。）"}
+];
+var KAKI_LOW = [
+ {t:"「 」から はじめる", ex:"「あっ、なにか いる！」"},
+ {t:"おとから はじめる", ex:"ドーン！ おおきな おとが した。"},
+ {t:"いつ・どこで から", ex:"なつやすみの あさ、ぼくは うみに いた。"},
+ {t:"気もちから はじめる", ex:"きょうは、とっても うれしい ひだった。"},
+ {t:"むかしむかし…", ex:"むかしむかし、ある もりに、ちいさな くまが すんで いました。"},
+ {t:"しつもんから はじめる", ex:"みんなは、くもに のった ことが ありますか。"},
+ {t:"ようすから はじめる", ex:"そらは まっさおで、くもが ひとつも なかった。"},
+ {t:"しゅじんこうの しょうかい", ex:"ぼくの なまえは たける。はしるのが だいすきな 二ねんせいだ。"}
+];
+var KAKI_HIGH = [
+ {t:"会話文から始める", ex:"「ねえ、あの光、何だと思う？」"},
+ {t:"音から始める", ex:"ガシャーン！ 静かな教室に、大きな音がひびいた。"},
+ {t:"時から始める", ex:"それは、夏休み最後の日のことだった。"},
+ {t:"場所・情景から始める", ex:"山のふもとに、だれも住んでいない古い家があった。"},
+ {t:"気持ちから始める", ex:"ぼくは、今日ほどくやしい日はなかった。"},
+ {t:"読者への問いかけ", ex:"みなさんは、本当にこわい思いをしたことがありますか。"},
+ {t:"結末から始める", ex:"あの日、ぼくはクラスのヒーローになった。でも、はじめはそうではなかった。"},
+ {t:"なぞから始める", ex:"その箱だけは、だれも開けてはいけないことになっていた。"},
+ {t:"人物紹介から始める", ex:"ぼくの姉は、世界一のせっかちだ。"},
+ {t:"天気から始める", ex:"朝から、しとしとと雨がふり続いていた。"},
+ {t:"心の中の声から始める", ex:"（どうして、ぼくだけ……。）"},
+ {t:"昔話風に始める", ex:"むかしむかし、ある山おくの村に、ふしぎな力をもつ少女がいました。"}
+];
+var GKEYS=[
+ {k:"waza", low:"ひょうげんの わざ", high:"表現技法"},
+ {k:"kaki", low:"かきだし", high:"書き出し"},
+ {k:"h", low:"人を あらわす ことば", high:"人物を表す言葉"},
+ {k:"m", low:"ようすを あらわす ことば", high:"様子を表す言葉"},
+ {k:"k", low:"気もちを あらわす ことば", high:"気持ちを表す言葉"}
+];
+var GL=null; // いま出ているおだい
+function gPool(k){
+  if (k==="waza") return (low()?WAZA_LOW:WAZA_HIGH).filter(function(x){ return !x.g || x.g<=st.grade; });
+  if (k==="kaki") return low()?KAKI_LOW:KAKI_HIGH;
+  return BOX[st.grade][k];
+}
+function gPick(k, avoid){
+  var pool=gPool(k), x;
+  for (var i=0;i<8;i++){ x=pool[Math.floor(Math.random()*pool.length)]; if (x!==avoid) break; }
+  return x;
+}
+function gOn(k){ return !st.gOff || !st.gOff[k]; }
+function renderGacha(){
+  if (!st.grade){ go("setup"); return; }
+  $("gOpts").innerHTML=GKEYS.map(function(o){ return '<label><input type="checkbox" '+(gOn(o.k)?"checked":"")+' onchange="gToggle(\''+o.k+'\',this.checked)">'+L(o.low,o.high)+'</label>'; }).join("");
+  $("drawBtn").textContent=L("🎲 おだいを ひく","🎲 おだいを引く");
+  if (!GL || GL.grade!==st.grade){ GL={grade:st.grade}; GKEYS.forEach(function(o){ GL[o.k]=gPick(o.k); }); }
+  drawCards();
+}
+function gToggle(k,on){ st.gOff=st.gOff||{}; st.gOff[k]=!on; save(); drawCards(); }
+function gCardHTML(k){
+  var o=GKEYS.filter(function(x){return x.k===k;})[0], v=GL[k], cls={waza:"waza",kaki:"kaki",h:"hito",m:"mono",k:"kimo"}[k], body;
+  if (k==="waza") body='<div class="main">'+esc(v.t)+'</div><div class="desc">'+esc(v.d)+'</div><div class="ex">'+L("れい：","例：")+esc(v.ex)+'</div>';
+  else if (k==="kaki") body='<div class="main">'+esc(v.t)+'</div><div class="ex">'+L("れい：","例：")+esc(v.ex)+'</div>';
+  else body='<div class="main">◇ '+esc(v)+'</div>';
+  return '<div class="gcard '+cls+'" id="gc-'+k+'"><div class="lab">'+L(o.low,o.high)+'</div>'+body+
+    '<button class="re" onclick="drawOne(\''+k+'\')">🔄</button></div>';
+}
+function drawCards(){
+  var top=["waza","kaki"].filter(gOn), w=["h","m","k"].filter(gOn);
+  $("gTop").className="gcards"+(top.length===2?" c2":"");
+  $("gTop").innerHTML=top.map(gCardHTML).join("");
+  $("gWords").style.gridTemplateColumns = w.length && window.innerWidth>600 ? "repeat("+w.length+",1fr)" : "";
+  $("gWords").innerHTML=w.map(gCardHTML).join("");
+}
+var spinning=false;
+function spin(keys){
+  if (spinning || !keys.length) return; spinning=true;
+  keys.forEach(function(k){ var el=$("gc-"+k); if (el) el.classList.add("spin"); });
+  var n=0, iv=setInterval(function(){
+    keys.forEach(function(k){ GL[k]=gPick(k, GL[k]); });
+    drawCards(); keys.forEach(function(k){ var el=$("gc-"+k); if (el) el.classList.add("spin"); });
+    if (++n>=9){ clearInterval(iv); spinning=false; drawCards();
+      keys.forEach(function(k){ var el=$("gc-"+k); if (el) el.classList.add("land"); }); }
+  },70);
+}
+function drawAll(){ spin(GKEYS.map(function(o){return o.k;}).filter(gOn)); }
+function drawOne(k){ spin([k]); }
+function toggleBig(){ document.body.classList.toggle("big"); $("bigBtn").textContent=document.body.classList.contains("big")?"↩ もどす":"📺 大きく"; drawCards(); }
+var gT=null, gEnd=0;
+function gTimerStart(min){ gTimerStop(); gEnd=Date.now()+min*60000; gTick(); gT=setInterval(gTick,250); }
+function gTimerStop(){ if (gT){ clearInterval(gT); gT=null; } $("gTime").textContent="--:--"; $("gTime").classList.remove("done"); }
+function gTick(){
+  var left=Math.max(0,Math.ceil((gEnd-Date.now())/1000));
+  $("gTime").textContent=left? Math.floor(left/60)+":"+("0"+left%60).slice(-2) : L("おわり！","おわり！");
+  $("gTime").classList.toggle("done",!left);
+  if (!left){ clearInterval(gT); gT=null; chime(); }
+}
 
 /* ---- start ---- */
 go(st.grade ? "home" : "setup");
