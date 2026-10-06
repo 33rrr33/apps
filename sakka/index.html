@@ -38,6 +38,7 @@
     background:var(--bg);color:var(--ink);line-height:1.7;-webkit-text-size-adjust:100%;}
   button,input,select,textarea{font-family:inherit;color:inherit}
   .wrap{max-width:760px;margin:0 auto}
+  body.wide .wrap{max-width:1240px}
   header.top{display:flex;align-items:center;gap:10px;padding:14px 0 6px}
   header.top h1{font-size:1.25rem;margin:0;flex:1;display:flex;align-items:center;gap:8px}
   .gradeBadge{font-size:.8rem;font-weight:700;background:var(--accent-soft);color:var(--accent);
@@ -258,17 +259,109 @@
   .teacher p{margin:6px 0}
   footer{text-align:center;color:var(--sub);font-size:.72rem;margin-top:30px}
 
+  /* ---- ホーム：2つのモード ---- */
+  .modes2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+  @media (max-width:560px){.modes2{grid-template-columns:1fr}}
+  .bigmode{border:3px solid;border-radius:22px;padding:22px 12px;font-size:1.45rem;font-weight:700;cursor:pointer;box-shadow:var(--shadow);font-family:inherit}
+  .bigmode span{display:block;font-size:3rem;line-height:1.1;margin-bottom:6px}
+  .bigmode small{display:block;font-size:.85rem;font-weight:400;color:var(--sub);margin-top:6px}
+  .bigmode.ipad{border-color:var(--hito);background:var(--hito-soft);color:var(--hito)}
+  .bigmode.paper{border-color:var(--mono);background:var(--mono-soft);color:var(--mono)}
+  .draftBar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border:2px dashed var(--accent);border-radius:16px;padding:12px 14px;margin-top:12px;font-weight:700}
+
+  /* ---- iPadで書く（縦書きエディタ） ---- */
+  .wbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 10px}
+  .wbar .text{flex:1 1 200px;min-width:160px}
+  .wbar .count{white-space:nowrap}
+  .wgrid{display:grid;grid-template-columns:1fr 290px;gap:12px;align-items:start}
+  @media (max-width:900px){.wgrid{grid-template-columns:1fr}.wpanel{order:-1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.wpanel .pc{margin:0}}
+  @media (max-width:600px){.wpanel{grid-template-columns:1fr}}
+  .edwrap{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .ed{writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;text-orientation:mixed;width:100%;box-sizing:border-box;height:min(64vh,620px);overflow-x:auto;overflow-y:hidden;
+    font-size:1.4rem;line-height:2.1;padding:18px 16px;white-space:pre-wrap;word-break:break-all;outline:none;
+    font-family:"UD デジタル教科書体 NP-R","UD Digi Kyokasho NP-R","BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    background:repeating-linear-gradient(to left,transparent 0,transparent calc(2.1em - 1px),var(--line) calc(2.1em - 1px),var(--line) 2.1em);
+    background-attachment:local;background-position:right 16px top 0;caret-color:var(--accent)}
+  .ed.horiz{writing-mode:horizontal-tb;-webkit-writing-mode:horizontal-tb;height:auto;min-height:55vh;overflow:auto;
+    background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(2.1em - 1px),var(--line) calc(2.1em - 1px),var(--line) 2.1em);background-position:0 18px}
+  .ed:empty::before{content:attr(data-ph);color:var(--sub)}
+  .ed.read{cursor:default}
+  .pc{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:10px 12px;margin-bottom:10px;position:relative}
+  .pc .lab{font-size:.75rem;font-weight:700}
+  .pc .nm{font-size:1.2rem;font-weight:700;line-height:1.35;margin:2px 0}
+  .pc .ds{font-size:.85rem;color:var(--sub)}
+  .pc .ex{background:var(--accent-soft);border-radius:10px;padding:6px 9px;margin-top:6px;font-size:.9rem}
+  .pc .re{position:absolute;top:6px;right:6px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:2px 7px;font-size:.75rem;cursor:pointer}
+  .pc.kaki{border-color:#8a63c9}.pc.kaki .lab{color:#8a63c9}
+  .pc.waza{border-color:var(--gold)}.pc.waza .lab{color:var(--gold)}
+  .pc.hito{border-color:var(--hito)}.pc.hito .lab{color:var(--hito)}
+  .pc.mono{border-color:var(--mono)}.pc.mono .lab{color:var(--mono)}
+  .pc.used.hito{background:var(--hito-soft)}.pc.used.mono{background:var(--mono-soft)}
+  .pc .wd{font-size:1.5rem;font-weight:700}
+  .bonusRow{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+
+  /* ---- 本棚 ---- */
+  .shelfHead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .shelfHead h2{flex:1;font-size:1.3rem;margin:0}
+  .stories{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px}
+  .story{display:flex;flex-direction:column;text-align:left;border:1px solid var(--line);border-left:10px solid var(--accent);border-radius:8px 14px 14px 8px;
+    background:var(--panel);box-shadow:var(--shadow);padding:12px 12px 10px;cursor:pointer;min-height:150px;font-family:inherit;color:inherit}
+  .story .no{font-size:.75rem;color:var(--sub);font-weight:700}
+  .story .tt{font-weight:700;font-size:1.05rem;margin:4px 0;line-height:1.35}
+  .story .pv{font-size:.8rem;color:var(--sub);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+  .story .mt{margin-top:auto;font-size:.72rem;color:var(--sub);padding-top:6px}
+  .story:nth-child(4n+2){border-left-color:var(--hito)} .story:nth-child(4n+3){border-left-color:var(--kimo)} .story:nth-child(4n+4){border-left-color:var(--gold)}
+  .readTitle{font-size:1.4rem;font-weight:700;margin:0 0 4px}
+
+  /* ---- 印刷プレビュー（原稿用紙・本） ---- */
+  #prScale{overflow-x:auto;padding:6px 0 20px}
+  #printArea{transform-origin:0 0}
+  .page{width:210mm;height:297mm;background:#fff;color:#1d1a16;box-shadow:0 4px 18px rgba(0,0,0,.18);margin:0 auto 18px;position:relative;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  /* 原稿用紙 */
+  .gInfo{position:absolute;left:10mm;right:10mm;top:9mm;height:70mm;display:grid;grid-template-columns:1fr 1fr 1fr;gap:3mm;
+    font-family:"BIZ UDPGothic","Hiragino Sans",sans-serif;font-size:3.6mm;line-height:1.45}
+  .gInfo .bx{border:0.5mm solid #c9b8a6;border-radius:3mm;padding:2.5mm 3mm;overflow:hidden}
+  .gInfo .lb{font-size:3mm;font-weight:700;color:#8a63c9;margin-bottom:1mm}
+  .gInfo .bx.w .lb{color:#c46a1e} .gInfo .bx.t .lb{color:#b88a00} .gInfo .bx.h .lb{color:#2f6fbf}
+  .gInfo .big{font-size:5.2mm;font-weight:700;line-height:1.3;margin-bottom:1.2mm}
+  .gInfo .ex{background:#fbeee4;border-radius:2mm;padding:1.5mm 2mm;margin-top:1.5mm}
+  .gInfo mark.em{background:#ffe27a;color:#3a2a00}
+  .gHeadLine{position:absolute;left:10mm;right:10mm;top:9mm;font-family:"BIZ UDPGothic",sans-serif;font-size:3.6mm;color:#7c7367}
+  .grid{position:absolute;right:10mm;top:86mm;display:flex;flex-direction:row-reverse}
+  .gcol{display:flex;flex-direction:column;flex:0 0 auto}
+  .gcell{flex:0 0 auto;min-height:0;line-height:1;border:0.3mm solid #d8b49a;margin:-0.15mm 0;display:flex;align-items:center;justify-content:center;
+    font-family:"UD デジタル教科書体 NP-R","BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;color:#1d1a16}
+  .gcell.pun{justify-content:flex-end;align-items:flex-start;padding:0.6mm 1.2mm 0 0}
+  .gcell.rot span{display:inline-block;transform:rotate(90deg)}
+  .gcell.sm span{display:inline-block;transform:translate(14%,-14%) scale(.9)}
+  .gpno{position:absolute;bottom:4mm;left:0;right:0;text-align:center;font-size:3mm;color:#999;font-family:sans-serif}
+  /* 本 */
+  .bbody{position:absolute;top:24mm;bottom:26mm;left:20mm;right:20mm;writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;overflow:hidden;
+    font-family:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;font-size:15pt;line-height:1.9;text-orientation:mixed;word-break:break-all}
+  .bbody p{margin:0;text-indent:1em;white-space:pre-wrap}
+  .bbody p.cont{text-indent:0}
+  .bbody .sTitle{font-size:1.5em;font-weight:700;margin:0 0 0 1.4em;padding-top:2em;text-indent:0}
+  .bbody .sNo{font-size:.8em;color:#7c7367;margin:0;padding-top:2em;text-indent:0}
+  .bpno{position:absolute;bottom:12mm;left:0;right:0;text-align:center;font-size:10pt;color:#888;font-family:"BIZ UDPMincho",serif}
+  .cover .bbody{display:flex;flex-direction:column;justify-content:center;align-items:center}
+  .cover .ct{font-size:30pt;font-weight:700;margin-left:12mm;letter-spacing:.1em}
+  .cover .ca{font-size:16pt;margin-top:60mm}
+  .toc .tl{margin:0;text-indent:0;display:flex}
+  .toc .tl .d{flex:1;border-right:1.5px dotted #aaa;margin:3mm 2mm}
+
   @media print{
-    body{background:#fff;padding:0}
+    @page{size:A4 portrait;margin:0}
+    html,body{background:#fff!important;padding:0!important;margin:0!important}
     body *{visibility:hidden}
-    #book,#book *{visibility:visible}
-    #book{position:absolute;left:0;top:0;width:100%;box-shadow:none;margin:0}
-    .pg{page-break-after:always;border:none;min-height:90vh}
-    .vert .pg{height:90vh}
+    #printArea,#printArea *{visibility:visible}
+    #printArea{position:absolute;left:0;top:0;zoom:1!important;transform:none!important}
+    .page{box-shadow:none;margin:0;break-after:page;page-break-after:always}
+    .toast{display:none}
   }
 </style>
 </head>
-<body>
+<body><body>
 <div class="wrap">
 
 <header class="top">
@@ -277,6 +370,8 @@
   <button class="gradeBadge" id="gradeBadge" onclick="go('setup')"></button>
 </header>
 
+
+<!-- ===== 学年えらび ===== -->
 <!-- ===== 学年えらび ===== -->
 <section id="v-setup" class="hidden">
   <div class="card">
@@ -297,25 +392,26 @@
     </div>
   </details>
 </section>
-
 <!-- ===== ホーム ===== -->
 <section id="v-home" class="hidden">
   <div class="card hero">
-    <div class="big">📚✏️</div>
-    <h2 id="helloTxt"></h2>
+    <h2 id="helloTxt" style="margin-top:0"></h2>
     <div class="sub" id="todayTxt"></div>
-    <button class="btn primary startBtn" onclick="go('gacha')" id="gachaBtn">🎲 おだいを引く（紙に書く）</button>
-    <div style="margin-top:10px"><button class="btn small" onclick="startToday()" id="startBtn">⌨️ タブレットで書く</button></div>
+    <div class="modes2" style="margin-top:14px">
+      <button class="bigmode ipad" onclick="startMode('ipad')"><span>📱</span><b id="mIpad">iPadで書く</b><small id="mIpadS">縦書きで打って、自分の本にためる</small></button>
+      <button class="bigmode paper" onclick="startMode('paper')"><span>📝</span><b id="mPaper">紙に書く</b><small id="mPaperS">おだいを出して、原稿用紙に書く</small></button>
+    </div>
+    <div id="draftBar"></div>
   </div>
   <div class="stats">
-    <div class="stat"><b id="stDays">0</b><span id="stDaysL">書いた日</span></div>
+    <div class="stat"><b id="stDays">0</b><span id="stDaysL">お話の数</span></div>
     <div class="stat"><b id="stChars">0</b><span>書いた文字</span></div>
     <div class="stat"><b id="stWords">0</b><span id="stWordsL">つかった言葉</span></div>
   </div>
   <div class="menu" style="margin-top:14px">
-    <button onclick="go('note')"><span class="e">📓</span><b>作家ノート</b><small>書いたものを読む・つづきを書く・出版する</small></button>
+    <button onclick="go('shelf')"><span class="e">📚</span><b id="mShelf">わたしの本</b><small>書いたお話を読む・続きを書く・本を印刷</small></button>
     <button onclick="go('box')"><span class="e">🗝️</span><b>言葉の宝箱</b><small>あつめた言葉を見る</small></button>
-    <button onclick="go('lessons')"><span class="e">🎓</span><b>作家のわざ</b><small>レッスンをえらんで読む</small></button>
+    <button onclick="go('lessons')"><span class="e">🎓</span><b>作家のわざ</b><small>レッスンを読む</small></button>
     <button onclick="go('teacher')"><span class="e">🧑‍🏫</span><b>先生へ</b><small>作家の時間とつかい方</small></button>
   </div>
 </section>
@@ -334,6 +430,7 @@
   </div>
   <div class="gfocus" id="gFocus"></div>
   <button class="btn primary drawBtn" id="drawBtn" onclick="drawAll()">🎲 おだいを引く</button>
+  <button class="btn drawBtn" id="genkoBtn" onclick="openGenko()" style="font-size:1.1rem;padding:12px">📄 原稿用紙を印刷（書き出しつき）</button>
   <div class="gwords" id="gWords"></div>
   <div class="gcards c2" id="gTop" style="margin-top:12px"></div>
   <div class="card" style="margin-top:12px;padding:12px 16px">
@@ -347,118 +444,83 @@
   </div>
   </div>
 </section>
-
-<!-- ===== きょうの作家の時間 ===== -->
-<section id="v-today" class="hidden">
-  <div class="steps"><div id="s1">① レッスン</div><div id="s2">② きょうの言葉</div><div id="s3">③ ひたすら書く</div></div>
-
-  <div id="t-lesson">
-    <div class="card lesson" id="lessonCard"></div>
-    <div class="row">
-      <button class="btn primary" onclick="todayStep(2)">つぎへ →</button>
-      <button class="btn ghost small" onclick="toggleLessonPick()">ほかのレッスンにする</button>
-    </div>
-    <div class="lessonList hidden" id="lessonPick"></div>
+<!-- ===== iPadで書く ===== -->
+<section id="v-write" class="hidden">
+  <div class="wbar">
+    <input class="text" id="wTitle" placeholder="だいめい">
+    <span class="count"><b id="wCount">0</b> 字</span>
+    <button class="btn small" id="dirBtn" onclick="toggleDir()">横書きにする</button>
+    <button class="btn primary" onclick="saveStory()" id="saveBtn">📚 本にしまう</button>
   </div>
-
-  <div id="t-words" class="hidden">
-    <div class="card">
-      <h2 id="wordsHead">きょうの言葉</h2>
-      <p class="sub" id="wordsSub" style="margin-top:0"></p>
-      <div class="words" id="todayWords"></div>
-    </div>
-    <div class="row">
-      <button class="btn" onclick="todayStep(1)">← レッスン</button>
-      <button class="btn primary" onclick="todayStep(3)">書きはじめる ✏️</button>
-    </div>
+  <div class="wgrid">
+    <div class="edwrap"><div id="ed" class="ed" spellcheck="false" autocapitalize="off" autocorrect="off"></div></div>
+    <aside class="wpanel" id="wPanel"></aside>
   </div>
+</section>
 
-  <div id="t-write" class="hidden">
-    <div class="card" style="padding:14px">
-      <div class="words" id="writeWords"></div>
-      <div class="sub" style="margin-top:6px" id="tapHint"></div>
-    </div>
-    <div class="card" style="padding:14px">
-      <div class="writeHead">
-        <div class="timer" id="timer">10:00</div>
-        <div class="bar"><i id="timerBar"></i></div>
-        <div class="count"><span id="charCount">0</span> 文字</div>
-      </div>
-      <div id="timeMsg"></div>
-      <input class="text" id="titleIn" placeholder="だいめい（あとでつけてもOK）" style="margin:10px 0 8px">
-      <textarea class="paper" id="paper" placeholder="ここに書こう。字をうちはじめるとタイマーがスタートするよ。"></textarea>
-      <div class="sub" style="margin-top:8px">書くことにまよったら…</div>
-      <div class="topics" id="topics"></div>
-      <div id="bonusWrap" class="hidden" style="margin-top:12px">
-        <div class="sub">ほかにもつかえた宝箱の言葉 ✨</div>
-        <div class="bonus" id="bonus"></div>
-      </div>
-    </div>
-    <div class="row">
-      <button class="btn" onclick="todayStep(2)">← 言葉</button>
-      <button class="btn primary" onclick="finishToday()">📓 作家ノートにしまう</button>
-    </div>
-  </div>
-
-  <div id="t-done" class="hidden">
-    <div class="card result">
-      <div class="big">🎉</div>
-      <h2 id="doneHead">よく書けたね！</h2>
-      <div><span class="num" id="doneChars">0</span> 文字</div>
-      <div class="bonus" id="doneWords" style="justify-content:center;margin-top:12px"></div>
-      <p class="sub" id="doneNote"></p>
-      <div class="row" style="justify-content:center">
-        <button class="btn" onclick="go('home')">ホームへ</button>
-        <button class="btn primary" onclick="openEntry(lastSavedId)">つづきを書く・出版する</button>
-      </div>
+<!-- ===== しまえた ===== -->
+<section id="v-done" class="hidden">
+  <div class="card result">
+    <div class="big">📚</div>
+    <h2 id="dHead"></h2>
+    <div><span class="num" id="dChars">0</span> <span id="dCharsL">字</span></div>
+    <div class="bonus" id="dWords" style="justify-content:center;margin-top:12px"></div>
+    <p class="sub" id="dNote"></p>
+    <div class="row" style="justify-content:center">
+      <button class="btn" onclick="go('home')">ホーム</button>
+      <button class="btn" onclick="startMode('ipad')" id="dMore">もう1話書く</button>
+      <button class="btn primary" onclick="go('shelf')" id="dShelf">📚 わたしの本を見る</button>
     </div>
   </div>
 </section>
 
-<!-- ===== 作家ノート ===== -->
-<section id="v-note" class="hidden">
-  <div class="card"><h2>📓 作家ノート</h2><p class="sub" style="margin:0">書いたものがたまっていきます。気に入った作品は、なおして「出版」しよう。</p></div>
-  <div id="noteList"></div>
-</section>
-
-<!-- ===== ノートの1ページ ===== -->
-<section id="v-entry" class="hidden">
+<!-- ===== わたしの本（本棚） ===== -->
+<section id="v-shelf" class="hidden">
   <div class="card">
-    <div class="sub" id="eMeta"></div>
-    <input class="text" id="eTitle" placeholder="だいめい" style="margin:8px 0">
-    <textarea class="paper" id="eText" style="min-height:36vh"></textarea>
-    <div class="row" style="margin-top:6px"><span class="count"><span id="eCount">0</span> 文字</span></div>
-    <div class="bonus" id="eWords" style="margin-top:8px"></div>
+    <div class="shelfHead">
+      <h2 id="shTitle">📖 わたしの短編集</h2>
+      <button class="btn primary" onclick="openBook()" id="bookBtn">🖨 本を印刷する</button>
+    </div>
+    <p class="sub" id="shSub" style="margin:6px 0 0"></p>
+    <div class="stories" id="stories"></div>
   </div>
   <details class="card">
-    <summary>🔧 なおすときのヒント（修正・校正）</summary>
-    <ul>
-      <li><b>つけたす</b>：気持ちや様子がつたわるように、言葉や文をふやそう。</li>
-      <li><b>けずる</b>：同じことのくり返しや、いらない文はないかな？</li>
-      <li><b>入れかえる</b>：同じ言葉が続いていたら、宝箱からにた言葉をさがそう。</li>
-      <li><b>見なおす</b>：「、」「。」、かぎ（「」）、字のまちがいはないかな？</li>
-    </ul>
+    <summary>データのほぞん（バックアップ）</summary>
+    <p class="sub">お話は、このiPadの中だけにほぞんされます。iPadを変えるときや、データを消す前に「書き出し」をしておきましょう。</p>
+    <div class="row">
+      <button class="btn small" onclick="exportData()">⬇ 書き出し</button>
+      <label class="btn small">⬆ 読みこみ<input type="file" accept=".json,application/json" class="hidden" onchange="importData(this)"></label>
+    </div>
   </details>
-  <div class="row">
-    <button class="btn primary" onclick="goPublish()">📖 出版する</button>
-    <button class="btn" onclick="showStage(curEntryId)">🎤 作家先生（大きく見せる）</button>
-    <button class="btn small" onclick="downloadTxt()">⬇ テキストで保存</button>
-    <button class="btn small danger" onclick="deleteEntry()">消す</button>
+</section>
+
+<!-- ===== お話を読む ===== -->
+<section id="v-read" class="hidden">
+  <div class="card">
+    <div class="sub" id="rMeta"></div>
+    <p class="readTitle" id="rTitle"></p>
+    <div class="edwrap" style="margin-top:8px"><div id="rText" class="ed read"></div></div>
+    <div class="bonus" id="rWords" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" onclick="continueStory(curId)" id="rCont">✏️ 続きを書く</button>
+      <button class="btn" onclick="renameStory()">題名を変える</button>
+      <button class="btn small danger" onclick="deleteStory()">消す</button>
+    </div>
   </div>
 </section>
 
-<!-- ===== 出版 ===== -->
-<section id="v-publish" class="hidden">
-  <div class="card">
-    <h2>📖 出版する</h2>
-    <p class="sub" style="margin-top:0">げんこう用紙をえらぼう。印刷して、絵をかいたり表紙をつけたりできます。</p>
-    <div class="types" id="types"></div>
-    <div class="row" style="margin-top:12px">
-      <button class="btn primary" onclick="window.print()">🖨 印刷する</button>
-      <button class="btn" onclick="markPublished()">⭐ 出版ずみにする</button>
+<!-- ===== 印刷（原稿用紙・本） ===== -->
+<section id="v-print" class="hidden">
+  <div class="card" style="padding:12px 16px">
+    <div class="row">
+      <b id="prTitle" style="flex:1"></b>
+      <label id="prSheets" class="row" style="gap:4px">枚数
+        <select id="sheetSel" onchange="openGenko()"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+      <button class="btn primary" onclick="doPrint()">🖨 印刷する</button>
     </div>
+    <p class="sub" id="prNote" style="margin:6px 0 0"></p>
   </div>
-  <div id="book"></div>
+  <div id="prScale"><div id="printArea"></div></div>
 </section>
 
 <!-- ===== 言葉の宝箱 ===== -->
@@ -473,22 +535,21 @@
     <div class="boxList" id="boxList"></div>
   </div>
 </section>
-
 <!-- ===== レッスン一覧 ===== -->
 <section id="v-lessons" class="hidden">
   <div class="card"><h2>🎓 作家のわざ</h2><p class="sub" style="margin:0">毎日1つずつ、レッスンが順番に出てきます。ここではいつでも読めます。</p>
     <div class="lessonList" id="allLessons"></div></div>
   <div class="card lesson hidden" id="lessonView"></div>
 </section>
-
 <!-- ===== 先生へ ===== -->
 <section id="v-teacher" class="hidden">
   <div class="card teacher">
     <h2>🧑‍🏫 先生へ：このアプリのねらい</h2>
     <p><b>作家の時間（ライティング・ワークショップ）</b>は、子どもが本物の「作家」として、自分で決めた内容を書き、作品を出版する学び方です。基本の流れは、<b>ミニレッスン → ひたすら書く → 共有（ふりかえり）</b>です。</p>
     <p>このアプリは、樋口綾香先生の朝学習の形（<b>ミニレッスン5分＋書く10分</b>）に合わせています。そこに、教科書巻末の「言葉の宝箱」の言葉を毎日3語（人物・事物・気持ち）入れました。<b>読むときに学んだ言葉を、書くときにつかえる言葉にする</b>ためです。</p>
-    <h2 style="margin-top:16px">紙に書くとき：おだいガチャ</h2>
-    <p>ホームの「🎲 おだいを引く」で、まず<b>「人物を書く」か「物を書く」か</b>を選びます。すると、<b>言葉の宝箱の言葉（人物か様子）・表現技法・書き出し</b>が1つずつランダムに出ます。表現技法と書き出しも、選んだほうに合うものだけが出ます。「📺 大きく」でテレビや黒板にうつし、タイマー（5／10／15分）を動かして、子どもは作家ノートや原稿用紙に書きます。出すおだいはチェックで選べて、カードごとに🔄で引き直せます。表現技法は学年に合わせて出し分けます（隠喩・対句は5年から、体言止めは4年から、倒置法は3年から）。</p>
+    <h2 style="margin-top:16px">2つの書き方</h2>
+    <p><b>📱 iPadで書く</b>：「人物」か「物」を選ぶと、<b>書き出しの例文が入った縦書きの画面</b>が開きます。横には言葉の宝箱の言葉（意味つき）と表現技法がいつも出ています。書けたら「本にしまう」で、お話が<b>自分の本（短編集）</b>に1話ずつたまります。あとから「続きを書く」で、どのお話も続きから書けます。「本を印刷する」で、表紙・もくじ・全部のお話が入った縦書きの本を印刷できます。</p>
+    <p><b>📝 紙に書く</b>：おだいを出して、テレビにうつしたりタイマーを使ったりできます。「原稿用紙を印刷」で、<b>書き出しがもう書いてある縦書きの原稿用紙</b>（言葉と表現技法のメモつき）を印刷できます。2枚目からは続き用です。</p>
     <h2 style="margin-top:16px">大事にしていること</h2>
     <ul>
       <li><b>書く内容は子どもが決める</b>。今日の言葉は「つかえたらすごい」というお誘いで、強制ではありません。</li>
@@ -505,11 +566,9 @@
     <p class="sub">参考：プロジェクト・ワークショップ編『作家の時間』（新評論）、樋口綾香「すてきやん通信」（小学館 みんなの教育技術）、光村図書 国語教科書「言葉の宝箱」</p>
   </div>
 </section>
-
-<footer>作家の時間 ✏️ ことばの宝箱　ver.2026-10-06g</footer>
+<footer>作家の時間 ✏️ ことばの宝箱　ver.2026-10-08a</footer>
 </div>
 
-<div id="stage" class="hidden"><button class="btn close" onclick="hideStage()">✕ とじる</button><div class="t" id="stT"></div><div class="a" id="stA"></div><div class="b" id="stB"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -701,30 +760,6 @@ var TOPICS_HIGH = ["お話をつくる","きのうあったこと","わすれら
 var TOPICS_LOW = ["おはなしを つくる","きのう あった こと","すきな もの","もしも ○○ だったら","たのしかった こと"];
 
 /* ============================================================
-   保存
-   ============================================================ */
-var LS = "sakka-no-jikan-v1";
-var st = load();
-function load(){
-  var d = null;
-  try{ d = JSON.parse(localStorage.getItem(LS)); }catch(e){}
-  d = d || {};
-  d.grade = d.grade || 0; d.name = d.name || "";
-  d.entries = d.entries || []; d.used = d.used || {}; d.lessonIdx = d.lessonIdx || 0;
-  d.today = d.today || null;
-  return d;
-}
-function save(){ try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){ toast("ほぞんできませんでした"); } }
-
-function low(){ return st.grade && st.grade <= 2; }
-function L(a,b){ return low() ? a : b; }
-function lessons(){ return low() ? LESSONS_LOW : LESSONS_HIGH; }
-function todayKey(){ var d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
-function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
-function $(id){ return document.getElementById(id); }
-function toast(t){ var e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(function(){e.classList.remove("on");},1800); }
-
-/* ============================================================
    言葉の判定（活用形も見つける）
    ============================================================ */
 function kata(s){ return s.replace(/[ぁ-ゖ]/g,function(c){return String.fromCharCode(c.charCodeAt(0)+0x60);}); }
@@ -760,335 +795,6 @@ function findWords(text, grade){
   if (!text) return [];
   return matchers(grade||st.grade).filter(function(m){ return m.re.test(text); });
 }
-
-/* ============================================================
-   画面きりかえ
-   ============================================================ */
-var VIEWS=["setup","home","gacha","today","note","entry","publish","box","lessons","teacher"];
-var cur="home";
-function go(v){
-  if (cur==="today" && v!=="today") pauseTimer();
-  if (cur==="entry" && v!=="entry") saveEntry();
-  if (v==="gacha" && cur!=="gacha") gChosen=false;
-  cur=v;
-  VIEWS.forEach(function(x){ $("v-"+x).classList.toggle("hidden", x!==v); });
-  $("backBtn").classList.toggle("hidden", v==="home" || (v==="setup" && !st.grade));
-  $("gradeBadge").classList.toggle("hidden", !st.grade || v==="setup");
-  $("gradeBadge").textContent = st.grade ? st.grade+"年"+(st.name?"・"+st.name:"") : "";
-  if (v==="entry" || v==="publish") $("backBtn").setAttribute("onclick", v==="publish" ? "openEntry(curEntryId)" : "go('note')");
-  else $("backBtn").setAttribute("onclick","go('home')");
-  window.scrollTo(0,0);
-  if (v!=="gacha" && document.body.classList.contains("big")) toggleBig();
-  ({setup:renderSetup, home:renderHome, gacha:renderGacha, note:renderNote, box:renderBox, lessons:renderLessons}[v]||function(){})();
-}
-
-/* ---- setup ---- */
-var pickGrade=0;
-function renderSetup(){
-  pickGrade=st.grade;
-  var h=""; for (var g=1; g<=6; g++) h+='<button data-g="'+g+'" class="'+(g===pickGrade?"on":"")+'" onclick="pickG('+g+')">'+g+'年</button>';
-  $("gradeBtns").innerHTML=h; $("nameIn").value=st.name;
-}
-function pickG(g){ pickGrade=g; Array.prototype.forEach.call(document.querySelectorAll("#gradeBtns button"),function(b){ b.classList.toggle("on", +b.dataset.g===g); }); }
-function saveSetup(){
-  if (!pickGrade){ toast("学年をえらんでね"); return; }
-  if (st.grade!==pickGrade){ st.today=null; st.lessonIdx = 0; }
-  st.grade=pickGrade; st.name=$("nameIn").value.trim(); save(); go("home");
-}
-
-/* ---- home ---- */
-function renderHome(){
-  $("helloTxt").textContent = (st.name? st.name+L(" さっか、"," 作家、") : "") + L("きょうも かこう！","今日も書こう！");
-  var d=new Date(), wd="日月火水木金土"[d.getDay()];
-  var doneToday = st.entries.some(function(e){ return e.day===todayKey(); });
-  $("todayTxt").textContent = (d.getMonth()+1)+"月"+d.getDate()+"日（"+wd+"）" + (doneToday? L("　きょうは もう かいたよ ✨","　今日はもう書いたよ ✨") : "");
-  $("gachaBtn").textContent = L("🎲 おだいを ひく（かみに かく）","🎲 おだいを引く（紙に書く）");
-  $("startBtn").textContent = L("⌨️ タブレットで かく","⌨️ タブレットで書く");
-  var days={}, chars=0; st.entries.forEach(function(e){ days[e.day]=1; chars+=(e.text||"").length; });
-  $("stDays").textContent=Object.keys(days).length;
-  $("stChars").textContent=chars;
-  var total=0, got=0; for (var c in BOX[st.grade]) BOX[st.grade][c].forEach(function(w){ total++; if (st.used[w]) got++; });
-  $("stWords").textContent=got+"/"+total;
-  $("stWordsL").textContent=st.grade+L("ねんの ことば","年の宝箱の言葉");
-}
-
-/* ============================================================
-   きょうの作家の時間
-   ============================================================ */
-function rng(seed){ var h=2166136261; for (var i=0;i<seed.length;i++){ h^=seed.charCodeAt(i); h=Math.imul(h,16777619); } return function(){ h+=0x6D2B79F5; var t=h; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
-function pickWord(c, n){
-  var list=BOX[st.grade][c], r=rng(todayKey()+"|"+st.grade+"|"+c), order=list.map(function(w,i){return i;});
-  for (var i=order.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)); var t=order[i]; order[i]=order[j]; order[j]=t; }
-  return list[order[n % order.length]];
-}
-var T=null; // 今日のセッション
-function startToday(){
-  if (!st.grade){ go("setup"); return; }
-  if (!st.today || st.today.day!==todayKey() || st.today.grade!==st.grade || st.today.finished){
-    st.today={day:todayKey(), grade:st.grade, swap:{h:0,m:0,k:0}, manual:{}, lesson:st.lessonIdx % lessons().length,
-      text:"", title:"", elapsed:0, finished:false};
-    save();
-  }
-  T=st.today;
-  go("today");
-  $("paper").value=T.text; $("titleIn").value=T.title;
-  todayStep(T.text ? 3 : 1);
-}
-function todayWords(){ return ["h","m","k"].map(function(c){ return {c:c, w:pickWord(c, T.swap[c])}; }); }
-
-function todayStep(n){
-  ["t-lesson","t-words","t-write","t-done"].forEach(function(id,i){ $(id).classList.toggle("hidden", i+1!==n); });
-  for (var i=1;i<=3;i++) $("s"+i).classList.toggle("on", i===n);
-  $("s1").textContent=L("① レッスン","① レッスン"); $("s2").textContent=L("② きょうの ことば","② 今日の言葉"); $("s3").textContent=L("③ かく","③ ひたすら書く");
-  if (n===1) renderLessonCard($("lessonCard"), lessons()[T.lesson], T.lesson);
-  if (n===2) renderTodayWords();
-  if (n===3) renderWrite();
-  if (n!==3) pauseTimer();
-  window.scrollTo(0,0);
-}
-function renderLessonCard(el, ls, idx){
-  var cat = ls.c ? CATS[ls.c] : null;
-  el.innerHTML = '<span class="tag">'+L("さっかの わざ","作家のわざ")+' '+(idx+1)+'</span>'+
-    '<h3>'+esc(ls.t)+'</h3>'+
-    ls.b.map(function(p){return '<p style="margin:4px 0">'+esc(p)+'</p>';}).join("")+
-    '<ul>'+ls.li.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul>'+
-    (ls.ex?'<div class="ex">'+esc(ls.ex).replace(/\n/g,"<br>")+'</div>':"")+
-    '<div class="try">✏️ '+esc(ls.tr)+'</div>'+
-    (cat?'<div class="sub" style="margin-top:6px">'+L("つかう ことば：","とくに使える言葉：")+'<b style="color:var(--'+cat.cls+')">'+L(cat.low,cat.high)+'</b></div>':"");
-}
-function toggleLessonPick(){
-  var el=$("lessonPick"); el.classList.toggle("hidden");
-  el.innerHTML = lessons().map(function(ls,i){ return '<button class="'+(i===T.lesson?"on":"")+'" onclick="setLesson('+i+')">'+(i+1)+'. '+esc(ls.t)+'</button>'; }).join("");
-}
-function setLesson(i){ T.lesson=i; save(); $("lessonPick").classList.add("hidden"); renderLessonCard($("lessonCard"), lessons()[i], i); }
-
-function wordCardHTML(o, usedNow, withSwap){
-  var cat=CATS[o.c], used=usedNow;
-  return '<div class="wcard '+cat.cls+(used?' used':'')+'" onclick="toggleManual(\''+o.c+'\')">'+
-    (withSwap?'<button class="swap" onclick="event.stopPropagation();swapWord(\''+o.c+'\')">🔄 '+L("かえる","かえる")+'</button>':"")+
-    '<div class="cat">'+L(cat.low,cat.high)+'</div>'+
-    '<div class="w"><span class="mark">'+(used?"◆":"◇")+'</span>'+esc(o.w)+'</div>'+
-    (MEAN[o.w]?'<div class="hint" style="color:var(--ink)">'+L("いみ：","意味：")+esc(MEAN[o.w])+'</div>':"")+
-    '<div class="hint">'+(used? L("つかえた！","使えた！") : (st.used[o.w]? L("まえにも つかったね","前にも使ったね") : ""))+'</div></div>';
-}
-function renderTodayWords(){
-  $("wordsHead").textContent=L("きょうの ことば","今日の言葉");
-  $("wordsSub").textContent=L("この ことばを つかって かけたら すごい！ ぜんぶ つかわなくても いいよ。","使えたらすごい！ 全部使わなくてもOK。言葉の意味がわからなかったら、国語辞典で調べてみよう。");
-  $("todayWords").innerHTML = todayWords().map(function(o){ return wordCardHTML(o, false, true); }).join("");
-}
-function swapWord(c){ T.swap[c]++; save(); renderTodayWords(); }
-
-/* ---- 書く ---- */
-var timerId=null, LIMIT=600;
-function renderWrite(){
-  $("topics").innerHTML=(low()?TOPICS_LOW:TOPICS_HIGH).map(function(t){return '<button onclick="useTopic(this)">'+esc(t)+'</button>';}).join("");
-  $("tapHint").textContent=L("つかった ことばは じどうで いろが つくよ。つかなかったら カードを タップしてね。","使った言葉は自動で色がつきます。漢字にしてつかないときは、カードをタップしてね。");
-  $("titleIn").placeholder=L("だいめい（あとで つけても いいよ）","題名（あとでつけてもOK）");
-  $("paper").placeholder=L("ここに かこう。もじを うつと タイマーが スタートするよ。","ここに書こう。字を打ちはじめるとタイマーがスタートするよ。");
-  updateWrite(true); drawTimer();
-  setTimeout(function(){ $("paper").focus(); }, 50);
-}
-function useTopic(b){ if (!$("paper").value) toast(b.textContent+" — "+L("いいね！ かいて みよう","いいね！書いてみよう")); }
-var prevUsed={};
-function updateWrite(silent){
-  var text=$("paper").value; T.text=text; T.title=$("titleIn").value;
-  $("charCount").textContent=text.replace(/\s/g,"").length;
-  var found=findWords(text), foundSet={}; found.forEach(function(m){ foundSet[m.w]=m; });
-  var tw=todayWords();
-  $("writeWords").innerHTML = tw.map(function(o){ return wordCardHTML(o, !!foundSet[o.w] || !!T.manual[o.c], false); }).join("");
-  tw.forEach(function(o){ var u=!!foundSet[o.w]; if (u && !prevUsed[o.w] && !silent) toast("◆ "+o.w+L(" を つかえたね！"," を使えたね！")); prevUsed[o.w]=u; });
-  var todaySet={}; tw.forEach(function(o){ todaySet[o.w]=1; });
-  var extra=found.filter(function(m){ return !todaySet[m.w]; });
-  $("bonusWrap").classList.toggle("hidden", !extra.length);
-  $("bonus").innerHTML=extra.map(function(m){ return '<span class="chip '+CATS[m.c].cls+'">◆ '+esc(m.w)+(m.g!==st.grade?' <small>'+m.g+'年</small>':'')+'</span>'; }).join("");
-  save();
-}
-function toggleManual(c){
-  if (cur!=="today" || $("t-write").classList.contains("hidden")) return;
-  T.manual[c]=!T.manual[c]; save(); updateWrite(true);
-}
-$("paper").addEventListener("input", function(){ if (!timerId && T.elapsed<LIMIT && this.value.length) startTimer(); clearTimeout(updateWrite.t); updateWrite.t=setTimeout(function(){updateWrite(false);},250); });
-$("titleIn").addEventListener("input", function(){ T.title=this.value; save(); });
-
-function startTimer(){
-  if (timerId) return;
-  var last=Date.now();
-  timerId=setInterval(function(){
-    var now=Date.now(); T.elapsed+= (now-last)/1000; last=now;
-    if (T.elapsed>=LIMIT){ T.elapsed=LIMIT; pauseTimer(); chime(); }
-    drawTimer(); save();
-  },500);
-}
-function pauseTimer(){ if (timerId){ clearInterval(timerId); timerId=null; } }
-function drawTimer(){
-  if (!T) return;
-  var left=Math.max(0, Math.ceil(LIMIT-T.elapsed));
-  $("timer").textContent = left? Math.floor(left/60)+":"+("0"+left%60).slice(-2) : L("おわり！","10分！");
-  $("timer").classList.toggle("done", !left);
-  $("timerBar").style.width = Math.min(100, T.elapsed/LIMIT*100)+"%";
-  $("timeMsg").innerHTML = left? "" : '<div class="msg good">'+L("10ぷん たったよ！ つづけて かいても いいよ。おわったら「作家ノートに しまう」を おそう。","10分たったよ！ 続けて書いてもOK。終わったら「作家ノートにしまう」を押そう。")+'</div>';
-}
-function chime(){
-  try{ var a=new (window.AudioContext||window.webkitAudioContext)(); [660,880].forEach(function(f,i){ var o=a.createOscillator(), g=a.createGain(); o.frequency.value=f; o.connect(g); g.connect(a.destination);
-    g.gain.setValueAtTime(.0001,a.currentTime+i*.25); g.gain.exponentialRampToValueAtTime(.2,a.currentTime+i*.25+.02); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+i*.25+.6);
-    o.start(a.currentTime+i*.25); o.stop(a.currentTime+i*.25+.65); }); }catch(e){}
-}
-
-var lastSavedId=null;
-function finishToday(){
-  updateWrite(true);
-  var text=T.text.trim();
-  if (!text){ toast(L("まだ なにも かいて いないよ","まだ何も書いていないよ")); return; }
-  pauseTimer();
-  var found=findWords(text), tw=todayWords(), usedList=[];
-  found.forEach(function(m){ usedList.push(m.w); });
-  tw.forEach(function(o){ if (T.manual[o.c] && usedList.indexOf(o.w)<0) usedList.push(o.w); });
-  usedList.forEach(function(w){ st.used[w]=(st.used[w]||0)+1; });
-  var e={id:"e"+Date.now(), day:T.day, date:new Date().toISOString(), grade:st.grade, title:T.title.trim(), text:T.text,
-    words:tw.map(function(o){return o.w;}), used:usedList, lesson:lessons()[T.lesson].t, published:false, minutes:Math.round(T.elapsed/60)};
-  st.entries.unshift(e); lastSavedId=e.id;
-  st.lessonIdx = (T.lesson+1) % lessons().length;
-  T.finished=true; save();
-  $("doneHead").textContent=L("よく かけたね！","よく書けたね！");
-  $("doneChars").textContent=text.replace(/\s/g,"").length;
-  var catOf={}; tw.forEach(function(o){ catOf[o.w]=o.c; }); found.forEach(function(m){ catOf[m.w]=m.c; });
-  $("doneWords").innerHTML = usedList.length ? usedList.map(function(w){ return '<span class="chip '+CATS[catOf[w]||"k"].cls+'">◆ '+esc(w)+'</span>'; }).join("")
-    : '<span class="sub">'+L("つぎは きょうの ことばも つかって みよう","次は今日の言葉も使ってみよう")+'</span>';
-  $("doneNote").textContent=L("つぎの レッスンは「"+lessons()[st.lessonIdx].t+"」だよ。","次のレッスンは「"+lessons()[st.lessonIdx].t+"」。");
-  todayStep(4);
-}
-
-/* ============================================================
-   作家ノート
-   ============================================================ */
-function fmtDate(iso){ var d=new Date(iso); return (d.getMonth()+1)+"/"+d.getDate(); }
-function renderNote(){
-  if (!st.entries.length){ $("noteList").innerHTML='<div class="card sub">'+L("まだ なにも ないよ。きょうの 作家の時間で かいて みよう！","まだ何もありません。今日の作家の時間で書いてみよう！")+'</div>'; return; }
-  $("noteList").innerHTML = st.entries.map(function(e){
-    var first=(e.text||"").trim().split("\n")[0];
-    return '<button class="entry" onclick="openEntry(\''+e.id+'\')"><div class="t">'+esc(e.title||L("（だいめい なし）","（題名なし）"))+(e.published?'<span class="pubBadge">出版</span>':'')+'</div>'+
-      '<div class="p">'+esc(first)+'</div><div class="m">'+fmtDate(e.date)+'・'+(e.text||"").replace(/\s/g,"").length+L("もじ","文字")+(e.used&&e.used.length?'・◆'+e.used.length:"")+'</div></button>';
-  }).join("");
-}
-var curEntryId=null;
-function getEntry(id){ for (var i=0;i<st.entries.length;i++) if (st.entries[i].id===id) return st.entries[i]; return null; }
-function openEntry(id){
-  var e=getEntry(id); if (!e) return; curEntryId=id; go("entry");
-  $("eMeta").textContent=fmtDate(e.date)+"　"+L("きょうの ことば：","今日の言葉：")+(e.words||[]).join("・")+"　／　"+(e.lesson||"");
-  $("eTitle").value=e.title||""; $("eText").value=e.text||""; refreshEntry();
-}
-function refreshEntry(){
-  var t=$("eText").value; $("eCount").textContent=t.replace(/\s/g,"").length;
-  var found=findWords(t, getEntry(curEntryId).grade);
-  $("eWords").innerHTML=found.map(function(m){ return '<span class="chip '+CATS[m.c].cls+'">◆ '+esc(m.w)+'</span>'; }).join("");
-}
-$("eText").addEventListener("input", function(){ clearTimeout(refreshEntry.t); refreshEntry.t=setTimeout(function(){ refreshEntry(); saveEntry(); },300); });
-$("eTitle").addEventListener("input", saveEntry);
-function saveEntry(){
-  var e=getEntry(curEntryId); if (!e) return;
-  var before=findWords(e.text, e.grade).map(function(m){return m.w;});
-  e.title=$("eTitle").value; e.text=$("eText").value;
-  findWords(e.text, e.grade).forEach(function(m){ if (before.indexOf(m.w)<0){ st.used[m.w]=(st.used[m.w]||0)+1; if ((e.used||[]).indexOf(m.w)<0) (e.used=e.used||[]).push(m.w); } });
-  save();
-}
-function deleteEntry(){
-  if (!confirm(L("ほんとうに けしますか？","本当に消しますか？"))) return;
-  st.entries=st.entries.filter(function(e){return e.id!==curEntryId;}); save(); go("note");
-}
-function downloadTxt(){
-  saveEntry(); var e=getEntry(curEntryId);
-  var blob=new Blob([(e.title?e.title+"\n"+(st.name?"作・"+st.name+"\n":"")+"\n":"")+e.text],{type:"text/plain"});
-  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=(e.title||"作品")+".txt"; a.click();
-}
-
-/* ---- 作家先生 ---- */
-function showStage(id){
-  saveEntry(); var e=getEntry(id); if (!e) return;
-  $("stT").textContent=e.title||""; $("stA").textContent=st.name? "作・"+st.name : "";
-  var html=esc(e.text);
-  findWords(e.text, e.grade).forEach(function(m){ html=html.replace(new RegExp(m.re.source,"g"), function(x){ return '<mark class="hl '+CATS[m.c].cls+'">'+x+'</mark>'; }); });
-  $("stB").innerHTML=html; $("stage").classList.remove("hidden");
-}
-function hideStage(){ $("stage").classList.add("hidden"); }
-
-/* ============================================================
-   出版（5しゅるいの げんこう用紙）
-   ============================================================ */
-var PTYPES=[
-  {id:"ehon", n:"絵本型", d:"横・絵2"},
-  {id:"y1", n:"横書き", d:"絵1"},
-  {id:"y0", n:"横書き", d:"絵なし"},
-  {id:"t1", n:"縦書き", d:"絵1"},
-  {id:"t0", n:"縦書き", d:"絵なし"}
-];
-var ptype="ehon";
-function typeIcon(id){
-  var v=id[0]==="t", pics=id==="ehon"?2:(id.slice(-1)==="1"?1:0), s='<svg width="44" height="54" viewBox="0 0 44 54"><rect x="1" y="1" width="42" height="52" rx="3" fill="none" stroke="currentColor" stroke-opacity=".4"/>';
-  if (id==="ehon"){ s+='<rect x="6" y="6" width="32" height="18" rx="2" fill="currentColor" fill-opacity=".15"/>'; for (var i=0;i<3;i++) s+='<line x1="6" x2="38" y1="'+(30+i*6)+'" y2="'+(30+i*6)+'" stroke="currentColor" stroke-opacity=".5"/>'; }
-  else if (!v){ var y=6; if (pics){ s+='<rect x="6" y="6" width="32" height="14" rx="2" fill="currentColor" fill-opacity=".15"/>'; y=26; } for (;y<48;y+=6) s+='<line x1="6" x2="38" y1="'+y+'" y2="'+y+'" stroke="currentColor" stroke-opacity=".5"/>'; }
-  else { var x=37; if (pics){ s+='<rect x="24" y="6" width="14" height="42" rx="2" fill="currentColor" fill-opacity=".15"/>'; x=19; } for (;x>5;x-=6) s+='<line x1="'+x+'" x2="'+x+'" y1="6" y2="48" stroke="currentColor" stroke-opacity=".5"/>'; }
-  return s+'</svg>';
-}
-function goPublish(){ saveEntry(); go("publish"); renderPublish(); }
-function renderPublish(){
-  $("types").innerHTML=PTYPES.map(function(p){ return '<button class="'+(p.id===ptype?"on":"")+'" onclick="ptype=\''+p.id+'\';renderPublish()">'+typeIcon(p.id)+p.n+'<br><span class="sub">'+p.d+'</span></button>'; }).join("");
-  var e=getEntry(curEntryId), title=esc(e.title||""), au=st.name? "作・"+esc(st.name) : "";
-  var paras=(e.text||"").split(/\n+/).map(function(s){return s.trim();}).filter(Boolean);
-  var book=$("book"); book.className = ptype[0]==="t" ? "vert" : (ptype==="ehon"?"ehon":"");
-  var pic='<div class="pic">'+L("ここに えを かこう","ここに絵をかこう")+'</div>', h="";
-  if (ptype==="ehon"){
-    // 文を1ページ約90字ずつに分け、ページごとに絵の枠
-    var pages=[], buf="";
-    paras.forEach(function(p){ if (buf && (buf+p).length>90){ pages.push(buf); buf=""; } buf+= (buf?"\n":"")+p; });
-    if (buf) pages.push(buf);
-    h+='<div class="pg"><div class="ttl">'+title+'</div><div class="au">'+au+'</div>'+pic+'</div>';
-    pages.forEach(function(p,i){ h+='<div class="pg">'+pic+p.split("\n").map(function(x){return '<p>'+esc(x)+'</p>';}).join("")+'<div class="no">'+(i+1)+'</div></div>'; });
-  } else {
-    // 縦書きは1ページ約300字ずつに分ける（印刷ではみ出さないように）
-    var chunks=[paras], first=true;
-    if (ptype[0]==="t"){ chunks=[]; var cur=[], n=0; paras.forEach(function(p){ if (cur.length && n+p.length>300){ chunks.push(cur); cur=[]; n=0; } cur.push(p); n+=p.length; }); if (cur.length) chunks.push(cur); if (!chunks.length) chunks=[[]]; }
-    chunks.forEach(function(ch,i){
-      h+='<div class="pg">'+(i===0?'<div class="ttl">'+title+'</div><div class="au">'+au+'</div>'+(ptype.slice(-1)==="1"?pic:""):"")+
-        ch.map(function(x){return '<p>'+esc(x)+'</p>';}).join("")+(chunks.length>1?'<div class="no">'+(i+1)+'</div>':"")+'</div>';
-    });
-  }
-  book.innerHTML=h;
-}
-function markPublished(){ var e=getEntry(curEntryId); e.published=true; save(); toast(L("しゅっぱん した よ！ ⭐","出版しました ⭐")); }
-
-/* ============================================================
-   言葉の宝箱
-   ============================================================ */
-var boxG=0, boxC="h";
-function renderBox(){
-  if (!boxG) boxG=st.grade;
-  var gh=""; for (var g=1; g<=6; g++) gh+='<button class="'+(g===boxG?"on":"")+'" onclick="boxG='+g+';renderBox()">'+g+'年</button>';
-  $("boxGrade").innerHTML=gh;
-  $("boxCat").innerHTML=["h","m","k"].map(function(c){ return '<button class="'+(c===boxC?"on":"")+'" onclick="boxC=\''+c+'\';renderBox()">'+CATS[c].short+'</button>'; }).join("");
-  var list=BOX[boxG][boxC], got=list.filter(function(w){return st.used[w];}).length;
-  $("boxProgTxt").textContent=(boxG<=2?CATS[boxC].low:CATS[boxC].high)+"　◆ "+got+" / "+list.length;
-  $("boxProg").style.width=(got/list.length*100)+"%"; $("boxProg").style.background="var(--"+CATS[boxC].cls+")";
-  $("boxList").innerHTML=list.map(function(w){ var n=st.used[w]; return '<span class="chip '+(n?CATS[boxC].cls:"off")+'">'+(n?"◆":"◇")+" "+esc(w)+(n>1?' <small>×'+n+'</small>':'')+'</span>'; }).join("");
-}
-
-/* ---- レッスン一覧 ---- */
-function renderLessons(){
-  $("allLessons").innerHTML=lessons().map(function(ls,i){ return '<button onclick="viewLesson('+i+')">'+(i+1)+'. '+esc(ls.t)+'</button>'; }).join("");
-  $("lessonView").classList.add("hidden");
-}
-function viewLesson(i){ var el=$("lessonView"); el.classList.remove("hidden"); renderLessonCard(el, lessons()[i], i); el.scrollIntoView({behavior:"smooth"}); }
-
-/* ---- バックアップ ---- */
-function exportData(){
-  var blob=new Blob([JSON.stringify(st,null,1)],{type:"application/json"}), a=document.createElement("a");
-  a.href=URL.createObjectURL(blob); a.download="sakka-no-jikan-"+todayKey()+".json"; a.click();
-}
-function importData(inp){
-  var f=inp.files[0]; if (!f) return; var r=new FileReader();
-  r.onload=function(){ try{ var d=JSON.parse(r.result); if (!d.entries) throw 0; if (!confirm("いまのデータを、このファイルの中身に入れかえますか？")) return; localStorage.setItem(LS, JSON.stringify(d)); st=load(); toast("読みこみました"); go("home"); }catch(e){ toast("読みこめませんでした"); } };
-  r.readAsText(f);
-}
-function wipeData(){ if (!confirm("書いたものも、あつめた言葉も、ぜんぶ消えます。いいですか？")) return; try{ localStorage.removeItem(LS); }catch(e){} st=load(); go("setup"); }
 
 /* ============================================================
    おだいガチャ：人物か物かを選び、言葉・表現技法・書き出しを1つずつ
@@ -1155,7 +861,356 @@ function emHTML(t){ return esc(t).replace(/【([^】]*)】/g,'<mark class="em">$
 function exOf(v){ return typeof v.ex==="string" ? v.ex : v.ex[gFocus()]; }
 function gOn(k){ return !st.gOff || !st.gOff[k]; }
 function newGL(){ GL={grade:st.grade, focus:gFocus()}; GKEYS.forEach(function(o){ GL[o.k]=gPick(o.k); }); }
-var gChosen=false;
+
+/* ============================================================
+   保存
+   ============================================================ */
+var LS = "sakka-no-jikan-v1";
+var st = load();
+function load(){
+  var d = null;
+  try{ d = JSON.parse(localStorage.getItem(LS)); }catch(e){}
+  d = d || {};
+  d.grade = d.grade || 0; d.name = d.name || "";
+  d.entries = d.entries || []; d.used = d.used || {};
+  return d;
+}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){ toast("ほぞんできませんでした"); } }
+function low(){ return st.grade && st.grade <= 2; }
+function L(a,b){ return low() ? a : b; }
+function lessons(){ return low() ? LESSONS_LOW : LESSONS_HIGH; }
+function todayKey(){ var d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function $(id){ return document.getElementById(id); }
+function toast(t){ var e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(function(){e.classList.remove("on");},1800); }
+function fmtDate(iso){ var d=new Date(iso); return (d.getMonth()+1)+"/"+d.getDate(); }
+function zen(t){ return String(t).replace(/[0-9A-Za-z]/g,function(c){ return String.fromCharCode(c.charCodeAt(0)+0xFEE0); }); }
+function charLen(t){ return (t||"").replace(/\s/g,"").length; }
+// 本の順番（古いものから）
+function storiesAsc(){ return st.entries.slice().sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); }); }
+function getEntry(id){ for (var i=0;i<st.entries.length;i++) if (st.entries[i].id===id) return st.entries[i]; return null; }
+
+/* ============================================================
+   画面きりかえ
+   ============================================================ */
+var VIEWS=["setup","home","gacha","write","done","shelf","read","print","box","lessons","teacher"];
+var cur="home", MODE="paper";
+function go(v){
+  if (cur==="write" && v!=="write") saveDraft();
+  if (v!=="gacha" && document.body.classList.contains("big")) toggleBig();
+  if (v==="gacha" && cur!=="gacha") gChosen=false;
+  cur=v;
+  document.body.classList.toggle("wide", ["write","print","read","shelf"].indexOf(v)>=0);
+  VIEWS.forEach(function(x){ $("v-"+x).classList.toggle("hidden", x!==v); });
+  $("backBtn").classList.toggle("hidden", v==="home" || (v==="setup" && !st.grade));
+  $("gradeBadge").classList.toggle("hidden", !st.grade || v==="setup");
+  $("gradeBadge").textContent = st.grade ? st.grade+"年"+(st.name?"・"+st.name:"") : "";
+  var back={read:"go('shelf')", print: PRINT_BACK, done:"go('home')"}[v] || "go('home')";
+  $("backBtn").setAttribute("onclick", back);
+  window.scrollTo(0,0);
+  ({setup:renderSetup, home:renderHome, gacha:renderGacha, shelf:renderShelf, box:renderBox, lessons:renderLessons}[v]||function(){})();
+}
+var PRINT_BACK="go('home')";
+
+/* ---- setup ---- */
+var pickGrade=0;
+function renderSetup(){
+  pickGrade=st.grade;
+  var h=""; for (var g=1; g<=6; g++) h+='<button data-g="'+g+'" class="'+(g===pickGrade?"on":"")+'" onclick="pickG('+g+')">'+g+'年</button>';
+  $("gradeBtns").innerHTML=h; $("nameIn").value=st.name;
+}
+function pickG(g){ pickGrade=g; Array.prototype.forEach.call(document.querySelectorAll("#gradeBtns button"),function(b){ b.classList.toggle("on", +b.dataset.g===g); }); }
+function saveSetup(){
+  if (!pickGrade){ toast("学年をえらんでね"); return; }
+  st.grade=pickGrade; st.name=$("nameIn").value.trim(); save(); go("home");
+}
+
+/* ---- home ---- */
+function renderHome(){
+  $("helloTxt").textContent = (st.name? st.name+L(" さっか、"," 作家、") : "") + L("きょうは どっちで かく？","今日はどっちで書く？");
+  var d=new Date(), wd="日月火水木金土"[d.getDay()];
+  $("todayTxt").textContent = (d.getMonth()+1)+"月"+d.getDate()+"日（"+wd+"）";
+  $("mIpad").textContent=L("iPadで かく","iPadで書く"); $("mIpadS").textContent=L("たてがきで うって、じぶんの 本に ためる","縦書きで打って、自分の本にためる");
+  $("mPaper").textContent=L("かみに かく","紙に書く"); $("mPaperS").textContent=L("おだいを だして、げんこうようしに かく","おだいを出して、原稿用紙に書く");
+  $("mShelf").textContent=L("わたしの 本","わたしの本");
+  var dr=st.draft;
+  $("draftBar").innerHTML = dr && charLen(dr.text) ? '<div class="draftBar">✏️ '+L("かきかけの おはなしが あるよ","書きかけのお話があります")+
+    (dr.title?'「'+esc(dr.title)+'」':'')+'<button class="btn primary small" onclick="resumeDraft()">'+L("つづける","つづける")+'</button><button class="btn small ghost" onclick="dropDraft()">'+L("すてる","すてる")+'</button></div>' : "";
+  var chars=0; st.entries.forEach(function(e){ chars+=charLen(e.text); });
+  $("stDays").textContent=st.entries.length; $("stDaysL").textContent=L("おはなしの かず","お話の数");
+  $("stChars").textContent=chars;
+  var total=0, got=0; for (var c in BOX[st.grade]) BOX[st.grade][c].forEach(function(w){ total++; if (st.used[w]) got++; });
+  $("stWords").textContent=got+"/"+total;
+  $("stWordsL").textContent=st.grade+L("ねんの ことば","年の宝箱の言葉");
+}
+function startMode(m){ if (!st.grade){ go("setup"); return; } MODE=m; go("gacha"); }
+
+function chime(){
+  try{ var a=new (window.AudioContext||window.webkitAudioContext)(); [660,880].forEach(function(f,i){ var o=a.createOscillator(), g=a.createGain(); o.frequency.value=f; o.connect(g); g.connect(a.destination);
+    g.gain.setValueAtTime(.0001,a.currentTime+i*.25); g.gain.exponentialRampToValueAtTime(.2,a.currentTime+i*.25+.02); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+i*.25+.6);
+    o.start(a.currentTime+i*.25); o.stop(a.currentTime+i*.25+.65); }); }catch(e){}
+}
+
+/* ============================================================
+   iPadで書く：縦書きエディタ
+   W = いま書いているお話
+   ============================================================ */
+var W=null;
+function kakiByTitle(t){ var all=(low()?KAKI_LOW:KAKI_HIGH); for (var i=0;i<all.length;i++) if (all[i].t===t) return all[i]; return null; }
+function wazaByTitle(t){ var all=(low()?WAZA_LOW:WAZA_HIGH); for (var i=0;i<all.length;i++) if (all[i].t===t) return all[i]; return null; }
+// 新しいお話：書き出しの例文を最初から入れておく
+function startNewStory(){
+  newGL();
+  W={id:null, focus:gFocus(), kaki:GL.kaki, word:GL.word, waza:GL.waza, startText:""};
+  openEditor(exOf(GL.kaki), "");
+}
+function continueStory(id){
+  var e=getEntry(id); if (!e) return;
+  st.gFocus = e.focus || gFocus(); save(); newGL();
+  W={id:id, focus:gFocus(), kaki:null, word:GL.word, waza:GL.waza, startText:e.text};
+  var t=e.text.replace(/\s+$/,"");
+  openEditor(t + "\n", e.title||"");
+}
+function resumeDraft(){
+  var d=st.draft; if (!d) return;
+  st.gFocus=d.focus||"h"; newGL();
+  W={id:d.id, focus:gFocus(), kaki:d.kakiT?kakiByTitle(d.kakiT):null, word:d.word||GL.word, waza:(d.wazaT&&wazaByTitle(d.wazaT))||GL.waza, startText:d.startText||""};
+  openEditor(d.text, d.title||"");
+}
+function dropDraft(){ if (!confirm(L("かきかけを すてますか？","書きかけをすてますか？"))) return; st.draft=null; save(); renderHome(); }
+
+var ed=null;
+function openEditor(text, title){
+  go("write");
+  ed=$("ed");
+  ed.contentEditable="plaintext-only";
+  if (ed.contentEditable!=="plaintext-only") ed.contentEditable="true";
+  ed.textContent=text; $("wTitle").value=title;
+  ed.setAttribute("data-ph", L("ここに かこう","ここに書こう"));
+  $("wTitle").placeholder=L("だいめい","題名");
+  $("saveBtn").textContent=L("📚 本に しまう","📚 本にしまう");
+  setDir(st.horiz);
+  renderPanel(true); saveDraft();
+  // カーソルを最後へ
+  setTimeout(function(){
+    try{ ed.focus({preventScroll:false}); var r=document.createRange(); r.selectNodeContents(ed); r.collapse(false); var s=getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){}
+    if (!st.horiz) ed.scrollLeft = -ed.scrollWidth;
+  }, 60);
+}
+function edText(){ return ed ? ed.innerText.replace(/ /g," ").replace(/\n$/,"") : ""; }
+function setDir(h){ st.horiz=!!h; ed.classList.toggle("horiz", !!h); $("dirBtn").textContent = h ? L("たてがきに する","縦書きにする") : L("よこがきに する","横書きにする"); }
+function toggleDir(){ setDir(!st.horiz); save(); }
+var prevHit={};
+function renderPanel(silent){
+  var text=edText(), found=findWords(text), set={}; found.forEach(function(m){ set[m.w]=m; });
+  $("wCount").textContent=charLen(text);
+  var f=W.focus, cat=CATS[f], used=!!set[W.word], h="";
+  if (W.kaki) h+='<div class="pc kaki"><div class="lab">'+L("かきだし","書き出し")+'</div><div class="nm">'+esc(W.kaki.t)+'</div><div class="ds">'+L("れいの ぶんが はいって いるよ。かえても いいよ。","例の文が入っています。書きかえてもOK。")+'</div></div>';
+  else { var e=getEntry(W.id); h+='<div class="pc kaki"><div class="lab">'+L("つづきを かく","続きを書く")+'</div><div class="nm">'+esc((e&&e.title)||L("（だいめいなし）","（題名なし）"))+'</div><div class="ds">'+L("さいごの つづきから かこう","最後の続きから書こう")+'</div></div>'; }
+  h+='<div class="pc '+cat.cls+(used?' used':'')+'"><div class="lab">'+L(cat.low,cat.high)+'</div><button class="re" onclick="swapPanel(\'word\')">🔄</button>'+
+     '<div class="wd">'+(used?"◆":"◇")+" "+esc(W.word)+'</div>'+(MEAN[W.word]?'<div class="ds">'+L("いみ：","意味：")+esc(MEAN[W.word])+'</div>':'')+
+     (used?'<div class="ds" style="color:var(--'+cat.cls+');font-weight:700">'+L("つかえた！","使えた！")+'</div>':'')+'</div>';
+  h+='<div class="pc waza"><div class="lab">'+L("ひょうげんの わざ","表現技法")+'</div><button class="re" onclick="swapPanel(\'waza\')">🔄</button>'+
+     '<div class="nm">'+esc(W.waza.t)+'</div><div class="ds">'+esc(W.waza.d)+'</div><div class="ex">'+L("れい：","例：")+emHTML(exOf(W.waza))+'</div></div>';
+  var extra=found.filter(function(m){ return m.w!==W.word; });
+  if (extra.length) h+='<div class="pc"><div class="lab">'+L("ほかにも つかえた ことば ✨","ほかにも使えた宝箱の言葉 ✨")+'</div><div class="bonusRow">'+extra.map(function(m){ return '<span class="chip '+CATS[m.c].cls+'">◆ '+esc(m.w)+'</span>'; }).join("")+'</div></div>';
+  $("wPanel").innerHTML=h;
+  if (used && !prevHit[W.word] && !silent) toast("◆ "+W.word+L(" を つかえたね！"," を使えたね！"));
+  prevHit={}; prevHit[W.word]=used;
+}
+function swapPanel(k){ if (k==="word") W.word=gPick("word", W.word); else W.waza=gPick("waza", W.waza); renderPanel(true); saveDraft(); }
+function saveDraft(){
+  if (!W || !ed) return;
+  st.draft={id:W.id, focus:W.focus, kakiT:W.kaki?W.kaki.t:null, word:W.word, wazaT:W.waza.t, startText:W.startText, text:edText(), title:$("wTitle").value};
+  save();
+}
+$("ed").addEventListener("input", function(){ clearTimeout(renderPanel.t); renderPanel.t=setTimeout(function(){ renderPanel(false); saveDraft(); }, 300); });
+$("wTitle").addEventListener("input", function(){ clearTimeout(saveDraft.t); saveDraft.t=setTimeout(saveDraft, 400); });
+
+function saveStory(){
+  var text=edText().replace(/\s+$/,"");
+  if (!charLen(text)){ toast(L("まだ なにも かいて いないよ","まだ何も書いていないよ")); return; }
+  var title=$("wTitle").value.trim();
+  if (!title){
+    var t=prompt(L("だいめいを つけよう","題名をつけよう"), "");
+    if (t===null) return;
+    title=t.trim() || L("（だいめいなし）","（題名なし）");
+    $("wTitle").value=title;
+  }
+  var before={}; findWords(W.startText).forEach(function(m){ before[m.w]=1; });
+  var found=findWords(text), newly=found.filter(function(m){ return !before[m.w]; });
+  newly.forEach(function(m){ st.used[m.w]=(st.used[m.w]||0)+1; });
+  var now=new Date().toISOString(), e;
+  if (W.id && (e=getEntry(W.id))){
+    e.text=text; e.title=title; e.updated=now; e.sessions=(e.sessions||1)+1;
+    e.words=(e.words||[]).concat([W.word]);
+    e.used=Array.from(new Set((e.used||[]).concat(found.map(function(m){return m.w;}))));
+  } else {
+    e={id:"e"+Date.now(), day:todayKey(), date:now, updated:now, grade:st.grade, title:title, text:text, focus:W.focus,
+       kaki:W.kaki?W.kaki.t:"", words:[W.word], used:found.map(function(m){return m.w;}), sessions:1, mode:"ipad"};
+    st.entries.unshift(e);
+  }
+  st.draft=null; W.id=e.id; save();
+  var list=storiesAsc(), no=list.indexOf(e)+1;
+  $("dHead").textContent=L("「"+title+"」を 本に しまったよ！","「"+title+"」を本にしまったよ！");
+  $("dChars").textContent=charLen(text); $("dCharsL").textContent=L("じ","字");
+  $("dWords").innerHTML = found.length ? found.map(function(m){ return '<span class="chip '+CATS[m.c].cls+'">◆ '+esc(m.w)+'</span>'; }).join("") : "";
+  $("dNote").textContent=L("あなたの 本は ぜんぶで "+list.length+" わ。これは だい"+no+"わ だよ。","あなたの本は全"+list.length+"話。これは第"+no+"話です。");
+  $("dMore").textContent=L("もう 1わ かく","もう1話書く"); $("dShelf").textContent=L("📚 わたしの 本を みる","📚 わたしの本を見る");
+  W=null; ed=null; cur="done"; go("done");
+}
+
+/* ============================================================
+   わたしの本（本棚）・読む
+   ============================================================ */
+function renderShelf(){
+  var list=storiesAsc();
+  $("shTitle").textContent="📖 "+(st.name? st.name+L(" の たんぺんしゅう","の短編集") : L("わたしの たんぺんしゅう","わたしの短編集"));
+  $("shSub").textContent = list.length ? L("ぜんぶで "+list.length+" わ。おはなしを おすと、よんだり つづきを かいたり できるよ。","全"+list.length+"話。お話を押すと、読んだり続きを書いたりできます。") : L("まだ おはなしが ないよ。「iPadで かく」から かいて みよう！","まだお話がありません。「iPadで書く」から書いてみよう！");
+  $("bookBtn").textContent=L("🖨 本を いんさつ","🖨 本を印刷する"); $("bookBtn").disabled=!list.length;
+  $("stories").innerHTML=list.map(function(e,i){
+    return '<button class="story" onclick="openRead(\''+e.id+'\')"><span class="no">'+L("だい"+(i+1)+"わ","第"+(i+1)+"話")+'</span><span class="tt">'+esc(e.title||L("（だいめいなし）","（題名なし）"))+'</span>'+
+      '<span class="pv">'+esc((e.text||"").slice(0,60))+'</span><span class="mt">'+fmtDate(e.updated||e.date)+'・'+charLen(e.text)+L("じ","字")+((e.sessions||1)>1?'・✏️'+e.sessions+L("かい","回"):'')+'</span></button>';
+  }).join("");
+}
+var curId=null;
+function openRead(id){
+  var e=getEntry(id); if (!e) return; curId=id; go("read");
+  var no=storiesAsc().indexOf(e)+1;
+  $("rMeta").textContent=L("だい"+no+"わ","第"+no+"話")+"・"+fmtDate(e.date)+L(" に かいた"," に書いた")+((e.sessions||1)>1?"・"+e.sessions+L("かい かいた","回書いた"):"")+"・"+charLen(e.text)+L("じ","字")+(e.kaki?"・"+L("かきだし：","書き出し：")+e.kaki:"");
+  $("rTitle").textContent=e.title||L("（だいめいなし）","（題名なし）");
+  var rt=$("rText"); rt.textContent=e.text; rt.classList.toggle("horiz", !!st.horiz);
+  $("rWords").innerHTML=(e.used||[]).map(function(w){ return '<span class="chip">◆ '+esc(w)+'</span>'; }).join("");
+  $("rCont").textContent=L("✏️ つづきを かく","✏️ 続きを書く");
+}
+function renameStory(){ var e=getEntry(curId); var t=prompt(L("あたらしい だいめい","新しい題名"), e.title||""); if (t===null) return; e.title=t.trim()||e.title; save(); openRead(curId); }
+function deleteStory(){ if (!confirm(L("この おはなしを けしますか？","このお話を消しますか？"))) return; st.entries=st.entries.filter(function(e){return e.id!==curId;}); save(); go("shelf"); }
+
+/* ============================================================
+   印刷：原稿用紙（紙に書く）
+   ============================================================ */
+function mm(n){ return n+"mm"; }
+function fitPreview(){
+  var a=$("printArea"); a.style.zoom=""; 
+  var w=$("prScale").clientWidth, pw=a.firstChild ? a.firstChild.getBoundingClientRect().width : 794;
+  var z=Math.min(1, (w-4)/pw); a.style.zoom = z<1 ? z : "";
+}
+window.addEventListener("resize", function(){ if (cur==="print") fitPreview(); });
+function doPrint(){ var a=$("printArea"); var z=a.style.zoom; a.style.zoom=""; window.print(); a.style.zoom=z; }
+
+// 縦書きの原稿用紙で、句読点・小さい字・のばす記号の置き方
+function cellCls(ch){
+  if (!ch) return "";
+  var c=ch[ch.length-1];
+  if ("、。，．".indexOf(c)>=0 && ch.length===1) return "pun";
+  if ("ー〜～…‥「」『』（）［］【】—―-".indexOf(c)>=0) return "rot";
+  if ("ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ".indexOf(c)>=0) return "sm";
+  return "";
+}
+function openGenko(){
+  PRINT_BACK="go('gacha')";
+  if (cur!=="print") go("print");
+  var lowG=low(), n=lowG?15:20, cell=lowG?11.4:8.6, gap=lowG?1.2:0.9, fs=lowG?7.6:5.8;
+  var sheets=+$("sheetSel").value||2;
+  $("prTitle").textContent=L("げんこうようし（かきだし つき）","原稿用紙（書き出しつき）");
+  $("prSheets").classList.remove("hidden");
+  $("prNote").textContent="1枚目は書き出しとおだいつき、2枚目からは続き用です。印刷画面で部数をクラスの人数にすると、全員分を印刷できます。";
+  var k=GL.kaki, w=GL.word, z=GL.waza, f=gFocus(), cat=CATS[f];
+  // マスに文字を入れる（1行目：題名、2行目：名前、3行目から本文。段落の頭は1マスあける）
+  var cols=[], colN=0, pos=0, text=exOf(k);
+  function newCol(){ cols.push(new Array(n).fill("")); colN=cols.length-1; pos=0; }
+  newCol(); newCol(); newCol(); pos=1;
+  for (var i=0;i<text.length;i++){
+    var ch=zen(text[i]);
+    if (ch==="\n"){ newCol(); pos=1; continue; }
+    if (pos===1 && !cols[colN][1] && "「『（".indexOf(ch)>=0) pos=0;   // 会話の「は1マス目から
+    if (pos>=n){
+      if ("、。」）".indexOf(ch)>=0){ cols[colN][n-1]+=ch; continue; }   // 行頭に句読点を置かない
+      newCol();
+    }
+    cols[colN][pos++]=ch;
+  }
+  var html="";
+  for (var s=0;s<sheets;s++){
+    html+='<div class="page">';
+    if (s===0){
+      html+='<div class="gInfo">'+
+        '<div class="bx"><div class="lb">'+L("かきだし","書き出し")+'</div><div class="big">'+esc(k.t)+'</div><div>'+L("したの げんこうようしの みぎはしに、れいの ぶんが かいて あるよ。つづきを かこう。","下の原稿用紙の右はしに、例の文がもう書いてあります。続きから書こう。")+'</div></div>'+
+        '<div class="bx '+(f==="h"?"h":"w")+'"><div class="lb">'+L(cat.low,cat.high)+'</div><div class="big">◇ '+esc(w)+'</div><div>'+(MEAN[w]?L("いみ：","意味：")+esc(MEAN[w]):"")+'</div><div style="margin-top:1.5mm;font-size:3mm;color:#7c7367">'+L("つかえたら ◇に いろを ぬろう","使えたら ◇に色をぬろう")+'</div></div>'+
+        '<div class="bx t"><div class="lb">'+L("ひょうげんの わざ","表現技法")+'</div><div class="big">'+esc(z.t)+'</div><div>'+esc(z.d)+'</div><div class="ex">'+L("れい：","例：")+emHTML(exOf(z))+'</div></div>'+
+      '</div>';
+    } else {
+      html+='<div class="gHeadLine">'+L("つづき","つづき")+'（'+(s+1)+'まいめ）　なまえ＿＿＿＿＿＿＿＿＿＿</div>';
+    }
+    html+='<div class="grid">';
+    var col0=s*n; // 2枚目以降は空のマス
+    for (var c=0;c<n;c++){
+      var data = s===0 ? (cols[c]||new Array(n).fill("")) : new Array(n).fill("");
+      html+='<div class="gcol" style="margin-left:'+mm(gap)+'">';
+      for (var r=0;r<n;r++) html+='<div class="gcell '+cellCls(data[r])+'" style="width:'+mm(cell)+';height:'+mm(cell)+';font-size:'+mm(fs)+'"><span>'+esc(data[r]||"")+'</span></div>';
+      html+='</div>';
+    }
+    html+='</div><div class="gpno">'+(s+1)+'</div></div>';
+  }
+  $("printArea").innerHTML=html;
+  fitPreview();
+}
+
+/* ============================================================
+   印刷：わたしの本（縦書きの短編集）
+   ============================================================ */
+async function openBook(){
+  var list=storiesAsc(); if (!list.length) return;
+  PRINT_BACK="go('shelf')"; go("print");
+  $("prTitle").textContent=L("わたしの 本（たてがき）","わたしの本（縦書きの短編集）");
+  $("prSheets").classList.add("hidden");
+  $("prNote").textContent="表紙・もくじ・すべてのお話が入っています（全"+list.length+"話）。";
+  var area=$("printArea"); area.style.zoom=""; area.innerHTML='<p class="sub">本をつくっています…</p>';
+  try{ if (document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
+  area.innerHTML="";
+  var pageNo=0;
+  function newPage(cls){ var p=document.createElement("div"); p.className="page "+(cls||""); var b=document.createElement("div"); b.className="bbody"; p.appendChild(b);
+    pageNo++; if (cls!=="cover"){ var n=document.createElement("div"); n.className="bpno"; n.textContent=pageNo; p.appendChild(n); } area.appendChild(p); return b; }
+  function fits(b){ return b.scrollWidth <= b.clientWidth + 1; }
+  // 表紙
+  var cb=newPage("cover");
+  cb.innerHTML='<div class="ct">'+esc(zen(st.name? st.name+"の短編集" : "わたしの短編集"))+'</div><div class="ca">'+(st.grade?zen(st.grade)+"年　":"")+(st.name?"作・"+esc(zen(st.name)):"")+'</div>';
+  // もくじ（あとで中身を入れる）
+  var perToc=14, tocN=Math.ceil(list.length/perToc), tocs=[];
+  for (var t=0;t<tocN;t++) tocs.push(newPage("toc"));
+  // お話
+  var starts=[], body=null;
+  for (var i=0;i<list.length;i++){
+    var e=list[i]; body=newPage(); starts.push(pageNo);
+    var no=document.createElement("p"); no.className="sNo"; no.textContent="第"+zen(i+1)+"話"; body.appendChild(no);
+    var h=document.createElement("p"); h.className="sTitle"; h.textContent=zen(e.title||"（題名なし）"); body.appendChild(h);
+    var paras=zen(e.text||"").split("\n");
+    for (var j=0;j<paras.length;j++){
+      var txt=paras[j], cls="";
+      if (!txt.trim()){ continue; }
+      while (txt.length){
+        var p=document.createElement("p"); if (cls) p.className=cls; p.textContent=txt; body.appendChild(p);
+        if (fits(body)) break;
+        // はみ出したら、入るところまで入れて次のページへ
+        var lo=0, hi=txt.length;
+        while (lo<hi){ var mid=(lo+hi+1)>>1; p.textContent=txt.slice(0,mid); if (fits(body)) lo=mid; else hi=mid-1; }
+        if (lo===0){ body.removeChild(p); body=newPage(); continue; }
+        // 句読点を行の先頭に送らない
+        while (lo<txt.length && "、。」）".indexOf(txt[lo])>=0 && lo>1){ lo--; }
+        p.textContent=txt.slice(0,lo); txt=txt.slice(lo); cls="cont"; body=newPage();
+      }
+    }
+  }
+  // もくじの中身
+  tocs.forEach(function(b,ti){
+    var h='<p class="sTitle" style="padding-top:2em">もくじ</p>';
+    list.slice(ti*perToc,(ti+1)*perToc).forEach(function(e,k){ var idx=ti*perToc+k; h+='<p class="tl"><span>第'+zen(idx+1)+'話　'+esc(zen(e.title||"（題名なし）"))+'</span><span class="d"></span><span>'+zen(starts[idx])+'</span></p>'; });
+    b.innerHTML=h;
+  });
+  fitPreview();
+}
+
+
 function renderGacha(){
   if (!st.grade){ go("setup"); return; }
   $("gChoose").classList.toggle("hidden", gChosen);
@@ -1172,7 +1227,7 @@ function renderGacha(){
   if (!GL || GL.grade!==st.grade || GL.focus!==gFocus()) newGL();
   drawCards();
 }
-function chooseFocus(f){ gChosen=true; st.gFocus=f; save(); newGL(); renderGacha(); window.scrollTo(0,0); }
+function chooseFocus(f){ if (MODE==="ipad"){ st.gFocus=f; save(); startNewStory(); return; } gChosen=true; st.gFocus=f; save(); newGL(); renderGacha(); window.scrollTo(0,0); }
 function setFocus(f){ st.gFocus=f; save(); newGL(); renderGacha(); }
 function gToggle(k,on){ st.gOff=st.gOff||{}; st.gOff[k]=!on; save(); drawCards(); }
 function gCardHTML(k){
@@ -1202,6 +1257,53 @@ function gTick(){
   $("gTime").classList.toggle("done",!left);
   if (!left){ clearInterval(gT); gT=null; chime(); }
 }
+
+
+
+var gChosen=false;
+function renderLessonCard(el, ls, idx){
+  var cat = ls.c ? CATS[ls.c] : null;
+  el.innerHTML = '<span class="tag">'+L("さっかの わざ","作家のわざ")+' '+(idx+1)+'</span>'+
+    '<h3>'+esc(ls.t)+'</h3>'+
+    ls.b.map(function(p){return '<p style="margin:4px 0">'+esc(p)+'</p>';}).join("")+
+    '<ul>'+ls.li.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul>'+
+    (ls.ex?'<div class="ex">'+esc(ls.ex).replace(/\n/g,"<br>")+'</div>':"")+
+    '<div class="try">✏️ '+esc(ls.tr)+'</div>'+
+    (cat?'<div class="sub" style="margin-top:6px">'+L("つかう ことば：","とくに使える言葉：")+'<b style="color:var(--'+cat.cls+')">'+L(cat.low,cat.high)+'</b></div>':"");
+}
+
+var boxG=0, boxC="h";
+function renderBox(){
+  if (!boxG) boxG=st.grade;
+  var gh=""; for (var g=1; g<=6; g++) gh+='<button class="'+(g===boxG?"on":"")+'" onclick="boxG='+g+';renderBox()">'+g+'年</button>';
+  $("boxGrade").innerHTML=gh;
+  $("boxCat").innerHTML=["h","m","k"].map(function(c){ return '<button class="'+(c===boxC?"on":"")+'" onclick="boxC=\''+c+'\';renderBox()">'+CATS[c].short+'</button>'; }).join("");
+  var list=BOX[boxG][boxC], got=list.filter(function(w){return st.used[w];}).length;
+  $("boxProgTxt").textContent=(boxG<=2?CATS[boxC].low:CATS[boxC].high)+"　◆ "+got+" / "+list.length;
+  $("boxProg").style.width=(got/list.length*100)+"%"; $("boxProg").style.background="var(--"+CATS[boxC].cls+")";
+  $("boxList").innerHTML=list.map(function(w){ var n=st.used[w]; return '<span class="chip '+(n?CATS[boxC].cls:"off")+'">'+(n?"◆":"◇")+" "+esc(w)+(n>1?' <small>×'+n+'</small>':'')+'</span>'; }).join("");
+}
+
+/* ---- レッスン一覧 ---- */
+function renderLessons(){
+  $("allLessons").innerHTML=lessons().map(function(ls,i){ return '<button onclick="viewLesson('+i+')">'+(i+1)+'. '+esc(ls.t)+'</button>'; }).join("");
+  $("lessonView").classList.add("hidden");
+}
+function viewLesson(i){ var el=$("lessonView"); el.classList.remove("hidden"); renderLessonCard(el, lessons()[i], i); el.scrollIntoView({behavior:"smooth"}); }
+
+/* ---- バックアップ ---- */
+function exportData(){
+  var blob=new Blob([JSON.stringify(st,null,1)],{type:"application/json"}), a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="sakka-no-jikan-"+todayKey()+".json"; a.click();
+}
+function importData(inp){
+  var f=inp.files[0]; if (!f) return; var r=new FileReader();
+  r.onload=function(){ try{ var d=JSON.parse(r.result); if (!d.entries) throw 0; if (!confirm("いまのデータを、このファイルの中身に入れかえますか？")) return; localStorage.setItem(LS, JSON.stringify(d)); st=load(); toast("読みこみました"); go("home"); }catch(e){ toast("読みこめませんでした"); } };
+  r.readAsText(f);
+}
+function wipeData(){ if (!confirm("書いたものも、あつめた言葉も、ぜんぶ消えます。いいですか？")) return; try{ localStorage.removeItem(LS); }catch(e){} st=load(); go("setup"); }
+
+
 
 /* ---- start ---- */
 go(st.grade ? "home" : "setup");
