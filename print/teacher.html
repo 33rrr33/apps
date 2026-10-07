@@ -192,10 +192,18 @@
 <section id="vQR" class="hidden">
   <div class="card" style="text-align:center">
     <h2>📱 児童用のQRコード</h2>
-    <p class="sub">児童のiPadのカメラで読みとって開きます。一度開けば、そのiPadが覚えます（ホーム画面に追加すると便利）。</p>
+    <p class="sub" id="qrLead">児童のiPadのカメラで読みとって開きます。一度開けば、そのiPadが覚えます（ホーム画面に追加すると便利）。</p>
     <div class="row" style="justify-content:center;margin-top:6px" id="qrTabs">
       <button class="btn primary" data-k="pdf" onclick="qrKind='pdf';showQR()">📄 PDF・写真を送る</button>
-      <button class="btn" data-k="math" onclick="qrKind='math';showQR()">📝 算数プリントを送る</button>
+      <button class="btn" data-k="math" onclick="qrKind='math';showQR()">📝 算数プリント（この時間だけ）</button>
+    </div>
+    <div id="mathCtl" class="hidden" style="margin-top:8px">
+      <div class="row" style="justify-content:center">
+        <span>使える時間</span>
+        <select id="mathDur" style="font-size:1rem;padding:6px 8px;border-radius:8px"><option value="50">50分</option><option value="100">100分（2時間分）</option><option value="day">きょう一日</option></select>
+        <button class="btn" onclick="makeMathQR()">🔄 新しいQRをつくる</button>
+      </div>
+      <p style="margin:6px 0 0;font-weight:700" id="mathExp"></p>
     </div>
     <p class="sub" id="qrKindNote" style="margin:6px 0 0"></p>
     <div id="qrBox"></div>
@@ -209,7 +217,7 @@
     <p class="sub">TeamsやOneNoteでリンクを配ってもOKです。</p>
   </div>
 </section>
-<p class="sub" style="text-align:center;margin-top:24px">印刷ステーション　ver.2026-10-07f</p>
+<p class="sub" style="text-align:center;margin-top:24px">印刷ステーション　ver.2026-10-07g</p>
 </div>
 
 <script src="lib/pdf-lib.min.js"></script>
@@ -464,15 +472,28 @@ async function deleteSelected(){
 
 /* ---------- QR・設定 ---------- */
 var qrKind="pdf";
-// 算数プリント × 印刷ステーション用のリンク（同じ受け取り先）
-function mathUrl(){ return KIDURL.replace(/print\/(#|$)/, "math-print/$1"); }
+// 算数プリント用：この時間だけ使えるリンク（受け取り先は、いま開いている この印刷ステーション）
+function recvCfg(){ return PS.decLink(KIDURL.split("#c=")[1]); }
+function makeMathQR(){
+  var d=$("mathDur").value, now=new Date(), exp;
+  if (d==="day"){ exp=new Date(now); exp.setHours(23,59,0,0); } else exp=new Date(now.getTime()+ (+d)*60000);
+  var c=recvCfg(); c.e=exp.getTime();
+  T.math={url: PS.appBase().replace(/print\/$/,"math-print/") + "#m=" + PS.encLink(c), exp:c.e, code:PS.codeOf(c)};
+  saveT(); showQR();
+}
+function mathValid(){ var m=T.math, c=recvCfg(); return m && m.exp>Date.now() && m.code===PS.codeOf(c); }
+function fmtHM(t){ var d=new Date(t); return (d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2); }
 function showQR(){
-  var url = qrKind==="math" ? mathUrl() : KIDURL;
+  if (qrKind==="math" && !mathValid()){ makeMathQR(); return; }
+  var url = qrKind==="math" ? T.math.url : KIDURL;
+  $("mathCtl").classList.toggle("hidden", qrKind!=="math");
+  $("qrLead").textContent = qrKind==="math" ? "児童のiPadのカメラで読みとって開きます。この算数プリント用QRは、下の時間まで使えます（時間がすぎたら新しいQRをつくってください）。" : "児童のiPadのカメラで読みとって開きます。一度開けば、そのiPadが覚えます（ホーム画面に追加すると便利）。";
+  if (qrKind==="math") $("mathExp").textContent="このQRは "+fmtHM(T.math.exp)+" まで使えます。時間がすぎると、児童の画面では送れなくなります。";
   $("qrBox").innerHTML=PS.qrSvg(url, 5); $("kidLink").textContent=url;
   $("openKid").href=url;
   $("qrCode").textContent = DIRECT ? PS.codeOf({p:T.pid}) : PS.codeOf(T);
   document.querySelectorAll("#qrTabs button").forEach(function(b){ b.classList.toggle("primary", b.dataset.k===qrKind); });
-  $("qrKindNote").textContent = qrKind==="math" ? "児童が算数のクイズでにがてを見つけ、できた練習プリントがそのまま先生に届きます。" : "児童がPDFや写真を選んで送ります。";
+  $("qrKindNote").textContent = qrKind==="math" ? "このQRを開くと算数プリントの画面になります。クイズに答えてできたプリントを「せんせいに おくる」と、この印刷ステーションに届きます。" : "児童がPDFや写真を選んで送ります。";
   go("vQR");
 }
 function toggleSettings(){ var s=$("settings"); s.style.display = s.style.display==="none" ? "" : "none"; }

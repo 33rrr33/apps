@@ -220,18 +220,27 @@
 <script src="../print/common.js"></script>
 <script>
 /* 先生の印刷ステーションのQR（#c=...）を受け取って、このiPadに覚える（印刷ステーションと共通） */
+// 先生がつくった「この時間だけ」のリンク（#m=...）を、このタブにだけ覚える
 function readTeacherLink(){
-  var m = location.hash.match(/c=([A-Za-z0-9_-]+)/);
+  var m = location.hash.match(/[#&]([mc])=([A-Za-z0-9_-]+)/);
   if (!m) return false;
-  try { var c = PS.decLink(m[1]); if ((c.o && c.r && c.t && c.f) || c.p) PS.lsSet("ps-kid-cfg", c); } catch(e){}
+  try {
+    var c = PS.decLink(m[2]);
+    if ((c.o && c.r && c.t && c.f) || c.p){
+      if (!c.e) c.e = Date.now() + 3*3600*1000;      // 古い形式のリンクは3時間
+      sessionStorage.setItem("mp-session", JSON.stringify(c));
+    }
+  } catch(e){}
   history.replaceState(null, "", location.pathname);
   return true;
 }
 readTeacherLink();
 // 開いているタブにリンクを貼ったとき（#c= だけ変わったとき）も読みとって、表示をなおす
 window.addEventListener("hashchange", function(){ if (readTeacherLink() && typeof rerender==="function") rerender(); });
-function teacherCfg(){ return PS.lsGet("ps-kid-cfg"); }
-function connBadge(){ return teacherCfg() ? '<span class="conn on">📶 せんせいの いんさつステーションと つながっています（うけつけコード：'+PS.codeOf(teacherCfg())+'）</span>' : '<span class="conn off">⚠️ せんせいの QRコードを まだ よみとって いません</span>'; }
+function sessionRaw(){ try{ return JSON.parse(sessionStorage.getItem("mp-session")); }catch(e){ return null; } }
+function teacherCfg(){ var c=sessionRaw(); return c && c.e > Date.now() ? c : null; }
+function untilText(c){ var d=new Date(c.e); return d.getHours()+":"+("0"+d.getMinutes()).slice(-2); }
+function connBadge(){ return teacherCfg() ? '<span class="conn on">📶 '+untilText(teacherCfg())+' まで せんせいに おくれるよ（うけつけコード：'+PS.codeOf(teacherCfg())+'）</span>' : '<span class="conn off">⚠️ せんせいの QRコードを まだ よみとって いません</span>'; }
 </script>
 <script>
 /* ==================================================================
@@ -1001,6 +1010,15 @@ function footerHTML(){
 }
 function renderSetup(){
   app.style.display=""; sheetsEl.innerHTML="";
+  if(!teacherCfg()){
+    const old=sessionRaw();
+    app.innerHTML=`<h1>🧮 さんすうプリント</h1><div class="panel" style="text-align:center;padding:30px 16px">
+      <div style="font-size:46px">${old?"⏰":"📱"}</div>
+      <div style="font-size:20px;font-weight:800;margin:8px 0">${old?"この QRコードの じかんは おわりました":"せんせいの QRコードから ひらいてね"}</div>
+      <p class="sub">${old?"せんせいに あたらしい QRコードを もらってね。":"せんせいが いんさつステーションで つくった QRコードを よみとると はじまるよ。"}</p>
+      <p class="sub" style="margin-top:14px"><a href="../math/" style="color:var(--accent)">れんしゅうだけ する（おくらない）ときは こちら</a></p></div>`;
+    S.screen="setup"; return;
+  }
   let crumbs="";
   if(S.homeStep>1 && S.grade) crumbs+=`<span class="crumb" data-s="1">${S.grade}ねんせい</span>`;
   if(S.homeStep>2) crumbs+=`<span class="crumb" data-s="2">${DOM_LABEL[S.domain]||S.domain}</span>`;
@@ -1047,7 +1065,6 @@ function renderSetup(){
       ${inner}
       ${S.homeStep>1?'<button class="ghost back" id="backBtn">← もどる</button>':""}
     </div>
-    ${S.homeStep===1?'<a class="panel" href="../print/" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit"><span style="font-size:30px">📄</span><span style="flex:1"><b>PDFや しゃしんを せんせいに おくる</b><br><span style="font-size:13px;color:var(--muted)">いんさつステーションの おくる がめんへ</span></span><b style="color:var(--accent)">→</b></a>':""}
     ${S.homeStep===1?footerHTML():""}`;
 
   app.querySelectorAll(".optbtn[data-g]").forEach(b=>b.onclick=()=>{ S.grade=+b.dataset.g; S.furi=S.grade<=3; S.domain="all"; S.unitKey=null; gotoStep(2); });
@@ -1387,7 +1404,7 @@ async function sheetToJpeg(i){
 async function sendAllSheets(){
   if(sending) return;
   const cfg=teacherCfg();
-  if(!cfg){ sendMsg("せんせいの QRコードを よみとってから おくってね。（じぶんで いんさつ も できるよ）","err"); return; }
+  if(!cfg){ sendMsg(sessionRaw()?"QRコードの じかんが おわったので おくれません。せんせいに いってね。（じぶんで いんさつ は できるよ）":"せんせいの QRコードを よみとってから おくってね。","err"); return; }
   const y=String(S.name.year||S.grade||"").trim(), k=String(S.name.kumi||"").trim(), b=String(S.name.ban||"").trim();
   if(!/^[0-9０-９]+$/.test(k) || !/^[0-9０-９]+$/.test(b)){ sendMsg("プリントの 上の 「組」と「番」を かいてね。","err"); return; }
   const num=v=>+String(v).replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
