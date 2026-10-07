@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>縦書き 全文シート</title>
+<meta name="description" content="自分で登録した文章を、行番号つきの縦書き全文シートにして印刷">
+<meta name="theme-color" content="#c96f3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="全文シート">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png">
+<style id="pageStyle">@page{size:297mm 210mm;margin:0}</style>
+<style>
+  :root{--bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;--accent:#c96f3f;--accent-soft:#fbeee4;--ng:#c0392b;--shadow:0 2px 12px rgba(90,70,40,.08)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;--accent:#e0895a;--accent-soft:#3a2f26;--ng:#f0857a;--shadow:0 2px 14px rgba(0,0,0,.35)}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:env(safe-area-inset-top) 16px calc(40px + env(safe-area-inset-bottom));background:var(--bg);color:var(--ink);
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Noto Sans JP",sans-serif;line-height:1.6}
+  .wrap{max-width:1100px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;padding:14px 0 6px}
+  header h1{font-size:1.25rem;margin:0;flex:1}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);margin:12px 0}
+  h2{font-size:1.05rem;margin:0 0 8px}
+  .btn{font-family:inherit;font-size:.95rem;font-weight:700;padding:9px 14px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.small{padding:6px 10px;font-size:.85rem}
+  .btn.danger{color:var(--ng)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .sub{color:var(--sub);font-size:.85rem}
+  .hidden{display:none!important}
+  input.text,textarea,select{font-family:inherit;font-size:1rem;padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+  input.text{width:100%}
+  textarea{width:100%;min-height:40vh;line-height:1.8;resize:vertical}
+  .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
+  .item{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel);cursor:pointer;text-align:left;font-family:inherit;color:inherit}
+  .item b{display:block;font-size:1.05rem}
+  .item span{font-size:.8rem;color:var(--sub)}
+  .opts{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .opts label{display:flex;align-items:center;gap:6px;font-size:.92rem}
+  #prev{overflow:auto;padding:4px 0 20px}
+  #sheets{transform-origin:0 0}
+  .page{background:#fff;color:#1d1a16;box-shadow:0 4px 18px rgba(0,0,0,.18);margin:0 auto 16px;position:relative;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cols{position:absolute;display:flex;flex-direction:row-reverse;align-items:flex-start}
+  .col{writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;text-orientation:mixed;white-space:nowrap;position:relative;
+    font-family:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif}
+  .col.ttl{font-weight:700}
+  .col.au{text-align:end}
+  .lno{position:absolute;left:50%;transform:translateX(-50%);font-family:sans-serif;color:#888;writing-mode:horizontal-tb;white-space:nowrap}
+  .pno{position:absolute;left:50%;transform:translateX(-50%);font-family:sans-serif;color:#888;writing-mode:horizontal-tb;white-space:nowrap}
+  .pgno{position:absolute;bottom:4mm;left:0;right:0;text-align:center;font-size:9pt;color:#999;font-family:sans-serif}
+  ruby rt{font-size:.5em}
+  .hint{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:.88rem}
+  @media print{
+    html,body{background:#fff!important;padding:0!important;margin:0!important}
+    body *{visibility:hidden}
+    #sheets,#sheets *{visibility:visible}
+    #sheets{position:absolute;left:0;top:0;zoom:1!important}
+    .page{box-shadow:none;margin:0;break-after:page;page-break-after:always}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>📜 縦書き 全文シート</h1><button class="btn small hidden" id="backBtn" onclick="go('list')">← もどる</button></header>
+
+<!-- 一覧 -->
+<section id="v-list">
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">登録した文章</h2><button class="btn primary" onclick="editText(null)">＋ 文章を登録する</button></div>
+    <p class="sub" style="margin:6px 0 0">このアプリには文章は入っていません。使う文章は、先生が自分で入力・貼りつけて登録してください。登録した文章は、この端末の中だけに保存されます。</p>
+    <div class="list" id="list"></div>
+  </div>
+  <details class="card">
+    <summary style="cursor:pointer;font-weight:700">データの書き出し・読みこみ（端末を変えるとき）</summary>
+    <div class="row" style="margin-top:10px">
+      <button class="btn small" onclick="exportAll()">⬇ 書き出し</button>
+      <label class="btn small">⬆ 読みこみ<input type="file" accept=".json,application/json" class="hidden" onchange="importAll(this)"></label>
+    </div>
+  </details>
+</section>
+
+<!-- 登録・編集 -->
+<section id="v-edit" class="hidden">
+  <div class="card">
+    <h2 id="edHead">文章を登録する</h2>
+    <div class="row"><input class="text" id="tTitle" placeholder="題名" style="flex:2 1 260px"><input class="text" id="tAuthor" placeholder="作者名（なくてもOK）" style="flex:1 1 180px"></div>
+    <textarea id="tBody" style="margin-top:8px" placeholder="ここに本文を入力するか、貼りつけてください。&#10;段落の終わりで改行してください（改行ごとに1段落になります）。"></textarea>
+    <div class="hint" style="margin-top:8px">
+      ふりがなを付けたいときは <b>｜漢字《かんじ》</b> のように書きます（｜は省略できることもあります）。<br>
+      半角の数字やアルファベットは、縦書きで読みやすいように全角になおして表示します。
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label class="btn small">📄 テキストファイルから読みこむ<input type="file" accept=".txt,text/plain" class="hidden" onchange="loadTxt(this)"></label>
+      <span style="flex:1"></span>
+      <button class="btn small danger hidden" id="delBtn" onclick="deleteText()">消す</button>
+      <button class="btn primary" onclick="saveText()">登録する</button>
+    </div>
+  </div>
+</section>
+
+<!-- シート -->
+<section id="v-sheet" class="hidden">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0" id="shTitle"></h2>
+      <div class="row"><button class="btn small" onclick="editText(cur)">✏️ 文章を直す</button><button class="btn primary" onclick="doPrint()">🖨 印刷する</button></div>
+    </div>
+    <div class="opts" style="margin-top:10px">
+      <label>用紙 <select id="oPaper"><option value="A4L">A4 横</option><option value="B4L">B4 横</option><option value="A3L">A3 横</option><option value="A4P">A4 縦</option></select></label>
+      <label>枚数 <select id="oPages"><option value="1">1枚におさめる</option><option value="2">2枚におさめる</option><option value="3">3枚におさめる</option><option value="0">文字の大きさで決める</option></select></label>
+      <label id="oSizeL" class="hidden">文字 <select id="oSize"><option>10</option><option>11</option><option selected>12</option><option>14</option><option>16</option><option>18</option></select>pt</label>
+      <label><input type="checkbox" id="oLno" checked> 行番号（5行ごと）</label>
+      <label><input type="checkbox" id="oPno"> 段落番号</label>
+      <label><input type="checkbox" id="oRuby" checked> ふりがな</label>
+    </div>
+    <p class="sub" id="shInfo" style="margin:8px 0 0"></p>
+  </div>
+  <div id="prev"><div id="sheets"></div></div>
+</section>
+</div>
+
+<script>
+var LS="zenbun-sheet-v1";
+var DB=load(), cur=null;
+function load(){ try{ return JSON.parse(localStorage.getItem(LS))||{texts:[],opt:{}}; }catch(e){ return {texts:[],opt:{}}; } }
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(DB)); }catch(e){ alert("保存できませんでした（容量がいっぱいかもしれません）"); } }
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function go(v){ ["list","edit","sheet"].forEach(function(x){ $("v-"+x).classList.toggle("hidden", x!==v); }); $("backBtn").classList.toggle("hidden", v==="list"); if (v==="list") renderList(); window.scrollTo(0,0); }
+function getT(id){ for (var i=0;i<DB.texts.length;i++) if (DB.texts[i].id===id) return DB.texts[i]; return null; }
+
+/* ---------- 一覧・登録 ---------- */
+function renderList(){
+  $("list").innerHTML = DB.texts.length ? DB.texts.map(function(t){
+    var n=t.body.replace(/《[^》]*》|｜|\s/g,"").length;
+    return '<button class="item" onclick="openSheet(\''+t.id+'\')"><b>'+esc(t.title||"（題名なし）")+'</b><span>'+esc(t.author||"")+(t.author?"・":"")+n+'字</span></button>';
+  }).join("") : '<p class="sub">まだありません。「＋ 文章を登録する」から登録してください。</p>';
+}
+function editText(id){
+  var t=id?getT(id):null; cur=id;
+  $("edHead").textContent = t ? "文章を直す" : "文章を登録する";
+  $("tTitle").value=t?t.title:""; $("tAuthor").value=t?t.author:""; $("tBody").value=t?t.body:"";
+  $("delBtn").classList.toggle("hidden", !t);
+  go("edit");
+}
+function saveText(){
+  var body=$("tBody").value.replace(/\r\n?/g,"\n").replace(/\s+$/,"");
+  if (!body.trim()){ alert("本文を入れてください"); return; }
+  var t=cur?getT(cur):null;
+  if (!t){ t={id:"t"+Date.now()}; DB.texts.unshift(t); }
+  t.title=$("tTitle").value.trim(); t.author=$("tAuthor").value.trim(); t.body=body; t.updated=new Date().toISOString();
+  save(); openSheet(t.id);
+}
+function deleteText(){ if (!confirm("この文章を消しますか？")) return; DB.texts=DB.texts.filter(function(t){return t.id!==cur;}); save(); go("list"); }
+function loadTxt(inp){ var f=inp.files[0]; if (!f) return; var r=new FileReader(); r.onload=function(){ $("tBody").value=r.result; if (!$("tTitle").value) $("tTitle").value=f.name.replace(/\.[^.]+$/,""); }; r.readAsText(f); inp.value=""; }
+function exportAll(){ var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(DB,null,1)],{type:"application/json"})); a.download="zenbun-sheet.json"; a.click(); }
+function importAll(inp){ var f=inp.files[0]; if (!f) return; var r=new FileReader(); r.onload=function(){ try{ var d=JSON.parse(r.result); if (!d.texts) throw 0; var have={}; DB.texts.forEach(function(t){have[t.id]=1;}); d.texts.forEach(function(t){ if (!have[t.id]) DB.texts.push(t); }); save(); renderList(); alert("読みこみました"); }catch(e){ alert("読みこめませんでした"); } }; r.readAsText(f); }
+
+/* ---------- 文字を「マス」に分ける（ルビは1かたまり） ---------- */
+function zen(c){ return c.replace(/[!-~]/g,function(x){ return String.fromCharCode(x.charCodeAt(0)+0xFEE0); }); }
+// 1段落を {b:親文字, r:ルビ} の並びにする。 ｜親《るび》 または 漢字《るび》
+function tokenize(p, useRuby){
+  var out=[], re=/｜([^｜《》]+)《([^》]+)》|([㐀-鿿々〆ヵヶ]+)《([^》]+)》/g, last=0, m;
+  function plain(s){ for (var i=0;i<s.length;i++) out.push({b:zen(s[i])}); }
+  while ((m=re.exec(p))){
+    plain(p.slice(last, m.index));
+    var base=m[1]||m[3], rb=m[2]||m[4];
+    if (useRuby) out.push({b:zen(base), r:rb, n:base.length}); else plain(base);
+    last=re.lastIndex;
+  }
+  plain(p.slice(last));
+  return out;
+}
+var NOHEAD="、。，．」』）】〕〉》ー・？！ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ…‥";
+// 1行 per 字数で折り返す。行頭に句読点などが来るときは前の行にぶら下げる
+function wrapPara(tokens, per){
+  var lines=[], line=[], len=0;
+  tokens.forEach(function(t){
+    var w=t.n||1;
+    if (len+w>per && line.length){
+      if (!t.r && NOHEAD.indexOf(t.b)>=0 && len<=per){ line.push(t); len+=w; return; }
+      lines.push(line); line=[]; len=0;
+    }
+    line.push(t); len+=w;
+  });
+  lines.push(line);
+  return lines;
+}
+function lineHTML(line, ruby){ return line.map(function(t){ return t.r && ruby ? "<ruby>"+esc(t.b)+"<rt>"+esc(t.r)+"</rt></ruby>" : esc(t.b); }).join(""); }
+
+/* ---------- シートをつくる ---------- */
+var PAPER={A4L:[297,210],B4L:[364,257],A3L:[420,297],A4P:[210,297]};
+var PT=0.3528; // 1pt = 0.3528mm
+var LH=1.75;   // 行の間かく（文字の大きさの何倍）
+function openSheet(id){ cur=id; var o=DB.opt||{};
+  $("oPaper").value=o.paper||"A4L"; $("oPages").value=(o.pages===undefined?"1":String(o.pages)); $("oSize").value=o.size||"12";
+  $("oLno").checked=o.lno!==false; $("oPno").checked=!!o.pno; $("oRuby").checked=o.ruby!==false;
+  go("sheet"); build();
+}
+["oPaper","oPages","oSize","oLno","oPno","oRuby"].forEach(function(k){ $(k).addEventListener("change", function(){
+  DB.opt={paper:$("oPaper").value, pages:+$("oPages").value, size:$("oSize").value, lno:$("oLno").checked, pno:$("oPno").checked, ruby:$("oRuby").checked}; save(); build(); }); });
+
+// 文字の大きさ fs(pt) で何ページになるか・行のならび
+function layout(t, fs, paper, ruby){
+  var W=paper[0], H=paper[1], mt=16, mb=16, ml=12, mr=12;
+  var fsmm=fs*PT, pitch=fsmm*LH;
+  var per=Math.max(5, Math.floor((H-mt-mb)/fsmm));
+  var perPage=Math.max(3, Math.floor((W-ml-mr)/pitch));
+  var cols=[];
+  cols.push({kind:"ttl", html:esc(zen(t.title||"")), size:fs*1.4});
+  if (t.author) cols.push({kind:"au", html:esc(zen(t.author)), size:fs});
+  cols.push({kind:"gap"});
+  var lineNo=0, paraNo=0;
+  t.body.split("\n").forEach(function(p){
+    if (!p.trim()){ return; }
+    paraNo++;
+    var tokens=[{b:"　"}].concat(tokenize(p.replace(/^[ 　]+/,""), ruby));
+    wrapPara(tokens, per).forEach(function(line,i){ lineNo++; cols.push({kind:"line", html:lineHTML(line, ruby), no:lineNo, para:i===0?paraNo:0}); });
+  });
+  // タイトル行は1.4倍なので少し多めに数える
+  var units=cols.length+0.6;
+  return {cols:cols, pages:Math.ceil(units/perPage), per:per, perPage:perPage, fs:fs, W:W, H:H, mt:mt, mb:mb, ml:ml, mr:mr, pitch:pitch, fsmm:fsmm, lines:lineNo};
+}
+function circled(n){ return n<=20 ? String.fromCharCode(0x2460+n-1) : "("+n+")"; }
+function build(){
+  var t=getT(cur); if (!t) return;
+  var paper=PAPER[$("oPaper").value], target=+$("oPages").value, ruby=$("oRuby").checked;
+  $("oSizeL").classList.toggle("hidden", target!==0);
+  $("pageStyle").textContent="@page{size:"+paper[0]+"mm "+paper[1]+"mm;margin:0}";
+  var L;
+  if (target===0) L=layout(t, +$("oSize").value, paper, ruby);
+  else { // 枚数におさまる いちばん大きい文字
+    var fs=20; L=layout(t, fs, paper, ruby);
+    while (L.pages>target && fs>6){ fs-=0.5; L=layout(t, fs, paper, ruby); }
+  }
+  $("shTitle").textContent=t.title||"（題名なし）";
+  $("shInfo").textContent="文字の大きさ "+L.fs+"pt ・ 1行 "+L.per+"字 ・ "+L.lines+"行 ・ "+L.pages+"枚"+(L.fs<9?"　※文字が小さいので、用紙を大きくするか枚数をふやすと読みやすくなります":"");
+  var lno=$("oLno").checked, pno=$("oPno").checked, html="", idx=0;
+  for (var pg=0; pg<L.pages; pg++){
+    html+='<div class="page" style="width:'+L.W+'mm;height:'+L.H+'mm"><div class="cols" style="top:'+L.mt+'mm;right:'+L.mr+'mm;height:'+(L.H-L.mt-L.mb)+'mm">';
+    var used=0;
+    while (idx<L.cols.length){
+      var c=L.cols[idx], w=c.kind==="ttl"?L.pitch*1.4:L.pitch;
+      if (used+w > L.W-L.ml-L.mr+0.01) break;
+      var st='width:'+w.toFixed(2)+'mm;height:'+(L.per*L.fsmm).toFixed(2)+'mm;font-size:'+(c.size||L.fs)+'pt;line-height:'+w.toFixed(2)+'mm';
+      if (c.kind==="gap") html+='<div class="col" style="'+st+'"></div>';
+      else {
+        var extra="";
+        if (c.kind==="line" && lno && c.no%5===0) extra+='<span class="lno" style="bottom:-'+(L.mb-3)+'mm;font-size:7pt">'+c.no+'</span>';
+        if (c.kind==="line" && pno && c.para) extra+='<span class="pno" style="top:-'+(L.mt-3)+'mm;font-size:9pt">'+circled(c.para)+'</span>';
+        html+='<div class="col '+(c.kind==="ttl"?"ttl":c.kind==="au"?"au":"")+'" style="'+st+'">'+c.html+extra+'</div>';
+      }
+      used+=w; idx++;
+    }
+    html+='</div>'+(L.pages>1?'<div class="pgno">'+(pg+1)+' / '+L.pages+'</div>':'')+'</div>';
+  }
+  $("sheets").innerHTML=html;
+  fit();
+}
+function fit(){ var s=$("sheets"); s.style.zoom=""; var p=s.firstChild; if (!p) return; var z=Math.min(1, ($("prev").clientWidth-4)/p.getBoundingClientRect().width); s.style.zoom = z<1 ? z : ""; }
+window.addEventListener("resize", function(){ if (!$("v-sheet").classList.contains("hidden")) fit(); });
+function doPrint(){ var s=$("sheets"), z=s.style.zoom; s.style.zoom=""; window.print(); s.style.zoom=z; }
+
+go("list");
+</script>
+</body>
+</html>
