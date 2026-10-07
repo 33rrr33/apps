@@ -219,7 +219,41 @@ var PS = (function(){
   function idbGet(id){ return idbDo("readonly", function(s){ return s.get(id); }); }
   function idbDel(id){ return idbDo("readwrite", function(s){ s.delete(id); }); }
 
-  return { peerOpts: peerOpts, newPeerId: newPeerId, idbPut: idbPut, idbAll: idbAll, idbGet: idbGet, idbDel: idbDel,
+  /* ---------- ほかのアプリから先生へPDFを送る（算数プリント×印刷ステーション用） ---------- */
+  // cfg: 児童用リンクの中身（{p} = GitHubなし、{o,r,t,f} = GitHub）
+  function sendDirectTo(cfg, meta, bytes, prog){
+    return new Promise(function(resolve, reject){
+      var done = false, peer = new Peer(peerOpts()), conn = null;
+      function fail(msg){ if (done) return; done = true; try{ peer.destroy(); }catch(e){} reject(new Error(msg)); }
+      var t1 = setTimeout(function(){ fail("せんせいの がめんが ひらいて いないみたい。せんせいに いってね"); }, 15000);
+      peer.on("error", function(e){ fail(e && e.type === "peer-unavailable" ? "せんせいの がめんが ひらいて いないみたい。せんせいに いってね" : "つながりませんでした"); });
+      peer.on("open", function(){
+        conn = peer.connect(cfg.p, { reliable: true });
+        conn.on("open", function(){
+          clearTimeout(t1); if (prog) prog("おくっています…", 75);
+          conn.send({ type: "file", meta: meta, bytes: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
+          setTimeout(function(){ fail("とどいたか わかりませんでした。もういちど おくってね"); }, 90000);
+        });
+        conn.on("data", function(d){ if (d && d.type === "ok" && !done){ done = true; setTimeout(function(){ try{ peer.destroy(); }catch(e){} }, 300); resolve(); } });
+        conn.on("error", function(){ fail("とちゅうで きれました。もういちど おくってね"); });
+      });
+    });
+  }
+  async function sendToTeacher(cfg, meta, bytes, prog){
+    if (cfg.p) return sendDirectTo(cfg, meta, bytes, prog);
+    var raw = await getRaw(cfg, "config.json");
+    if (!raw) throw new Error("せんせいの じゅんびが まだです");
+    var conf = JSON.parse(dec.decode(raw));
+    if (await fingerprint(conf.pub) !== cfg.f) throw new Error("リンクが ちがいます。せんせいに きいてね");
+    var pub = await importPub(conf.pub);
+    if (prog) prog("かぎを かけています…", 60);
+    var s = await seal(pub, bytes, meta), id = Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    if (prog) prog("おくっています…", 75);
+    await putFile(cfg, "inbox/" + id + ".bin", bufToB64(s.bin), "pdf");
+    await putFile(cfg, "inbox/" + id + ".json", bufToB64(enc.encode(JSON.stringify(s.head))), "info");
+  }
+
+  return { sendToTeacher: sendToTeacher, peerOpts: peerOpts, newPeerId: newPeerId, idbPut: idbPut, idbAll: idbAll, idbGet: idbGet, idbDel: idbDel,
     bufToB64: bufToB64, b64ToBuf: b64ToBuf, encLink: encLink, decLink: decLink, enc: enc,
     listDir: listDir, getRaw: getRaw, putFile: putFile, deleteFile: deleteFile, privateRepos: privateRepos,
     makeConfig: makeConfig, unlock: unlock, importPriv: importPriv, importPub: importPub, fingerprint: fingerprint,

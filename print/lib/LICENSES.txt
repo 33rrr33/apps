@@ -27,3 +27,6 @@ qrcode-generator 1.4.4 (Kazuhiko Arase) — MIT License — https://github.com/k
 
 ----
 peerjs 1.5.5 — MIT License — https://github.com/peers/peerjs
+
+----
+html2canvas 1.4.1 — MIT License — https://github.com/niklasvh/html2canvas

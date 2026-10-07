@@ -1,0 +1,1416 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>算数プリント × 印刷ステーション</title>
+<meta name="description" content="クイズでにがてを見つけて、れんしゅうプリントを自動でつくる">
+<meta name="theme-color" content="#2f6fed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="算数プリント送信">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<style>
+  :root{
+    --bg:#f4f7fb; --panel:#fff; --line:#dfe6ef; --ink:#1f2a37;
+    --muted:#6b7785; --accent:#2f6fed; --accent2:#e8f0ff; --ok:#16a34a;
+    --wood:#e6c188; --wood2:#d8ad6e; --wood-dark:#b98a4a;
+    --warn:#f0a63e; --weak:#ec6a6a;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{font-family:"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+       background:var(--bg); color:var(--ink); line-height:1.5; -webkit-text-size-adjust:100%;}
+  *{-webkit-tap-highlight-color:transparent}
+  .wrap{max-width:920px;margin:0 auto;padding:18px 16px 60px}
+  h1{font-size:22px;margin:6px 0 2px;display:flex;align-items:center;gap:8px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+         padding:16px;box-shadow:0 1px 3px rgba(20,40,80,.05);margin-bottom:16px}
+  .row{margin-bottom:16px}.row:last-child{margin-bottom:0}
+  label.tag{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;
+        padding:10px 18px;font-size:16px;cursor:pointer;user-select:none;transition:.12s}
+  .chip:hover{border-color:var(--accent)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .gradechips .chip{min-width:64px;text-align:center;font-weight:700}
+
+  button.go{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:14px 24px;
+            font-size:17px;font-weight:800;cursor:pointer}
+  button.go:disabled{background:#b8c6e6;cursor:not-allowed}
+  button.ghost{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:12px 18px;font-size:15px;cursor:pointer}
+  button:active{transform:translateY(1px)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .foot{color:var(--muted);font-size:12px;margin-top:22px;line-height:1.8}
+  .foot a{color:var(--accent);text-decoration:none} .foot a:hover{text-decoration:underline}
+
+  /* ===== ステップ選択（1つずつ） ===== */
+  .step-title{font-size:19px;font-weight:800;margin:2px 0 14px}
+  .opts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .optbtn{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:20px 14px;
+          font-size:18px;font-weight:800;cursor:pointer;text-align:center;transition:.12s;line-height:1.3;color:var(--ink)}
+  .optbtn:hover{border-color:var(--accent);background:var(--accent2)}
+  .optbtn small{display:block;color:var(--muted);font-weight:600;font-size:12px;margin-top:5px}
+  .optbtn:disabled{cursor:not-allowed;opacity:.4}
+  .crumbs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .crumb{background:var(--accent2);color:var(--accent);border:1.5px solid #cfe0ff;border-radius:999px;
+         padding:6px 14px;font-size:14px;font-weight:800;cursor:pointer}
+  .crumb:hover{border-color:var(--accent)}
+  .dom-head{grid-column:1/-1;font-size:12px;font-weight:800;color:var(--muted);margin:10px 0 -2px;padding-left:2px}
+  .back{margin-top:16px}
+
+  /* ===== 診断（つみきタワー） ===== */
+  .quiz-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+  .prog{font-size:13px;color:var(--muted);font-weight:700}
+  .quizlayout{display:flex;gap:18px;align-items:flex-start}
+  .qcard{flex:1 1 auto;min-width:0}
+  .q-domain{font-size:12px;font-weight:800;color:var(--muted)}
+  .q-unit{font-size:16px;color:var(--ink);font-weight:800;margin:2px 0 8px}
+  .q-text{font-size:24px;font-weight:800;line-height:1.45;margin:6px 0 18px;font-variant-numeric:tabular-nums;word-break:keep-all;overflow-wrap:break-word}
+  .q-retry{display:inline-block;background:#fff4e0;color:#b06a00;border:1px solid #ffd894;
+           border-radius:999px;padding:3px 12px;font-size:12px;font-weight:700;margin-bottom:10px}
+  .choices2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .cbtn{border:2px solid var(--line);background:#fff;border-radius:14px;padding:18px 14px;font-size:22px;
+        font-weight:700;cursor:pointer;transition:.1s;text-align:center;font-variant-numeric:tabular-nums;
+        word-break:keep-all;overflow-wrap:break-word;line-height:1.3}
+  .cbtn:hover{border-color:var(--accent);background:var(--accent2)}
+  .cbtn.correct{border-color:var(--ok);background:#e9f9ef;color:var(--ok)}
+  .cbtn.wrong{border-color:var(--weak);background:#fdeaea;color:var(--weak)}
+  .cbtn:disabled{cursor:default}
+  .feedback{min-height:26px;margin-top:14px;font-weight:800;font-size:16px}
+  .feedback.good{color:var(--ok)} .feedback.bad{color:var(--warn)}
+
+  /* タワー */
+  .tower-wrap{flex:0 0 152px;display:flex;flex-direction:column;align-items:center}
+  .tower{display:flex;flex-direction:column-reverse;align-items:center;gap:4px;
+         min-height:230px;justify-content:flex-start;padding:8px 0}
+  .tower-cap{font-size:26px;line-height:1;margin-bottom:2px;transition:.3s}
+  .blk{border-radius:7px;height:22px;border-bottom:3px solid rgba(0,0,0,.14);
+       box-shadow:inset 0 2px 0 rgba(255,255,255,.45);display:flex;align-items:center;
+       justify-content:center;font-size:12px;animation:drop .32s cubic-bezier(.2,1.3,.5,1);}
+  .blk.ok{background:linear-gradient(#eccd93,#dcb06b)}
+  .blk.shaky{background:linear-gradient(#f6dc9a,#eec46a)}
+  .blk.weak{background:linear-gradient(#f4b3b3,#e98a8a)}
+  .tower-base{width:104px;height:12px;background:#cbb189;border-radius:6px;margin-top:2px;
+              border-bottom:3px solid #a98a5c}
+  @keyframes drop{from{opacity:0;transform:translateY(-26px) scale(.9)}to{opacity:1;transform:none}}
+  .legend{font-size:12px;color:var(--muted);margin-top:10px;text-align:center;line-height:1.7}
+  .legend .lg{display:block;margin-top:2px}
+
+  /* ===== 結果 ===== */
+  .result-hero{text-align:center;padding:6px 0 2px}
+  .result-hero .big{font-size:26px;font-weight:900}
+  .tally{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .tally .t{border-radius:12px;padding:10px 16px;font-weight:800;font-size:15px;border:1.5px solid var(--line)}
+  .tally .t b{font-size:20px;display:block}
+  .t.ok{background:#e9f9ef;color:#0f7a37;border-color:#b6e6c6}
+  .t.shaky{background:#fff6e3;color:#a86a00;border-color:#f4dca0}
+  .t.weak{background:#fdeaea;color:#c23b3b;border-color:#f4b8b8}
+  .weaklist{margin-top:6px}
+  .wk{display:flex;align-items:flex-start;gap:12px;border:1.5px solid var(--line);border-radius:12px;
+      padding:14px 16px;margin-bottom:10px;background:#fff}
+  .wk input{margin-top:5px;width:18px;height:18px;flex:none}
+  .wk .badge{flex:none;font-size:11px;font-weight:800;border-radius:999px;padding:2px 9px;margin-top:2px}
+  .badge.weak{background:#fdeaea;color:#c23b3b} .badge.shaky{background:#fff6e3;color:#a86a00}
+  .wk .info{min-width:0}
+  .wk .u{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+  .wk .s{display:block;font-weight:800;font-size:18px;line-height:1.4}
+  .wk-all{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;margin:6px 0 4px;cursor:pointer}
+  .wk-all input{width:22px;height:22px;flex:none}
+  rt{font-size:.55em;font-weight:500}
+  ruby{ruby-align:center}
+  .furi-fab{position:fixed;right:14px;bottom:14px;z-index:50;background:#fff;color:var(--ink);
+            border:1.5px solid var(--line);border-radius:999px;padding:10px 16px;font-size:14px;
+            font-weight:800;box-shadow:0 3px 10px rgba(20,40,80,.15);cursor:pointer}
+  .furi-fab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .lvlrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .lvlrow .star{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px;
+                cursor:pointer;font-size:13px;white-space:nowrap}
+  .lvlrow .star.on{background:var(--accent2);border-color:var(--accent);color:var(--accent);font-weight:800}
+
+  /* ===== プリント（本家 算数プリントメーカー 準拠） ===== */
+  .ws-banner{background:var(--accent2);border:1.5px solid #cfe0ff;border-radius:12px;
+             padding:13px 16px;margin:0 auto 10px;max-width:210mm;font-weight:800;color:#234;font-size:16px;line-height:1.7}
+  .ws-banner .em{color:var(--accent)}
+  .ws-banner .wb-u,.ws-banner .wb-s{display:block;font-weight:800;margin-top:4px}
+  .wsbar{max-width:210mm;margin:0 auto 10px}
+  .wsstep{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:8px}
+  .wsbtns{max-width:210mm;margin:16px auto 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .wsbtns .big{font-size:16px}
+  .wsbtns .navrow{display:flex;gap:10px;flex-wrap:wrap;width:100%;margin-top:6px;align-items:center;border-top:1px dashed var(--line);padding-top:12px}
+  .wsbtns .navrow .go{font-weight:800}
+  .wsbtns .donemsg{font-weight:800;color:var(--ok);align-self:center}
+  .sheet{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16mm 15mm;
+         width:210mm;max-width:100%;min-height:297mm;margin:0 auto 22px;display:flex;flex-direction:column}
+  .nw{white-space:nowrap}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;
+        text-align:center;margin:0 4px;line-height:1.1;font-size:0.9em}
+  .frac .fn{padding:0 3px;border-bottom:1.6px solid currentColor}
+  .frac .fd{padding:1px 3px 0}
+  .sheet-head{border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:16px}
+  .sheet-line1{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sheet-unit{font-size:15px;color:var(--ink);font-weight:700;margin-top:6px}
+  .skillrow{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-top:6px}
+  .sheet-skill{font-size:23px;font-weight:800;color:var(--accent);line-height:1.2}
+  .namebox{font-size:15px;white-space:nowrap;flex:none}
+  .namebox .nf{display:inline-block;margin-left:16px}
+  .namebox .nfin{width:2.6em;border:none;border-bottom:1px solid var(--ink);text-align:center;
+                 font:inherit;color:var(--ink);padding:0 2px;margin-right:4px;background:transparent}
+  .namebox .nfin:focus{outline:none;border-bottom:2px solid var(--accent)}
+  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 40px;
+         flex:1 1 auto;grid-auto-rows:1fr;margin-top:6px}
+  .qgrid.one{grid-template-columns:1fr}
+  .q{display:flex;flex-direction:column;justify-content:space-between;
+     font-size:19px;padding:12px 0;border-bottom:1px dotted #d9d9d9}
+  .q.choice{justify-content:flex-start}
+  .qtext{display:flex;align-items:center;gap:7px;line-height:1.5}
+  .q .no{color:var(--accent);font-weight:700;flex:none}
+  .qtext .body{min-width:0}
+  .q .body{font-variant-numeric:tabular-nums;word-break:keep-all;overflow-wrap:break-word}
+  .write{display:inline-block;min-width:8em;border-bottom:1.5px solid #444;
+         text-align:center;color:var(--ok);font-weight:700;text-indent:0}
+  .write.short{min-width:3.5em;margin-left:18px}
+  .ansline{padding-left:32px;text-indent:0}
+  .opts{margin:10px 0 0 32px;color:#333;font-size:16px;text-indent:0}
+  .opt{display:inline-block;margin-right:18px;white-space:nowrap}
+  .answers{flex:none;border-top:2px dashed #cbd5e2;margin-top:12px;padding-top:8px;
+           font-size:14px;color:#333;line-height:2;font-variant-numeric:tabular-nums}
+  .answers .ans-label{display:inline-block;font-weight:800;color:var(--accent);margin-right:10px}
+  .answers .ans{display:inline-block;margin-right:16px;white-space:nowrap}
+  .answers .ans b{color:var(--accent);margin-right:5px}
+
+  .sendbox{max-width:210mm;margin:12px auto 0;border:2px solid var(--accent);background:var(--accent2);border-radius:14px;padding:14px 16px}
+  .sendbox .go{font-size:18px}
+  .sendmsg{margin-top:8px;font-weight:800}
+  .sendmsg.err{color:#c23b3b} .sendmsg.ok{color:var(--ok)}
+  .conn{display:inline-block;font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px;margin-bottom:8px}
+  .conn.on{background:#e9f9ef;color:#0f7a37} .conn.off{background:#fff4e0;color:#b06a00}
+  #capture{position:fixed;left:-10000px;top:0;width:794px}
+  #capture .sheet{width:794px;max-width:none;border:none;border-radius:0;margin:0}
+  @media (max-width:600px){
+    .quizlayout{flex-direction:column-reverse}
+    .tower-wrap{flex:none;align-self:center}
+    .tower{min-height:0}
+    .q-text{font-size:21px}
+    .choices2{gap:10px}
+    .cbtn{font-size:19px;padding:15px 10px}
+    .qgrid{grid-template-columns:1fr}
+  }
+  @media print{
+    body{background:#fff}
+    .wrap{max-width:none;padding:0;margin:0}
+    #app,.noprint{display:none !important}
+    #sheets{margin:0}
+    .ws-banner{display:none !important}
+    .sheet{border:none;border-radius:0;padding:0;width:auto;max-width:none;
+           height:255mm;min-height:0;overflow:hidden;margin:0;page-break-after:always}
+    .sheet:last-child{page-break-after:auto}
+    .q{font-size:16px;break-inside:avoid}
+    @page{size:A4 portrait;margin:14mm}
+  }
+</style>
+
+<div class="wrap">
+  <div id="app"></div>
+  <div id="sheets"></div>
+</div>
+<div id="capture"></div>
+
+<script src="../print/lib/pdf-lib.min.js"></script>
+<script src="../print/lib/peerjs.min.js"></script>
+<script src="../print/lib/html2canvas.min.js"></script>
+<script src="../print/common.js"></script>
+<script>
+/* 先生の印刷ステーションのQR（#c=...）を受け取って、このiPadに覚える（印刷ステーションと共通） */
+(function(){
+  var m = location.hash.match(/c=([A-Za-z0-9_-]+)/);
+  if (m){ try { var c = PS.decLink(m[1]); if ((c.o && c.r && c.t && c.f) || c.p) PS.lsSet("ps-kid-cfg", c); } catch(e){} history.replaceState(null, "", location.pathname); }
+})();
+function teacherCfg(){ return PS.lsGet("ps-kid-cfg"); }
+function connBadge(){ return teacherCfg() ? '<span class="conn on">📶 せんせいの いんさつステーションと つながっています</span>' : '<span class="conn off">⚠️ せんせいの QRコードを まだ よみとって いません</span>'; }
+</script>
+<script>
+/* ==================================================================
+   算数プリント自動作成（にがてはっけん）
+   ・診断＝「さんすう つみきタワー」準拠（gn の q / confirm）
+   ・プリント＝「算数プリントメーカー」準拠（GEN / TAXO / 描画）
+   両アプリは単元キーが共通なので、診断で見つけた
+   {key, skillIdx, にがて度} を GEN[key][skillIdx](level) に渡すだけで連結。
+   ================================================================== */
+
+/* ===== 算数プリントメーカー: スキル別ジェネレータ =====
+   各 gen(level) は {q, a} (記述式) か {q, a, ch:[...]} (選択式) を返す。
+   ch がある場合は a を必ず含む。 */
+
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[R(0,a.length-1)];
+const coin=()=>R(0,1)===0;
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+// 小学校の分数表記（分子を上・分母を下の横棒）
+const jf=(n,d)=>`<span class="frac"><span class="fn">${n}</span><span class="fd">${d}</span></span>`;
+function jfr(n,d){const g=gcd(Math.abs(n),d)||1;n/=g;d/=g;return d===1?`${n}`:jf(n,d);} // 約分
+const rnd=(x,p)=>+x.toFixed(p===undefined?2:p);
+const yen=n=>`${n}円`;
+// 選択肢を作る（答え+distractors、重複除去、4つに調整）
+function C(q,a,arr){
+  a=String(a); const set=new Set([a]); const ch=[a];
+  for(const d of arr){ const s=String(d); if(!set.has(s)){set.add(s);ch.push(s);} }
+  return {q,a,ch};
+}
+// 数値の近い誤答を作る
+function nd(ans,unit){
+  unit=unit||""; const out=[]; const seen=new Set([ans]);
+  const cand=[ans+1,ans-1,ans+2,ans-2,ans+ (Math.abs(ans)>=10?10:3), ans-(Math.abs(ans)>=10?10:3), ans*2, ans+5];
+  for(const c of cand){ if(c!==ans && c>0 && !seen.has(c)){seen.add(c); out.push(`${c}${unit}`);} if(out.length>=3)break; }
+  let k=3; while(out.length<3){ if(!seen.has(ans+k)){seen.add(ans+k);out.push(`${ans+k}${unit}`);} k++; }
+  return out;
+}
+
+const GEN = {};
+
+/* ========== 1年 数と計算 ========== */
+GEN.kazu10=[ l=>{
+  const hi=[10,10,20,20,20][l-1];
+  return pick([
+    ()=>{const n=R(0,hi-1); return {q:`${n} の つぎの 数は？`, a:n+1};},
+    ()=>{const n=R(1,hi);   return {q:`${n} の まえの 数は？`, a:n-1};},
+    ()=>{const n=R(2,Math.min(10,hi)); const a=R(1,n-1); return {q:`${n} は ${a} と いくつ？`, a:n-a};},
+  ])();
+}];
+GEN.gousei10=[ l=>{
+  const t=R(1,9);
+  return coin()? {q:`${t} と いくつで 10？`, a:10-t} : {q:`10 は ${t} と いくつ？`, a:10-t};
+}];
+GEN.tashizan1=[ l=>{ // あわせる（くり上がりなし・和≤10）
+  const a=R(1,8), b=R(1,Math.min(9-a,9)); return {q:`${a} ＋ ${b} は？`, a:a+b};
+}];
+GEN.hikizan1=[ l=>{ const a=R(2,10), b=R(1,a-1); return {q:`${a} − ${b} は？`, a:a-b}; }];
+GEN.kuriagari1=[ l=>{ // 和 11〜18
+  let a=R(2,9), b=R(2,9); while(a+b<11){a=R(2,9);b=R(2,9);} return {q:`${a} ＋ ${b} は？`, a:a+b};
+}];
+GEN.kurisagari1=[ l=>{ const a=R(11,18), b=R(a-9,9); return {q:`${a} − ${b} は？`, a:a-b}; }];
+GEN.ookii_kazu1=[ l=>{
+  const hi=[9,9,9,9,9][l-1];
+  return coin()
+    ? (()=>{const t=R(1,hi),b=R(0,9); return {q:`10 が ${t}こと ばらが ${b}こで いくつ？`, a:t*10+b};})()
+    : (()=>{const n=R(11,99); return {q:`${n} は 10が ${Math.floor(n/10)}こと ばらが いくつ？`, a:n%10};})();
+}];
+
+/* ========== 2年 数と計算 ========== */
+GEN.kurai_2=[ l=>pick([
+  ()=>({q:`100 が 10こ 集まると？`, a:1000}),
+  ()=>({q:`1000 は 100 が 何こ？`, a:"10こ"}),
+  ()=>{const t=R(2,9); return {q:`100 が ${t}こ 集まると？`, a:t*100};},
+  ()=>{const t=R(2,9); return {q:`1000 が ${t}こで いくつ？`, a:t*1000};},
+])()];
+GEN.tashi_hissan2=[ l=>{
+  const [lo,hi]=[[10,50],[10,99],[20,99],[100,499],[100,999]][l-1];
+  const a=R(lo,hi), b=R(lo,hi); return {q:`${a} ＋ ${b} は？`, a:a+b};
+}];
+GEN.hiki_hissan2=[ l=>{
+  const [lo,hi]=[[10,50],[10,99],[20,99],[100,499],[100,999]][l-1];
+  let a=R(lo,hi), b=R(lo,hi); if(a<b)[a,b]=[b,a]; return {q:`${a} − ${b} は？`, a:a-b};
+}];
+GEN.bunsuu_kantan2=[ l=>pick([
+  ()=>{const n=pick([2,3,4,5,6,8]); return C(`◯を ${n}つに 同じに 分けた 1つ分は？`, jf(1,n), [jf(1,n+1),jf(1,n+2),jf(n,1)]);},
+  ()=>{const n=pick([3,4,5,6,8]),m=R(2,n-1); return C(`1を ${n}つに 同じように分けた ${m}つ分は？`, jf(m,n), [jf(m+1,n),jf(m-1,n),jf(m,n+1)]);},
+  ()=>C(`ケーキを 2つに 同じに 分けた 1つ分は？`, jf(1,2), [jf(1,3),jf(1,4),jf(2,1)]),
+  ()=>C(`4分の1は どんな 大きさ？`, "4つに分けた 1つ分", ["2つに分けた 1つ分","4つ集めた 大きさ","4ばいの 大きさ"]),
+])()];
+GEN.kake_imi=[ l=>pick([
+  ()=>{const a=R(2,6),b=R(2,5); return C(`1はこ ${a}こ入りの あめが ${b}はこ。ぜんぶで 何こ？ 式はどれ？`, `${a}×${b}`, [`${a}＋${b}`,`${a}−${b}`,`${b}÷${a}`]);},
+  ()=>{const a=R(2,6),b=R(2,5); return C(`${a}×${b} は どんな意味？`, `${a}こずつ ${b}つ分`, [`${b}こずつ ${a}つ分`,`${a}と ${b}を たす`,`${a}を ${b}こに 分ける`]);},
+])()];
+GEN.kuku=[ l=>{ const a=R(1,9), b=R(1,9); return {q:`${a} × ${b} は？`, a:a*b}; }];
+
+/* ========== 3年 数と計算 ========== */
+GEN.kurai_seisuu=[ l=>pick([
+  ()=>({q:`10 が 10こ 集まると？`, a:100}),
+  ()=>({q:`1000 は 100 が 何こ？`, a:"10こ"}),
+  ()=>{const t=R(2,9); return {q:`${t*10} を 10倍すると？`, a:t*100};},
+  ()=>{const t=R(2,9); return {q:`${t*100} は 10を 何こ 集めた数？`, a:`${t*10}こ`};},
+])()];
+GEN.tashi_hiki_hissan3=[ l=>{
+  const [lo,hi]=[[100,499],[100,999],[1000,4999],[1000,9999],[1000,9999]][l-1];
+  let a=R(lo,hi), b=R(lo,hi);
+  if(coin()) return {q:`${a} ＋ ${b} は？`, a:a+b};
+  if(a<b)[a,b]=[b,a]; return {q:`${a} − ${b} は？`, a:a-b};
+}];
+GEN.kake_hissan=[ l=>{
+  const cfg=[[[11,19],[2,5]],[[11,49],[2,9]],[[10,99],[2,9]],[[100,499],[2,9]],[[100,999],[2,9]]][l-1];
+  const a=R(cfg[0][0],cfg[0][1]), b=R(cfg[1][0],cfg[1][1]); return {q:`${a} × ${b} は？`, a:a*b};
+}];
+GEN.warizan_imi=[ l=>{
+  const d=R(2,[5,9,9,9,9][l-1]), q=R(2,[5,9,9,12,12][l-1]);
+  return coin()? {q:`${d*q}こを ${d}人で 同じ数ずつ 分けると、1人ぶんは？`, a:`${q}こ`}
+               : {q:`${d*q} ÷ ${d} は？`, a:q};
+}];
+GEN.amari=[ l=>{
+  const d=R(2,[5,6,9,9,9][l-1]), q=R(2,[5,9,12,20,30][l-1]), r=R(1,d-1);
+  return {q:`${d*q+r} ÷ ${d} は？`, a:`${q}あまり${r}`};
+}];
+GEN.shousuu3=[ l=>pick([
+  ()=>{const n=R(1,99)/10; return {q:`${n.toFixed(1)} は 0.1 が いくつ分？`, a:Math.round(n*10)};},
+  ()=>{const c=R(1,9); return {q:`0.1 が ${c}こで いくつ？`, a:+(c/10).toFixed(1)};},
+])()];
+GEN.bunsuu_imi=[ l=>pick([
+  ()=>{const n=pick([3,4,5,6,8]); return {q:`1を ${n}つに 同じように分けた 1つ分は？`, a:jf(1,n)};},
+  ()=>{const d=pick([3,4,5,6,8]),k=R(2,d-1); return {q:`${jf(1,d)} が ${k}こ分で？`, a:jf(k,d)};},
+])()];
+GEN.shiki_box3=[ l=>{
+  const hi=[9,20,50,99,99][l-1];
+  return pick([
+    ()=>{const x=R(1,hi),b=R(1,hi); return {q:`□ ＋ ${b} ＝ ${x+b} の □は？`, a:x};},
+    ()=>{const x=R(2,hi),b=R(1,x); return {q:`□ − ${b} ＝ ${x-b} の □は？`, a:x};},
+    ()=>{const x=R(2,9),b=R(2,9); return {q:`□ × ${b} ＝ ${x*b} の □は？`, a:x};},
+  ])();
+}];
+
+/* ========== 4年 数と計算 ========== */
+GEN.kurai_ookii4=[ l=>pick([
+  ()=>C(`一万 が 10こ 集まると？`, "十万", ["百万","千","一億"]),
+  ()=>C(`十万 が 10こ 集まると？`, "百万", ["十万","千万","一億"]),
+  ()=>C(`百万 が 10こ 集まると？`, "千万", ["百万","一億","十万"]),
+  ()=>C(`千万 が 10こ 集まると？`, "一億", ["一千万","十億","百万"]),
+  ()=>C(`一億 が 10こ 集まると？`, "十億", ["一億","百億","一兆"]),
+  ()=>C(`十億 が 10こ 集まると？`, "百億", ["十億","千億","一兆"]),
+  ()=>C(`千億 が 10こ 集まると？`, "一兆", ["千億","十兆","百億"]),
+  ()=>C(`一億 は 一万 が 何こ？`, "10000こ", ["1000こ","100000こ","100こ"]),
+  ()=>C(`一兆 は 一億 が 何こ？`, "10000こ", ["1000こ","100こ","100000こ"]),
+  ()=>C(`一億 は 千万 が 何こ？`, "10こ", ["100こ","1000こ","5こ"]),
+])()];
+GEN.wari_hissan1=[ l=>{
+  const d=R(2,9), q=R([11,21,41,101,201][l-1],[49,99,199,499,999][l-1]);
+  if(l>=3 && coin()){ const r=R(1,d-1); return {q:`${d*q+r} ÷ ${d} は？`, a:`${q}あまり${r}`}; }
+  return {q:`${d*q} ÷ ${d} は？`, a:q};
+}];
+GEN.wari_hissan2=[ l=>{
+  const d=R([11,11,13,15,21][l-1],[19,29,49,79,99][l-1]), q=R(2,[9,19,29,49,49][l-1]);
+  if(coin()){ const r=R(1,d-1); return {q:`${d*q+r} ÷ ${d} は？`, a:`${q}あまり${r}`}; }
+  return {q:`${d*q} ÷ ${d} は？`, a:q};
+}];
+GEN.shousuu_shikumi=[ l=>pick([
+  ()=>{const c=R(1,9); return {q:`0.01 が ${c}こで いくつ？`, a:+(c/100).toFixed(2)};},
+  ()=>{const n=R(1,99)/10; return {q:`${n.toFixed(1)} は 0.1 が いくつ分？`, a:Math.round(n*10)};},
+  ()=>{const c=R(11,99); return {q:`0.01 が ${c}こで いくつ？`, a:+(c/100).toFixed(2)};},
+])()];
+GEN.shousuu_kagen4=[ l=>{
+  const dp=[1,1,2,2,2][l-1], mul=Math.pow(10,dp), hi=[9,30,50,80,99][l-1];
+  let x=R(1,hi*mul)/mul, y=R(1,hi*mul)/mul, op=coin()?"＋":"−";
+  if(op==="−"&&x<y)[x,y]=[y,x];
+  return {q:`${x.toFixed(dp)} ${op} ${y.toFixed(dp)} は？`, a:+(op==="＋"?x+y:x-y).toFixed(dp)};
+}];
+GEN.shousuu_kakewari4=[
+  l=>{ const a=R(2,[9,20,50,99,99][l-1])/10, b=R(2,[5,9,9,20,20][l-1]); return {q:`${a.toFixed(1)} × ${b} は？`, a:rnd(a*b)}; },
+  l=>{ const b=R(2,[5,9,9,12,12][l-1]), q=R(2,[9,20,50,50,99][l-1]); const a=rnd(b*q/10); return {q:`${a} ÷ ${b} は？`, a:+(q/10).toFixed(1)}; },
+];
+GEN.shousuu_seisuu4=[ l=>{ const a=R(2,[9,20,50,99,99][l-1])/10, b=R(2,[5,9,9,20,20][l-1]); return {q:`${a.toFixed(1)} × ${b} は？`, a:rnd(a*b)}; }];
+GEN.shousuu_waru_seisuu4=[ l=>{ const b=R(2,[5,9,9,12,12][l-1]), q=R(2,[9,20,50,50,99][l-1]); const a=rnd(b*q/10); return {q:`${a} ÷ ${b} は？`, a:+(q/10).toFixed(1)}; }];
+GEN.doubunbo=[ l=>{
+  const d=R(3,[5,6,8,10,12][l-1]); let x=R(1,d-1),y=R(1,d-1),op=coin()?"＋":"−";
+  if(op==="−"&&x<y)[x,y]=[y,x]; const n=op==="＋"?x+y:x-y; if(n===0) return GEN.doubunbo[0](l);
+  return {q:`${jf(x,d)} ${op} ${jf(y,d)} は？`, a:jf(n,d)};
+}];
+GEN.gaisuu4=[ l=>{
+  const place=[100,100,1000,1000,10000][l-1];
+  const label={100:"百の位",1000:"千の位",10000:"一万の位"}[place];
+  const hi=[9999,9999,99999,99999,999999][l-1];
+  const n=R(place,hi);
+  return {q:`${n} を ${label}までの がい数に すると？`, a:Math.round(n/place)*place};
+}];
+GEN.shiki_keisan4=[ l=>{
+  const hi=[9,12,20,50,99][l-1], a=R(2,hi), b=R(2,9), c=R(2,9);
+  return pick([
+    ()=>({q:`${a} ＋ ${b} × ${c} は？`, a:a+b*c}),
+    ()=>({q:`${a} × ${b} − ${c} は？`, a:a*b-c}),
+    ()=>({q:`(${a} ＋ ${b}) × ${c} は？`, a:(a+b)*c}),
+    ()=>({q:`${a} × ${b} ＋ ${a} × ${c} は？`, a:a*b+a*c}),
+  ])();
+}];
+
+/* ========== 5年 数と計算 ========== */
+GEN.seisuu_shousuu5=[
+  l=>{ const base=R(1,9999)/[10,100,100,1000,1000][l-1]; const m=pick([10,100]); return {q:`${base} を ${m}ばい すると？`, a:rnd(base*m,4)}; },
+  l=>{ const base=R(1,99999)/[1,1,10,10,100][l-1]; const m=pick([10,100]); return {q:`${base} を ${m===10?"10分の1":"100分の1"} に すると？`, a:rnd(base/m,4)}; },
+];
+GEN.shousuu_kake5=[
+  l=>{ const a=R(2,[9,20,50,99,99][l-1])/10, b=R(2,[9,15,30,50,99][l-1])/10; return {q:`${a.toFixed(1)} × ${b.toFixed(1)} は？`, a:rnd(a*b)}; },
+  l=>{ const a=R(2,[9,20,50,99,99][l-1])/10, b=R(2,[9,15,30,50,99][l-1])/10; return {q:`${a.toFixed(1)} × ${b.toFixed(1)} は？（点の 位置に ちゅうい）`, a:rnd(a*b)}; },
+];
+GEN.shousuu_waru5=[
+  l=>{ const b=R(2,[5,9,9,15,20][l-1])/10, q=R(2,[9,20,50,50,99][l-1])/10; const a=rnd(b*q); return {q:`${a} ÷ ${b.toFixed(1)} は？`, a:rnd(q)}; },
+  l=>{ const b=R(2,[5,9,9,12,15][l-1]), q=R(2,[9,20,50,50,99][l-1])/10; const a=rnd(b*q); return {q:`${a} ÷ ${b} は？（点の 位置に ちゅうい）`, a:rnd(q)}; },
+];
+GEN.baisuu_yakusuu=[
+  l=>{ const even=coin(); const target=even?"偶数":"奇数";
+       const ansv = even? R(1,50)*2 : R(1,50)*2-1;               // 答え
+       const w=new Set(); while(w.size<3){ const x= even? R(1,50)*2-1 : R(1,50)*2; if(x!==ansv) w.add(x); }
+       return C(`${target}は 次のどれ？`, ansv, [...w]); },
+  l=>{ const base=R(2,[4,6,8,9,12][l-1]); const k=R(2,6); const ans=base*k;
+       const wrong=[]; let c=ans-2;
+       while(wrong.length<3){ if(c>0 && c!==ans && c%base!==0 && !wrong.includes(c)) wrong.push(c); c++; }
+       return C(`${base} の 倍数は 次のどれ？`, ans, wrong); },
+  l=>{ const n=pick([12,18,24,36,48]); const divs=[],non=[];
+       for(let i=2;i<n;i++){ if(n%i===0) divs.push(i); else non.push(i); }
+       const a=pick(divs); const w=[]; const shuf=non.slice().sort(()=>Math.random()-0.5);
+       for(const x of shuf){ if(w.length<3 && !w.includes(x)) w.push(x); }
+       return C(`${n} を わりきれる数（約数）は？`, a, w); },
+];
+GEN.bunsuu_shousuu5=[
+  l=>{ const d=R(2,[5,6,8,9,12][l-1]), n=R(1,d-1); return {q:`${n} ÷ ${d} を 分数で かくと？`, a:jf(n,d)}; },
+  l=>{ const dens=[[2,4,5],[2,4,5,10],[2,4,5,8,10],[2,4,5,8,10,20],[2,4,5,8,10,20,25]][l-1]; const d=pick(dens), n=R(1,d-1); return {q:`${jf(n,d)} を 小数に すると？`, a:rnd(n/d,3)}; },
+];
+GEN.ibunbo5=[
+  l=>{ const [d1,d2]=twoDen(l); const a=R(1,d1-1),b=R(1,d2-1); const L=d1*d2/gcd(d1,d2); return {q:`${jf(a,d1)} ＋ ${jf(b,d2)} は？`, a:jfr(a*L/d1+b*L/d2, L)}; },
+  l=>{ let d1,d2,a,b,L,n; do{ [d1,d2]=twoDen(l); a=R(1,d1-1); b=R(1,d2-1); L=d1*d2/gcd(d1,d2); n=a*L/d1-b*L/d2; }while(n<=0); return {q:`${jf(a,d1)} − ${jf(b,d2)} は？`, a:jfr(n,L)}; },
+];
+GEN.bunsuu_kakewari5=[
+  l=>{ const d=R(3,[5,6,8,9,12][l-1]), n=R(1,d-1), m=R(2,[4,5,6,8,9][l-1]); return {q:`${jf(n,d)} × ${m} は？`, a:jf(n*m,d)}; },
+  l=>{ const d=R(2,[5,6,8,9,12][l-1]), n=R(1,d-1), m=R(2,[4,5,6,8,9][l-1]); return {q:`${jf(n,d)} ÷ ${m} は？`, a:jf(n,d*m)}; },
+];
+
+/* ========== 6年 数と計算 ========== */
+GEN.bunsuu_kake6=[
+  l=>{ const d1=R(2,[4,5,6,8,9][l-1]), d2=R(2,[4,5,6,8,9][l-1]), n1=R(1,d1-1), n2=R(1,d2-1); return {q:`${jf(n1,d1)} × ${jf(n2,d2)} は？`, a:jf(n1*n2,d1*d2)}; },
+  l=>{ const d1=R(2,[4,5,6,8,9][l-1]), d2=R(2,[4,5,6,8,9][l-1]), n1=R(1,d1-1), n2=R(1,d2-1); return {q:`${jf(n1,d1)} × ${jf(n2,d2)} は？（約分して）`, a:jfr(n1*n2,d1*d2)}; },
+];
+GEN.bunsuu_wari6=[
+  l=>{ const d1=R(2,[4,5,6,8,9][l-1]), d2=R(2,[4,5,6,8,9][l-1]), n1=R(1,d1-1), n2=R(1,d2-1); return {q:`${jf(n1,d1)} ÷ ${jf(n2,d2)} は？`, a:jf(n1*d2,d1*n2)}; },
+  l=>{ const d1=R(2,[4,5,6,8,9][l-1]), d2=R(2,[4,5,6,8,9][l-1]), n1=R(1,d1-1), n2=R(1,d2-1); return {q:`${jf(n1,d1)} ÷ ${jf(n2,d2)} は？（約分して）`, a:jfr(n1*d2,d1*n2)}; },
+];
+GEN.bunsuu_shousuu_mix6=[ l=>{
+  const decs=[[0.5,1,2],[0.25,1,4],[0.75,3,4],[0.2,1,5],[0.1,1,10]]; const o=pick(decs);
+  const d2=pick([2,3,4,5,6]), n2=R(1,d2-1), op=coin()?"＋":"−";
+  const L=o[2]*d2/gcd(o[2],d2);        // 左＝分数 n2/d2、右＝小数 o[0]（＝o[1]/o[2]）
+  let n=op==="＋"? n2*L/d2 + o[1]*L/o[2] : n2*L/d2 - o[1]*L/o[2];
+  if(n<=0) return GEN.bunsuu_shousuu_mix6[0](l);
+  return {q:`${jf(n2,d2)} ${op} ${o[0]} は？`, a:jfr(n,L)};
+}];
+GEN.moji_shiki6=[
+  l=>pick([
+    ()=>{const p=R(2,9); return C(`1本 x円の ペンを ${p}本 買った 代金の 式は？`, `x × ${p}`, [`x ＋ ${p}`,`x − ${p}`,`${p} ÷ x`]);},
+    ()=>{const p=R(2,6),g=R(10,90); return C(`1こ x円の あめ ${p}こと ${g}円の ガム。代金の 式は？`, `x × ${p} ＋ ${g}`, [`x ＋ ${p} ＋ ${g}`,`x × ${p} − ${g}`,`x ＋ ${g}`]);},
+  ])(),
+  l=>pick([
+    ()=>{const x=R(2,[9,9,12,20,30][l-1]),k=R(2,9); return {q:`x × ${k} ＝ ${x*k} の x は？`, a:x};},
+    ()=>{const x=R(2,[9,20,50,99,99][l-1]),k=R(1,20); return {q:`x ＋ ${k} ＝ ${x+k} の x は？`, a:x};},
+  ])(),
+];
+
+/* ========== 図形 ========== */
+GEN.katachi1=[ l=>pick([
+  ()=>C(`つぎのうち ころがる 形は？`, "ボール（まる）", ["さいころ（しかく）","はこ","つみき（しかく）"]),
+  ()=>C(`ころがらないで つみやすい 形は？`, "はこ（しかく）", ["ボール","たま","まるい かん"]),
+  ()=>C(`四角い はこの 面の 形は？`, "四角", ["まる","三角","ほし"]),
+  ()=>C(`ボールの ような まるい 形を 何という？`, "球（きゅう）", ["四角","三角","つつ"]),
+  ()=>C(`かんジュースの ような 形（ころがる つつ）は？`, "円柱", ["はこ","ボール","さいころ"]),
+  ()=>C(`おさらの ふちの 形は？`, "まる（円）", ["四角","三角","ほし"]),
+  ()=>C(`まどガラスの 形は？`, "四角", ["まる","三角","ボール"]),
+  ()=>C(`サイコロの 形は？`, "四角い はこ", ["ボール","つつ","たま"]),
+  ()=>C(`タイヤを 横から 見た 形は？`, "まる（円）", ["四角","三角","ほし"]),
+  ()=>C(`おにぎりの 形は？`, "三角", ["四角","まる","つつ"]),
+  ()=>C(`つみ木で たかく つみやすい 形は？`, "四角い はこ", ["ボール","たまご形","まるい かん"]),
+  ()=>C(`とがった かどが ある 形は どれ？`, "三角", ["まる","円","ボール"]),
+])()];
+GEN.sankaku_shikaku2=[ l=>pick([
+  ()=>C(`三角形は 直線が 何本？`, "3本", ["4本","2本","5本"]),
+  ()=>C(`四角形は 直線が 何本？`, "4本", ["3本","5本","6本"]),
+  ()=>C(`三角形の かどは いくつ？`, "3つ", ["4つ","2つ","5つ"]),
+  ()=>C(`四角形の かどは いくつ？`, "4つ", ["3つ","5つ","6つ"]),
+  ()=>C(`長方形の かどは ぜんぶ どんな 角？`, "直角", ["するどい角","にぶい角","まるい角"]),
+  ()=>C(`正方形の かどは ぜんぶ どんな 角？`, "直角", ["するどい角","にぶい角","いろいろ"]),
+  ()=>C(`正方形の 4つの 辺の 長さは？`, "ぜんぶ 同じ", ["2組が 同じ","ばらばら","3つが 同じ"]),
+  ()=>C(`長方形の 向かい合う 辺の 長さは？`, "同じ", ["ばらばら","ぜんぶ ちがう","1本だけ 長い"]),
+  ()=>C(`3本の 直線で かこまれた 形は？`, "三角形", ["四角形","五角形","円"]),
+  ()=>C(`4本の 直線で かこまれた 形は？`, "四角形", ["三角形","五角形","円"]),
+  ()=>C(`ノートの ような かどが 直角の 形は？`, "長方形", ["三角形","円","ひし形"]),
+  ()=>C(`三角じょうぎの 形は？`, "三角形", ["四角形","円","五角形"]),
+])()];
+GEN.hako2=[ l=>pick([
+  ()=>C(`さいころ（立方体）の 面は いくつ？`, "6つ", ["4つ","8つ","5つ"]),
+  ()=>C(`直方体の 面は いくつ？`, "6つ", ["4つ","8つ","12こ"]),
+  ()=>C(`はこの形の へん（線）は 何本？`, "12本", ["6本","8本","10本"]),
+  ()=>C(`はこの形の ちょう点（かど）は いくつ？`, "8つ", ["6つ","12こ","4つ"]),
+  ()=>C(`さいころの 面の 形は？`, "正方形", ["三角形","円","長方形"]),
+  ()=>C(`向かい合う 面は 何組 ある？`, "3組", ["2組","4組","6組"]),
+  ()=>C(`正方形を 何まい あつめると さいころに なる？`, "6まい", ["4まい","8まい","5まい"]),
+  ()=>C(`面と 面が 合わさった ところ（線）を 何という？`, "へん", ["ちょう点","面","角"]),
+  ()=>C(`へんが 3本 あつまった かどを 何という？`, "ちょう点", ["面","へん","円"]),
+  ()=>C(`はこの形で いちばん 多いのは？`, "へん（12本）", ["面（6つ）","ちょう点（8つ）","ぜんぶ 同じ"]),
+])()];
+GEN.en3=[ l=>pick([
+  ()=>C(`円の まん中の 点を 何という？`, "中心", ["半径","直径","円周"]),
+  ()=>C(`直径は 半径の 何倍？`, "2倍", ["3倍","半分","4倍"]),
+  ()=>C(`中心から 円のまわりまでの 長さを 何という？`, "半径", ["直径","中心","円周"]),
+  ()=>{const r=R(2,9); return {q:`半径 ${r}cm の 円の 直径は？`, a:`${r*2}cm`};},
+])()];
+GEN.sankaku3=[ l=>pick([
+  ()=>C(`3つの 辺が ぜんぶ 同じ 三角形は？`, "正三角形", ["二等辺三角形","直角三角形","ふつうの三角形"]),
+  ()=>C(`2つの 辺が 同じ 三角形は？`, "二等辺三角形", ["正三角形","直角三角形","四角形"]),
+  ()=>C(`正三角形の 3つの 角の 大きさは？`, "ぜんぶ 同じ（60°）", ["ばらばら","直角が ある","90°が 2つ"]),
+  ()=>C(`二等辺三角形の 2つの 角は？`, "同じ 大きさ", ["ぜんぶ ちがう","直角","いちばん 大きい"]),
+  ()=>C(`正三角形の 1つの 角は 何度？`, "60°", ["90°","45°","30°"]),
+  ()=>C(`辺の 長さが みんな ちがう 三角形は？`, "ふつうの 三角形", ["正三角形","二等辺三角形","円"]),
+  ()=>C(`二等辺三角形で 長さが 同じ 辺は 何本？`, "2本", ["3本","1本","4本"]),
+  ()=>C(`正三角形で 長さが 同じ 辺は 何本？`, "3本", ["2本","1本","0本"]),
+  ()=>C(`角の 大きさを はかる 道具は？`, "分度器", ["ものさし","コンパス","三角じょうぎ"]),
+  ()=>C(`同じ 長さを うつしとる 道具は？`, "コンパス", ["分度器","ものさし","電たく"]),
+])()];
+GEN.kaku4=[ l=>pick([
+  ()=>C(`直角は 何度？`, "90°", ["180°","45°","360°"]),
+  ()=>C(`半回転（一直線）は 何度？`, "180°", ["90°","360°","270°"]),
+  ()=>C(`1回転は 何度？`, "360°", ["180°","90°","270°"]),
+  ()=>{const a=R(30,150); return {q:`${a}° と ${180-a>0?180-a:30}° を あわせると（直角2つ分まで）…一直線は 何度？`, a:"180°", ch:["180°","90°","360°","270°"]};},
+])()];
+GEN.suichoku4=[ l=>pick([
+  ()=>C(`2本の 直線が 直角に 交わるのを 何という？`, "垂直", ["平行","対角","水平"]),
+  ()=>C(`どこまでも 交わらない 2本の 直線を 何という？`, "平行", ["垂直","直角","対称"]),
+  ()=>C(`向かい合う 2組の 辺が 平行な 四角形は？`, "平行四辺形", ["台形","正三角形","円"]),
+  ()=>C(`4つの 辺の 長さが ぜんぶ 同じ 四角形は？`, "ひし形", ["台形","長方形","五角形"]),
+  ()=>C(`1組の 辺だけ 平行な 四角形は？`, "台形", ["平行四辺形","ひし形","正方形"]),
+  ()=>C(`4つの 角が ぜんぶ 直角の 四角形は？`, "長方形", ["台形","ひし形","三角形"]),
+  ()=>C(`4つの 角が 直角で 4つの 辺も 同じ 四角形は？`, "正方形", ["長方形","台形","ひし形"]),
+  ()=>C(`平行な 2本の 直線の あいだの はばは？`, "どこも 同じ", ["だんだん 広がる","だんだん せまくなる","ばらばら"]),
+  ()=>C(`平行四辺形の 向かい合う 辺は？`, "平行で 長さも 同じ", ["長さが ちがう","直角に 交わる","1本だけ 長い"]),
+  ()=>C(`直角を つくる 2本の 直線の かんけいは？`, "垂直", ["平行","水平","対称"]),
+])()];
+GEN.menseki4=[ l=>pick([
+  ()=>{const a=R(2,[6,9,12,20,30][l-1]),b=R(2,[6,9,12,20,30][l-1]); return {q:`たて ${a}cm・横 ${b}cm の 長方形の 面積は？`, a:`${a*b}c㎡`};},
+  ()=>{const s=R(2,[6,9,12,20,30][l-1]); return {q:`1辺 ${s}cm の 正方形の 面積は？`, a:`${s*s}c㎡`};},
+])()];
+GEN.chokuhoutai4=[ l=>pick([
+  ()=>C(`直方体の 面は いくつ？`, "6つ", ["4つ","8つ","12こ"]),
+  ()=>C(`立方体の 面は いくつ？`, "6つ", ["4つ","8つ","5つ"]),
+  ()=>C(`直方体の 頂点（かど）は いくつ？`, "8つ", ["6つ","12こ","4つ"]),
+  ()=>C(`立方体の 頂点（かど）は いくつ？`, "8つ", ["6つ","10こ","4つ"]),
+  ()=>C(`直方体の 辺は 何本？`, "12本", ["6本","8本","10本"]),
+  ()=>C(`立方体の 辺は 何本？`, "12本", ["6本","8本","14本"]),
+  ()=>C(`立方体の 面の 形は？`, "正方形", ["長方形","三角形","円"]),
+  ()=>C(`直方体の 面の 形は？`, "長方形（や 正方形）", ["三角形","円","五角形"]),
+  ()=>C(`向かい合う 面の かんけいは？`, "平行", ["垂直","交わる","ななめ"]),
+  ()=>C(`1つの 頂点に あつまる 辺は 何本？`, "3本", ["2本","4本","6本"]),
+])()];
+GEN.goudou5=[ l=>pick([
+  ()=>C(`合同な 図形で 正しいのは？`, "対応する 辺の 長さが 等しい", ["面積だけ 等しい","形が にていれば よい","色が 同じ"]),
+  ()=>C(`合同＝どんな 図形？`, "ぴったり 重なる 図形", ["大きさが ちがう 図形","形が ちがう 図形","半分の 図形"]),
+  ()=>C(`合同な 図形で 対応する 角は？`, "等しい", ["ばらばら","2倍","半分"]),
+  ()=>C(`合同な 図形で 対応する 辺は？`, "等しい", ["ちがう","2倍","半分"]),
+  ()=>C(`合同な 図形は うら返して 重なっても よい？`, "よい（重なれば よい）", ["だめ","半分だけ よい","色が 同じなら よい"]),
+  ()=>C(`形も 大きさも 同じ 図形を 何という？`, "合同", ["相似","対称","平行"]),
+  ()=>C(`面積が 同じなら 必ず 合同？`, "とは かぎらない", ["必ず 合同","ぜったい ちがう","半分だけ 合同"]),
+  ()=>C(`三角形の 合同を 決めるのに つかうのは？`, "辺の長さや 角の大きさ", ["色","名前","面積だけ"]),
+  ()=>C(`合同な 図形を うつしとる 道具は？`, "コンパスと ものさし", ["電たく","はさみ","じしゃく"]),
+  ()=>C(`合同な 図形の 面積は？`, "等しい", ["ちがう","2倍","半分"]),
+])()];
+GEN.zukei_kaku5=[ l=>pick([
+  ()=>({q:`三角形の 3つの角の 和は？`, a:"180°"}),
+  ()=>{const a=R(30,100),b=R(20,150-a); return {q:`三角形で 2つの 角が ${a}°と ${b}°。もう1つは？`, a:`${180-a-b}°`};},
+  ()=>({q:`四角形の 4つの角の 和は？`, a:"360°"}),
+])()];
+GEN.seitakakkei5=[ l=>pick([
+  ()=>{const d=R(2,[6,10,15,20,30][l-1]); return {q:`直径 ${d}cm の 円の 円周は？（3.14）`, a:`${rnd(d*3.14)}cm`};},
+  ()=>{const n=pick([3,4,5,6,8]); return {q:`正${n}角形の 辺は 何本？`, a:`${n}本`};},
+  ()=>{const r=R(2,[6,10,15,20,30][l-1]); return {q:`半径 ${r}cm の 円の 円周は？（3.14）`, a:`${rnd(2*r*3.14)}cm`};},
+])()];
+GEN.menseki5=[ l=>pick([
+  ()=>{let b=R(2,[8,12,16,20,24][l-1]),h=R(2,[8,12,16,20,24][l-1]); if((b*h)%2)h++; return {q:`底辺 ${b}cm・高さ ${h}cm の 三角形の 面積は？`, a:`${b*h/2}c㎡`};},
+  ()=>{const b=R(2,[8,12,16,20,24][l-1]),h=R(2,[8,12,16,20,24][l-1]); return {q:`底辺 ${b}cm・高さ ${h}cm の 平行四辺形の 面積は？`, a:`${b*h}c㎡`};},
+])()];
+GEN.taiseki5=[ l=>pick([
+  ()=>{const a=R(2,[5,8,10,15,20][l-1]),b=R(2,[5,8,10,15,20][l-1]),c=R(2,[5,8,10,15,20][l-1]); return {q:`たて${a}・横${b}・高さ${c}cm の 直方体の 体積は？`, a:`${a*b*c}c㎥`};},
+  ()=>{const s=R(2,[5,8,10,12,15][l-1]); return {q:`1辺 ${s}cm の 立方体の 体積は？`, a:`${s*s*s}c㎥`};},
+])()];
+GEN.rittai5=[ l=>pick([
+  ()=>C(`三角柱の 底面の 形は？`, "三角形", ["四角形","円","五角形"]),
+  ()=>C(`四角柱の 底面の 形は？`, "四角形", ["三角形","円","五角形"]),
+  ()=>C(`五角柱の 底面の 形は？`, "五角形", ["四角形","六角形","円"]),
+  ()=>C(`六角柱の 底面の 形は？`, "六角形", ["五角形","円","四角形"]),
+  ()=>C(`円柱の 底面の 形は？`, "円", ["三角形","四角形","だ円"]),
+  ()=>C(`角柱の 側面の 形は？`, "長方形", ["三角形","円","台形"]),
+  ()=>C(`三角柱の 底面は いくつ ある？`, "2つ", ["1つ","3つ","6つ"]),
+  ()=>C(`円柱の 側面を ひらくと どんな形？`, "長方形", ["円","三角形","おうぎ形"]),
+  ()=>C(`三角柱の 面は いくつ？`, "5つ", ["4つ","6つ","3つ"]),
+  ()=>C(`四角柱の 面は いくつ？`, "6つ", ["5つ","4つ","8つ"]),
+])()];
+GEN.taishou6=[ l=>pick([
+  ()=>C(`1本の 線で 折ると ぴったり 重なる 図形は？`, "線対称", ["点対称","合同","相似"]),
+  ()=>C(`180°回すと もとと 重なる 図形は？`, "点対称", ["線対称","合同","平行"]),
+  ()=>C(`線対称の 折り目の 線を 何という？`, "対称の じく", ["対称の 中心","半径","対角線"]),
+  ()=>C(`点対称で 中心と する 点を 何という？`, "対称の 中心", ["対称の じく","頂点","半径"]),
+  ()=>C(`正方形は 線対称？`, "線対称である", ["線対称でない","点だけ 対称","対称でない"]),
+  ()=>C(`円は 点対称？`, "点対称である", ["点対称でない","線だけ 対称","対称でない"]),
+  ()=>C(`線対称で 対応する 2点を むすぶ 線と じくの かんけいは？`, "垂直", ["平行","同じ 長さ","ななめ"]),
+  ()=>C(`長方形は 点対称？`, "点対称である", ["点対称でない","線だけ 対称","対称でない"]),
+  ()=>C(`平行四辺形は どんな 対称？`, "点対称", ["線対称","対称でない","円対称"]),
+  ()=>C(`線対称な 図形で 対応する 辺の 長さは？`, "等しい", ["ちがう","2倍","半分"]),
+])()];
+GEN.en_menseki6=[ l=>{ const r=R(2,[8,12,16,20,25][l-1]); return {q:`半径 ${r}cm の 円の 面積は？（3.14）`, a:`${rnd(r*r*3.14)}c㎡`}; }];
+GEN.rittai_taiseki6=[ l=>pick([
+  ()=>{const s=R(4,[12,20,40,60,99][l-1]),h=R(2,[6,10,15,20,30][l-1]); return {q:`底面積 ${s}c㎡・高さ ${h}cm の 角柱の 体積は？`, a:`${s*h}c㎥`};},
+  ()=>{const r=R(2,[4,5,6,8,10][l-1]),h=R(2,[6,10,15,20,30][l-1]); return {q:`底面の 半径 ${r}cm・高さ ${h}cm の 円柱の 体積は？（3.14）`, a:`${rnd(r*r*3.14*h)}c㎥`};},
+])()];
+GEN.kakudai6=[ l=>pick([
+  ()=>{const s=R(2,9),m=pick([2,3,4]); return {q:`${m}倍の 拡大図。辺 ${s}cm は 何cm に なる？`, a:`${s*m}cm`};},
+  ()=>{const s=pick([6,8,9,12]),m=pick([2,3]); return {q:`${1}/${m}の 縮図（${m}分の1）。辺 ${s*m}cm は 何cm？`, a:`${s}cm`};},
+  ()=>C(`拡大図・縮図で 変わらないのは？`, "角の 大きさ", ["辺の 長さ","面積","まわりの 長さ"]),
+])()];
+
+/* ========== 測定 ========== */
+GEN.ryou_kurabe1=[ l=>pick([
+  ()=>C(`2本の えんぴつの 長さを くらべる 正しい 方法は？`, "はしを そろえて くらべる", ["色で くらべる","太さで くらべる","名前で くらべる"]),
+  ()=>C(`水の かさを くらべる 正しい 方法は？`, "同じ コップに うつして くらべる", ["色で くらべる","重さで くらべる","見た目だけで くらべる"]),
+  ()=>C(`ひもの 長さを くらべる 方法は？`, "まっすぐ のばして はしを そろえる", ["まるめて くらべる","色で くらべる","太さで くらべる"]),
+  ()=>C(`広さを くらべる 方法は？`, "重ねて くらべる", ["色で くらべる","名前で くらべる","高さで くらべる"]),
+  ()=>C(`2つの コップ どちらが 多く 入るか しらべる 方法は？`, "同じ 入れものに うつす", ["形で きめる","色で きめる","おもさだけ 見る"]),
+  ()=>C(`つくえの たてと よこ どちらが 長いか しらべる 方法は？`, "テープなどで うつして くらべる", ["見た 感じで きめる","色で きめる","重さで きめる"]),
+  ()=>C(`長さを あらわす とき つかうのは？`, "同じ 大きさの ますや ブロックの 数", ["色の 数","おもさ","名前"]),
+  ()=>C(`かさ（水の りょう）を あらわす とき つかうのは？`, "同じ コップ 何ばい分", ["色","高さだけ","名前"]),
+  ()=>C(`せいくらべ（高さ）は どう くらべる？`, "足もとを そろえて くらべる", ["あたまを ばらばらに","色で くらべる","体重で くらべる"]),
+  ()=>C(`長い ほうを えらぶ とき 大切なのは？`, "はしを そろえる こと", ["色を そろえる","太さを そろえる","名前を 見る"]),
+])()];
+GEN.tokei1=[ l=>pick([
+  ()=>{const h=R(1,12); return {q:`短い針が ${h}、長い針が 12 を さす。何時？`, a:`${h}時`};},
+  ()=>{const h=R(1,12); return {q:`短い針が ${h}と ${h===12?1:h+1}の あいだ、長い針が 6。何時半？`, a:`${h}時半`};},
+])()];
+GEN.tokei_fun1=[ l=>pick([
+  ()=>{const k=R(1,11); return {q:`長い針が ${k}（${k*5}の ところ）を さすと 何分？`, a:`${k*5}分`};},
+  ()=>({q:`長い針 1まわりで 何分？`, a:"60分"}),
+])()];
+GEN.nagasa2=[ l=>pick([
+  ()=>({q:`1cm は 何mm？`, a:"10mm"}),
+  ()=>{const c=R(1,20),m=R(1,9); return {q:`${c}cm${m}mm は 何mm？`, a:`${c*10+m}mm`};},
+  ()=>{const c=R(2,30); return {q:`${c}cm は 何mm？`, a:`${c*10}mm`};},
+])()];
+GEN.nagasa_m2=[ l=>pick([
+  ()=>({q:`1m は 何cm？`, a:"100cm"}),
+  ()=>{const m=R(1,9),c=R(1,99); return {q:`${m}m${c}cm は 何cm？`, a:`${m*100+c}cm`};},
+  ()=>{const m=R(2,9); return {q:`${m}m は 何cm？`, a:`${m*100}cm`};},
+])()];
+GEN.kasa2=[ l=>pick([
+  ()=>({q:`1L は 何dL？`, a:"10dL"}),
+  ()=>({q:`1L は 何mL？`, a:"1000mL"}),
+  ()=>{const x=R(2,9); return {q:`${x}L は 何dL？`, a:`${x*10}dL`};},
+  ()=>{const x=R(2,9); return {q:`${x}dL は 何mL？`, a:`${x*100}mL`};},
+])()];
+GEN.jikan2=[ l=>pick([
+  ()=>({q:`1時間は 何分？`, a:"60分"}),
+  ()=>{const h=R(1,10),m=pick([10,20,30,40,50]),add=pick([10,20,30]); let tm=m+add; let hh=h+Math.floor(tm/60); tm=tm%60; return {q:`${h}時${m}分から ${add}分 たつと 何時何分？`, a:`${hh}時${tm}分`};},
+])()];
+GEN.nagasa_km3=[ l=>pick([
+  ()=>({q:`1km は 何m？`, a:"1000m"}),
+  ()=>{const k=R(1,9),m=R(1,999); return {q:`${k}km${m}m は 何m？`, a:`${k*1000+m}m`};},
+  ()=>{const k=R(2,9); return {q:`${k}km は 何m？`, a:`${k*1000}m`};},
+])()];
+GEN.omosa3=[ l=>pick([
+  ()=>({q:`1kg は 何g？`, a:"1000g"}),
+  ()=>{const k=R(1,9),g=R(1,999); return {q:`${k}kg${g}g は 何g？`, a:`${k*1000+g}g`};},
+  ()=>({q:`1t は 何kg？`, a:"1000kg"}),
+])()];
+GEN.jikan3=[ l=>pick([
+  ()=>({q:`1分は 何秒？`, a:"60秒"}),
+  ()=>{const s=R(61,300); return {q:`${s}秒は 何分何秒？`, a:`${Math.floor(s/60)}分${s%60}秒`};},
+  ()=>{const m=R(1,5),s=R(1,59); return {q:`${m}分${s}秒は 何秒？`, a:`${m*60+s}秒`};},
+])()];
+
+/* ========== 変化と関係 ========== */
+GEN.tomonau4=[ l=>{
+  const k=R(2,[4,5,6,8,10][l-1]), x=R(3,[6,8,10,12,15][l-1]);
+  return coin()
+    ? {q:`○が 1ふえると □が ${k}ふえる。○が ${x}の とき □は？`, a:k*x}
+    : {q:`だんが 1,2,3…で まわりが ${k},${k*2},${k*3}…。だん${x}の ときは？`, a:k*x};
+}];
+GEN.bai4=[ l=>{
+  const base=R(2,[6,9,12,20,30][l-1]), m=R(2,[4,5,6,8,9][l-1]);
+  return coin()
+    ? {q:`${base*m}cm は ${base}cm の 何倍？`, a:`${m}倍`}
+    : {q:`${base}cm の ${m}倍は 何cm？`, a:`${base*m}cm`};
+}];
+GEN.heikin5=[ l=>{
+  const cnt=[3,3,4,4,5][l-1], hi=[10,20,50,100,100][l-1];
+  const nums=[]; for(let i=0;i<cnt;i++) nums.push(R(1,hi));
+  let sum=nums.reduce((a,b)=>a+b,0); nums[0]+=(cnt-sum%cnt)%cnt; sum=nums.reduce((a,b)=>a+b,0);
+  return {q:`${nums.join("、")} の 平均は？`, a:sum/cnt};
+}];
+GEN.tani_ryou5=[ l=>{
+  const per=R([2,4,6,8,10][l-1],[8,12,20,50,99][l-1]), cnt=R(2,[5,6,8,10,12][l-1]);
+  return coin()
+    ? {q:`${cnt}本 ${per*cnt}円の えんぴつ。1本 何円？`, a:yen(per)}
+    : {q:`${cnt}㎡に ${per*cnt}人。1㎡あたり 何人？`, a:`${per}人`};
+}];
+GEN.hayasa5=[
+  l=>coin()
+    ? (()=>{const s=R([20,40,40,50,60][l-1],[60,80,90,100,120][l-1]),t=R(2,[4,5,6,8,10][l-1]); return {q:`${s*t}km を ${t}時間で 走る 車。時速 何km？`, a:`${s}km`};})()
+    : (()=>{const s=R(3,[6,8,10,12,15][l-1]),t=R(2,[5,8,10,15,20][l-1]); return {q:`${s*t}m を ${t}秒。秒速 何m？`, a:`${s}m`};})(),
+  l=>coin()
+    ? (()=>{const s=R([20,40,40,50,60][l-1],[60,80,90,100,120][l-1]),t=R(2,[4,5,6,8,10][l-1]); return {q:`時速 ${s}km で ${t}時間 走ると 道のりは？`, a:`${s*t}km`};})()
+    : (()=>{const s=R(3,[6,8,10,12,15][l-1]),t=R(2,[5,8,10,15,20][l-1]); return {q:`秒速 ${s}m で ${t}秒 進むと？`, a:`${s*t}m`};})(),
+];
+GEN.wariai5=[
+  l=>{ const tots=[20,25,40,50,100,200], pcts=[5,10,15,20,25,40,50,60,75,80]; let tot,pct; do{ tot=pick(tots); pct=pick(pcts); }while((tot*pct)%100!==0); const part=tot*pct/100; return {q:`${tot}のうち ${part}。${part}の 割合は？（もとにする量 ${tot}）`, a:rnd(pct/100,2)}; },
+  l=>{ const p=R(1,19)*5; return {q:`割合 ${p/100} を 百分率に すると？`, a:`${p}%`}; },
+];
+GEN.hi6=[
+  l=>{ const g=pick([2,3,4,5,6]); const a=g*R(2,[4,5,6,8,9][l-1]), b=g*R(2,[4,5,6,8,9][l-1]); const gg=gcd(a,b); if(a===b) return GEN.hi6[0](l); return {q:`${a}：${b} を 簡単に すると？`, a:`${a/gg}：${b/gg}`}; },
+  l=>{ let r1=R(2,5),r2=R(2,5); const g=gcd(r1,r2); r1/=g; r2/=g; const k=R(2,[4,5,6,8,9][l-1]); return {q:`A：B＝${r1}：${r2}。A が ${r1*k}の とき B は？`, a:r2*k}; },
+];
+GEN.hirei6=[ l=>pick([
+  ()=>C(`x が 2倍・3倍で y も 2倍・3倍。これは？`, "比例", ["反比例","対称","合同"]),
+  ()=>{const p=R(20,120); return C(`1mで ${p}円の リボン。xm の 代金 y円の 式は？`, `y＝${p}×x`, [`y＝${p}÷x`,`y＝x÷${p}`,`y＝${p}＋x`]);},
+])()];
+GEN.hanpirei6=[ l=>pick([
+  ()=>C(`x が 2倍で y は 2分の1。これは？`, "反比例", ["比例","対称","合同"]),
+  ()=>C(`x が ふえると y が へる かんけいは？`, "反比例", ["比例","対称","相似"]),
+  ()=>{const s=pick([12,18,24,36,48,60,72,90,100,120]); return C(`面積 ${s}の 長方形。たて x・横 y の 式は？`, `x×y＝${s}`, [`x＋y＝${s}`,`y＝${s}×x`,`x÷y＝${s}`]);},
+  ()=>{const m=R(2,6); return C(`反比例で x が ${m}倍に なると y は？`, jf(1,m), [`${m}倍`,jf(1,m+1),"かわらない"]);},
+  ()=>C(`反比例の グラフは どんな 線？`, "曲線（なめらかな 線）", ["直線","おれ線","点だけ"]),
+  ()=>C(`x×y が いつも 同じに なるのは？`, "反比例", ["比例","対称","合同"]),
+])()];
+
+/* ========== データの活用 ========== */
+GEN.e_graph1=[ l=>pick([
+  ()=>C(`絵グラフで いちばん 多いのが すぐ わかるのは なぜ？`, "高さ（長さ）で くらべられるから", ["色が きれいだから","絵が かわいいから","数字が 大きいから"]),
+  ()=>C(`絵グラフで くらべる とき 大切なのは？`, "だんを そろえて ならべる", ["ばらばらに ならべる","大きい絵に する","色を かえる"]),
+  ()=>C(`絵グラフの 絵 1つは ふつう 何を あらわす？`, "きめた 数（1こ など）", ["いつも 10こ","色","名前"]),
+  ()=>C(`絵グラフで 数が 多い ものは？`, "絵が いちばん 多い もの", ["絵が いちばん 少ない もの","色が こい もの","左に ある もの"]),
+  ()=>C(`絵グラフは 何を くらべるのに よい？`, "多い・少ない", ["色の 名前","形","おもさ"]),
+  ()=>C(`絵グラフで 絵の 数が 同じなら？`, "数は 同じ", ["数は ちがう","かならず 多い","わからない"]),
+  ()=>C(`絵グラフで 数を しらべるには？`, "絵の 数を かぞえる", ["色を 見る","高さだけ 見る","名前を 読む"]),
+  ()=>C(`絵グラフを たてに ならべると？`, "高さで くらべやすい", ["わかりにくい","色が かわる","数が へる"]),
+  ()=>C(`絵グラフの よい ところは？`, "パッと 見て 多い少ないが わかる", ["正確な 数字が わかる","色が わかる","名前が わかる"]),
+  ()=>C(`絵グラフで いちばん 少ない ものは？`, "絵が いちばん 少ない もの", ["絵が 多い もの","右の もの","色が こい もの"]),
+])()];
+GEN.hyou_graph2=[ l=>pick([
+  ()=>C(`正確な 数が すぐ わかるのは？`, "表に 数字で 書く", ["絵で かく","色で ぬる","ならべるだけ"]),
+  ()=>C(`○グラフ（ぼう）で わかりやすいのは？`, "多い少ないが 形で わかる", ["正確な 数字","色の 種類","名前の 順"]),
+  ()=>C(`表の よい ところは？`, "数が 正確に わかる", ["多い少ないが パッと わかる","色が きれい","絵が かわいい"]),
+  ()=>C(`グラフの よい ところは？`, "多い少ないが ひと目で わかる", ["正確な 数字が わかる","名前が わかる","色が わかる"]),
+  ()=>C(`しゅるいごとの 数を せいりする とき まず するのは？`, "同じ しゅるいを 数える", ["色を ぬる","絵を かく","ならべかえる だけ"]),
+  ()=>C(`○グラフで ○の 数が 多い ほど？`, "その 数が 多い", ["その 数が 少ない","わからない","色が こい"]),
+  ()=>C(`表と グラフ どちらが 正確な 数字？`, "表", ["グラフ","どちらも 同じ","どちらも ちがう"]),
+  ()=>C(`表と グラフ どちらが 多い少ないを 見やすい？`, "グラフ", ["表","どちらも 同じ","どちらも 見にくい"]),
+  ()=>C(`○グラフの ○が 同じ 数なら？`, "同じ 数", ["ちがう 数","かならず 多い","わからない"]),
+  ()=>C(`数を 整理する 目的は？`, "多い少ないや 数を わかりやすく する", ["絵を ふやす","色を ふやす","ならべる だけ"]),
+])()];
+GEN.bou_graph3=[ l=>{
+  const scale=pick([[5,l],[10,l],[2,l],[20,l],[100,l]][l-1] ? [pick([2,5,10,20,100]),0] : [5,0]);
+  const s=pick([2,5,10,20,50,100]), k=R(2,8);
+  return {q:`1目もりが ${s}の 棒グラフ。ぼうが ${k}目もりぶんなら いくつ？`, a:s*k};
+}];
+GEN.ore_graph4=[ l=>pick([
+  ()=>C(`折れ線が 右上がりの とき、数は？`, "ふえている", ["へっている","変わらない","0になる"]),
+  ()=>C(`折れ線が 右下がりの とき、数は？`, "へっている", ["ふえている","変わらない","2倍になる"]),
+  ()=>C(`折れ線グラフが 平ら（横）の とき、数は？`, "変わらない", ["ふえている","へっている","2倍になる"]),
+  ()=>C(`線が いちばん 急な ところは？`, "変わり方が いちばん 大きい", ["変わり方が 小さい","変わらない","まちがい"]),
+  ()=>C(`線の かたむきが ゆるやかな ところは？`, "変わり方が 小さい", ["変わり方が 大きい","へっている","0になる"]),
+  ()=>C(`折れ線グラフは 何を 見るのに よい？`, "変わり方（変化）", ["色","名前","形"]),
+  ()=>C(`折れ線グラフの たてじくは ふつう 何を 表す？`, "しらべた 数（量）", ["時こく","名前","色"]),
+  ()=>C(`折れ線グラフの よこじくは ふつう 何を 表す？`, "時こく（時間）など", ["数（量）","色","名前"]),
+  ()=>C(`いちばん 高い 点は 何を あらわす？`, "いちばん 多い とき", ["いちばん 少ない とき","へった とき","0の とき"]),
+  ()=>C(`2つの 点を つなぐ 線は 何を 表す？`, "その間の 変わり方", ["色","名前","合計"]),
+])()];
+GEN.wariai_graph5=[ l=>pick([
+  ()=>{const tot=pick([100,200,400,500]),p=pick([10,20,25,40,50]); return {q:`帯グラフで ${p}%の ところ。全体が ${tot}人なら 何人？`, a:`${tot*p/100}人`};},
+  ()=>C(`円グラフ 全体は 何を あらわす？`, "全体で 100%（1）", ["50%","半分","10%"]),
+])()];
+GEN.daihyouchi6=[
+  l=>pick([
+    ()=>C(`小さい順に ならべた まん中の 値を 何という？`, "中央値", ["平均値","最頻値","合計"]),
+    ()=>C(`いちばん 多く 出てくる 値を 何という？`, "最頻値", ["中央値","平均値","範囲"]),
+    ()=>C(`合計 ÷ 個数で 出す 値を 何という？`, "平均値", ["中央値","最頻値","範囲"]),
+    ()=>C(`いちばん 大きい 値と 小さい 値の 差を 何という？`, "範囲", ["中央値","最頻値","平均値"]),
+    ()=>{const a=Array.from({length:5},()=>R(1,9)).sort((x,y)=>x-y); const med=a[2]; const w=new Set(); while(w.size<3){const v=R(1,9); if(v!==med)w.add(v);} return C(`${a.join("、")} の 中央値は？`, med, [...w]);},
+    ()=>{const m=R(2,8); let p,q; do{p=R(1,9);}while(p===m); do{q=R(1,9);}while(q===m||q===p); const a=[m,m,m,p,q].sort((x,y)=>x-y); const w=new Set([p,q]); while(w.size<3){const v=R(1,9); if(v!==m)w.add(v);} return C(`${a.join("、")} で いちばん 多い 値（最頻値）は？`, m, [...w].slice(0,3));},
+  ])(),
+  l=>pick([
+    ()=>C(`柱状グラフ（ヒストグラム）で わかるのは？`, "ちらばりの ようす", ["名前の 順","色の 数","1つの 値だけ"]),
+    ()=>C(`度数分布表の『度数』は 何を あらわす？`, "その はんいに 入る 個数", ["合計","平均","いちばん 大きい 数"]),
+    ()=>C(`ヒストグラムの 柱の 高さは 何を あらわす？`, "度数（個数）", ["平均","名前","合計"]),
+    ()=>C(`度数分布表の 度数を ぜんぶ たすと？`, "全体の 個数", ["平均値","中央値","範囲"]),
+    ()=>{const a=R(1,5)*10,b=a+10,n=R(2,9); return C(`${a}以上 ${b}未満の 度数が ${n}。この はんいの 個数は？`, `${n}こ`, [`${n+1}こ`,`${n+2}こ`,`${a}こ`]);},
+    ()=>C(`データを いくつかの はんいに 分けて 数えた 表を 何という？`, "度数分布表", ["平均表","かけ算表","九九表"]),
+  ])(),
+];
+
+// 異分母用: 2つの分母
+function twoDen(l){
+  const dens=[[2,3,4],[2,3,4,6],[2,3,4,5,6],[3,4,5,6,8],[4,5,6,8,9,12]][l-1];
+  let d1=pick(dens), d2=pick(dens); while(d2===d1) d2=pick(dens); return [d1,d2];
+}
+
+
+const TAXO=[
+  {g:1,key:"kazu10",dom:"数と計算",unit:"10までのかず",skills:["10までを かぞえる・数字で かく"]},
+  {g:1,key:"gousei10",dom:"数と計算",unit:"いくつと いくつ（10の合成）",skills:["10を つくる（3と7で 10）"]},
+  {g:1,key:"tashizan1",dom:"数と計算",unit:"たしざん（あわせて・ふえると）",skills:["たすと いくつ（あわせる）"]},
+  {g:1,key:"hikizan1",dom:"数と計算",unit:"ひきざん（のこりは・ちがいは）",skills:["ひくと いくつ（のこり）"]},
+  {g:1,key:"kuriagari1",dom:"数と計算",unit:"くり上がりの ある たしざん",skills:["10を つくって たす（9＋4）"]},
+  {g:1,key:"kurisagari1",dom:"数と計算",unit:"くり下がりの ある ひきざん",skills:["10から ひく（12−9）"]},
+  {g:1,key:"ookii_kazu1",dom:"数と計算",unit:"大きいかず（100まで）",skills:["10のまとまりと ばら で 数える"]},
+  {g:2,key:"kurai_2",dom:"数と計算",unit:"大きい数（千・万）",skills:["100が 10こで 1000"]},
+  {g:2,key:"tashi_hissan2",dom:"数と計算",unit:"たし算の ひっ算",skills:["位をそろえて たす（くり上がり）"]},
+  {g:2,key:"hiki_hissan2",dom:"数と計算",unit:"ひき算の ひっ算",skills:["位をそろえて ひく（くり下がり）"]},
+  {g:2,key:"bunsuu_kantan2",dom:"数と計算",unit:"かんたんな 分数",skills:["2分の1は 半分（半分こ）"]},
+  {g:2,key:"kake_imi",dom:"数と計算",unit:"かけ算",skills:["かけ算は「◯こずつ △つ分」"]},
+  {g:2,key:"kuku",dom:"数と計算",unit:"かけ算（九九）",skills:["九九を すらすら 言えるかな"]},
+  {g:3,key:"kurai_seisuu",dom:"数と計算",unit:"大きい数（位取り）",skills:["位が 1つ左で 10倍"]},
+  {g:3,key:"tashi_hiki_hissan3",dom:"数と計算",unit:"大きい数の 筆算（3〜4けた）",skills:["位をそろえて くり上がり・くり下がり"]},
+  {g:3,key:"kake_hissan",dom:"数と計算",unit:"かけ算の筆算",skills:["位ごとに かけて たす"]},
+  {g:3,key:"warizan_imi",dom:"数と計算",unit:"わり算",skills:["わり算は「同じ数ずつ 分ける」"]},
+  {g:3,key:"amari",dom:"数と計算",unit:"あまりのあるわり算",skills:["わって あまりを 出す"]},
+  {g:3,key:"shousuu3",dom:"数と計算",unit:"小数（小数のしくみ）",skills:["0.1が いくつ分で みる（小数第一位）"]},
+  {g:3,key:"bunsuu_imi",dom:"数と計算",unit:"分数（分数のしくみ）",skills:["4分の1は「1を 4つに分けた 1つ分」"]},
+  {g:3,key:"shiki_box3",dom:"数と計算",unit:"□を 使った 式",skills:["□に あてはまる 数を 見つける"]},
+  {g:4,key:"kurai_ookii4",dom:"数と計算",unit:"大きい数（億・兆）",skills:["4けたごとに 区切って 読む"]},
+  {g:4,key:"wari_hissan1",dom:"数と計算",unit:"1けたでわるわり算（筆算）",skills:["大きい位から 順に わる"]},
+  {g:4,key:"wari_hissan2",dom:"数と計算",unit:"2けたでわるわり算（筆算）",skills:["だいたいの 答えを 見つけて わる"]},
+  {g:4,key:"shousuu_shikumi",dom:"数と計算",unit:"小数（小数のしくみ・100分の1）",skills:["0.1・0.01 が いくつ分か で 数をみる"]},
+  {g:4,key:"shousuu_kagen4",dom:"数と計算",unit:"小数のたし算・ひき算",skills:["点（位）を そろえて たす・ひく"]},
+  {g:4,key:"shousuu_kakewari4",dom:"数と計算",unit:"小数のかけ算・わり算（×÷整数）",skills:["小数 × 整数（整数みたいに かけて 点）","小数 ÷ 整数（整数みたいに わって 点）"]},
+  {g:4,key:"shousuu_seisuu4",dom:"数と計算",unit:"小数のかけ算（小数×整数）",skills:["整数みたいに かけて、点を つける"]},
+  {g:4,key:"shousuu_waru_seisuu4",dom:"数と計算",unit:"小数のわり算（小数÷整数）",skills:["整数みたいに わって、点を つける"]},
+  {g:4,key:"doubunbo",dom:"数と計算",unit:"分数のたし算・ひき算（分母が同じ）",skills:["分母は そのまま、分子を たす・ひく"]},
+  {g:4,key:"gaisuu4",dom:"数と計算",unit:"がい数（四捨五入）",skills:["四捨五入して およその数に"]},
+  {g:4,key:"shiki_keisan4",dom:"数と計算",unit:"式と計算（四則混合）",skills:["×・÷を 先に、（　）は いちばん先に"]},
+  {g:5,key:"seisuu_shousuu5",dom:"数と計算",unit:"整数と小数",skills:["10倍・100倍 すると 点が 右へ","10分の1・100分の1 で 点が 左へ"]},
+  {g:5,key:"shousuu_kake5",dom:"数と計算",unit:"小数のかけ算",skills:["計算のしかた（0.1が 何こ分か で 考える）","積の 小数点の 位置（点の 数だけ 動かす）"]},
+  {g:5,key:"shousuu_waru5",dom:"数と計算",unit:"小数のわり算",skills:["わる数を 整数に（点を 同じだけ 動かす）","商の 小数点は まっすぐ 上へ"]},
+  {g:5,key:"baisuu_yakusuu",dom:"数と計算",unit:"偶数と奇数、倍数と約数",skills:["偶数か 奇数か 見分ける","倍数を 見つける","約数を 見つける"]},
+  {g:5,key:"bunsuu_shousuu5",dom:"数と計算",unit:"分数と小数、整数の関係",skills:["わり算の 答えを 分数で（2÷5＝5分の2）","分数を 小数に（分子 ÷ 分母）"]},
+  {g:5,key:"ibunbo5",dom:"数と計算",unit:"分数のたし算とひき算（分母がちがう）",skills:["分母を そろえて たす（通分）","分母を そろえて ひく（通分）"]},
+  {g:5,key:"bunsuu_kakewari5",dom:"数と計算",unit:"分数のかけ算とわり算（×÷整数）",skills:["分数 × 整数（分子に かける）","分数 ÷ 整数（分母に かける）"]},
+  {g:6,key:"bunsuu_kake6",dom:"数と計算",unit:"分数のかけ算（分数×分数）",skills:["分母どうし・分子どうし かける","とちゅうで 約分する"]},
+  {g:6,key:"bunsuu_wari6",dom:"数と計算",unit:"分数のわり算（分数÷分数）",skills:["ひっくり返して かける（逆数）","とちゅうで 約分する"]},
+  {g:6,key:"bunsuu_shousuu_mix6",dom:"数と計算",unit:"分数・小数の まじった計算",skills:["分数に そろえて 計算する"]},
+  {g:6,key:"moji_shiki6",dom:"数と計算",unit:"文字を 使った 式（x）",skills:["x を使って 式に 表す","x に あてはまる 数を 求める"]},
+  {g:1,key:"katachi1",dom:"図形",unit:"かたちあそび",skills:["形を なかまわけする（さんかく・しかく・まる）"]},
+  {g:2,key:"sankaku_shikaku2",dom:"図形",unit:"三角形と四角形",skills:["三角形＝3本の直線・四角形＝4本の直線"]},
+  {g:2,key:"hako2",dom:"図形",unit:"はこの形",skills:["はこの 面・へん・ちょう点"]},
+  {g:3,key:"en3",dom:"図形",unit:"円と球",skills:["円は 中心から 同じ 長さ（半径）"]},
+  {g:3,key:"sankaku3",dom:"図形",unit:"三角形と角",skills:["二等辺三角形・正三角形／角"]},
+  {g:4,key:"kaku4",dom:"図形",unit:"角",skills:["角の 大きさを 分度器で はかる（°）"]},
+  {g:4,key:"suichoku4",dom:"図形",unit:"垂直・平行と四角形",skills:["垂直・平行／台形・平行四辺形・ひし形"]},
+  {g:4,key:"menseki4",dom:"図形",unit:"面積",skills:["長方形の 面積＝たて × 横"]},
+  {g:4,key:"chokuhoutai4",dom:"図形",unit:"直方体と立方体",skills:["直方体・立方体の 面・辺・頂点"]},
+  {g:5,key:"goudou5",dom:"図形",unit:"合同な図形",skills:["合同＝ぴったり 重なる（対応する 辺・角）"]},
+  {g:5,key:"zukei_kaku5",dom:"図形",unit:"図形の角（内角の和）",skills:["三角形の 3つの 角の 和は 180°"]},
+  {g:5,key:"seitakakkei5",dom:"図形",unit:"正多角形と円（円周）",skills:["正多角形／円周＝直径 × 3.14"]},
+  {g:5,key:"menseki5",dom:"図形",unit:"面積（三角形・四角形）",skills:["三角形＝底辺×高さ÷2、平行四辺形＝底辺×高さ"]},
+  {g:5,key:"taiseki5",dom:"図形",unit:"体積",skills:["直方体の 体積＝たて × 横 × 高さ"]},
+  {g:5,key:"rittai5",dom:"図形",unit:"立体（角柱と円柱）",skills:["角柱・円柱／底面と側面"]},
+  {g:6,key:"taishou6",dom:"図形",unit:"対称な図形",skills:["線対称（折って重なる）・点対称（回して重なる）"]},
+  {g:6,key:"en_menseki6",dom:"図形",unit:"円の面積",skills:["円の 面積＝半径 × 半径 × 3.14"]},
+  {g:6,key:"rittai_taiseki6",dom:"図形",unit:"立体の体積（角柱・円柱）",skills:["角柱・円柱の 体積＝底面積 × 高さ"]},
+  {g:6,key:"kakudai6",dom:"図形",unit:"拡大図と縮図",skills:["形は同じで 大きさがちがう（対応する辺の比が同じ）"]},
+  {g:1,key:"ryou_kurabe1",dom:"測定",unit:"おおきさくらべ",skills:["どちらが 大きい/長いか くらべる"]},
+  {g:1,key:"tokei1",dom:"測定",unit:"とけい（なんじ・なんじはん）",skills:["短い針で ○時、長い針で ○時半"]},
+  {g:1,key:"tokei_fun1",dom:"測定",unit:"なんじなんぷん",skills:["長い針で ○分を 読む（1目もり＝1分）"]},
+  {g:2,key:"nagasa2",dom:"測定",unit:"長さ（cm・mm）",skills:["cm・mm で あらわす（1cm＝10mm）"]},
+  {g:2,key:"nagasa_m2",dom:"測定",unit:"長さ（m）",skills:["m と cm（1m＝100cm）"]},
+  {g:2,key:"kasa2",dom:"測定",unit:"かさ（L・dL・mL）",skills:["L・dL・mL で あらわす（1L＝10dL）"]},
+  {g:2,key:"jikan2",dom:"測定",unit:"時こくと時間",skills:["時こくと 時間（○分後・○分前）"]},
+  {g:3,key:"nagasa_km3",dom:"測定",unit:"長さ（km）・道のり",skills:["km（1km＝1000m）"]},
+  {g:3,key:"omosa3",dom:"測定",unit:"重さ（g・kg・t）",skills:["g・kg で あらわす（1kg＝1000g）"]},
+  {g:3,key:"jikan3",dom:"測定",unit:"時こくと時間（秒）",skills:["秒／時間の 計算（60で くり上がり）"]},
+  {g:4,key:"tomonau4",dom:"変化と関係",unit:"変わり方",skills:["表に して きまりを 見つける"]},
+  {g:4,key:"bai4",dom:"変化と関係",unit:"倍の見方（簡単な割合）",skills:["何倍か で くらべる（□倍）"]},
+  {g:5,key:"heikin5",dom:"変化と関係",unit:"平均",skills:["合計 ÷ 個数 で 平均"]},
+  {g:5,key:"tani_ryou5",dom:"変化と関係",unit:"単位量あたりの大きさ",skills:["1つ分に そろえて くらべる（1あたり）"]},
+  {g:5,key:"hayasa5",dom:"変化と関係",unit:"速さ",skills:["速さ ＝ 道のり ÷ 時間","道のり ＝ 速さ × 時間"]},
+  {g:5,key:"wariai5",dom:"変化と関係",unit:"割合",skills:["割合 ＝ くらべる量 ÷ もとにする量","百分率（％）に なおす"]},
+  {g:6,key:"hi6",dom:"変化と関係",unit:"比",skills:["比を 簡単に する","比を つかって 一方の 量を 求める"]},
+  {g:6,key:"hirei6",dom:"変化と関係",unit:"比例",skills:["一方が 2倍で もう一方も 2倍（y＝きまった数×x）"]},
+  {g:6,key:"hanpirei6",dom:"変化と関係",unit:"反比例",skills:["一方が 2倍で もう一方は 2分の1（x×y＝きまった数）"]},
+  {g:1,key:"e_graph1",dom:"データの活用",unit:"かずしらべ（絵グラフ）",skills:["絵グラフで 多い少ないを くらべる"]},
+  {g:2,key:"hyou_graph2",dom:"データの活用",unit:"ひょうと グラフ",skills:["表や ○グラフに せいりする"]},
+  {g:3,key:"bou_graph3",dom:"データの活用",unit:"表とぼうグラフ",skills:["棒グラフを 読む（1目もりの 大きさ）"]},
+  {g:4,key:"ore_graph4",dom:"データの活用",unit:"折れ線グラフ",skills:["折れ線グラフで 変わり方を 読む"]},
+  {g:5,key:"wariai_graph5",dom:"データの活用",unit:"帯グラフと円グラフ",skills:["帯・円グラフで 割合を 読む"]},
+  {g:6,key:"daihyouchi6",dom:"データの活用",unit:"資料の調べ方（代表値）",skills:["平均値・中央値・最頻値","度数分布表・柱状グラフを 読む"]},
+];
+
+/* 診断用データ（積み木タワー gn の q=最初の問題 / k=たしかめ問題） */
+const ASSESS = {"kazu10":[{"q":{"t":"9 の つぎの 数は？","c":["10","8","11","9"],"a":0},"k":{"t":"6 は 5 と いくつ？","c":["1","2","3","6"],"a":0}}],"gousei10":[{"q":{"t":"7 と いくつで 10？","c":["3","4","2","5"],"a":0},"k":{"t":"10 は 6 と いくつ？","c":["4","3","5","6"],"a":0}}],"tashizan1":[{"q":{"t":"3 ＋ 4 は？","c":["7","6","8","5"],"a":0},"k":{"t":"5 ＋ 2 は？","c":["7","6","8","3"],"a":0}}],"hikizan1":[{"q":{"t":"8 − 3 は？","c":["5","4","6","2"],"a":0},"k":{"t":"7 − 5 は？","c":["2","3","1","4"],"a":0}}],"kuriagari1":[{"q":{"t":"9 ＋ 4 は？","c":["13","12","14","11"],"a":0},"k":{"t":"8 ＋ 5 は？","c":["13","12","14","11"],"a":0}}],"kurisagari1":[{"q":{"t":"12 − 9 は？","c":["3","4","2","5"],"a":0},"k":{"t":"14 − 6 は？","c":["8","7","9","6"],"a":0}}],"ookii_kazu1":[{"q":{"t":"10 が 4こと ばらが 3こで いくつ？","c":["43","34","403","13"],"a":0},"k":{"t":"58 は 10が 5こと ばらが いくつ？","c":["8","5","3","13"],"a":0}}],"kurai_2":[{"q":{"t":"100 が 10こ 集まると？","c":["1000","100","10000","110"],"a":0},"k":{"t":"1000 は 100 が 何こ？","c":["10こ","100こ","1こ","1000こ"],"a":0}}],"tashi_hissan2":[{"q":{"t":"38 ＋ 27 は？","c":["65","55","63","515"],"a":0},"k":{"t":"46 ＋ 25 は？","c":["71","61","611","69"],"a":0}}],"hiki_hissan2":[{"q":{"t":"45 − 27 は？","c":["18","22","28","12"],"a":0},"k":{"t":"63 − 28 は？","c":["35","45","25","41"],"a":0}}],"bunsuu_kantan2":[{"q":{"t":"ケーキを 2つに 同じに 分けた 1つ分は？","c":["2分の1","2","1","4分の1"],"a":0},"k":{"t":"4分の1は どんな 大きさ？","c":["4つに分けた 1つ分","2つに分けた 1つ分","4こ分","4ばい"],"a":0}}],"kake_imi":[{"q":{"t":"1はこ 4こ入りの あめが 3はこ。ぜんぶで 何こ？ 式はどれ？","c":["4×3","4＋3","4−3","3−1"],"a":0},"k":{"t":"5×3 は どんな意味？","c":["5こずつ 3つ分","5と3を たす","5を 3こに 分ける","5から 3を ひく"],"a":0}}],"kuku":[{"q":{"t":"7 × 8 は？","c":["56","54","48","63"],"a":0},"k":{"t":"6 × 9 は？","c":["54","56","48","45"],"a":0}}],"kurai_seisuu":[{"q":{"t":"10 が 10こ 集まると？","c":["100","10","1000","20"],"a":0},"k":{"t":"1000 は 100 が 何こ？","c":["10こ","100こ","1000こ","1こ"],"a":0}}],"tashi_hiki_hissan3":[{"q":{"t":"248 ＋ 187 は？","c":["435","425","445","331"],"a":0},"k":{"t":"425 − 286 は？","c":["139","141","239","161"],"a":0}}],"kake_hissan":[{"q":{"t":"23 × 3 は？","c":["69","66","63","79"],"a":0},"k":{"t":"14 × 2 は？","c":["28","26","24","32"],"a":0}}],"warizan_imi":[{"q":{"t":"12こを 3人で 同じ数ずつ 分けると、1人ぶんは？","c":["4こ","3こ","5こ","6こ"],"a":0},"k":{"t":"15 ÷ 3 は？","c":["5","4","6","3"],"a":0}}],"amari":[{"q":{"t":"20 ÷ 6 は？","c":["3あまり2","2あまり8","3あまり0","4あまり0"],"a":0},"k":{"t":"14 ÷ 4 は？","c":["3あまり2","3あまり1","2あまり6","4あまり0"],"a":0}}],"shousuu3":[{"q":{"t":"2.5 は 0.1 が いくつ分？","c":["25","250","5","205"],"a":0},"k":{"t":"0.1 が 8こで いくつ？","c":["0.8","8","0.08","80"],"a":0}}],"bunsuu_imi":[{"q":{"t":"1を 5つに 同じように分けた 1つ分は？","c":["5分の1","5","1分の5","4分の1"],"a":0},"k":{"t":"3分の1 が 2こ分で？","c":["3分の2","6分の1","6分の2","2分の3"],"a":0}}],"shiki_box3":[{"q":{"t":"□ ＋ 4 ＝ 17 の □は？","c":["13","21","11","14"],"a":0},"k":{"t":"□ − 5 ＝ 8 の □は？","c":["13","3","12","15"],"a":0}}],"kurai_ookii4":[{"q":{"t":"一万 が 10こ 集まると？","c":["十万","百万","千","一億"],"a":0},"k":{"t":"一億 は 一万 が 何こ？","c":["10000こ","100こ","1000こ","10こ"],"a":0}}],"wari_hissan1":[{"q":{"t":"536 ÷ 4 は？","c":["134","132","144","128"],"a":0},"k":{"t":"84 ÷ 4 は？","c":["21","22","24","12"],"a":0}}],"wari_hissan2":[{"q":{"t":"322 ÷ 14 は？","c":["23","22","24","32"],"a":0},"k":{"t":"80 ÷ 30 は？","c":["2あまり20","2あまり2","3あまり0","2あまり10"],"a":0}}],"shousuu_shikumi":[{"q":{"t":"0.01 が 7こで いくつ？","c":["0.07","0.7","7","0.007"],"a":0},"k":{"t":"2.5 は 0.1 が いくつ分？","c":["25","250","205","5"],"a":0}}],"shousuu_kagen4":[{"q":{"t":"2.25 ＋ 1.34 は？","c":["3.59","3.69","35.9","3.5"],"a":0},"k":{"t":"3.46 − 2.14 は？","c":["1.32","1.42","13.2","1.3"],"a":0}}],"shousuu_kakewari4":[{"q":{"t":"0.3 × 4 は？","c":["1.2","12","0.12","1.4"],"a":0},"k":{"t":"1.2 × 3 は？","c":["3.6","36","0.36","3.2"],"a":0}},{"q":{"t":"7.2 ÷ 3 は？","c":["2.4","24","0.24","2.6"],"a":0},"k":{"t":"9.6 ÷ 3 は？","c":["3.2","32","0.32","3.6"],"a":0}}],"shousuu_seisuu4":[{"q":{"t":"0.3 × 4 は？","c":["1.2","12","0.12","1.4"],"a":0},"k":{"t":"1.2 × 3 は？","c":["3.6","36","0.36","3.2"],"a":0}}],"shousuu_waru_seisuu4":[{"q":{"t":"7.2 ÷ 3 は？","c":["2.4","24","0.24","2.6"],"a":0},"k":{"t":"9.6 ÷ 3 は？","c":["3.2","32","0.32","3.6"],"a":0}}],"doubunbo":[{"q":{"t":"5分の1 ＋ 5分の2 は？","c":["5分の3","10分の3","5分の2","25分の3"],"a":0},"k":{"t":"7分の4 − 7分の2 は？","c":["7分の2","14分の2","7分の6","0分の2"],"a":0}}],"gaisuu4":[{"q":{"t":"2894 を 百の位までの がい数に すると？","c":["2900","2800","3000","2890"],"a":0},"k":{"t":"63 の 一の位を 四捨五入すると 何十？","c":["60","70","65","50"],"a":0}}],"shiki_keisan4":[{"q":{"t":"2 ＋ 3 × 4 は？","c":["14","20","24","9"],"a":0},"k":{"t":"(2 ＋ 3) × 4 は？","c":["20","14","24","9"],"a":0}}],"seisuu_shousuu5":[{"q":{"t":"1.435 を 10ばい すると？","c":["14.35","0.1435","143.5","1.435"],"a":0},"k":{"t":"0.72 を 100ばい すると？","c":["72","7.2","720","0.072"],"a":0}},{"q":{"t":"2.5 を 10分の1 に すると？","c":["0.25","25","0.025","2.5"],"a":0},"k":{"t":"43 を 100分の1 に すると？","c":["0.43","4.3","0.043","430"],"a":0}}],"shousuu_kake5":[{"q":{"t":"2.1 × 2.3 は？","c":["4.83","48.3","0.483","4.23"],"a":0},"k":{"t":"80 × 2.4 は？","c":["192","19.2","1920","168"],"a":0}},{"q":{"t":"63 × 47 ＝ 2961。では 6.3 × 4.7 は？","c":["29.61","296.1","2.961","2961"],"a":0},"k":{"t":"0.4 × 0.2 は？（点の 位置に ちゅうい）","c":["0.08","0.8","8","0.008"],"a":0}}],"shousuu_waru5":[{"q":{"t":"7.5 ÷ 2.5 は？","c":["3","30","0.3","5"],"a":0},"k":{"t":"36 ÷ 1.8 は？","c":["20","2","200","18"],"a":0}},{"q":{"t":"8.4 ÷ 4 は？（点の 位置に ちゅうい）","c":["2.1","21","0.21","2.4"],"a":0},"k":{"t":"9.6 ÷ 8 は？","c":["1.2","12","0.12","1.6"],"a":0}}],"baisuu_yakusuu":[{"q":{"t":"偶数は 次のどれ？","c":["48","31","57","95"],"a":0},"k":{"t":"奇数は 次のどれ？","c":["23","40","16","78"],"a":0}},{"q":{"t":"6 の 倍数は 次のどれ？","c":["24","22","15","20"],"a":0},"k":{"t":"4 と 6 の 公倍数（両方の倍数）は？","c":["12","10","14","9"],"a":0}},{"q":{"t":"12 を わりきれる数（約数）は？","c":["4","5","8","7"],"a":0},"k":{"t":"8 と 12 の 公約数（両方の約数）は？","c":["4","3","5","6"],"a":0}}],"bunsuu_shousuu5":[{"q":{"t":"2 ÷ 5 を 分数で かくと？","c":["5分の2","2分の5","0.5","2.5"],"a":0},"k":{"t":"3 ÷ 4 を 分数で かくと？","c":["4分の3","3分の4","0.75","1.3"],"a":0}},{"q":{"t":"4分の3 を 小数に すると？","c":["0.75","0.34","1.3","7.5"],"a":0},"k":{"t":"5分の1 を 小数に すると？","c":["0.2","0.5","1.5","5.1"],"a":0}}],"ibunbo5":[{"q":{"t":"2分の1 ＋ 3分の1 は？","c":["6分の5","5分の2","6分の1","6分の2"],"a":0},"k":{"t":"4分の1 ＋ 3分の1 は？","c":["12分の7","7分の12","12分の2","7分の2"],"a":0}},{"q":{"t":"4分の3 − 2分の1 は？","c":["4分の1","2分の2","4分の2","2分の1"],"a":0},"k":{"t":"3分の2 − 4分の1 は？","c":["12分の5","5分の12","12分の1","1分の12"],"a":0}}],"bunsuu_kakewari5":[{"q":{"t":"5分の2 × 3 は？","c":["5分の6","15分の6","6分の5","15分の2"],"a":0},"k":{"t":"4分の1 × 3 は？","c":["4分の3","12分の3","3分の4","12分の1"],"a":0}},{"q":{"t":"4分の3 ÷ 2 は？","c":["8分の3","4分の6","2分の3","3分の8"],"a":0},"k":{"t":"5分の2 ÷ 3 は？","c":["15分の2","15分の6","3分の2","2分の15"],"a":0}}],"bunsuu_kake6":[{"q":{"t":"2分の1 × 3分の2 は？","c":["6分の2","5分の3","6分の3","3分の2"],"a":0},"k":{"t":"4分の3 × 5分の2 は？","c":["20分の6","9分の5","20分の5","6分の20"],"a":0}},{"q":{"t":"3分の2 × 4分の3 は？（約分して）","c":["2分の1","7分の5","12分の5","4分の3"],"a":0},"k":{"t":"5分の4 × 8分の5 は？（約分して）","c":["2分の1","13分の9","9分の4","2分の2"],"a":0}}],"bunsuu_wari6":[{"q":{"t":"2分の1 ÷ 3分の1 は？","c":["2分の3","6分の1","3分の2","5分の2"],"a":0},"k":{"t":"3分の2 ÷ 4分の3 は？","c":["9分の8","12分の6","6分の8","8分の9"],"a":0}},{"q":{"t":"3分の2 ÷ 6分の5 は？（約分して）","c":["5分の4","4分の5","3分の2","5分の3"],"a":0},"k":{"t":"4分の3 ÷ 8分の9 は？（約分して）","c":["3分の2","9分の8","2分の1","4分の9"],"a":0}}],"bunsuu_shousuu_mix6":[{"q":{"t":"2分の1 ＋ 0.5 は？","c":["1","0.55","2分の1","10分の1"],"a":0},"k":{"t":"4分の3 ＋ 0.25 は？","c":["1","4分の1","0.28","2分の1"],"a":0}}],"moji_shiki6":[{"q":{"t":"1本 x円の ペンを 3本 買った 代金の 式は？","c":["x × 3","x ＋ 3","3 − x","x ÷ 3"],"a":0},"k":{"t":"1こ x円の あめ 5こと 20円の ガム。代金の 式は？","c":["x × 5 ＋ 20","x ＋ 5 ＋ 20","x × 5 × 20","x ＋ 20"],"a":0}},{"q":{"t":"x × 3 ＝ 24 の x は？","c":["8","6","9","21"],"a":0},"k":{"t":"x ＋ 7 ＝ 20 の x は？","c":["13","27","14","3"],"a":0}}],"katachi1":[{"q":{"t":"つぎのうち ころがる 形は？","c":["ボール（まる）","はこ","つみき（四角）","おりがみ"],"a":0},"k":{"t":"四角い はこの 面の 形は？","c":["四角","まる","さんかく","ほし"],"a":0}}],"sankaku_shikaku2":[{"q":{"t":"三角形は 直線が 何本？","c":["3本","4本","2本","5本"],"a":0},"k":{"t":"長方形の かどは ぜんぶ どんな 角？","c":["直角","するどい角","にぶい角","まがった線"],"a":0}}],"hako2":[{"q":{"t":"さいころ（立方体）の 面は いくつ？","c":["6つ","4つ","8つ","12"],"a":0},"k":{"t":"はこの形の へん（線）は 何本？","c":["12本","6本","8本","4本"],"a":0}}],"en3":[{"q":{"t":"円の まん中の 点を 何という？","c":["中心","半径","直径","円周"],"a":0},"k":{"t":"直径は 半径の 何倍？","c":["2倍","3倍","半分","4倍"],"a":0}}],"sankaku3":[{"q":{"t":"3つの 辺が ぜんぶ 同じ 三角形は？","c":["正三角形","二等辺三角形","直角三角形","四角形"],"a":0},"k":{"t":"2つの 辺が 同じ 三角形は？","c":["二等辺三角形","正三角形","円","長方形"],"a":0}}],"kaku4":[{"q":{"t":"直角は 何度？","c":["90°","100°","180°","45°"],"a":0},"k":{"t":"半回転（一直線）は 何度？","c":["180°","90°","360°","270°"],"a":0}}],"suichoku4":[{"q":{"t":"2本の 直線が 直角に 交わるのを 何という？","c":["垂直","平行","対角線","水平"],"a":0},"k":{"t":"向かい合う 2組の 辺が 平行な 四角形は？","c":["平行四辺形","台形","三角形","円"],"a":0}}],"menseki4":[{"q":{"t":"たて 3cm・横 5cm の 長方形の 面積は？","c":["15c㎡","8c㎡","16c㎡","35c㎡"],"a":0},"k":{"t":"1辺 4cm の 正方形の 面積は？","c":["16c㎡","8c㎡","4c㎡","12c㎡"],"a":0}}],"chokuhoutai4":[{"q":{"t":"直方体の 面は いくつ？","c":["6つ","4つ","8つ","12"],"a":0},"k":{"t":"立方体の 頂点（かど）は いくつ？","c":["8つ","6つ","12","4つ"],"a":0}}],"goudou5":[{"q":{"t":"合同な 図形で 正しいのは？","c":["対応する 辺の 長さが 等しい","大きさが ちがってよい","形が ちがってよい","色が 同じ"],"a":0},"k":{"t":"三角形の 合同を 決めるのに 使うのは？","c":["辺の長さや 角の大きさ","色","名前","面積だけ"],"a":0}}],"zukei_kaku5":[{"q":{"t":"三角形の 3つの角の 和は？","c":["180°","360°","90°","270°"],"a":0},"k":{"t":"三角形で 2つの 角が 60°と 70°。もう1つは？","c":["50°","60°","70°","80°"],"a":0}}],"seitakakkei5":[{"q":{"t":"直径 10cm の 円の 円周は？（3.14）","c":["31.4cm","3.14cm","62.8cm","10cm"],"a":0},"k":{"t":"正六角形の 辺は 何本？","c":["6本","5本","4本","8本"],"a":0}}],"menseki5":[{"q":{"t":"底辺 6cm・高さ 4cm の 三角形の 面積は？","c":["12c㎡","24c㎡","10c㎡","48c㎡"],"a":0},"k":{"t":"底辺 5cm・高さ 3cm の 平行四辺形の 面積は？","c":["15c㎡","8c㎡","7.5c㎡","30c㎡"],"a":0}}],"taiseki5":[{"q":{"t":"たて2・横3・高さ4cm の 直方体の 体積は？","c":["24c㎥","9c㎥","14c㎥","20c㎥"],"a":0},"k":{"t":"1辺 3cm の 立方体の 体積は？","c":["27c㎥","9c㎥","6c㎥","12c㎥"],"a":0}}],"rittai5":[{"q":{"t":"三角柱の 底面の 形は？","c":["三角形","四角形","円","五角形"],"a":0},"k":{"t":"円柱の 底面の 形は？","c":["円","三角形","四角形","線"],"a":0}}],"taishou6":[{"q":{"t":"1本の 線で 折ると ぴったり 重なる 図形は？","c":["線対称","点対称","合同","相似"],"a":0},"k":{"t":"180°回すと もとと 重なる 図形は？","c":["点対称","線対称","正三角形","円だけ"],"a":0}}],"en_menseki6":[{"q":{"t":"半径 10cm の 円の 面積は？（3.14）","c":["314c㎡","31.4c㎡","62.8c㎡","100c㎡"],"a":0},"k":{"t":"半径 2cm の 円の 面積は？（3.14）","c":["12.56c㎡","6.28c㎡","4c㎡","1.256c㎡"],"a":0}}],"rittai_taiseki6":[{"q":{"t":"底面積 6c㎡・高さ 10cm の 角柱の 体積は？","c":["60c㎥","16c㎥","6c㎥","600c㎥"],"a":0},"k":{"t":"底面積 5c㎡・高さ 4cm の 立体の 体積は？","c":["20c㎥","9c㎥","54c㎥","1.25c㎥"],"a":0}}],"kakudai6":[{"q":{"t":"2倍の 拡大図。辺 3cm は 何cm に なる？","c":["6cm","5cm","1.5cm","9cm"],"a":0},"k":{"t":"拡大図・縮図で 変わらないのは？","c":["角の 大きさ","辺の 長さ","面積","まわりの 長さ"],"a":0}}],"ryou_kurabe1":[{"q":{"t":"2本の えんぴつの 長さを くらべる 正しい 方法は？","c":["はしを そろえて くらべる","すきな ところで くらべる","色で くらべる","名前で くらべる"],"a":0},"k":{"t":"水の かさを くらべる 正しい 方法は？","c":["同じ コップに うつして くらべる","入れ物の 色で くらべる","重さで くらべる","高い 入れ物が 多い"],"a":0}}],"tokei1":[{"q":{"t":"短い針が 3、長い針が 12。何時？","c":["3時","12時","3時半","6時"],"a":0},"k":{"t":"長い針が 6 を さすと？","c":["○時半","ちょうど ○時","○時5分","わからない"],"a":0}}],"tokei_fun1":[{"q":{"t":"長い針が 4（20の ところ）を さすと 何分？","c":["20分","4分","40分","5分"],"a":0},"k":{"t":"長い針 1まわりで 何分？","c":["60分","100分","12分","10分"],"a":0}}],"nagasa2":[{"q":{"t":"1cm は 何mm？","c":["10mm","100mm","1mm","5mm"],"a":0},"k":{"t":"3cm2mm は 何mm？","c":["32mm","5mm","320mm","23mm"],"a":0}}],"nagasa_m2":[{"q":{"t":"1m は 何cm？","c":["100cm","10cm","1000cm","50cm"],"a":0},"k":{"t":"1m20cm は 何cm？","c":["120cm","102cm","1200cm","30cm"],"a":0}}],"kasa2":[{"q":{"t":"1L は 何dL？","c":["10dL","100dL","1dL","5dL"],"a":0},"k":{"t":"1L は 何mL？","c":["1000mL","100mL","10mL","500mL"],"a":0}}],"jikan2":[{"q":{"t":"午前9時から 40分 たつと 何時何分？","c":["9時40分","9時4分","10時40分","8時20分"],"a":0},"k":{"t":"1時間は 何分？","c":["60分","100分","30分","12分"],"a":0}}],"nagasa_km3":[{"q":{"t":"1km は 何m？","c":["1000m","100m","10m","500m"],"a":0},"k":{"t":"1km500m は 何m？","c":["1500m","1050m","150m","1550m"],"a":0}}],"omosa3":[{"q":{"t":"1kg は 何g？","c":["1000g","100g","10g","500g"],"a":0},"k":{"t":"1kg300g は 何g？","c":["1300g","1030g","130g","1003g"],"a":0}}],"jikan3":[{"q":{"t":"1分は 何秒？","c":["60秒","100秒","30秒","10秒"],"a":0},"k":{"t":"90秒は 何分何秒？","c":["1分30秒","9分","1分90秒","90分"],"a":0}}],"tomonau4":[{"q":{"t":"だんが 1,2,3…で まわりが 4,8,12…。だん5の ときは？","c":["20","16","24","15"],"a":0},"k":{"t":"○が 1ふえると □が 4ふえる。○が 6の とき □は？","c":["24","10","20","16"],"a":0}}],"bai4":[{"q":{"t":"12cm は 4cm の 何倍？","c":["3倍","8倍","48倍","2倍"],"a":0},"k":{"t":"6cm の 3倍は 何cm？","c":["18cm","9cm","2cm","3cm"],"a":0}}],"heikin5":[{"q":{"t":"3, 5, 4 の 平均は？","c":["4","3","5","12"],"a":0},"k":{"t":"点数 2,4,6,8 の 平均は？","c":["5","6","4","20"],"a":0}}],"tani_ryou5":[{"q":{"t":"3㎡に 12人。1㎡あたり 何人？","c":["4人","36人","9人","3人"],"a":0},"k":{"t":"5本 400円の えんぴつ。1本 何円？","c":["80円","2000円","405円","500円"],"a":0}}],"hayasa5":[{"q":{"t":"120km を 2時間で 走る 車。時速 何km？","c":["60km","240km","122km","2km"],"a":0},"k":{"t":"100m を 20秒。秒速 何m？","c":["5m","2000m","80m","120m"],"a":0}},{"q":{"t":"時速 60km で 3時間 走ると 道のりは？","c":["180km","20km","63km","30km"],"a":0},"k":{"t":"秒速 5m で 8秒 進むと？","c":["40m","13m","1.6m","3m"],"a":0}}],"wariai5":[{"q":{"t":"定員 50人の バスに 40人。乗っている 割合は？","c":["0.8","1.25","0.4","8"],"a":0},"k":{"t":"20問中 15問 正解。正解の 割合は？","c":["0.75","0.2","1.3","15"],"a":0}},{"q":{"t":"割合 0.8 を 百分率に すると？","c":["80%","8%","0.8%","800%"],"a":0},"k":{"t":"割合 0.05 は 何％？","c":["5%","50%","0.5%","500%"],"a":0}}],"hi6":[{"q":{"t":"12：8 を 簡単に すると？","c":["3：2","6：4","12：8","2：3"],"a":0},"k":{"t":"10：15 を 簡単に すると？","c":["2：3","5：3","10：15","3：2"],"a":0}},{"q":{"t":"牛乳：ジュース＝2：3。牛乳 4杯の とき ジュースは？","c":["6杯","5杯","8杯","3杯"],"a":0},"k":{"t":"姉：妹＝3：2 で あめ 15こを 分ける。姉は？","c":["9こ","6こ","3こ","5こ"],"a":0}}],"hirei6":[{"q":{"t":"x が 2倍・3倍で y も 2倍・3倍。これは？","c":["比例","反比例","どちらでもない","ぜんぶ同じ"],"a":0},"k":{"t":"1mで 90円の リボン。xm の 代金 y円の 式は？","c":["y＝90×x","y＝90÷x","y＝x÷90","y＝90＋x"],"a":0}}],"hanpirei6":[{"q":{"t":"x が 2倍で y は 2分の1。これは？","c":["反比例","比例","どちらでもない","ぜんぶ同じ"],"a":0},"k":{"t":"面積 24の 長方形。たて x・横 y の 式は？","c":["x×y＝24","y＝24×x","y＝x＋24","x÷y＝24"],"a":0}}],"e_graph1":[{"q":{"t":"絵グラフで いちばん 多いのが すぐ わかるのは なぜ？","c":["高さ（長さ）で くらべられるから","色が きれいだから","名前が あるから","数字が ないから"],"a":0},"k":{"t":"絵グラフで くらべる とき 大切なのは？","c":["だんを そろえて ならべる","すきに ならべる","ばらばらに おく","大きさを かえる"],"a":0}}],"hyou_graph2":[{"q":{"t":"数が すぐ わかるのは？","c":["表に 数字で 書く","絵の まま おく","色で 分ける","ならべない"],"a":0},"k":{"t":"○グラフで わかりやすいのは？","c":["多い少ないが 形で わかる","色が きれい","数字が いらない","名前だけ わかる"],"a":0}}],"bou_graph3":[{"q":{"t":"1目もりが 5の 棒グラフ。ぼうが 4目もりぶんなら いくつ？","c":["20","4","9","45"],"a":0},"k":{"t":"1目もりが 10の グラフ。3目もりぶんは？","c":["30","3","13","310"],"a":0}}],"ore_graph4":[{"q":{"t":"折れ線が 右上がりの とき、数は？","c":["ふえている","へっている","変わらない","0になる"],"a":0},"k":{"t":"線が いちばん 急な ところは？","c":["変わり方が いちばん 大きい","変わっていない","いちばん 小さい数","まちがい"],"a":0}}],"wariai_graph5":[{"q":{"t":"円グラフ 全体は 何を あらわす？","c":["全体で 100%（1）","1人分","1cm","時間"],"a":0},"k":{"t":"帯グラフで 40%の ところ。全体が 200人なら 何人？","c":["80人","40人","200人","20人"],"a":0}}],"daihyouchi6":[{"q":{"t":"小さい順に ならべた まん中の 値を 何という？","c":["中央値","平均値","最頻値","合計"],"a":0},"k":{"t":"いちばん 多く 出てくる 値を 何という？","c":["最頻値","中央値","平均値","代表値"],"a":0}},{"q":{"t":"柱状グラフ（ヒストグラム）で わかるのは？","c":["ちらばりの ようす","1つの 正確な 値","名前","色"],"a":0},"k":{"t":"度数分布表の『度数』は 何を あらわす？","c":["その はんいに 入る 個数","平均","いちばん 大きい数","合計の 割合"],"a":0}}]};
+
+/* ふりがな（低学年=grade<=3 のときだけ 漢字にルビ）。読みはビルド時にkuromojiで生成。 */
+const FURI = {"算数": "さんすう", "年": "とし", "生": "せい", "数字": "すうじ", "数": "かず", "合成": "ごうせい", "上がり": "あがり", "下がり": "さがり", "大き": "おおき", "数える": "かぞえる", "大きい": "おおきい", "千": "せん", "万": "まん", "集まる": "あつまる", "何": "なん", "算": "さん", "ひっ算": "ひっさん", "位": "くらい", "分数": "ぶんすう", "分の": "ぶんの", "半分": "はんぶん", "分け": "わけ", "分": "ぶん", "集め": "あつめ", "同じ": "おなじ", "かけ算": "かけざん", "意味": "いみ", "分ける": "わける", "入り": "いり", "式": "しき", "九": "きゅう", "九九": "くく", "言える": "いえる", "位取り": "くらいどり", "左": "ひだり", "倍": "ばい", "筆算": "ひっさん", "わり算": "わりざん", "人": "にん", "出す": "だす", "小数": "しょうすう", "第": "だい", "一": "いち", "使っ": "つかっ", "見つける": "みつける", "形": "かたち", "球": "きゅう", "四角": "しかく", "三角": "さんかく", "円": "えん", "四角い": "しかくい", "面": "めん", "木": "き", "横": "よこ", "見": "み", "円柱": "えんちゅう", "三角形": "さんかくけい", "四角形": "しかくけい", "本": "ほん", "直線": "ちょくせん", "五角形": "ごかっけい", "正方形": "せいほうけい", "辺": "へん", "長": "なが", "組": "くみ", "長方形": "ちょうほうけい", "向かい合う": "むかいあう", "長い": "ながい", "直角": "ちょっかく", "ひし形": "ひしがた", "角": "かく", "線": "せん", "点": "てん", "直方体": "ちょくほうたい", "多い": "おおい", "合わさっ": "あわさっ", "立方体": "りっぽうたい", "中心": "ちゅうしん", "半径": "はんけい", "まん中": "まんなか", "直径": "ちょっけい", "円周": "えんしゅう", "二等辺三角形": "にとうへんさんかくけい", "正三角形": "せいさんかくけい", "度": "ど", "道具": "どうぐ", "分度器": "ぶんどき", "電": "でん", "多く": "おおく", "入る": "はいる", "方法": "ほうほう", "入れ": "いれ", "色": "いろ", "見る": "みる", "広": "ひろ", "重ね": "かさね", "名前": "なまえ", "高": "たか", "太": "ふと", "大切": "たいせつ", "水": "みず", "正しい": "ただしい", "重": "おも", "見た目": "みため", "感じ": "かんじ", "足もと": "あしもと", "体重": "たいじゅう", "入れ物": "いれもの", "高い": "たかい", "短い": "みじかい", "針": "はり", "時": "じ", "時半": "じはん", "読む": "よむ", "目": "め", "何分": "なんぷん", "時間": "じかん", "後": "ご", "前": "まえ", "午前": "ごぜん", "道のり": "みちのり", "秒": "びょう", "計算": "けいさん", "絵": "え", "少ない": "すくない", "右": "みぎ", "正確": "せいかく", "表": "ひょう", "種類": "しゅるい", "順": "じゅん", "見にくい": "みにくい", "整理": "せいり", "目的": "もくてき", "書く": "かく", "棒グラフ": "ぼうぐらふ", "棒": "ぼう", "年生": "ねんせい", "長さ": "ながさ", "重さ": "おもさ", "道": "みち", "何本": "なんぼん", "何時": "なんじ", "何こ": "なんこ", "半": "はん", "たし算": "たしざん", "ひき算": "ひきざん"};
+let _fmax=1; for(const k in FURI){ if(k.length>_fmax) _fmax=k.length; }
+function _walk(s,onWord,onChar){
+  s=String(s); let i=0, n=s.length;
+  while(i<n){
+    if(s[i]==="<"){ const j=s.indexOf(">",i); if(j>=0){ onChar(s.slice(i,j+1)); i=j+1; continue; } }
+    let hit=null;
+    for(let L=Math.min(_fmax,n-i); L>=1; L--){ const sub=s.substr(i,L); if(FURI[sub]!==undefined){ hit=sub; break; } }
+    if(hit){
+      let rd=FURI[hit];
+      if(hit==="分"){ rd = /[0-9０-９]/.test(i>0?s[i-1]:"") ? "ふん" : "ぶん"; } // 5分=ふん / いくつ分=ぶん
+      onWord(hit,rd); i+=hit.length;
+    } else { onChar(s[i]); i++; }
+  }
+}
+function furi(s){ let o=""; _walk(s,(w,r)=>o+=`<ruby>${w}<rt>${r}</rt></ruby>`,c=>o+=c); return o; }
+function kana(s){ let o=""; _walk(s,(w,r)=>o+=r,c=>o+=c); return o; }
+/* 学年別表示：1年=すべてひらがな / 2年以上=漢字（ふりがなON時はルビ） */
+function disp(s){ if(S.grade===1) return kana(s); if(S.furi) return furi(s); return String(s); }
+function rerender(){ if(S.screen==="setup") renderSetup(); else if(S.screen==="quiz") quizScreen(); else if(S.screen==="result") resultScreen(); else if(S.screen==="ws") renderWorksheet(); }
+function mountFuriToggle(){
+  let el=document.getElementById("furiFab");
+  if(!el){ el=document.createElement("button"); el.id="furiFab"; el.className="furi-fab noprint";
+           el.onclick=()=>{ S.furi=!S.furi; mountFuriToggle(); rerender(); }; document.body.appendChild(el); }
+  el.style.display = (S.grade && S.grade>=2) ? "" : "none";
+  el.classList.toggle("on", !!S.furi);
+  el.textContent = S.furi ? "ふりがな あり" : "ふりがな なし";
+}
+
+/* ---------- 共通ヘルパ ---------- */
+const unitByKey = k => TAXO.find(u=>u.key===k);
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const app = document.getElementById("app");
+const sheetsEl = document.getElementById("sheets");
+const DOM_ORDER = ["数と計算","図形","測定","変化と関係","データの活用"];
+const DOM_LABEL = {"all":"ぜんぶ","数と計算":"けいさん","図形":"かたち","測定":"はかる","変化と関係":"きまり・わりあい","データの活用":"グラフ"};
+
+/* ---------- 状態 ---------- */
+const S = {
+  grade:null, domain:"all", mode:"quick",
+  queue:[], pos:0, phase:"q", results:{},
+  levelMode:"auto",            // "auto" or 1..5
+  name:{year:"", kumi:"", ban:""},
+  showAns:false, sheetsData:[], sheetIdx:0, homeStep:1, unitKey:null, furi:true, screen:""
+};
+const qkey = it => it.key + "#" + it.skillIdx;
+
+/* ================================================================
+   画面1：ホーム
+   ================================================================ */
+function homeScreen(){
+  sheetsEl.innerHTML=""; app.style.display="";
+  S.queue=[]; S.pos=0; S.results={}; S.phase="q"; S.sheetsData=[];
+  S.grade=null; S.domain="all"; S.mode="quick"; S.unitKey=null; S.homeStep=1;
+  renderSetup();
+}
+function gotoStep(n){ S.homeStep=n; renderSetup(); }
+function footerHTML(){
+  return `<p class="foot">
+      ※このアプリは「さんすう つみきタワー」と「算数プリントメーカー」を 合体させて 作りました。<br>
+      つみきタワー → <a href="https://33rrr33.github.io/tsumiki-tower/" target="_blank" rel="noopener">こちら</a>
+    </p>`;
+}
+function renderSetup(){
+  app.style.display=""; sheetsEl.innerHTML="";
+  let crumbs="";
+  if(S.homeStep>1 && S.grade) crumbs+=`<span class="crumb" data-s="1">${S.grade}ねんせい</span>`;
+  if(S.homeStep>2) crumbs+=`<span class="crumb" data-s="2">${DOM_LABEL[S.domain]||S.domain}</span>`;
+  if(S.homeStep>3) crumbs+=`<span class="crumb" data-s="3">${S.unitKey?F(unitByKey(S.unitKey).unit):"ぜんぶ"}</span>`;
+
+  let inner="";
+  if(S.homeStep===1){
+    inner = `<div class="step-title">① なんねんせい？</div>
+      <div class="opts-grid">
+        ${[1,2,3,4,5,6].map(g=>`<button class="optbtn" data-g="${g}">${g}ねんせい</button>`).join("")}
+      </div>`;
+  } else if(S.homeStep===2){
+    inner = `<div class="step-title">② どこを ためす？</div>
+      <div class="opts-grid">
+        ${["all",...DOM_ORDER].map(d=>{
+           const lab=DOM_LABEL[d]||d;
+           const n = d==="all" ? TAXO.filter(u=>u.g===S.grade).length : TAXO.filter(u=>u.g===S.grade&&u.dom===d).length;
+           return `<button class="optbtn" data-dom="${d}" ${n===0?"disabled":""}>${lab}<small>${n>0?n+"たんげん":"なし"}</small></button>`;
+        }).join("")}
+      </div>`;
+  } else {
+    const units = TAXO.filter(u=>u.g===S.grade && (S.domain==="all"||u.dom===S.domain));
+    let btns = `<button class="optbtn" data-unit="__all__">ぜんぶ<small>${units.length}たんげん</small></button>`;
+    if(S.domain==="all"){
+      DOM_ORDER.forEach(dom=>{
+        const us=units.filter(u=>u.dom===dom);
+        if(!us.length) return;
+        btns += `<div class="dom-head">${DOM_LABEL[dom]}</div>`;
+        us.forEach(u=> btns += `<button class="optbtn" data-unit="${u.key}">${disp(u.unit)}<small>${u.skills.length}スキル</small></button>`);
+      });
+    } else {
+      units.forEach(u=> btns += `<button class="optbtn" data-unit="${u.key}">${disp(u.unit)}<small>${u.skills.length}スキル</small></button>`);
+    }
+    inner = `<div class="step-title">③ どの たんげん？<span style="font-size:13px;font-weight:600;color:var(--muted)">（5問で しんだん）</span></div>
+      <div class="opts-grid">${btns}</div>`;
+  }
+
+  app.innerHTML = `
+    <h1>🧮 さんすう にがて はっけん！</h1>
+    ${connBadge()}
+    ${S.homeStep===1?'<p class="sub">クイズに こたえて、にがてな ところを さがそう。きみだけの れんしゅうプリントが できるよ！</p>':""}
+    <div class="panel">
+      ${crumbs?`<div class="crumbs">${crumbs}</div>`:""}
+      ${inner}
+      ${S.homeStep>1?'<button class="ghost back" id="backBtn">← もどる</button>':""}
+    </div>
+    ${S.homeStep===1?footerHTML():""}`;
+
+  app.querySelectorAll(".optbtn[data-g]").forEach(b=>b.onclick=()=>{ S.grade=+b.dataset.g; S.furi=S.grade<=3; S.domain="all"; S.unitKey=null; gotoStep(2); });
+  app.querySelectorAll(".optbtn[data-dom]").forEach(b=>b.onclick=()=>{ if(b.hasAttribute("disabled"))return; S.domain=b.dataset.dom; S.unitKey=null; gotoStep(3); });
+  app.querySelectorAll(".optbtn[data-unit]").forEach(b=>b.onclick=()=>{ const v=b.dataset.unit; S.unitKey = v==="__all__"?null:v; startDiagnostic(); });
+  app.querySelectorAll(".crumb").forEach(c=>c.onclick=()=>gotoStep(+c.dataset.s));
+  const bk=document.getElementById("backBtn"); if(bk) bk.onclick=()=>gotoStep(Math.max(1,S.homeStep-1));
+  S.screen="setup"; mountFuriToggle();
+  window.scrollTo(0,0);
+}
+function candidateSkills(){
+  const items=[];
+  TAXO.filter(u=>u.g===S.grade && (S.domain==="all"||u.dom===S.domain) && (!S.unitKey || u.key===S.unitKey)).forEach(u=>{
+    u.skills.forEach((sn,i)=>items.push({key:u.key, skillIdx:i, unit:u.unit, dom:u.dom, skill:sn}));
+  });
+  return items;
+}
+
+/* ================================================================
+   しんだん キュー作成
+   ================================================================ */
+function buildQueue(){
+  // 5問で判定：領域をまんべんなく 最大5スキル（少なければ ある分だけ）
+  const all=candidateSkills();
+  const byDom={}; DOM_ORDER.forEach(d=>byDom[d]=[]);
+  all.forEach(it=>byDom[it.dom].push(it));
+  Object.keys(byDom).forEach(d=>byDom[d]=shuffle(byDom[d]));
+  const target=Math.min(5, all.length), out=[]; let added=true;
+  while(out.length<target && added){
+    added=false;
+    for(const d of DOM_ORDER){ if(byDom[d].length){ out.push(byDom[d].shift()); added=true; if(out.length>=target)break; } }
+  }
+  return shuffle(out);
+}
+function startDiagnostic(){
+  S.queue=buildQueue(); S.pos=0; S.phase="q"; S.results={};
+  quizScreen();
+}
+
+/* ================================================================
+   画面2：しんだん（つみきタワー）
+   ================================================================ */
+function towerHTML(){
+  // これまでに 積んだ ぶん
+  const done=S.queue.slice(0,S.pos).map(it=>S.results[qkey(it)]);
+  const total=S.queue.length;
+  const complete = S.pos>=total;
+  let blocks="";
+  done.forEach((r,i)=>{
+    const w=86 + (i%3)*8;            // 少し ふぞろいに
+    const mark = r.status==="ok"?"":(r.status==="shaky"?"·":"");
+    blocks+=`<div class="blk ${r.status}" style="width:${w}px"></div>`;
+  });
+  const cap = complete ? "🌟" : "🐣";
+  return `
+    <div class="tower-cap">${cap}</div>
+    <div class="tower">
+      ${blocks || '<div style="font-size:12px;color:var(--muted)">ここに つみきが たまって いくよ</div>'}
+    </div>
+    <div class="tower-base"></div>
+    <div class="legend">つみき ${S.pos}/${total}こ
+      <span class="lg"><span style="color:var(--wood-dark)">■</span> できた</span>
+      <span class="lg"><span style="color:#e0a93a">■</span> あとすこし</span>
+      <span class="lg"><span style="color:#e07070">■</span> にがて</span></div>`;
+}
+function quizScreen(){
+  sheetsEl.innerHTML=""; app.style.display="";
+  if(S.pos>=S.queue.length){ resultScreen(); return; }
+  const it=S.queue[S.pos];
+  const rec=ASSESS[it.key][it.skillIdx];
+  const src = S.phase==="q" ? rec.q : rec.k;
+  // confirm が無いスキルの保険
+  if(!src){ recordAndNext(it, S.phase==="q"?"ok":"weak"); return; }
+  const order=shuffle(src.c.map((c,i)=>({c,correct:i===src.a})));
+  app.innerHTML = `
+    <div class="quiz-top">
+      <span class="prog">もんだい ${S.pos+1} / ${S.queue.length}</span>
+      <button class="ghost" id="quit" style="padding:6px 12px;font-size:13px">やめる</button>
+    </div>
+    <div class="panel">
+      <div class="quizlayout">
+        <div class="qcard">
+          <div class="q-domain">${DOM_LABEL[it.dom]||it.dom}</div>
+          <div class="q-unit">${disp(it.unit)}</div>
+          ${S.phase==="confirm"?'<div class="q-retry">もう いちど たしかめ！</div><br>':""}
+          <div class="q-text">${disp(src.t)}</div>
+          <div class="choices2" id="choices">
+            ${order.map((o,i)=>`<button class="cbtn" data-i="${i}" data-correct="${o.correct}">${disp(o.c)}</button>`).join("")}
+          </div>
+          <div class="feedback" id="fb"></div>
+        </div>
+        <div class="tower-wrap">${towerHTML()}</div>
+      </div>
+    </div>`;
+  document.getElementById("quit").onclick=()=>{ if(confirm("やめて さいしょに もどる？")) homeScreen(); };
+  S.screen="quiz"; mountFuriToggle();
+  const fb=document.getElementById("fb");
+  app.querySelectorAll(".cbtn").forEach(b=>b.onclick=()=>{
+    const correct = b.dataset.correct==="true";
+    app.querySelectorAll(".cbtn").forEach(x=>{ x.disabled=true;
+      if(x.dataset.correct==="true") x.classList.add("correct"); });
+    if(!correct) b.classList.add("wrong");
+    if(correct){
+      fb.textContent = S.phase==="q" ? "せいかい！🎉" : "せいかい！できたね😊";
+      fb.className="feedback good";
+      setTimeout(()=>recordAndNext(it, S.phase==="q"?"ok":"shaky"), 650);
+    }else{
+      if(S.phase==="q"){
+        fb.textContent="おしい！もう いちど やってみよう👀"; fb.className="feedback bad";
+        setTimeout(()=>{ S.phase="confirm"; quizScreen(); }, 900);
+      }else{
+        fb.textContent="ここは あとで れんしゅう しよう💪"; fb.className="feedback bad";
+        setTimeout(()=>recordAndNext(it, "weak"), 900);
+      }
+    }
+  });
+}
+function recordAndNext(it, status){
+  S.results[qkey(it)] = {status, key:it.key, skillIdx:it.skillIdx, unit:it.unit, dom:it.dom, skill:it.skill};
+  S.phase="q"; S.pos++;
+  quizScreen();
+}
+
+/* ================================================================
+   画面3：けっか
+   ================================================================ */
+function resultScreen(){
+  app.style.display=""; sheetsEl.innerHTML="";
+  const recs=S.queue.map(it=>S.results[qkey(it)]).filter(Boolean);
+  const ok=recs.filter(r=>r.status==="ok").length;
+  const shaky=recs.filter(r=>r.status==="shaky");
+  const weak=recs.filter(r=>r.status==="weak");
+  // にがて順（weak→shaky）、単元でまとめる
+  const targets=[...weak, ...shaky];
+
+  let body;
+  if(targets.length===0){
+    body = `
+      <div class="result-hero">
+        <div class="tower-cap" style="font-size:40px">🏆</div>
+        <div class="big">ぜんぶ できた！すごい🌟</div>
+        <p class="sub" style="margin-top:6px">にがては なかったよ！</p>
+      </div>
+      <div class="actions" style="justify-content:center;margin-top:8px">
+        <button class="go" id="challenge">ちょうせん プリントを つくる</button>
+        <button class="ghost" id="again">もういちど クイズ</button>
+        <button class="ghost" id="home2">さいしょに もどる</button>
+      </div>`;
+  }else{
+    const list = targets.map((r)=>`
+      <div class="wk">
+        <span class="badge ${r.status}">${r.status==="weak"?"にがて":"あとすこし"}</span>
+        <span class="info">
+          <span class="u">たんげん：${DOM_LABEL[r.dom]||r.dom}／${disp(r.unit)}</span>
+          <span class="s">${disp(r.skill)}</span>
+        </span>
+      </div>`).join("");
+    body = `
+      <div class="result-hero">
+        <div class="tower-cap" style="font-size:34px">🐣</div>
+        <div class="big">ぜんぶ おわり！🎉</div>
+      </div>
+      <div class="tally">
+        <div class="t ok">できた<b>${ok}</b></div>
+        <div class="t shaky">あとすこし<b>${shaky.length}</b></div>
+        <div class="t weak">にがて<b>${weak.length}</b></div>
+      </div>
+      <p style="font-weight:800;font-size:16px;margin:4px 0 8px">
+        にがてな ところ 👇
+      </p>
+      <div class="weaklist">${list}</div>
+      <div class="lvlrow">
+        <span style="font-weight:700;font-size:13px">むずかしさ：</span>
+        <span class="star lv on" data-lv="auto">おまかせ</span>
+        ${[1,2,3,4,5].map(l=>`<span class="star lv" data-lv="${l}">★${l}</span>`).join("")}
+      </div>
+      <div class="actions">
+        <button class="go" id="makews">プリントを つくる（${targets.length}まい）→</button>
+        <button class="ghost" id="again">もういちど クイズ</button>
+        <button class="ghost" id="home2">さいしょに もどる</button>
+      </div>`;
+  }
+  app.innerHTML = `<div class="panel">${body}</div>`;
+  S.screen="result"; mountFuriToggle();
+
+  const home2=document.getElementById("home2"); if(home2) home2.onclick=homeScreen;
+  const again=document.getElementById("again"); if(again) again.onclick=startDiagnostic;
+  const chal=document.getElementById("challenge");
+  if(chal) chal.onclick=()=>{ // 全問できた子向け：受けた単元を ★4 で
+    const tested=recs.map(r=>({...r})); makeWorksheets(tested, 4); };
+  const mk=document.getElementById("makews");
+  if(mk){
+    app.querySelectorAll(".star.lv").forEach(s=>s.onclick=()=>{
+      app.querySelectorAll(".star.lv").forEach(x=>x.classList.remove("on"));
+      s.classList.add("on"); S.levelMode = s.dataset.lv==="auto"?"auto":+s.dataset.lv;
+    });
+    mk.onclick=()=>{ makeWorksheets(targets, null); };
+  }
+}
+
+/* ================================================================
+   画面4：プリント（自動生成）
+   ================================================================ */
+function levelFor(rec, forced){
+  if(forced) return forced;
+  if(S.levelMode!=="auto") return S.levelMode;
+  return rec.status==="weak" ? 1 : (rec.status==="shaky" ? 2 : 3); // にがては やさしめから
+}
+function genProblems(key, idx, level){
+  const gen=GEN[key][idx]; const qty=10; const cur=[]; const seen=new Set(); let guard=0;
+  while(cur.length<qty && guard<qty*120){
+    guard++; const o=gen(level);
+    const k=o.q+"||"+(o.ch?o.ch.join("／"):o.a);
+    if(seen.has(k)) continue; seen.add(k);
+    if(o.ch) o.ch=shuffle(o.ch);
+    cur.push(o);
+  }
+  const uniq=cur.length; let i=0;
+  while(cur.length<qty && uniq>0){
+    const s=cur[i%uniq];
+    cur.push(s.ch?{q:s.q,a:s.a,ch:shuffle(s.ch.slice())}:{q:s.q,a:s.a}); i++;
+  }
+  return cur;
+}
+function makeWorksheets(recs, forcedLevel){
+  S.sheetsData = recs.map(r=>{
+    const lv=levelFor(r, forcedLevel);
+    return {rec:r, level:lv, problems:genProblems(r.key, r.skillIdx, lv)};
+  });
+  S.showAns=false; S.sheetIdx=0;
+  renderWorksheet();
+  window.scrollTo(0,0);
+}
+function renderWorksheet(){
+  app.style.display="none";
+  const N=S.sheetsData.length;
+  S.sheetIdx=Math.max(0,Math.min(S.sheetIdx,N-1));
+  const sd=S.sheetsData[S.sheetIdx];
+  const u=unitByKey(sd.rec.key), skill=u.skills[sd.rec.skillIdx];
+  const tag = sd.rec.status==="weak"?"にがて":(sd.rec.status==="shaky"?"あとすこし":"ちょうせん");
+  const nums="①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("");
+  const labels="アイウエオ".split("");
+  const isLast = S.sheetIdx >= N-1;
+
+  let html = `<div class="wsbar noprint">
+      <div class="wsstep">📄 プリント <b>${S.sheetIdx+1}</b> / ${N} まいめ</div>
+      <div class="ws-banner"><b>${tag}</b>だった ところの れんしゅうだよ！
+        <span class="wb-u">たんげん：<span class="em">${disp(u.unit)}</span></span>
+        <span class="wb-s">スキル：<span class="em">${disp(skill)}</span></span></div>
+    </div>`;
+
+  html += `<div class="sheet" data-si="${S.sheetIdx}">
+      <div class="sheet-head">
+        <div class="sheet-line1">${disp("算数プリント")}　${u.g}${disp("年生")}　｜　<span class="nw">むずかしさ ${"★".repeat(sd.level)}</span></div>
+        <div class="sheet-unit">たんげん：${disp(u.unit)}</div>
+        <div class="skillrow">
+          <div class="sheet-skill">${disp(skill)}</div>
+          <div class="namebox"><span class="nf"><input class="nfin nf-year" inputmode="numeric">年</span><span class="nf"><input class="nfin nf-kumi" inputmode="numeric">組</span><span class="nf"><input class="nfin nf-ban" inputmode="numeric">番</span></div>
+        </div>
+      </div>`;
+  const hasChoice=sd.problems.some(o=>o.ch);
+  html += `<div class="qgrid${hasChoice?" one":""}">`;
+  sd.problems.forEach((o,i)=>{
+    const no=`<span class="no">${nums[i]||(i+1)}</span>`;
+    const ans="&nbsp;"; // 問題欄は常に空欄。答えは下の「こたえ」欄に
+    if(o.ch){
+      const opts=`<div class="opts">`+o.ch.map((c,j)=>`<span class="opt">${labels[j]}. ${disp(c)}</span>`).join("")+`</div>`;
+      html+=`<div class="q choice"><div class="qtext">${no}<span class="body">${disp(o.q)}</span><span class="write short">${ans}</span></div>${opts}</div>`;
+    }else{
+      html+=`<div class="q"><div class="qtext">${no}<span class="body">${disp(o.q)}</span></div><div class="ansline"><span class="write">${ans}</span></div></div>`;
+    }
+  });
+  html += `</div>`; // qグリッドを閉じる
+  if(S.showAns){
+    html += `<div class="answers"><span class="ans-label">こたえ</span>`+
+      sd.problems.map((o,i)=>`<span class="ans"><b>${nums[i]||(i+1)}</b>${disp(o.a)}</span>`).join("")+`</div>`;
+  }
+  html += `</div>`; // .sheet を閉じる
+
+  html += `<div class="sendbox noprint">
+      <button class="go" id="sendBtn">📨 せんせいに おくる（${N}まい ぜんぶ）</button>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">プリントの 上の 「年・組・番」を かいてから おしてね。せんせいの いんさつステーションに とどきます。</div>
+      <div class="sendmsg" id="sendMsg"></div>
+    </div>`;
+  html += `<div class="wsbtns noprint">
+      <button class="ghost big" id="printBtn">🖨 じぶんで いんさつ / PDF</button>
+      <button class="ghost big" id="ansBtn">${S.showAns?"こたえを かくす":"こたえを 見る"}</button>
+      <button class="ghost big" id="regenBtn">🔀 べつの もんだい</button>
+      <div class="navrow">
+        ${S.sheetIdx>0?'<button class="ghost" id="prevBtn">← まえの プリント</button>':''}
+        ${!isLast?'<button class="go" id="nextBtn">つぎの プリント →</button>':'<span class="donemsg">これで さいご！🎉</span>'}
+        <button class="ghost" id="backBtn">けっかに もどる</button>
+        <button class="ghost" id="homeBtn">↩ さいしょから</button>
+      </div>
+    </div>`;
+
+  sheetsEl.innerHTML=html;
+  S.screen="ws"; mountFuriToggle();
+
+  const sheet=sheetsEl.querySelector(".sheet");
+  const y=sheet.querySelector(".nf-year"),k=sheet.querySelector(".nf-kumi"),b=sheet.querySelector(".nf-ban");
+  y.value=S.name.year!==""?S.name.year:String(S.grade||"");
+  k.value=S.name.kumi; b.value=S.name.ban;
+  y.oninput=()=>S.name.year=y.value;
+  k.oninput=()=>S.name.kumi=k.value;
+  b.oninput=()=>S.name.ban=b.value;
+
+  document.getElementById("printBtn").onclick=()=>window.print();
+  document.getElementById("sendBtn").onclick=sendAllSheets;
+  document.getElementById("ansBtn").onclick=()=>{ S.showAns=!S.showAns; renderWorksheet(); };
+  document.getElementById("regenBtn").onclick=()=>{ sd.problems=genProblems(sd.rec.key, sd.rec.skillIdx, sd.level); renderWorksheet(); };
+  const nx=document.getElementById("nextBtn"); if(nx) nx.onclick=()=>{ S.sheetIdx++; S.showAns=false; renderWorksheet(); window.scrollTo(0,0); };
+  const pv=document.getElementById("prevBtn"); if(pv) pv.onclick=()=>{ S.sheetIdx--; S.showAns=false; renderWorksheet(); window.scrollTo(0,0); };
+  document.getElementById("backBtn").onclick=()=>{ app.style.display=""; sheetsEl.innerHTML=""; resultScreen(); };
+  document.getElementById("homeBtn").onclick=homeScreen;
+}
+
+/* ================================================================
+   先生の印刷ステーションへ おくる
+   ================================================================ */
+let sending=false;
+function sendMsg(t,cls){ const el=document.getElementById("sendMsg"); if(el){ el.textContent=t; el.className="sendmsg"+(cls?" "+cls:""); } }
+async function sheetToJpeg(i){
+  // 見えないところに A4はばで プリントを かいて、画像にする
+  const keep={idx:S.sheetIdx, ans:S.showAns};
+  S.sheetIdx=i; S.showAns=false; renderWorksheet();
+  const sheet=sheetsEl.querySelector(".sheet").cloneNode(true);
+  // 名前らんの 入力を そのまま 文字に
+  sheet.querySelectorAll("input").forEach(inp=>{ const sp=document.createElement("span"); sp.className=inp.className; sp.style.display="inline-block"; sp.textContent=inp.value||"\u00a0"; inp.replaceWith(sp); });
+  const cap=document.getElementById("capture"); cap.innerHTML=""; cap.appendChild(sheet);
+  const canvas=await html2canvas(sheet,{scale:2,backgroundColor:"#ffffff",windowWidth:1000,logging:false});
+  cap.innerHTML="";
+  S.sheetIdx=keep.idx; S.showAns=keep.ans;
+  const blob=await new Promise(r=>canvas.toBlob(r,"image/jpeg",0.85));
+  return {bytes:await blob.arrayBuffer(), w:canvas.width, h:canvas.height};
+}
+async function sendAllSheets(){
+  if(sending) return;
+  const cfg=teacherCfg();
+  if(!cfg){ sendMsg("せんせいの QRコードを よみとってから おくってね。（じぶんで いんさつ も できるよ）","err"); return; }
+  const y=String(S.name.year||S.grade||"").trim(), k=String(S.name.kumi||"").trim(), b=String(S.name.ban||"").trim();
+  if(!/^[0-9０-９]+$/.test(k) || !/^[0-9０-９]+$/.test(b)){ sendMsg("プリントの 上の 「組」と「番」を かいてね。","err"); return; }
+  const num=v=>+String(v).replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+  sending=true; const btn=document.getElementById("sendBtn"); if(btn) btn.disabled=true;
+  const startIdx=S.sheetIdx;
+  try{
+    const lib=window.PDFLib, pdf=await lib.PDFDocument.create(), A4=[595.28,841.89];
+    for(let i=0;i<S.sheetsData.length;i++){
+      sendMsg(`プリントを PDFに しています… ${i+1} / ${S.sheetsData.length}`);
+      const j=await sheetToJpeg(i), img=await pdf.embedJpg(j.bytes);
+      const sc=Math.min(A4[0]/j.w, A4[1]/j.h), page=pdf.addPage(A4);
+      page.drawImage(img,{x:(A4[0]-j.w*sc)/2, y:A4[1]-j.h*sc, width:j.w*sc, height:j.h*sc});
+    }
+    S.sheetIdx=startIdx; renderWorksheet();
+    const bytes=await pdf.save();
+    const units=[...new Set(S.sheetsData.map(sd=>unitByKey(sd.rec.key).unit))].join("・");
+    const meta={nen:num(y), kumi:num(k), ban:num(b), name:"算数プリント（"+units+"）", pages:S.sheetsData.length, at:new Date().toISOString()};
+    sendMsg("せんせいに つないでいます…");
+    await PS.sendToTeacher(cfg, meta, bytes, t=>sendMsg(t));
+    sendMsg(`とどいたよ！🎉 ${S.sheetsData.length}まいの プリントが せんせいの ところで いんさつ できるよ。`,"ok");
+  }catch(e){
+    S.sheetIdx=startIdx; renderWorksheet();
+    sendMsg("⚠️ "+(e&&e.message||"おくれませんでした")+" もういちど おしてね。","err");
+  }finally{
+    sending=false; const b2=document.getElementById("sendBtn"); if(b2) b2.disabled=false;
+  }
+}
+
+/* start */
+homeScreen();
+</script>
+
+</body></html>
