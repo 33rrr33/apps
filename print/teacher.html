@@ -55,6 +55,17 @@
   #qrBox svg{width:min(320px,80vw);height:auto;display:block;margin:10px auto;background:#fff;border-radius:8px}
   .linkTxt{font-size:.75rem;word-break:break-all;background:var(--accent-soft);border-radius:8px;padding:8px;margin:6px 0}
   details summary{cursor:pointer;font-weight:700}
+  .pick2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  @media (max-width:640px){.pick2{grid-template-columns:1fr}}
+  .choice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;font-family:inherit;color:var(--ink);background:var(--panel);
+    border:2px solid var(--line);border-radius:16px;padding:16px;cursor:pointer;font-size:1rem}
+  .choice.rec{border-color:var(--accent);background:var(--accent-soft)}
+  .choice .e{font-size:2rem}
+  .choice b{font-size:1.15rem}
+  .choice .tag{font-size:.75rem;font-weight:700;color:var(--accent)}
+  .choice .d{font-size:.88rem;color:var(--sub);line-height:1.6}
+  .live.off::before{color:var(--ng)}
+  .live.big{font-size:.95rem;font-weight:700}
 </style>
 </head>
 <body>
@@ -64,6 +75,23 @@
   <button class="btn hidden" id="qrBtn" onclick="showQR()">📱 児童用QR</button>
   <button class="btn hidden" id="setBtn" onclick="toggleSettings()">⚙️</button>
 </header>
+
+<!-- ===== 受け取り方をえらぶ ===== -->
+<section id="vStart" class="hidden">
+  <div class="card">
+    <h2>受け取り方をえらんでください</h2>
+    <div class="pick2">
+      <button class="choice rec" onclick="startDirect()">
+        <span class="e">📶</span><b>GitHubなしで使う</b><span class="tag">おすすめ・準備なし</span>
+        <span class="d">児童のiPadから、この先生のiPadに<b>直接</b>届きます。アカウントも設定もいりません。<br>⚠️ 受け取るあいだは、<b>この画面を開いたまま</b>にしてください。</span>
+      </button>
+      <button class="choice" onclick="go('vSetup')">
+        <span class="e">☁️</span><b>GitHubで保管して使う</b><span class="tag">準備 約5分</span>
+        <span class="d">先生が画面を閉じていても届きます。PDFは暗号化して、先生の非公開リポジトリに保管します。</span>
+      </button>
+    </div>
+  </div>
+</section>
 
 <!-- ===== はじめての準備 ===== -->
 <section id="vSetup" class="hidden">
@@ -125,12 +153,12 @@
     <h2>⚙️ 設定</h2>
     <div class="row"><span>クラスの人数</span><input class="text" id="sizeIn" type="number" min="0" max="45" style="width:90px" placeholder="35"><span class="sub">（まだの番号を出します）</span></div>
     <div class="row" style="margin-top:10px">
-      <button class="btn" onclick="showTeacherLink()">🔑 ほかのiPadで開くリンク</button>
-      <button class="btn" onclick="lockNow()">🔒 パスワードを忘れさせる</button>
-      <button class="btn danger" onclick="resetAll()">はじめからやり直す</button>
+      <button class="btn gh" onclick="showTeacherLink()">🔑 ほかのiPadで開くリンク</button>
+      <button class="btn gh" onclick="lockNow()">🔒 パスワードを忘れさせる</button>
+      <button class="btn danger" onclick="resetAll()">受け取り方を変える・はじめからやり直す</button>
     </div>
     <div id="tLink"></div>
-    <p class="sub">保管庫：<span id="repoName"></span></p>
+    <p class="sub" id="repoLine">保管庫：<span id="repoName"></span></p>
   </div>
 
   <div class="card">
@@ -174,6 +202,7 @@
 
 <script src="lib/pdf-lib.min.js"></script>
 <script src="lib/qrcode.js"></script>
+<script src="lib/peerjs.min.js"></script>
 <script src="common.js"></script>
 <script>
 var T = PS.lsGet("ps-teacher") || {};      // {o,r,t,pk?,size?}
@@ -185,10 +214,10 @@ function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function err(id, m){ $(id).innerHTML = m ? '<div class="err">⚠️ '+esc(m)+'</div>' : ""; }
 function go(v){
-  ["vSetup","vNewPw","vUnlock","vMain","vQR"].forEach(function(x){ $(x).classList.toggle("hidden", x!==v); });
+  ["vStart","vSetup","vNewPw","vUnlock","vMain","vQR"].forEach(function(x){ $(x).classList.toggle("hidden", x!==v); });
   var inApp = v==="vMain" || v==="vQR";
   $("qrBtn").classList.toggle("hidden", !inApp); $("setBtn").classList.toggle("hidden", !inApp);
-  if (v==="vMain") startPoll(); else stopPoll();
+  if (v==="vMain" && !DIRECT) startPoll(); else stopPoll();
   window.scrollTo(0,0);
 }
 function saveT(){ PS.lsSet("ps-teacher", T); }
@@ -200,8 +229,10 @@ function saveT(){ PS.lsSet("ps-teacher", T); }
 })();
 
 /* ---------- 起動 ---------- */
+var DIRECT=false, PEER=null;
 async function boot(){
-  if (!T.t || !T.o){ go("vSetup"); return; }
+  if (T.mode==="p" && T.pid){ enterDirect(); return; }
+  if (!T.t || !T.o){ go("vStart"); return; }
   try{
     var raw = await PS.getRaw(T, "config.json");
     if (!raw){ go("vNewPw"); return; }
@@ -255,12 +286,56 @@ async function enterMain(){
   go("vMain"); render(); refresh();
 }
 
+/* ---------- GitHubなし：直接受け取る ---------- */
+function startDirect(){ T={mode:"p", pid:PS.newPeerId(), size:T.size}; saveT(); enterDirect(); showQR(); }
+async function enterDirect(){
+  DIRECT=true;
+  KIDURL = PS.appBase() + "#c=" + PS.encLink({p:T.pid});
+  $("repoLine").textContent="受け取り方：GitHubなし（このiPadに直接届く）";
+  document.querySelectorAll(".gh").forEach(function(b){ b.classList.add("hidden"); });
+  $("sizeIn").value = T.size||"";
+  try{ (await PS.idbAll()).forEach(function(it){ items[it.id]={id:it.id, meta:it.meta, local:true}; }); }catch(e){}
+  if (!$("vQR").classList.contains("hidden")) {} else go("vMain");
+  render(); listen();
+}
+function setLive(t, ok){ var l=$("live"); l.textContent=t; l.classList.toggle("off", !ok); l.classList.add("big"); }
+var retryT=null;
+function listen(){
+  if (PEER && !PEER.destroyed) return;
+  setLive("つないでいます…", false);
+  PEER = new Peer(T.pid, PS.peerOpts());
+  PEER.on("open", function(){ setLive("受付中（この画面を開いたままにしてください）", true); });
+  PEER.on("connection", function(conn){
+    conn.on("data", async function(d){
+      if (!d || d.type!=="file" || !d.meta || !d.bytes) return;
+      var id=Date.now()+"-"+Math.random().toString(36).slice(2,8);
+      var m=d.meta, meta={nen:+m.nen||0, kumi:+m.kumi||0, ban:+m.ban||0, name:String(m.name||"").slice(0,200), pages:+m.pages||0, at:new Date().toISOString()};
+      try{
+        await PS.idbPut({id:id, meta:meta, bytes:d.bytes});
+        items[id]={id:id, meta:meta, local:true}; render();
+        conn.send({type:"ok"});
+      }catch(e){ err("mainErr","このiPadにしまえませんでした（容量がいっぱいかもしれません）"); }
+    });
+  });
+  PEER.on("disconnected", function(){ setLive("つなぎなおしています…", false); try{ PEER.reconnect(); }catch(e){} });
+  PEER.on("error", function(e){
+    if (e.type==="unavailable-id"){ setLive("この先生ページが、別のタブや別のiPadでも開いています。そちらを閉じてください。", false); PEER.destroy(); PEER=null; retryLater(8000); return; }
+    if (e.type==="peer-unavailable") return;
+    setLive("つながっていません（インターネットを確認してください）", false);
+    if (PEER && PEER.destroyed){ PEER=null; retryLater(5000); }
+    else if (["network","server-error","socket-error","socket-closed"].indexOf(e.type)>=0){ try{ PEER.destroy(); }catch(x){} PEER=null; retryLater(5000); }
+  });
+}
+function retryLater(ms){ clearTimeout(retryT); retryT=setTimeout(listen, ms); }
+document.addEventListener("visibilitychange", function(){ if (DIRECT && document.visibilityState==="visible" && (!PEER || PEER.destroyed || PEER.disconnected)){ if (PEER && PEER.disconnected && !PEER.destroyed){ try{ PEER.reconnect(); }catch(e){} } else listen(); } });
+
 /* ---------- 一覧 ---------- */
 function startPoll(){ stopPoll(); pollTimer=setInterval(function(){ if (document.visibilityState==="visible") refresh(); }, 12000); }
 function stopPoll(){ if (pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
 document.addEventListener("visibilitychange", function(){ if (document.visibilityState==="visible" && pollTimer) refresh(); });
 var refreshing=false;
 async function refresh(){
+  if (DIRECT) return;
   if (refreshing) return; refreshing=true;
   try{
     var files = await PS.listDir(T, "inbox"), byId = {};
@@ -319,6 +394,7 @@ function selectAll(){ var all=Object.keys(items).every(function(k){return chosen
 /* ---------- 印刷 ---------- */
 var lastUrl=null;
 async function getPdf(it){
+  if (it.local){ var rec=await PS.idbGet(it.id); if (!rec) throw new Error("ファイルが見つかりません"); return rec.bytes; }
   if (!it.bin){ var buf = await PS.getRaw(T, it.binPath); if (!buf) throw new Error("ファイルが見つかりません"); it.bin = await PS.openBin(it.key, it.head, buf); }
   return it.bin;
 }
@@ -345,6 +421,7 @@ function prepareOne(id){ var m=items[id].meta; prepare([id], m.nen+"-"+m.kumi+"-
 async function removeIds(ids){
   for (var i=0;i<ids.length;i++){
     var it=items[ids[i]]; if (!it) continue;
+    if (it.local){ await PS.idbDel(it.id); delete items[ids[i]]; delete chosen[ids[i]]; delete printed[ids[i]]; continue; }
     await PS.deleteFile(T, it.jsonPath, it.jsonSha);
     await PS.deleteFile(T, it.binPath, it.binSha);
     delete items[ids[i]]; delete chosen[ids[i]]; delete printed[ids[i]];
@@ -374,8 +451,10 @@ function showTeacherLink(){
 }
 function lockNow(){ delete T.pk; saveT(); PRIV=null; items={}; go("vUnlock"); }
 function resetAll(){
-  if (!confirm("このiPadの設定を消して、はじめからやり直します。保管庫の中身は消えません。いいですか？")) return;
-  PS.lsDel("ps-teacher"); PS.lsDel("ps-printed"); T={}; items={}; PRIV=null; go("vSetup");
+  if (!confirm(DIRECT ? "受け取り方をえらびなおします。いま届いているPDFは、このiPadに残ります。児童用QRは新しくなるので、配りなおしてください。いいですか？" : "このiPadの設定を消して、はじめからやり直します。保管庫の中身は消えません。いいですか？")) return;
+  if (PEER){ try{ PEER.destroy(); }catch(e){} PEER=null; }
+  DIRECT=false; document.querySelectorAll(".gh").forEach(function(b){ b.classList.remove("hidden"); });
+  PS.lsDel("ps-teacher"); PS.lsDel("ps-printed"); T={}; items={}; PRIV=null; go("vStart");
 }
 function copyText(t){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ alert("コピーしました"); }, function(){ prompt("コピーしてください", t); }); }
 

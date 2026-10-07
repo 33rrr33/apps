@@ -24,3 +24,6 @@ SOFTWARE.
 
 ----
 qrcode-generator 1.4.4 (Kazuhiko Arase) — MIT License — https://github.com/kazuhikoarase/qrcode-generator
+
+----
+peerjs 1.5.5 — MIT License — https://github.com/peers/peerjs

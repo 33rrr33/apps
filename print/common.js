@@ -190,7 +190,37 @@ var PS = (function(){
   }
   function appBase(){ return location.href.replace(/[#?].*$/, "").replace(/[^/]*$/, ""); }
 
-  return { bufToB64: bufToB64, b64ToBuf: b64ToBuf, encLink: encLink, decLink: decLink, enc: enc,
+  /* ---------- GitHubなしモード：児童のiPad → 先生のiPad に直接送る ---------- */
+  // つなぎ役（シグナリング）はPeerJSの無料サーバー。PDFの中身は通らず、端末どうしで直接送る
+  function peerOpts(){
+    var o = { debug: 0, config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }] } };
+    var h = lsGet("ps-peer-host"); if (h) for (var k in h) o[k] = h[k];   // テスト用
+    return o;
+  }
+  function newPeerId(){ var a = rand(12), s = ""; for (var i = 0; i < a.length; i++) s += "abcdefghijkmnpqrstuvwxyz23456789"[a[i] % 32]; return "printstation-" + s; }
+  // 先生のiPadの中にPDFをしまっておく（IndexedDB）
+  function idb(){
+    return new Promise(function(res, rej){
+      var r = indexedDB.open("print-station", 1);
+      r.onupgradeneeded = function(){ r.result.createObjectStore("items", { keyPath: "id" }); };
+      r.onsuccess = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); };
+    });
+  }
+  async function idbDo(mode, fn){
+    var db = await idb();
+    return new Promise(function(res, rej){
+      var tx = db.transaction("items", mode), st = tx.objectStore("items"), out = fn(st);
+      tx.oncomplete = function(){ res(out && out.result !== undefined ? out.result : out); db.close(); };
+      tx.onerror = function(){ rej(tx.error); db.close(); };
+    });
+  }
+  function idbPut(item){ return idbDo("readwrite", function(s){ s.put(item); }); }
+  function idbAll(){ return idbDo("readonly", function(s){ return s.getAll(); }); }
+  function idbGet(id){ return idbDo("readonly", function(s){ return s.get(id); }); }
+  function idbDel(id){ return idbDo("readwrite", function(s){ s.delete(id); }); }
+
+  return { peerOpts: peerOpts, newPeerId: newPeerId, idbPut: idbPut, idbAll: idbAll, idbGet: idbGet, idbDel: idbDel,
+    bufToB64: bufToB64, b64ToBuf: b64ToBuf, encLink: encLink, decLink: decLink, enc: enc,
     listDir: listDir, getRaw: getRaw, putFile: putFile, deleteFile: deleteFile, privateRepos: privateRepos,
     makeConfig: makeConfig, unlock: unlock, importPriv: importPriv, importPub: importPub, fingerprint: fingerprint,
     seal: seal, openHead: openHead, openBin: openBin, filesToPdf: filesToPdf, mergePdfs: mergePdfs,

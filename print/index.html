@@ -99,6 +99,7 @@
 </div>
 
 <script src="lib/pdf-lib.min.js"></script>
+<script src="lib/peerjs.min.js"></script>
 <script src="common.js"></script>
 <script>
 var CFG = null, PUB = null, sel = PS.lsGet("ps-kid-who") || {}, files = [];
@@ -108,7 +109,7 @@ function show(id){ ["noCfg","main","busy","done"].forEach(function(x){ $(x).clas
 // 先生のリンク（#c=...）を受け取って、この iPad に おぼえる
 (function(){
   var m = location.hash.match(/c=([A-Za-z0-9_-]+)/);
-  if (m){ try { var c = PS.decLink(m[1]); if (c.o && c.r && c.t && c.f){ PS.lsSet("ps-kid-cfg", c); } } catch(e){} history.replaceState(null, "", location.pathname); }
+  if (m){ try { var c = PS.decLink(m[1]); if ((c.o && c.r && c.t && c.f) || c.p){ PS.lsSet("ps-kid-cfg", c); } } catch(e){} history.replaceState(null, "", location.pathname); }
   CFG = PS.lsGet("ps-kid-cfg");
 })();
 
@@ -127,8 +128,43 @@ function render(){
 $("fileIn").onchange=function(){ files = files.concat(Array.prototype.slice.call(this.files)); this.value=""; $("err1").innerHTML=""; render(); };
 
 function prog(t, p){ $("busyT").textContent=t; $("busyBar").style.width=p+"%"; }
+// GitHubなし：先生のiPadへ直接おくる
+function sendDirect(meta, bytes){
+  return new Promise(function(resolve, reject){
+    var done=false, peer=new Peer(PS.peerOpts()), conn=null;
+    function fail(msg){ if (done) return; done=true; try{ peer.destroy(); }catch(e){} reject(new Error(msg)); }
+    var t1=setTimeout(function(){ fail("せんせいの がめんが ひらいて いないみたい。せんせいに いってね"); }, 15000);
+    peer.on("error", function(e){ fail(e && e.type==="peer-unavailable" ? "せんせいの がめんが ひらいて いないみたい。せんせいに いってね" : "つながりませんでした"); });
+    peer.on("open", function(){
+      conn=peer.connect(CFG.p, {reliable:true});
+      conn.on("open", function(){
+        clearTimeout(t1); prog("おくっています…", 70);
+        conn.send({type:"file", meta:meta, bytes:bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset+bytes.byteLength)});
+        setTimeout(function(){ fail("とどいたか わかりませんでした。もういちど おくってね"); }, 90000);
+      });
+      conn.on("data", function(d){ if (d && d.type==="ok" && !done){ done=true; setTimeout(function(){ try{ peer.destroy(); }catch(e){} }, 300); resolve(); } });
+      conn.on("error", function(){ fail("とちゅうで きれました。もういちど おくってね"); });
+    });
+  });
+}
 async function send(){
   show("busy"); prog("じゅんびしています…", 10);
+  if (CFG.p){
+    try{
+      prog("PDFに しています…", 30);
+      var pdf0 = await PS.filesToPdf(files);
+      if (pdf0.bytes.length > 25*1024*1024) throw new Error("ファイルが おおきすぎます（25MBまで）");
+      prog("せんせいに つないでいます…", 50);
+      await sendDirect({ nen:sel.nen, kumi:sel.kumi, ban:sel.ban, name:files.map(function(f){return f.name;}).join("、"), pages:pdf0.pages, at:new Date().toISOString() }, pdf0.bytes);
+      prog("おくれた！", 100);
+      $("doneTxt").textContent = sel.nen+"ねん "+sel.kumi+"くみ "+sel.ban+"ばん・"+pdf0.pages+"ページ";
+      files=[]; show("done");
+    }catch(e){
+      show("main"); render();
+      $("err1").innerHTML='<div class="err">⚠️ '+String(e.message||"おくれませんでした").replace(/[<>&]/g,"")+'<br>もういちど 「おくる」を おしてね</div>';
+    }
+    return;
+  }
   try{
     if (!PUB){
       var raw = await PS.getRaw(CFG, "config.json");
