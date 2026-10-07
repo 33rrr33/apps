@@ -108,11 +108,14 @@ function $(id){ return document.getElementById(id); }
 function show(id){ ["noCfg","main","busy","done"].forEach(function(x){ $(x).classList.toggle("hidden", x!==id); }); window.scrollTo(0,0); }
 
 // 先生のリンク（#c=...）を受け取って、この iPad に おぼえる
-(function(){
+function readTeacherLink(){
   var m = location.hash.match(/c=([A-Za-z0-9_-]+)/);
   if (m){ try { var c = PS.decLink(m[1]); if ((c.o && c.r && c.t && c.f) || c.p){ PS.lsSet("ps-kid-cfg", c); } } catch(e){} history.replaceState(null, "", location.pathname); }
-  CFG = PS.lsGet("ps-kid-cfg");
-})();
+  CFG = PS.lsGet("ps-kid-cfg"); PUB = null;
+}
+readTeacherLink();
+// 開いているタブにリンクを貼ったとき（#c= だけ変わったとき）も読みとる
+window.addEventListener("hashchange", function(){ readTeacherLink(); if (!CFG) show("noCfg"); else { show("main"); render(); $("codeLine").textContent="せんせいの うけつけコード："+PS.codeOf(CFG); } });
 
 function pick(el, key, n, from){
   var h=""; for (var i=from||1; i<=n; i++) h+='<button data-v="'+i+'" class="'+(sel[key]===i?"on":"")+'">'+i+'</button>';

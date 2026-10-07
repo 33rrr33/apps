@@ -220,10 +220,16 @@
 <script src="../print/common.js"></script>
 <script>
 /* 先生の印刷ステーションのQR（#c=...）を受け取って、このiPadに覚える（印刷ステーションと共通） */
-(function(){
+function readTeacherLink(){
   var m = location.hash.match(/c=([A-Za-z0-9_-]+)/);
-  if (m){ try { var c = PS.decLink(m[1]); if ((c.o && c.r && c.t && c.f) || c.p) PS.lsSet("ps-kid-cfg", c); } catch(e){} history.replaceState(null, "", location.pathname); }
-})();
+  if (!m) return false;
+  try { var c = PS.decLink(m[1]); if ((c.o && c.r && c.t && c.f) || c.p) PS.lsSet("ps-kid-cfg", c); } catch(e){}
+  history.replaceState(null, "", location.pathname);
+  return true;
+}
+readTeacherLink();
+// 開いているタブにリンクを貼ったとき（#c= だけ変わったとき）も読みとって、表示をなおす
+window.addEventListener("hashchange", function(){ if (readTeacherLink() && typeof rerender==="function") rerender(); });
 function teacherCfg(){ return PS.lsGet("ps-kid-cfg"); }
 function connBadge(){ return teacherCfg() ? '<span class="conn on">📶 せんせいの いんさつステーションと つながっています（うけつけコード：'+PS.codeOf(teacherCfg())+'）</span>' : '<span class="conn off">⚠️ せんせいの QRコードを まだ よみとって いません</span>'; }
 </script>
