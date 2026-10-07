@@ -72,6 +72,7 @@
 
     <div class="card">
       <div class="who" id="who">―</div>
+      <div class="sub" style="text-align:center" id="codeLine"></div>
       <label class="file" style="margin-top:12px">
         <span class="big">📄📷</span>PDFや しゃしんを えらぶ
         <input type="file" id="fileIn" accept="application/pdf,image/*" multiple>
@@ -195,7 +196,7 @@ async function send(){
 }
 function reset(){ show("main"); render(); }
 
-if (!CFG) show("noCfg"); else { show("main"); render(); }
+if (!CFG) show("noCfg"); else { show("main"); render(); $("codeLine").textContent="せんせいの うけつけコード："+PS.codeOf(CFG); }
 </script>
 </body>
 </html>

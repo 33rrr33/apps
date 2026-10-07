@@ -199,6 +199,7 @@
     </div>
     <p class="sub" id="qrKindNote" style="margin:6px 0 0"></p>
     <div id="qrBox"></div>
+    <p style="margin:4px 0">受付コード <b id="qrCode" style="font-size:1.3em;letter-spacing:.1em"></b>（児童の画面にも同じコードが出ます）</p>
     <div class="linkTxt" id="kidLink"></div>
     <div class="row" style="justify-content:center">
       <button class="btn" onclick="copyText($('kidLink').textContent)">リンクをコピー</button>
@@ -207,7 +208,7 @@
     <p class="sub">TeamsやOneNoteでリンクを配ってもOKです。</p>
   </div>
 </section>
-<p class="sub" style="text-align:center;margin-top:24px">印刷ステーション　ver.2026-10-07d</p>
+<p class="sub" style="text-align:center;margin-top:24px">印刷ステーション　ver.2026-10-07e</p>
 </div>
 
 <script src="lib/pdf-lib.min.js"></script>
@@ -293,7 +294,7 @@ async function doUnlock(){
 async function enterMain(){
   KIDURL = PS.appBase() + "#c=" + PS.encLink({o:T.o, r:T.r, t:T.t, f: await PS.fingerprint(CONF.pub)});
   $("repoName").textContent = T.o+"/"+T.r; $("sizeIn").value = T.size||"";
-  $("modeLine").textContent="☁️ GitHubで保管（"+T.o+"/"+T.r+"）";
+  $("modeLine").innerHTML="☁️ GitHubで保管（"+T.o+"/"+T.r+"）　受付コード <b style=\"font-size:1.2em;letter-spacing:.1em\">"+PS.codeOf(T)+"</b>";
   go("vMain"); render(); refresh();
 }
 
@@ -303,7 +304,7 @@ async function enterDirect(){
   DIRECT=true;
   KIDURL = PS.appBase() + "#c=" + PS.encLink({p:T.pid});
   $("repoLine").textContent="受け取り方：GitHubなし（このiPadに直接届く）";
-  $("modeLine").textContent="📶 GitHubなし（このiPadに直接届く）";
+  $("modeLine").innerHTML="📶 GitHubなし（このiPadに直接届く）　受付コード <b style=\"font-size:1.2em;letter-spacing:.1em\">"+PS.codeOf({p:T.pid})+"</b>";
   document.querySelectorAll(".gh").forEach(function(b){ b.classList.add("hidden"); });
   $("sizeIn").value = T.size||"";
   try{ (await PS.idbAll()).forEach(function(it){ items[it.id]={id:it.id, meta:it.meta, local:true}; }); }catch(e){}
@@ -467,6 +468,7 @@ function mathUrl(){ return KIDURL.replace(/print\/(#|$)/, "math-print/$1"); }
 function showQR(){
   var url = qrKind==="math" ? mathUrl() : KIDURL;
   $("qrBox").innerHTML=PS.qrSvg(url, 5); $("kidLink").textContent=url;
+  $("qrCode").textContent = DIRECT ? PS.codeOf({p:T.pid}) : PS.codeOf(T);
   document.querySelectorAll("#qrTabs button").forEach(function(b){ b.classList.toggle("primary", b.dataset.k===qrKind); });
   $("qrKindNote").textContent = qrKind==="math" ? "児童が算数のクイズでにがてを見つけ、できた練習プリントがそのまま先生に届きます。" : "児童がPDFや写真を選んで送ります。";
   go("vQR");

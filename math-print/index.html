@@ -225,7 +225,7 @@
   if (m){ try { var c = PS.decLink(m[1]); if ((c.o && c.r && c.t && c.f) || c.p) PS.lsSet("ps-kid-cfg", c); } catch(e){} history.replaceState(null, "", location.pathname); }
 })();
 function teacherCfg(){ return PS.lsGet("ps-kid-cfg"); }
-function connBadge(){ return teacherCfg() ? '<span class="conn on">📶 せんせいの いんさつステーションと つながっています</span>' : '<span class="conn off">⚠️ せんせいの QRコードを まだ よみとって いません</span>'; }
+function connBadge(){ return teacherCfg() ? '<span class="conn on">📶 せんせいの いんさつステーションと つながっています（うけつけコード：'+PS.codeOf(teacherCfg())+'）</span>' : '<span class="conn off">⚠️ せんせいの QRコードを まだ よみとって いません</span>'; }
 </script>
 <script>
 /* ==================================================================

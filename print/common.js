@@ -253,7 +253,16 @@ var PS = (function(){
     await putFile(cfg, "inbox/" + id + ".json", bufToB64(enc.encode(JSON.stringify(s.head))), "info");
   }
 
-  return { sendToTeacher: sendToTeacher, peerOpts: peerOpts, newPeerId: newPeerId, idbPut: idbPut, idbAll: idbAll, idbGet: idbGet, idbDel: idbDel,
+  // 受付コード：どの先生につながっているかを、先生と児童の画面で見くらべるための4文字
+  function codeOf(cfg){
+    if (!cfg) return "";
+    var src = cfg.p ? cfg.p : (cfg.o + "/" + cfg.r), h = 0;
+    for (var i = 0; i < src.length; i++) h = (h * 31 + src.charCodeAt(i)) >>> 0;
+    var a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", out = "";
+    for (var k = 0; k < 4; k++){ out += a[h % 32]; h = Math.floor(h / 32); }
+    return out;
+  }
+  return { codeOf: codeOf, sendToTeacher: sendToTeacher, peerOpts: peerOpts, newPeerId: newPeerId, idbPut: idbPut, idbAll: idbAll, idbGet: idbGet, idbDel: idbDel,
     bufToB64: bufToB64, b64ToBuf: b64ToBuf, encLink: encLink, decLink: decLink, enc: enc,
     listDir: listDir, getRaw: getRaw, putFile: putFile, deleteFile: deleteFile, privateRepos: privateRepos,
     makeConfig: makeConfig, unlock: unlock, importPriv: importPriv, importPub: importPub, fingerprint: fingerprint,
