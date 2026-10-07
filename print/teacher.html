@@ -95,6 +95,7 @@
 
 <!-- ===== はじめての準備 ===== -->
 <section id="vSetup" class="hidden">
+  <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn small switchBtn" onclick="switchMode()">🔁 受け取り方をえらびなおす</button></div>
   <div class="card">
     <h2>はじめての準備（1回だけ・約5分）</h2>
     <p class="sub" style="margin-top:0">児童のPDFは、先生のGitHubにつくる<b>非公開の保管庫</b>に入ります。サーバーはいりません。PDFは送る前に暗号化されるので、先生のパスワードなしでは中を見られません。</p>
@@ -125,6 +126,7 @@
 
 <!-- ===== パスワードを決める（初回） ===== -->
 <section id="vNewPw" class="hidden">
+  <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn small switchBtn" onclick="switchMode()">🔁 受け取り方をえらびなおす</button></div>
   <div class="card">
     <h2>先生のパスワードを決める</h2>
     <p class="sub" style="margin-top:0">PDFを開くためのパスワードです。<b>わすれると、送られたPDFは開けません</b>（作り直せば、また使えます）。8文字以上にしてください。</p>
@@ -138,6 +140,7 @@
 
 <!-- ===== パスワードで開く ===== -->
 <section id="vUnlock" class="hidden">
+  <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn small switchBtn" onclick="switchMode()">🔁 受け取り方をえらびなおす</button></div>
   <div class="card">
     <h2>🔒 パスワードを入れてください</h2>
     <input class="text" type="password" id="pw0" placeholder="パスワード" autocomplete="current-password" onkeydown="if(event.key==='Enter')doUnlock()">
@@ -149,6 +152,7 @@
 
 <!-- ===== 一覧 ===== -->
 <section id="vMain" class="hidden">
+  <div class="row" style="justify-content:space-between;margin-top:6px"><span class="sub" id="modeLine"></span><button class="btn small" onclick="switchMode()">🔁 受け取り方を変える</button></div>
   <div class="card" id="settings" style="display:none">
     <h2>⚙️ 設定</h2>
     <div class="row"><span>クラスの人数</span><input class="text" id="sizeIn" type="number" min="0" max="45" style="width:90px" placeholder="35"><span class="sub">（まだの番号を出します）</span></div>
@@ -198,6 +202,7 @@
     <p class="sub">TeamsやOneNoteでリンクを配ってもOKです。</p>
   </div>
 </section>
+<p class="sub" style="text-align:center;margin-top:24px">印刷ステーション　ver.2026-10-07b</p>
 </div>
 
 <script src="lib/pdf-lib.min.js"></script>
@@ -283,6 +288,7 @@ async function doUnlock(){
 async function enterMain(){
   KIDURL = PS.appBase() + "#c=" + PS.encLink({o:T.o, r:T.r, t:T.t, f: await PS.fingerprint(CONF.pub)});
   $("repoName").textContent = T.o+"/"+T.r; $("sizeIn").value = T.size||"";
+  $("modeLine").textContent="☁️ GitHubで保管（"+T.o+"/"+T.r+"）";
   go("vMain"); render(); refresh();
 }
 
@@ -292,6 +298,7 @@ async function enterDirect(){
   DIRECT=true;
   KIDURL = PS.appBase() + "#c=" + PS.encLink({p:T.pid});
   $("repoLine").textContent="受け取り方：GitHubなし（このiPadに直接届く）";
+  $("modeLine").textContent="📶 GitHubなし（このiPadに直接届く）";
   document.querySelectorAll(".gh").forEach(function(b){ b.classList.add("hidden"); });
   $("sizeIn").value = T.size||"";
   try{ (await PS.idbAll()).forEach(function(it){ items[it.id]={id:it.id, meta:it.meta, local:true}; }); }catch(e){}
@@ -450,6 +457,13 @@ function showTeacherLink(){
   $("tLink").innerHTML='<p class="sub">⚠️ このリンクは先生だけが使ってください（開くにはパスワードも必要です）。</p><div class="linkTxt">'+esc(url)+'</div><button class="btn" onclick="copyText(\''+url+'\')">コピー</button>';
 }
 function lockNow(){ delete T.pk; saveT(); PRIV=null; items={}; go("vUnlock"); }
+// どの画面からでも、受け取り方をえらぶ画面へ
+function switchMode(){
+  if (!confirm("受け取り方をえらぶ画面にもどります。児童用QRは新しくなるので、配りなおしてください。いいですか？")) return;
+  if (PEER){ try{ PEER.destroy(); }catch(e){} PEER=null; }
+  DIRECT=false; document.querySelectorAll(".gh").forEach(function(b){ b.classList.remove("hidden"); });
+  var size=T.size; PS.lsDel("ps-printed"); T={size:size}; saveT(); items={}; PRIV=null; go("vStart");
+}
 function resetAll(){
   if (!confirm(DIRECT ? "受け取り方をえらびなおします。いま届いているPDFは、このiPadに残ります。児童用QRは新しくなるので、配りなおしてください。いいですか？" : "このiPadの設定を消して、はじめからやり直します。保管庫の中身は消えません。いいですか？")) return;
   if (PEER){ try{ PEER.destroy(); }catch(e){} PEER=null; }
