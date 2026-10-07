@@ -1047,6 +1047,7 @@ function renderSetup(){
       ${inner}
       ${S.homeStep>1?'<button class="ghost back" id="backBtn">← もどる</button>':""}
     </div>
+    ${S.homeStep===1?'<a class="panel" href="../print/" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit"><span style="font-size:30px">📄</span><span style="flex:1"><b>PDFや しゃしんを せんせいに おくる</b><br><span style="font-size:13px;color:var(--muted)">いんさつステーションの おくる がめんへ</span></span><b style="color:var(--accent)">→</b></a>':""}
     ${S.homeStep===1?footerHTML():""}`;
 
   app.querySelectorAll(".optbtn[data-g]").forEach(b=>b.onclick=()=>{ S.grade=+b.dataset.g; S.furi=S.grade<=3; S.domain="all"; S.unitKey=null; gotoStep(2); });
