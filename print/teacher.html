@@ -207,7 +207,7 @@
     <p class="sub">TeamsやOneNoteでリンクを配ってもOKです。</p>
   </div>
 </section>
-<p class="sub" style="text-align:center;margin-top:24px">印刷ステーション　ver.2026-10-07c</p>
+<p class="sub" style="text-align:center;margin-top:24px">印刷ステーション　ver.2026-10-07d</p>
 </div>
 
 <script src="lib/pdf-lib.min.js"></script>
@@ -310,13 +310,20 @@ async function enterDirect(){
   if (!$("vQR").classList.contains("hidden")) {} else go("vMain");
   render(); listen();
 }
+// 受付中は iPad の画面が自動で消えないようにする（対応していないブラウザでは何もしない）
+var WAKE=null;
+async function keepAwake(){
+  if (!DIRECT || !("wakeLock" in navigator) || document.visibilityState!=="visible" || (WAKE && !WAKE.released)) return;
+  try{ WAKE=await navigator.wakeLock.request("screen"); }catch(e){}
+}
+document.addEventListener("visibilitychange", function(){ if (document.visibilityState==="visible") keepAwake(); });
 function setLive(t, ok){ var l=$("live"); l.textContent=t; l.classList.toggle("off", !ok); l.classList.add("big"); }
 var retryT=null;
 function listen(){
   if (PEER && !PEER.destroyed) return;
   setLive("つないでいます…", false);
   PEER = new Peer(T.pid, PS.peerOpts());
-  PEER.on("open", function(){ setLive("受付中（この画面を開いたままにしてください）", true); });
+  PEER.on("open", function(){ setLive("受付中（この画面を開いたままにしてください）", true); keepAwake(); });
   PEER.on("connection", function(conn){
     conn.on("data", async function(d){
       if (!d || d.type!=="file" || !d.meta || !d.bytes) return;
