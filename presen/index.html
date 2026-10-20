@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>プレゼンわざずかん</title>
+<link rel="icon" href="../icon-192.png"><link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>:root{color-scheme:light}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+</head><body>
+<style>
+/* Layout: 図鑑のように「こんなとき → このワザ」のカードを並べ、開くと「ワザなし／ワザあり」のミニスライドをくらべる。提案の見本はスライドと台本を並べる */
+:root{
+  --paper:#F2F5FA; --card:#FFFFFF; --ink:#1D2742; --muted:#58637F; --line:#D3DAE6;
+  --accent:#2C68E0; --accent-soft:#E3ECFD; --sun:#FFC83A;
+  --hook:#E0532F; --hook-soft:#FDE9E2;
+  --good:#17946A; --good-soft:#DDF4EA; --bad:#D9483A; --bad-soft:#FCE6E2;
+  --s-bg:#FFFFFF; --s-ink:#1D2742; --s-muted:#6B7590; --s-soft:#EEF3FC; --s-soft2:#DCE3EF; --s-pinksoft:#FDEDEA;
+  --s-blue:#2C68E0; --s-red:#D9483A; --s-green:#17946A; --s-yellow:#FFE27A;
+  --s-paleyellow:#F1E58A; --s-pink:#EE6CB0; --s-cyan:#3EC5D4; --s-orange:#F4983C; --s-nori:#22303A; --s-rice:#FFFFFF;
+  --f-display:"Dela Gothic One","Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#121828; --card:#1B2337; --ink:#E8EDF7; --muted:#A2ADC6; --line:#2D3753;
+  --accent:#6E9FFF; --accent-soft:#22325A; --sun:#FFD04F; --hook:#FF8A66; --hook-soft:#43231A;
+  --good:#3FC690; --good-soft:#173A2E; --bad:#FF7B66; --bad-soft:#40211D; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#121828; --card:#1B2337; --ink:#E8EDF7; --muted:#A2ADC6; --line:#2D3753;
+  --accent:#6E9FFF; --accent-soft:#22325A; --sun:#FFD04F; --hook:#FF8A66; --hook-soft:#43231A;
+  --good:#3FC690; --good-soft:#173A2E; --bad:#FF7B66; --bad-soft:#40211D; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.75;font-weight:500}
+.wrap{max-width:1080px;margin:0 auto;padding-block:20px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{text-wrap:balance;margin:0}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.hero{display:grid;gap:10px;padding-block:12px 20px}
+.hero .eyebrow{font-weight:700;color:var(--accent);letter-spacing:.08em;font-size:14px}
+.hero h1{font-family:var(--f-display);font-weight:400;font-size:clamp(34px,7vw,56px);line-height:1.15;letter-spacing:.02em}
+.hero h1 .mark{background:linear-gradient(transparent 62%,var(--sun) 62%);padding:0 .08em}
+.hero p{margin:0;max-width:42em;font-size:17px}
+.hero p b{color:var(--hook)}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 24px;border-bottom:2px solid var(--line)}
+.tab{border:0;background:none;color:var(--muted);font-weight:900;font-size:16px;padding:10px 14px;border-radius:12px 12px 0 0;margin-bottom:-2px;border-bottom:4px solid transparent}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);background:var(--card)}
+
+.lead{margin:0 0 18px;color:var(--muted)}
+.group{margin-bottom:38px}
+.ghead{display:grid;gap:4px;margin-bottom:16px}
+.ghead h2{font-size:24px;font-weight:900;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ghead h2 i{font-style:normal;font-size:13px;color:var(--card);background:var(--accent);border-radius:8px;padding:2px 10px}
+.group.hook .ghead h2 i{background:var(--hook)}
+.ghead p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
+.card{display:grid;grid-template-rows:auto 1fr;gap:12px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px;color:inherit;transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.group.hook .card:hover{border-color:var(--hook)}
+.card .thumb{pointer-events:none}
+.card .when{font-size:14px;color:var(--muted);line-height:1.6}
+.card .when b{display:block;color:var(--accent);font-size:12px;letter-spacing:.06em}
+.group.hook .card .when b{color:var(--hook)}
+.card .name{font-weight:900;font-size:19px;line-height:1.4;display:flex;gap:8px;align-items:baseline}
+.no{font-family:var(--f-display);font-weight:400;font-size:13px;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:1px 10px;white-space:nowrap}
+.no.h{color:var(--hook);background:var(--hook-soft)}
+
+.back{border:2px solid var(--line);background:var(--card);color:var(--ink);font-weight:700;border-radius:999px;padding:6px 16px;font-size:15px}
+.dhead{display:grid;gap:10px;margin:18px 0 22px}
+.dhead h2{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,5vw,40px);line-height:1.25}
+.whenbox{background:var(--accent-soft);border-radius:14px;padding:12px 16px;font-size:17px;font-weight:700;max-width:46em}
+.whenbox span{display:inline-block;background:var(--accent);color:var(--card);border-radius:8px;padding:0 10px;margin-right:8px;font-size:14px}
+.hookpage .whenbox{background:var(--hook-soft)} .hookpage .whenbox span{background:var(--hook)}
+.compare{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);gap:10px;align-items:start}
+.side{display:grid;gap:10px;min-width:0}
+.tag{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:900;font-size:16px}
+.tag i{font-style:normal;color:var(--card);border-radius:8px;padding:2px 12px}
+.tag.bad i{background:var(--bad)} .tag.bad{color:var(--bad)}
+.tag.good i{background:var(--good)} .tag.good{color:var(--good)}
+.mid{align-self:center;display:grid;place-items:center;color:var(--accent);font-weight:900;font-size:13px;text-align:center;line-height:1.3}
+.mid svg{width:46px;height:46px}
+.btn{border:2px solid var(--accent);background:var(--card);color:var(--accent);font-weight:900;border-radius:999px;padding:6px 16px;font-size:15px}
+.btn.solid{background:var(--accent);color:var(--card)}
+.btn:disabled{opacity:.35;cursor:default}
+.howto{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px;margin-top:28px}
+.panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px 20px;min-width:0}
+.panel h3{font-size:20px;font-weight:900;margin-bottom:10px}
+.panel p{margin:0}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:st}
+.steps li{display:grid;grid-template-columns:36px 1fr;gap:10px;align-items:start;counter-increment:st}
+.steps li::before{content:counter(st);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--card);font-family:var(--f-display);font-size:16px}
+.point{background:var(--sun);color:#1D2742;border-color:var(--sun)}
+.point p{font-size:17px;font-weight:700}
+.say{margin-top:14px;background:var(--card);border:2px dashed var(--line);border-radius:18px;padding:16px 20px}
+.say h3{font-size:18px;font-weight:900;margin-bottom:6px}
+.say p{margin:0;font-size:17px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:28px;flex-wrap:wrap}
+
+/* ミニスライド */
+.slide{position:relative;aspect-ratio:16/9;width:100%;max-width:100%;container-type:inline-size;background:var(--s-bg);color:var(--s-ink);border-radius:8px;box-shadow:0 0 0 2px var(--line),0 8px 20px rgba(20,30,60,.10);overflow:hidden;padding:4cqw 5cqw;display:flex;flex-direction:column;gap:2.6cqw;font-family:var(--f-body);line-height:1.5}
+.s-title{font-weight:900;font-size:5.2cqw;line-height:1.25;border-bottom:.6cqw solid var(--s-blue);padding-bottom:1.2cqw}
+.s-dense{font-size:2.65cqw;line-height:1.7;margin:0;font-weight:500}
+.s-three{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:2.4cqw}
+.s-box{background:var(--s-soft);border-radius:2cqw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1cqw;text-align:center;padding:2cqw}
+.s-num{display:grid;place-items:center;width:7cqw;height:7cqw;border-radius:50%;background:var(--s-blue);color:var(--s-bg);font-family:var(--f-display);font-size:3.8cqw}
+.s-box b{font-size:4.2cqw;line-height:1.25}
+.s-box small{font-size:2.6cqw;color:var(--s-muted)}
+.s-big{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3.5cqw}
+.s-line{display:flex;align-items:center;gap:2.5cqw;font-size:5.4cqw;font-weight:900}
+.s-chip{background:var(--s-soft);border-radius:1.6cqw;padding:.4cqw 2.4cqw}
+.s-line .em{color:var(--s-red)}
+.arr{width:9cqw;height:4.5cqw;flex:none}
+.s-two{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:2.4cqw}
+.s-col{border-radius:2cqw;padding:2cqw 2.6cqw;border:.5cqw solid}
+.s-col.g{border-color:var(--s-blue);background:var(--s-soft)} .s-col.r{border-color:var(--s-red);background:var(--s-pinksoft)}
+.s-colhead{font-weight:900;font-size:3.8cqw}
+.s-col.g .s-colhead{color:var(--s-blue)} .s-col.r .s-colhead{color:var(--s-red)}
+.s-col ul{margin:1cqw 0 0;padding-left:4cqw;font-size:3.4cqw;font-weight:700;line-height:1.6}
+.s-concl{background:var(--s-yellow);border-radius:1.6cqw;text-align:center;font-weight:900;font-size:3.6cqw;padding:1cqw}
+.s-ba{flex:1;display:flex;align-items:center;justify-content:center;gap:4cqw}
+.s-state{display:flex;flex-direction:column;align-items:center;gap:.6cqw}
+.s-face{width:17cqw;height:17cqw}
+.s-lbl{font-size:3.2cqw;font-weight:900;color:var(--s-muted)}
+.s-n{font-family:var(--f-display);font-size:6.5cqw;line-height:1}
+.s-n.up{color:var(--s-red)}
+.s-ba .arr{width:16cqw;height:8cqw}
+.s-note{position:absolute;right:5cqw;bottom:4cqw;background:var(--s-red);color:var(--s-bg);font-weight:900;font-size:3.2cqw;border-radius:999px;padding:.6cqw 2.8cqw;transform:rotate(-4deg)}
+.s-table{width:100%;border-collapse:collapse;font-size:3.3cqw;font-weight:700;text-align:center;margin-top:1cqw}
+.s-table th{background:var(--s-blue);color:var(--s-bg);padding:1.1cqw;font-weight:900}
+.s-table td{border-bottom:.3cqw solid var(--s-soft2);padding:1.2cqw}
+.s-table td:first-child{font-weight:900;background:var(--s-soft)}
+.s-table.left td,.s-table.left th{text-align:left;padding-left:2cqw}
+.s-table.left{font-size:3cqw}
+.s-table.left td:first-child{width:34%}
+.s-table.worry th:first-child{background:var(--s-red)}
+.s-table.worry td:first-child{background:var(--s-pinksoft)}
+.s-bars{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.4cqw}
+.s-bar{display:grid;grid-template-columns:22cqw 1fr 9cqw;align-items:center;gap:1.6cqw;font-size:3cqw;font-weight:700}
+.s-bar .b{height:4.2cqw;border-radius:0 1cqw 1cqw 0;background:var(--s-soft2)}
+.s-bar.top .b{background:var(--s-red)} .s-bar.top{font-weight:900;color:var(--s-red)}
+.s-bar span:last-child{font-variant-numeric:tabular-nums}
+.s-cap{position:absolute;right:5cqw;top:13cqw;font-weight:900;font-size:3.4cqw;color:var(--s-red)}
+.s-flow{flex:1;display:flex;align-items:center;justify-content:space-between;gap:.6cqw}
+.s-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:.8cqw;text-align:center}
+.s-step .season{font-size:2.3cqw;font-weight:900;color:var(--s-muted);min-height:3.4cqw}
+.s-step .box{width:100%;background:var(--s-soft);border:.4cqw solid var(--s-blue);border-radius:1.6cqw;padding:1.6cqw .6cqw;font-size:2.9cqw;font-weight:900;line-height:1.3}
+.s-step .box em{display:block;font-style:normal;font-family:var(--f-display);color:var(--s-blue);font-size:3.2cqw}
+.s-flow .arr{width:4cqw;height:3cqw;margin-top:3cqw}
+.s-q{font-size:4.6cqw;font-weight:900;line-height:1.35}
+.s-q .q{color:var(--s-red);font-family:var(--f-display);margin-right:1cqw}
+.s-opts{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;align-items:stretch}
+.s-opt{border:.5cqw solid var(--s-soft2);border-radius:2cqw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6cqw;text-align:center;padding:1.4cqw;transition:all .3s}
+.s-opt .abc{font-family:var(--f-display);font-size:5cqw;color:var(--s-blue);line-height:1}
+.s-opt b{font-size:4.2cqw}
+.s-opt small{font-size:2.4cqw;color:var(--s-muted)}
+.revealed .s-opt.ok{border-color:var(--s-red);background:var(--s-pinksoft);transform:scale(1.04)}
+.revealed .s-opt:not(.ok){opacity:.4}
+.s-ans{border:0;align-self:center;background:var(--s-blue);color:var(--s-bg);font-weight:900;font-size:2.8cqw;border-radius:999px;padding:.8cqw 4cqw}
+.revealed .s-ans{background:var(--s-red)}
+.b9 .t{font-size:2.8cqw;color:var(--s-paleyellow);font-weight:700;border:0}
+.b9 p{margin:0;font-size:2.2cqw;line-height:1.55}
+.b9 .c1{color:var(--s-pink)} .b9 .c2{color:var(--s-cyan)} .b9 .c3{color:var(--s-orange)} .b9 .c4{color:var(--s-green)} .b9 .c5{color:var(--s-paleyellow)}
+.g9 .s-title{font-size:6.4cqw}
+.g9 .s-title b{color:var(--s-red)}
+.g9 ul{margin:0;padding-left:5cqw;font-size:5cqw;font-weight:900;line-height:1.55}
+.s-center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:2cqw}
+.s-kicker{font-size:3.2cqw;font-weight:900;color:var(--s-muted)}
+.s-huge{font-family:var(--f-display);font-size:6.6cqw;line-height:1.3}
+.s-huge .red{color:var(--s-red)}
+.s-src{font-size:2.2cqw;color:var(--s-muted)}
+.s-reasons{display:flex;gap:2cqw;flex-wrap:wrap;justify-content:center}
+.s-reasons span{background:var(--s-soft);border-radius:999px;padding:.6cqw 2.6cqw;font-size:2.9cqw;font-weight:900}
+.s-onigiri{display:flex;align-items:center;gap:4cqw}
+.s-onigiri svg{width:20cqw;height:18cqw}
+.s-ev{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:3cqw;align-items:center}
+.s-stat{text-align:center;display:flex;flex-direction:column;gap:.6cqw}
+.s-stat .n{font-family:var(--f-display);font-size:10cqw;line-height:1;color:var(--s-red)}
+.s-stat .n small{font-size:4.4cqw;color:var(--s-ink)}
+.s-stat .d{font-size:2.8cqw;font-weight:700}
+.s-quote{background:var(--s-soft);border-radius:2cqw;padding:2.4cqw 3cqw;font-size:3.3cqw;font-weight:900;line-height:1.5;position:relative}
+.s-quote small{display:block;font-size:2.4cqw;color:var(--s-muted);margin-top:1cqw}
+.s-quote::before{content:"“";position:absolute;left:1cqw;top:-2cqw;font-size:9cqw;color:var(--s-blue);font-family:Georgia,serif;line-height:1}
+.s-tag{position:absolute;left:5cqw;bottom:2.6cqw;font-size:2.2cqw;color:var(--s-muted)}
+.s-action{background:var(--s-yellow);border-radius:2cqw;padding:2cqw 4cqw;font-size:5cqw;font-weight:900;line-height:1.35}
+.s-thanks{font-size:2.8cqw;color:var(--s-muted);font-weight:700}
+.s-cover{flex:1;display:flex;flex-direction:column;justify-content:center;gap:2.2cqw;border-left:1.6cqw solid var(--s-red);padding-left:4cqw}
+.s-cover .big{font-family:var(--f-display);font-size:7.6cqw;line-height:1.25}
+.s-cover .sub{font-size:3.2cqw;font-weight:900;color:var(--s-muted)}
+.s-connect{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.8cqw}
+.s-crow{display:grid;grid-template-columns:22cqw 7cqw 1fr;align-items:center;gap:1.6cqw}
+.s-goal{background:var(--s-blue);color:var(--s-bg);border-radius:999px;text-align:center;font-weight:900;font-size:3.6cqw;padding:.8cqw 0}
+.s-crow .arr{width:7cqw;height:3.6cqw}
+.s-crow .idea{background:var(--s-soft);border-radius:1.6cqw;padding:1.2cqw 2.4cqw;font-size:3.4cqw;font-weight:900}
+.s-vs{flex:1;display:grid;grid-template-columns:1fr auto 1fr;gap:3cqw;align-items:center;text-align:center}
+.s-vs .n{font-family:var(--f-display);font-size:9cqw;line-height:1}
+.s-vs .n.red{color:var(--s-red)}
+.s-vs .lab{font-size:3.4cqw;font-weight:900}
+.s-vs .vs{font-family:var(--f-display);font-size:5cqw;color:var(--s-muted)}
+
+/* 見本プレゼン */
+.demo{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
+.demo .stage{display:grid;gap:12px;min-width:0}
+.demo .ctrl{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.demo .count{font-weight:900;font-variant-numeric:tabular-nums}
+.demo .script{display:grid;gap:14px}
+.demo .script .panel p{font-size:17px}
+.role{display:inline-block;font-size:13px;font-weight:900;color:var(--card);background:var(--hook);border-radius:8px;padding:1px 10px;margin-bottom:6px}
+.wazalink{border:0;background:none;padding:0;color:var(--accent);font-weight:900;font-size:16px;text-decoration:underline;text-underline-offset:3px;text-align:left}
+.thumbs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:6px}
+.thumbs button{border:0;padding:0;background:none;border-radius:8px;opacity:.55;transition:opacity .15s}
+.thumbs button[aria-current="true"]{opacity:1;outline:3px solid var(--hook);outline-offset:2px}
+.thumbs .slide{pointer-events:none}
+.story{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px;align-items:center}
+.story span{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:2px 12px;font-weight:700;font-size:14px}
+.story span.on{border-color:var(--hook);color:var(--hook)}
+.story em{font-style:normal;color:var(--muted)}
+.memo{font-size:13px;color:var(--muted);margin-top:10px}
+.scene{background:var(--hook-soft);border-radius:16px;padding:14px 18px;margin-bottom:16px;font-weight:700}
+.scene b{color:var(--hook)}
+
+/* データ */
+.cols2{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.ways{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.way{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:6px;align-content:start}
+.way b{font-size:19px}
+.way .ex{font-size:14px;color:var(--muted);line-height:1.6}
+.way ul{margin:0;padding-left:1.2em;font-size:15px;line-height:1.6}
+.vs2{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.vcard{border-radius:16px;padding:14px 18px;border:2px solid}
+.vcard.ng{border-color:var(--bad);background:var(--bad-soft)} .vcard.ok{border-color:var(--good);background:var(--good-soft)}
+.vcard .lab{font-weight:900;font-size:14px}
+.vcard.ng .lab{color:var(--bad)} .vcard.ok .lab{color:var(--good)}
+.vcard p{margin:4px 0 0;font-size:17px;font-weight:700}
+.vcard small{display:block;color:var(--muted);font-weight:700;margin-top:4px}
+.maker{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px;align-items:start}
+.form{display:grid;gap:10px}
+.form label{font-weight:900;font-size:14px;color:var(--muted)}
+.form input[type=text],.form input[type=number]{width:100%;font-family:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
+.row{display:grid;grid-template-columns:28px minmax(0,1fr) 84px;gap:8px;align-items:center}
+.row input[type=checkbox]{width:22px;height:22px;accent-color:var(--hook)}
+.hint{font-size:13px;color:var(--muted)}
+.outsay{background:var(--card);border:2px dashed var(--line);border-radius:14px;padding:12px 16px;font-weight:700;margin-top:10px}
+
+/* クイズ */
+.quiz{max-width:760px}
+.qcard{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 22px;display:grid;gap:14px}
+.qmeta{display:flex;justify-content:space-between;color:var(--muted);font-weight:700;font-size:14px}
+.qbar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.qbar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.qtext{font-size:19px;font-weight:900;line-height:1.6}
+.qtext small{display:block;font-size:14px;color:var(--muted);font-weight:700}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink);border-radius:14px;padding:10px 14px;font-size:17px;font-weight:700;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt .no{flex:none}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.fb{border-radius:14px;padding:12px 16px;font-weight:700}
+.fb.ok{background:var(--good-soft)} .fb.ng{background:var(--bad-soft)}
+.fb b{display:block;font-size:18px}
+.fb.ok b{color:var(--good)} .fb.ng b{color:var(--bad)}
+.qnav{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.result{text-align:center;display:grid;gap:12px;justify-items:center}
+.result .score{font-family:var(--f-display);font-size:56px;line-height:1;color:var(--accent)}
+
+/* 作り方 */
+.sec{margin-bottom:34px}
+.sec h2{font-size:24px;font-weight:900;margin-bottom:6px}
+.sec > p{margin:0 0 14px;color:var(--muted)}
+.flow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.flow .part{display:grid;gap:6px;min-width:0;align-content:start}
+.flow .lab{font-weight:900;font-size:13px;text-align:center;border-radius:8px;padding:2px 4px;color:var(--card)}
+.lab.a{background:var(--hook)} .lab.b{background:var(--accent)} .lab.c{background:var(--good)}
+.flow .slide{padding:3cqw 5cqw;gap:2cqw;justify-content:center;align-items:center;text-align:center}
+.flow .slide b{font-size:9cqw;line-height:1.25}
+.flow .slide small{font-size:6.5cqw;color:var(--s-muted);font-weight:700;line-height:1.35}
+.flow .sayit{font-size:13px;color:var(--muted);line-height:1.5}
+.make{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;counter-reset:mk}
+.make li{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;counter-increment:mk;display:grid;gap:4px;align-content:start}
+.make li::before{content:"ステップ " counter(mk);font-weight:900;color:var(--accent);font-size:13px;letter-spacing:.05em}
+.make b{font-size:18px}
+.make span{font-size:15px;color:var(--muted);line-height:1.6}
+.talk{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.talk div{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px}
+.talk b{display:block;font-size:18px;color:var(--hook)}
+.talk span{font-size:15px;color:var(--muted);line-height:1.6}
+.qa{display:grid;gap:10px}
+.qa details{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 16px}
+.qa summary{font-weight:900;font-size:17px;cursor:pointer}
+.qa summary::marker{color:var(--hook)}
+.qa p{margin:8px 0 2px;color:var(--muted)}
+.cheat{width:100%;border-collapse:collapse;background:var(--card);font-size:16px}
+.cheat th,.cheat td{padding:10px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.cheat th{background:var(--accent-soft);font-weight:900}
+.cheat td a{color:var(--accent);font-weight:900;text-decoration:none;white-space:nowrap}
+.cheat tr.h td a{color:var(--hook)}
+.tablewrap{overflow-x:auto;border:2px solid var(--line);border-radius:14px}
+.checks{display:grid;gap:8px;max-width:720px}
+.check{display:flex;gap:12px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:700;font-size:17px;cursor:pointer}
+.check input{width:24px;height:24px;accent-color:var(--good);flex:none}
+.check:has(input:checked){border-color:var(--good);background:var(--good-soft)}
+.done{margin-top:10px;font-weight:900;color:var(--good);font-size:18px}
+
+@media (max-width:760px){
+  .compare{grid-template-columns:minmax(0,1fr)}
+  .mid svg{transform:rotate(90deg)}
+  .howto,.demo,.maker{grid-template-columns:minmax(0,1fr)}
+  .flow{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">5年生のための 提案プレゼン</div>
+    <h1>プレゼン<span class="mark">わざ</span>ずかん</h1>
+    <p>学校をもっとよくするアイデアを思いついたら、校長先生に許可をもらうプレゼンをしよう。<b>「やりたいです！」だけでは、なかなか「いいよ」とは言ってもらえません。</b>データで理由を見せて、心配なことにも答えて、「それならやってみよう」と言ってもらえるプレゼンを作ろう。</p>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="メニュー">
+    <button class="tab" role="tab" data-tab="zukan">ワザずかん</button>
+    <button class="tab" role="tab" data-tab="demo">提案プレゼンの見本</button>
+    <button class="tab" role="tab" data-tab="data">データの集め方</button>
+    <button class="tab" role="tab" data-tab="quiz">どのワザ？クイズ</button>
+    <button class="tab" role="tab" data-tab="guide">作り方とチェック</button>
+  </nav>
+  <main id="view"></main>
+</div>
+
+<script>
+const arrow = (c='var(--s-blue)') => `<svg class="arr" viewBox="0 0 100 50" aria-hidden="true"><path d="M4 17H62V4L96 25L62 46V33H4Z" fill="${c}"/></svg>`;
+const ARR = arrow();
+function face(kind){
+  const happy = kind === 'happy';
+  const eyes = happy
+    ? '<path d="M28 42Q35 34 42 42M58 42Q65 34 72 42" stroke="var(--s-ink)" stroke-width="5" fill="none" stroke-linecap="round"/>'
+    : '<circle cx="35" cy="44" r="5" fill="var(--s-ink)"/><circle cx="65" cy="44" r="5" fill="var(--s-ink)"/><path d="M25 32L42 36M75 32L58 36" stroke="var(--s-ink)" stroke-width="4" stroke-linecap="round"/>';
+  const mouth = happy
+    ? '<path d="M30 60Q50 82 70 60Z" fill="var(--s-red)" stroke="var(--s-ink)" stroke-width="4" stroke-linejoin="round"/>'
+    : '<path d="M34 72Q50 60 66 72" stroke="var(--s-ink)" stroke-width="5" fill="none" stroke-linecap="round"/>';
+  return `<svg class="s-face" viewBox="0 0 100 100" role="img" aria-label="${happy?'にこにこの顔':'こまった顔'}"><circle cx="50" cy="50" r="44" fill="${happy?'var(--s-yellow)':'var(--s-soft2)'}" stroke="var(--s-ink)" stroke-width="4"/>${eyes}${mouth}</svg>`;
+}
+const ONIGIRI = '<svg viewBox="0 0 120 108" role="img" aria-label="おにぎり"><path d="M60 6C70 6 116 80 112 94C109 104 96 104 60 104S11 104 8 94C4 80 50 6 60 6Z" fill="var(--s-rice)" stroke="var(--s-ink)" stroke-width="4"/><rect x="38" y="66" width="44" height="38" rx="4" fill="var(--s-nori)"/></svg>';
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dense = (title, text) => `<div class="s-title">${title}</div><p class="s-dense">${text}</p>`;
+const quizSlide = (q, opts, okIdx, ans) => `<div class="s-q"><span class="q">Q.</span>${q}</div><div class="s-opts">${opts.map((o,i)=>`<div class="s-opt${i===okIdx?' ok':''}"><span class="abc">${'ABC'[i]}</span><b>${o[0]}</b><small>${o[1]}</small></div>`).join('')}</div><button class="s-ans" data-reveal="${ans}">答えを見る</button>`;
+const bars = (rows, unit, tops) => { const m = Math.max(1,...rows.map(r=>r[1])); return `<div class="s-bars">${rows.map((r,i)=>`<div class="s-bar${tops.includes(i)?' top':''}"><span>${esc(r[0])}</span><div class="b" style="width:${r[1]/m*100}%"></div><span>${r[1]}${unit}</span></div>`).join('')}</div>`; };
+const flowSlide = items => `<div class="s-flow">${items.map((r,i,a)=>`<div class="s-step"><div class="season">${r[0]}</div><div class="box"><em>${i+1}</em>${r[1]}</div></div>${i<a.length-1?ARR:''}`).join('')}</div>`;
+
+/* 提案プレゼンでよく使うスライド（ワザと見本で共通） */
+const SL = {
+  ask:`<div class="s-center"><div class="s-kicker">校長先生へのお願い</div><div class="s-huge">雨の日の昼休みに<br><span class="red">多目的室</span>を使わせてください</div><div class="s-reasons"><span>理由1 楽しくない人が多い</span><span>理由2 ろうかが危ない</span><span>理由3 学年をこえてなかよく</span></div></div>`,
+  survey:`<div class="s-title">雨の日の昼休みは楽しい？</div><div class="s-cap">38人が「楽しくない」</div>${bars([['とても楽しい',4],['楽しい',10],['あまり楽しくない',22],['楽しくない',16]],'人',[2,3])}<div class="s-tag">5年生52人へのアンケート（見本の数字です）</div>`,
+  evidence:`<div class="s-title">雨の日の昼休み、こまっています</div><div class="s-ev">
+    <div class="s-stat"><div class="n">38<small>人 / 52人</small></div><div class="d">「雨の日の昼休みは楽しくない」<br>と答えた5年生</div></div>
+    <div class="s-quote">雨の日は、ろうかでぶつかるけがが多いですね。<small>保健の先生へのインタビュー</small></div></div>
+    <div class="s-tag">5年生アンケートより（見本の数字です）</div>`,
+  run:`<div class="s-title">ろうかを走っている人（10分間）</div><div class="s-vs"><div><div class="n">3人</div><div class="lab">晴れの日</div></div><div class="vs">vs</div><div><div class="n red">15人</div><div class="lab">雨の日</div></div></div><div class="s-note">5倍！</div><div class="s-tag">2階のろうかで、5年生が数えた（見本の数字です）</div>`,
+  connect:`<div class="s-title">学校の目標とつながっています</div><div class="s-connect">
+    <div class="s-crow"><div class="s-goal">なかよく</div>${ARR}<div class="idea">学年をこえて、いっしょに遊べる</div></div>
+    <div class="s-crow"><div class="s-goal">かしこく</div>${ARR}<div class="idea">ルールを自分たちで決めて、守る</div></div>
+    <div class="s-crow"><div class="s-goal">たくましく</div>${ARR}<div class="idea">ろうかを走る人がへって、安全に</div></div></div>`,
+  plan:`<div class="s-title">くわしい計画</div><table class="s-table left">
+    <tr><td>いつ</td><td>雨の日の昼休み（20分間）</td></tr>
+    <tr><td>どこで</td><td>多目的室</td></tr>
+    <tr><td>だれが</td><td>5年生の「遊び係」6人が交代で係をする</td></tr>
+    <tr><td>何をする</td><td>トランプ・おりがみ・ボードゲーム</td></tr>
+    <tr><td>お金・道具</td><td>学級にある道具を使う（お金はかからない）</td></tr></table>`,
+  worry:`<div class="s-title">心配なことと、わたしたちの対策</div><table class="s-table left worry">
+    <tr><th>心配なこと</th><th>わたしたちの対策</th></tr>
+    <tr><td>けんかにならない？</td><td>ルールを作って入口にはる。係が見回る</td></tr>
+    <tr><td>散らかったら？</td><td>終わる5分前に片付け。チェック表で確認</td></tr>
+    <tr><td>人が多すぎたら？</td><td>1回30人まで。学年ごとに曜日を決める</td></tr></table>`,
+  trial:`<div class="s-title">まずは1か月、ためさせてください</div>${flowSlide([['11月','ためしにやる'],['毎回','係が記録をつける'],['11月の終わり','アンケートをとる'],['12月','校長先生に報告']])}`,
+  goal:`<div class="s-title">めざすこと</div><div class="s-ba">
+    <div class="s-state">${face('sad')}<div class="s-lbl">今（雨の日）</div><div class="s-n">15人</div></div>
+    ${arrow('var(--s-red)')}
+    <div class="s-state">${face('happy')}<div class="s-lbl">1か月後の目標</div><div class="s-n up">5人以下</div></div></div>
+    <div class="s-note">ろうかを走る人をへらす！</div>`,
+  call:`<div class="s-center"><div class="s-kicker">校長先生へのお願い</div><div class="s-action">11月の1か月、ためしに<br>多目的室を使わせてください！</div><div class="s-thanks">ご検討よろしくお願いします　5年1組 遊び係</div></div>`,
+};
+
+const T = [
+/* ───── 見やすくするワザ ───── */
+{ id:'three', g:'see', name:'大事なことを3つにしぼる',
+  when:'伝えたいことがたくさんあって、文章が長くなってしまうとき',
+  before: dense('わたしたちの町のよいところ','わたしたちの町には、よいところがたくさんあります。まず、山や川などの自然がゆたかで、夏には川で魚つりをしたり、秋には紅葉を見に行ったりできます。また、おいしい食べ物もたくさんあって、とくにりんごは全国でも有名で、たくさんの人が買いに来ます。それから、町にはあいさつをしてくれるやさしい人が多いです。ほかにも、図書館が新しくなったことや、お祭りがにぎやかなことなど、いいところがいっぱいあります。'),
+  after:`<div class="s-title">わたしたちの町のよいところ</div><div class="s-three">
+    <div class="s-box"><span class="s-num">1</span><b>自然がゆたか</b><small>山・川・紅葉</small></div>
+    <div class="s-box"><span class="s-num">2</span><b>食べ物が<br>おいしい</b><small>りんごが有名</small></div>
+    <div class="s-box"><span class="s-num">3</span><b>人がやさしい</b><small>あいさつがいっぱい</small></div></div>`,
+  steps:['文章を読んで、大事なことばに線を引く。','にていることを、グループにまとめる。','いちばん伝えたい3つだけをえらぶ。のこりは、話すときに言えばOK。'],
+  point:'3つは、聞く人がおぼえやすい数。提案の「理由」も3つにしぼると伝わりやすいよ。' },
+{ id:'keyword', g:'see', name:'長い文は、キーワードで短く',
+  when:'1つの文が長くて、スライドが文字だらけになるとき',
+  before: dense('朝ごはんの大切さ','朝ごはんを毎日しっかり食べると、体と頭にエネルギーが入るので、午前中の授業に集中しやすくなるといわれています。また、朝ごはんを食べると体温が上がって、元気に活動できるようになります。だから、朝ごはんはとても大切だと思います。'),
+  after:`<div class="s-title">朝ごはんの大切さ</div><div class="s-big">
+    <div class="s-line"><span class="s-chip">朝ごはん</span>${ARR}<span class="em">集中力アップ！</span></div>
+    <div class="s-line"><span class="s-chip">朝ごはん</span>${ARR}<span class="em">体ぽかぽか・元気！</span></div></div>`,
+  steps:['「何が」「どうなる」にあたる、大事なことばを見つける。','いらないことばをけずって、短くする。矢印を使うともっと短くなる。','くわしい説明は、スライドに書かずに自分の口で話す。'],
+  point:'1行は15文字くらいまでが目安。スライドは「話のメモ」ではなく「看板」だと思おう。' },
+{ id:'merit', g:'see', name:'メリット・デメリットでくらべる',
+  when:'「いいところ」と「こまるところ」の両方を考えて、自分の意見を伝えたいとき',
+  before: dense('タブレットで勉強すること','タブレットで勉強すると、わからないことをすぐに調べられるのでべんりです。でも、長く使うと目がつかれます。写真や動画が使えるのもいいところですが、ゲームなどについ使いすぎてしまうこともあります。わたしは、ルールを決めて使えばいいと思います。'),
+  after:`<div class="s-title">タブレットで勉強すること</div><div class="s-two">
+    <div class="s-col g"><div class="s-colhead">いいところ（メリット）</div><ul><li>すぐに調べられる</li><li>写真や動画が使える</li></ul></div>
+    <div class="s-col r"><div class="s-colhead">こまるところ（デメリット）</div><ul><li>目がつかれる</li><li>つい使いすぎる</li></ul></div></div>
+    <div class="s-concl">わたしの考え：ルールを決めて使おう！</div>`,
+  steps:['いいところと、こまるところを、別々に書き出す。','左に「いいところ」、右に「こまるところ」をならべる。色も分けよう。','さいごに「だから、わたしは○○と考えます」と自分の意見をのせる。'],
+  point:'こまるところもかくさずに見せると、「ちゃんと考えているな」と信用してもらえるよ。' },
+{ id:'arrow', g:'see', name:'矢印と顔で「変化」を見せる',
+  when:'「前」と「あと」でかわったことや、「今」と「めざす姿」を伝えたいとき',
+  before: dense('外遊びキャンペーンの結果','わたしたち運動委員会は、休み時間に外で遊ぶ人をふやすために「外遊びキャンペーン」をしました。キャンペーンの前は、外で遊ぶ人は20人くらいで、教室でつまらなそうにしている人もいました。でも、キャンペーンのあとは35人にふえて、みんな楽しそうに遊んでいました。'),
+  after:`<div class="s-title">外遊びキャンペーンの結果</div><div class="s-ba">
+    <div class="s-state">${face('sad')}<div class="s-lbl">キャンペーン前</div><div class="s-n">20人</div></div>
+    ${arrow('var(--s-red)')}
+    <div class="s-state">${face('happy')}<div class="s-lbl">キャンペーンのあと</div><div class="s-n up">35人</div></div></div>
+    <div class="s-note">15人もふえた！</div>`,
+  steps:['文章の中から「前」と「あと」（または「今」と「目標」）をさがす。','左に「前」、右に「あと」を置いて、太い矢印（→）でつなぐ。','顔のイラストや数字で、どうかわるかを見せる。'],
+  point:'提案では「今はこう → やってみたらこうなる」を見せると、やる意味が伝わるよ。' },
+{ id:'table', g:'see', name:'表にまとめて、くらべやすく',
+  when:'いくつかのものを、同じポイントでくらべたいとき',
+  before: dense('3つの動物をくらべよう','ライオンは大きな動物で、肉を食べ、アフリカの草原にすんでいます。うさぎは小さな動物で、草を食べ、野原や森にすんでいます。ペンギンは中くらいの大きさの鳥で、魚を食べ、南極などの寒い海の近くにすんでいます。'),
+  after:`<div class="s-title">3つの動物をくらべよう</div><table class="s-table">
+    <tr><th>動物</th><th>大きさ</th><th>食べ物</th><th>すんでいる所</th></tr>
+    <tr><td>ライオン</td><td>大きい</td><td>肉</td><td>草原</td></tr>
+    <tr><td>うさぎ</td><td>小さい</td><td>草</td><td>野原・森</td></tr>
+    <tr><td>ペンギン</td><td>中くらい</td><td>魚</td><td>寒い海の近く</td></tr></table>`,
+  steps:['くらべる「もの」（ライオン・うさぎ…）を、たてにならべる。','くらべる「ポイント」（大きさ・食べ物…）を、横にならべる。','あいているマスを、短いことばでうめる。'],
+  point:'表は、提案の「計画」や「心配と対策」をまとめるときにも大かつやくするよ。' },
+{ id:'graph', g:'see', name:'数字はグラフにする',
+  when:'アンケートなどで数字がたくさん出てきて、多い・少ないをくらべたいとき',
+  before: dense('雨の日の昼休みは楽しい？','5年生52人にアンケートをとったところ、「とても楽しい」が4人、「楽しい」が10人、「あまり楽しくない」が22人、「楽しくない」が16人でした。'),
+  after: SL.survey,
+  steps:['アンケートの答えを、順番どおりにならべる。','くらべたいときは「ぼうグラフ」、ふえた・へったを見せたいときは「折れ線グラフ」をえらぶ。','いちばん言いたいところだけ、色をかえる。'],
+  point:'グラフのそばに「何がわかるか」を一言書こう。（例：38人が「楽しくない」）「データの集め方」タブで、自分のデータからグラフを作れるよ。' },
+{ id:'steps', g:'see', name:'順番は、番号と矢印でつなぐ',
+  when:'やり方や、ものごとの流れを説明するとき',
+  before: dense('米づくりの流れ','米づくりは、まず春に田おこしをして土をやわらかくし、次に田に水を入れて代かきをします。そのあと田植えをして、夏の間は草取りや水の管理をし、秋になったら稲かりをします。'),
+  after:`<div class="s-title">米づくりの流れ</div>${flowSlide([['春','田おこし'],['春','代かき'],['春〜初夏','田植え'],['夏','草取り・水の管理'],['秋','稲かり']])}`,
+  steps:['することを1つずつ、カードに書き出すように分ける。','順番にならべて、番号をつける。','矢印でつなぐ。季節や時間も書きそえるとわかりやすい。'],
+  point:'番号と矢印があると、聞く人は「今どこの話か」がすぐにわかるよ。' },
+{ id:'style', g:'see', name:'大きな文字と、少ない色',
+  when:'教室のいちばん後ろの席の人にも、ちゃんと見えるようにしたいとき',
+  before:`<div class="b9" style="display:contents"><div class="s-title t">わたしの好きな季節</div><p><span class="c1">わたしは秋が好きです。</span><span class="c2">理由は、さつまいもやくりなど、おいしい食べ物がたくさんあるからです。</span><span class="c3">また、山の紅葉がとてもきれいで、家族で見に行くのが楽しみです。</span><span class="c4">それに、夏よりもすずしくて、外で遊びやすいからです。</span><span class="c5">みなさんは、どの季節が好きですか？</span></p></div>`,
+  after:`<div class="g9" style="display:contents"><div class="s-title">好きな季節は <b>秋</b></div><ul><li>食べ物がおいしい</li><li>紅葉がきれい</li><li>すずしくて遊びやすい</li></ul></div>`,
+  steps:['文字は大きく。タイトルはとくに大きく、太くする。','色は3色くらいまで。大事なことばだけ色をかえる。','背景と文字は、はっきりちがう色にする。（白い背景に黄色の文字は見えない！）'],
+  point:'作ったら、パソコンから3歩はなれて見てみよう。読めなかったら、文字をもっと大きく！' },
+
+/* ───── なっとくしてもらうワザ（提案プレゼン） ───── */
+{ id:'conclusion', g:'hook', name:'お願いを、さいしょに言う',
+  when:'何のためのプレゼンなのか、すぐにわかってもらいたいとき',
+  before: dense('雨の日の昼休みについて','ぼくたちは、雨の日の昼休みについて考えました。雨の日は外で遊べないので、教室でつまらなそうにしている人がいます。ろうかを走る人もいます。いろいろ話し合って、多目的室で遊べたらいいなと思いました。なので、多目的室を使わせてもらえたらうれしいです。'),
+  after: SL.ask,
+  steps:['さいしょに「今日は、○○のお願いに来ました」と言う。','次に「理由は3つあります」と、理由をならべる。','最後に、もう一度お願いをくり返す。'],
+  say:'「今日は、雨の日の昼休みに、多目的室を使わせていただくお願いに来ました。理由は3つあります。」',
+  point:'お願いが最後まで出てこないと、校長先生は「何の話かな？」と思いながら聞くことになるよ。お願い → 理由 → もう一度お願い。' },
+{ id:'evidence', g:'hook', name:'データで「本当にこまっている」を見せる',
+  when:'「本当にそうなの？」「みんなそう思っているの？」と聞かれそうなとき',
+  before: dense('雨の日の昼休み','雨の日の昼休みは、つまらないと思っている人が多いと思います。ろうかを走る人も多い気がします。だから、なんとかしたほうがいいと思います。'),
+  after: SL.evidence,
+  steps:['「〜と思います」「〜な気がします」だけで終わらせない。','アンケート・数えた記録・インタビュー・写真で、本当だとわかるものを集める。','「○人中○人」のように、数字で見せる。どこで調べたかも小さく書く。'],
+  say:'「5年生52人にアンケートをとったところ、38人が『雨の日の昼休みは楽しくない』と答えました。保健の先生も『雨の日はろうかでのけがが多い』と話していました。」',
+  point:'「思います」より「調べたら○○でした」。データがあると、子どもの意見ではなく「学校の課題」として聞いてもらえるよ。' },
+{ id:'quizq', g:'hook', name:'問いかけで、考えてもらう',
+  when:'聞く人に、データにおどろいてもらいたいとき',
+  before: dense('アンケートの結果','アンケートの結果、雨の日の昼休みが「楽しくない」と答えた人は、52人中38人でした。'),
+  after: quizSlide('雨の日の昼休みが「楽しくない」5年生は、52人中何人？',[['約10人','5人に1人'],['約25人','2人に1人'],['約38人','4人に3人']],2,'答え：C 38人'),
+  steps:['いちばんおどろいてほしいデータをえらぶ。','「何人だと思いますか？」と、問いかけの形にする。','聞いた人に予想してもらってから、答えを見せる。'],
+  say:'「校長先生、雨の日の昼休みが楽しくないと答えた5年生は、何人くらいだと思われますか？… 答えは38人。4人に3人です。」',
+  point:'予想してから答えを聞くと、「そんなに多いのか」と心に残るよ。データを見せる前に1回だけ使おう。' },
+{ id:'surprise', g:'hook', name:'数字を、身近なものにたとえる',
+  when:'数字を言っても、すごさや大変さが伝わらないとき',
+  before: dense('食品ロスについて','日本では、まだ食べられるのにすてられてしまう食べ物（食品ロス）が、1年間に約472万トンもあります。これはとても多い量です。'),
+  after:`<div class="s-title">食品ロスって、どれくらい？</div><div class="s-center"><div class="s-onigiri">${ONIGIRI}<div style="text-align:left"><div class="s-kicker">日本人1人が毎日すてている量</div><div class="s-huge">おにぎり<span class="red">1こ</span>分</div></div></div><div class="s-src">日本全体で1年に約472万トン（2022年度・農林水産省／環境省）</div></div>`,
+  steps:['「472万トン」のような大きな数字は、そのままだとピンとこない。','「1人」「1日」「1クラス」など、身近な大きさにわり算してみる。','おにぎり・バケツ・教室など、みんなが知っているものにたとえる。'],
+  say:'「472万トンと言われても、ピンとこないですよね。じつは、1人1人が毎日おにぎり1こ分をすてているのと同じなんです。」',
+  point:'「4人に3人」「5倍」「バケツ1ぱい分」のように言いかえると、数字が一気に伝わるよ。' },
+{ id:'connect', g:'hook', name:'学校の目標とつなげる',
+  when:'「自分たちがやりたいから」だけでなく、「学校にとってもいいこと」だと伝えたいとき',
+  before: dense('ボードゲームがしたいです','雨の日の昼休みに、多目的室でボードゲームやトランプをしたいです。みんなも楽しみにしています。ぜひやらせてください。'),
+  after: SL.connect,
+  steps:['学校の目標や、校長先生が朝会などでよく話していることを調べる。（学校だより・ホームページも見てみよう）','自分たちの提案が、その目標とどうつながるかを考える。','「この提案は、学校の目標の○○につながります」と伝える。'],
+  say:'「この提案は、学校の目標の『なかよく』にもつながると考えています。ふだん話さない学年とも、いっしょに遊べるからです。」',
+  point:'許可をくれる人が大切にしていることとつなげると、「それはいいね」と思ってもらいやすくなるよ。（目標の文は、自分の学校のものに書きかえよう）' },
+{ id:'plan', g:'hook', name:'計画を「いつ・どこ・だれ・何」でハッキリ',
+  when:'「くわしく、どうやるの？」と聞かれそうなとき',
+  before: dense('やりたいこと','多目的室で、みんなで遊べるようにしたいです。道具もあったほうがいいと思います。係の人が何かすると思います。'),
+  after: SL.plan,
+  steps:['「いつ・どこで・だれが・何をする」を書き出す。','お金や道具がいるかどうかも書く。（いらないなら「お金はかからない」と書くと安心してもらえる）','表にまとめて、1まいで見せる。'],
+  say:'「計画をくわしく説明します。雨の日の昼休みに、多目的室で、5年生の遊び係6人が交代で係をします。」',
+  point:'計画がくわしいほど、「この子たちなら、ちゃんとできそうだ」と思ってもらえるよ。' },
+{ id:'worry', g:'hook', name:'心配なことに、先に答えておく',
+  when:'「でも、○○になったらどうするの？」と心配されそうなとき',
+  before: dense('多目的室を使いたいです','雨の日の昼休みに多目的室で遊びたいです。きっと楽しくなると思います。ぜひ使わせてください。'),
+  after: SL.worry,
+  steps:['校長先生や先生の立場になって、心配なことを書き出す。（安全・けんか・片付け・先生の手間・ほかの学年は？）','1つずつ、自分たちにできる対策を考える。','表にして、聞かれる前に見せる。'],
+  say:'「心配なことも考えました。1つ目は、けんかにならないかです。そこで、ルールを作って入口にはり、係が見回ります。」',
+  point:'大人がいちばん気にするのは「安全」と「みんなにとって公平か」。先に答えておくと、ぐっと信用してもらえるよ。' },
+{ id:'trial', g:'hook', name:'「まずはためしに」と提案する',
+  when:'いきなり「ずっとやらせてください」とお願いすると、許可がもらいにくそうなとき',
+  before: dense('お願い','これからずっと、雨の日の昼休みは多目的室を使わせてください。'),
+  after: SL.trial,
+  steps:['期間を短く決める。（1か月だけ・5回だけ など）','うまくいったかを、どうやってたしかめるか決める。（記録・アンケート）','結果を報告することを約束する。'],
+  say:'「まずは11月の1か月だけ、ためしにやらせてください。終わったら、アンケートをとって、結果をご報告します。」',
+  point:'「ためしに」「結果を報告します」は、許可をもらいやすくすることば。大人の会社でもよく使われているよ。' },
+{ id:'call', g:'hook', name:'最後は、はっきりお願いする',
+  when:'プレゼンの最後に、許可をもらいたいとき',
+  before: dense('おわりに','これで発表を終わります。考えてもらえたらうれしいです。'),
+  after: SL.call,
+  steps:['何を許可してほしいかを、1文ではっきり言う。','期間や場所など、条件も入れる。','「ご検討よろしくお願いします」と、ていねいに頭を下げて終わる。'],
+  say:'「11月の1か月、ためしに多目的室を使わせてください。ご検討、よろしくお願いします。」',
+  point:'「考えてもらえたら…」ではなく「○○を許可してください」とはっきり。何に「いいよ」と言えばいいかがわかると、答えやすくなるよ。' },
+];
+const byId = Object.fromEntries(T.map((t,i)=>[t.id,{...t,no:i+1}]));
+const tagNo = t => `<span class="no${t.g==='hook'?' h':''}">ワザ${t.no}</span>`;
+
+/* 提案プレゼンの見本 */
+const DEMO = [
+ {part:'はじめ', slide:`<div class="s-cover"><div class="sub">校長先生へのご提案　5年1組 遊び係</div><div class="big">雨の日の昼休みを、<br>安全で楽しく！</div><div class="sub">〜 多目的室を「室内遊びの部屋」に 〜</div></div>`,
+  say:'「校長先生、今日はお時間をいただき、ありがとうございます。わたしたち5年1組の遊び係から、雨の日の昼休みについてご提案があります。」',
+  why:'題名に「安全」を入れています。校長先生が大切にしていることを、さいしょから見せています。', waza:['connect']},
+ {part:'お願い', slide: SL.ask,
+  say:'「今日は、雨の日の昼休みに、多目的室を使わせていただくお願いに来ました。理由は3つあります。」',
+  why:'お願いをさいしょに言っているので、校長先生は「何のための話か」がわかった上で聞けます。', waza:['conclusion','three']},
+ {part:'こまりごと', slide: SL.survey,
+  say:'「1つ目の理由です。5年生52人にアンケートをとったところ、38人、つまり4人に3人が『雨の日の昼休みは楽しくない』と答えました。」',
+  why:'「つまらない人が多いと思います」ではなく、アンケートの数字で見せています。「4人に3人」と言いかえているのもポイント。', waza:['evidence','graph','surprise']},
+ {part:'こまりごと', slide: SL.run,
+  say:'「2つ目の理由です。2階のろうかで、走っている人を10分間数えました。晴れの日は3人でしたが、雨の日は15人。5倍でした。保健の先生からも、雨の日はろうかでのけがが多いと聞きました。」',
+  why:'自分たちで数えた記録と、保健の先生の話の2つを証拠にしています。', waza:['evidence']},
+ {part:'学校とのつながり', slide: SL.connect,
+  say:'「3つ目の理由です。この提案は、学校の目標とつながっていると考えています。」',
+  why:'「やりたい」だけでなく「学校にとってもいいこと」だと伝えています。', waza:['connect']},
+ {part:'計画', slide: SL.plan,
+  say:'「くわしい計画です。雨の日の昼休みに、多目的室で、遊び係6人が交代で係をします。道具は学級にあるものを使うので、お金はかかりません。」',
+  why:'「いつ・どこで・だれが・何を」を表にして、1まいでわかるようにしています。', waza:['plan','table']},
+ {part:'心配と対策', slide: SL.worry,
+  say:'「心配なことも考えました。けんかにならないように、ルールを作って入口にはり、係が見回ります。片付けは終わる5分前から始めます。」',
+  why:'校長先生が聞きそうな心配に、聞かれる前に答えています。ここがいちばん信用につながります。', waza:['worry']},
+ {part:'めざすこと', slide: SL.goal,
+  say:'「この取り組みで、雨の日にろうかを走る人を、15人から5人以下にへらすことをめざします。」',
+  why:'「今」と「目標」を矢印でつないで、やる意味を見せています。', waza:['arrow']},
+ {part:'ためしに', slide: SL.trial,
+  say:'「まずは11月の1か月だけ、ためしにやらせてください。終わったらアンケートをとって、12月に結果をご報告します。」',
+  why:'「ずっと」ではなく「1か月だけ」にすると、許可を出す人も「やってみようか」と言いやすくなります。', waza:['trial','steps']},
+ {part:'お願い', slide: SL.call,
+  say:'「11月の1か月、ためしに多目的室を使わせてください。ご検討、よろしくお願いします。」（全員で礼）',
+  why:'何を許可してほしいかを、最後にはっきりもう一度言っています。', waza:['call']},
+];
+let demoIdx = 0;
+
+const Q = [
+ {q:'校長先生に「でも、けんかやけがが起きたらどうするの？」と聞かれそう。', o:['worry','graph','style'], a:'worry', why:'心配されそうなことは、聞かれる前に対策を表で見せておこう。'},
+ {q:'「これからずっとやらせてください」だと、許可がもらいにくそう。', o:['call','trial','three'], a:'trial', why:'「まずは1か月ためしに」「結果を報告します」と言うと、許可が出しやすくなるよ。'},
+ {q:'「つまらないと思っている人が多いと思います」と言いたいけど、本当か聞かれそう。', o:['evidence','keyword','merit'], a:'evidence', why:'アンケートや数えた記録で「○人中○人」と見せよう。'},
+ {q:'計画の「いつ・だれが・どうやって」がはっきりしていない。', o:['arrow','plan','quizq'], a:'plan', why:'いつ・どこで・だれが・何をするかを表にまとめると、「できそうだ」と思ってもらえるよ。'},
+ {q:'「自分たちが楽しいから」だけでなく、学校にとってもいいことだと伝えたい。', o:['connect','surprise','table'], a:'connect', why:'学校の目標とつなげると、「それはいいね」と思ってもらいやすいよ。'},
+ {q:'プレゼンの最後が「考えてもらえたらうれしいです」で終わってしまう。', o:['steps','call','merit'], a:'call', why:'「○○を許可してください」と、最後にはっきりお願いしよう。'},
+ {q:'お願いが、プレゼンの最後まで出てこない。', o:['conclusion','graph','style'], a:'conclusion', why:'お願いをさいしょに言うと、聞く人は何の話かわかった上で聞けるよ。'},
+ {q:'アンケートで、4つの答えの人数がそれぞれ出た。', o:['graph','keyword','trial'], a:'graph', why:'人数の多い・少ないはグラフにすると、ひと目でわかるよ。'},
+ {q:'「今はろうかを走る人が15人。それを5人以下にしたい」と伝えたい。', o:['arrow','table','quizq'], a:'arrow', why:'「今」と「目標」を矢印でつなぐと、かわりたい姿が見えるよ。'},
+ {q:'理由が7つもある。ぜんぶ言いたいけど…', o:['keyword','three','worry'], a:'three', why:'理由は、いちばん強い3つにしぼろう。'},
+];
+
+const view = document.getElementById('view');
+let quizState = {i:0, score:0, answered:false};
+const slideHTML = (inner, extra='') => `<div class="slide ${extra}">${inner}</div>`;
+
+function renderZukan(){
+  const groups = [
+    ['hook','なっとくしてもらうワザ','校長先生に「それならやってみよう」と言ってもらうためのワザ。提案プレゼンでは、まずここを見よう。','なっとく'],
+    ['see','見やすくするワザ','ひと目でわかるスライドにするためのワザ。長い文章をスッキリさせよう。','見やすく'],
+  ];
+  view.innerHTML = `<p class="lead">カードをおすと、「ワザなし」と「ワザあり」のスライドをくらべられます。</p>` + groups.map(([g,h,p,lab])=>`
+  <section class="group ${g}"><div class="ghead"><h2><i>${lab}</i>${h}</h2><p>${p}</p></div>
+  <div class="grid">${T.filter(t=>t.g===g).map(t0=>{ const t=byId[t0.id]; return `
+    <button class="card" data-go="${t.id}">
+      <div class="thumb">${slideHTML(t.after)}</div>
+      <div style="display:grid;gap:6px">
+        <div class="name">${tagNo(t)}${t.name}</div>
+        <div class="when"><b>こんなときに</b>${t.when}</div>
+      </div>
+    </button>`;}).join('')}</div></section>`).join('');
+}
+
+function renderDetail(id){
+  const t = byId[id]; const i = t.no - 1;
+  const prev = T[i-1], next = T[i+1];
+  view.innerHTML = `<div class="${t.g==='hook'?'hookpage':''}">
+  <button class="back" data-tab="zukan">← ずかんにもどる</button>
+  <div class="dhead"><div>${tagNo(t)}</div><h2>${t.name}</h2>
+    <div class="whenbox"><span>こんなときに</span>${t.when}</div></div>
+  <div class="compare">
+    <div class="side"><div class="tag bad"><i>ワザなし</i>${t.g==='hook'?'「うーん…」と思われる':'文字ばかりで読みにくい…'}</div>${slideHTML(t.before)}</div>
+    <div class="mid" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M10 38H58V18L92 50L58 82V62H10Z" fill="currentColor"/></svg>ワザを<br>使うと</div>
+    <div class="side"><div class="tag good"><i>ワザあり</i>${t.g==='hook'?'「なるほど」と思ってもらえる！':'ひと目でわかる！'}</div>${slideHTML(t.after)}</div>
+  </div>
+  ${t.say?`<div class="say"><h3>話すときは、こんなふうに</h3><p>${t.say}</p></div>`:''}
+  <div class="howto">
+    <div class="panel"><h3>やり方</h3><ol class="steps">${t.steps.map(s=>`<li><span>${s}</span></li>`).join('')}</ol></div>
+    <div class="panel point"><h3>ポイント</h3><p>${t.point}</p></div>
+  </div>
+  <div class="pager">
+    ${prev?`<button class="btn" data-go="${prev.id}">← ワザ${i}：${prev.name}</button>`:'<span></span>'}
+    ${next?`<button class="btn solid" data-go="${next.id}">ワザ${i+2}：${next.name} →</button>`:`<button class="btn solid" data-tab="demo">提案プレゼンの見本を見る →</button>`}
+  </div></div>`;
+}
+
+function renderDemo(){
+  const d = DEMO[demoIdx];
+  const parts = DEMO.map(x=>x.part).filter((p,i,a)=>a.indexOf(p)===i);
+  view.innerHTML = `
+  <div class="scene"><b>場面：</b>5年1組の遊び係が、「雨の日の昼休みに多目的室を使いたい」と校長先生にお願いするプレゼン。スライドと話すことをセットで見てみよう。</div>
+  <div class="story" aria-label="プレゼンの流れ">${parts.map((p,i)=>`<span class="${p===d.part?'on':''}">${p}</span>${i<parts.length-1?'<em>→</em>':''}`).join('')}</div>
+  <div class="demo">
+    <div class="stage">
+      ${slideHTML(d.slide)}
+      <div class="ctrl"><button class="btn" id="dprev" ${demoIdx===0?'disabled':''}>← 前へ</button><span class="count">${demoIdx+1} / ${DEMO.length}</span><button class="btn solid" id="dnext" ${demoIdx===DEMO.length-1?'disabled':''}>次へ →</button></div>
+      <div class="thumbs">${DEMO.map((x,i)=>`<button data-demo="${i}" aria-label="${i+1}まい目" aria-current="${i===demoIdx}">${slideHTML(x.slide)}</button>`).join('')}</div>
+    </div>
+    <div class="script">
+      <div class="panel"><span class="role">${d.part}</span><h3>話すこと</h3><p>${d.say}</p></div>
+      <div class="panel point"><h3>ここがなっとくポイント</h3><p>${d.why}</p></div>
+      <div class="panel"><h3>使っているワザ</h3><div style="display:grid;gap:6px">${d.waza.map(w=>`<button class="wazalink" data-go="${w}">ワザ${byId[w].no}：${byId[w].name}</button>`).join('')}</div></div>
+    </div>
+  </div>
+  <p class="memo">アンケートや数えた人数は、見本用につくった数字です。学校の目標も見本なので、自分の学校のものに書きかえてください。</p>`;
+  document.getElementById('dprev').onclick = ()=>{ demoIdx--; renderDemo(); };
+  document.getElementById('dnext').onclick = ()=>{ demoIdx++; renderDemo(); };
+}
+
+/* データの集め方 */
+let maker = { title:'雨の日の昼休みは楽しい？', rows:[['とても楽しい',4,false],['楽しい',10,false],['あまり楽しくない',22,true],['楽しくない',16,true],['',0,false]] };
+function renderData(){
+  view.innerHTML = `
+  <section class="sec"><h2>データがあると、なっとくしてもらえる</h2>
+    <p>「思います」だけだと、「本当かな？」と思われてしまいます。調べた数字を見せよう。</p>
+    <div class="vs2">
+      <div class="vcard ng"><div class="lab">弱い</div><p>「つまらないと思っている人が多いと思います」</p><small>本当かどうか、わからない</small></div>
+      <div class="vcard ng"><div class="lab">まだ弱い</div><p>「クラスの友だちもつまらないと言っていました」</p><small>何人が言ったのか、わからない</small></div>
+      <div class="vcard ok"><div class="lab">強い！</div><p>「5年生52人中38人が『楽しくない』と答えました」</p><small>だれに・何人に聞いたかがわかる</small></div>
+    </div>
+  </section>
+  <section class="sec"><h2>データの集め方 4つ</h2>
+    <p>1つだけより、2つ以上を組み合わせると、もっとなっとくしてもらえます。</p>
+    <div class="ways">
+      <div class="way"><b>アンケート</b><span class="ex">例：雨の日の昼休みは楽しい？</span><ul><li>だれに聞くか決める（5年生全員 など）</li><li>答えはえらぶ形にすると集計しやすい</li><li>何人に聞いて、何人が答えたかを書く</li></ul></div>
+      <div class="way"><b>数えて記録する</b><span class="ex">例：ろうかを走る人を10分間数える</span><ul><li>場所と時間を決めて、同じ条件でくらべる</li><li>「正」の字で数える</li><li>何日か数えると、もっと正しくなる</li></ul></div>
+      <div class="way"><b>インタビュー</b><span class="ex">例：保健の先生・担任の先生・用務員さん</span><ul><li>聞きたいことを先にメモしておく</li><li>言ってくれたことばを、そのまま書きとる</li><li>スライドにのせてよいか、許可をもらう</li></ul></div>
+      <div class="way"><b>写真・調べ学習</b><span class="ex">例：雨の日のろうかの様子、ほかの学校の取り組み</span><ul><li>人の顔がうつらないように気をつける</li><li>本やネットで調べたら、どこで調べたかを書く</li></ul></div>
+    </div>
+  </section>
+  <section class="sec"><h2>アンケートの質問の作り方</h2>
+    <p>聞き方しだいで、答えがかわってしまいます。正直な答えが集まる聞き方にしよう。</p>
+    <div class="vs2">
+      <div class="vcard ng"><div class="lab">よくない聞き方</div><p>「雨の日の昼休みは、つまらないですよね？」</p><small>「つまらない」と答えさせようとしている</small></div>
+      <div class="vcard ng"><div class="lab">よくない聞き方</div><p>「雨の日の昼休みについて、どう思いますか？」</p><small>答えがバラバラで、数えられない</small></div>
+      <div class="vcard ok"><div class="lab">いい聞き方</div><p>「雨の日の昼休みは楽しいですか？　1 とても楽しい　2 楽しい　3 あまり楽しくない　4 楽しくない」</p><small>答えやすく、数えやすい</small></div>
+    </div>
+  </section>
+  <section class="sec"><h2>アンケートの結果を、スライドにしてみよう</h2>
+    <p>質問と人数を入れると、グラフのスライドと、発表で言う文ができます。言いたい答えにチェックを入れよう。</p>
+    <div class="maker">
+      <div class="panel form">
+        <label for="mk-title">質問</label><input type="text" id="mk-title" value="${esc(maker.title)}">
+        <label>答えと人数（言いたい答えにチェック）</label>
+        ${maker.rows.map((r,i)=>`<div class="row"><input type="checkbox" id="mk-c${i}" ${r[2]?'checked':''} aria-label="言いたい答え"><input type="text" id="mk-l${i}" value="${esc(r[0])}" placeholder="答え${i+1}"><input type="number" id="mk-n${i}" min="0" value="${r[1]||''}" placeholder="人数"></div>`).join('')}
+        <span class="hint">使わない行は、空けておけばOK。</span>
+      </div>
+      <div><div id="mk-out"></div><div class="outsay" id="mk-say"></div></div>
+    </div>
+  </section>`;
+  const upd = ()=>{
+    maker.title = document.getElementById('mk-title').value;
+    maker.rows = maker.rows.map((_,i)=>[document.getElementById('mk-l'+i).value, Math.max(0, parseInt(document.getElementById('mk-n'+i).value,10)||0), document.getElementById('mk-c'+i).checked]);
+    const used = maker.rows.filter(r=>r[0].trim() && r[1]>0);
+    const total = used.reduce((a,r)=>a+r[1],0);
+    const picked = used.filter(r=>r[2]);
+    const sum = picked.reduce((a,r)=>a+r[1],0);
+    const pct = total ? Math.round(sum/total*100) : 0;
+    const tops = used.map((r,i)=>r[2]?i:-1).filter(i=>i>=0);
+    const names = picked.map(r=>`「${esc(r[0])}」`).join('か');
+    const cap = picked.length && total ? `<div class="s-cap">${sum}人が${picked.length===1?esc(picked[0][0]):'このどれか'}</div>` : '';
+    document.getElementById('mk-out').innerHTML = slideHTML(`<div class="s-title">${esc(maker.title)||'質問を入れよう'}</div>${cap}${used.length?bars(used.map(r=>[r[0],r[1]]),'人',tops):'<div class="s-center s-kicker">答えと人数を入れると、グラフが出ます</div>'}<div class="s-tag">${total}人へのアンケート</div>`);
+    document.getElementById('mk-say').innerHTML = (picked.length && total)
+      ? `発表で言う文：「${total}人にアンケートをとったところ、${sum}人（約${pct}%、${Math.round(pct/10)}わりくらい）が${names}と答えました。」`
+      : '言いたい答えにチェックを入れると、発表で言う文ができます。';
+  };
+  view.querySelectorAll('.form input').forEach(x=>x.addEventListener('input',upd)); upd();
+}
+
+const optLabel = id => `${tagNo(byId[id])}${byId[id].name}`;
+function renderQuiz(){
+  const s = quizState;
+  if(s.i >= Q.length){
+    const msg = s.score === Q.length ? 'ぜんぶ正解！提案名人だね。' : s.score >= Q.length-2 ? 'すごい！もう少しで名人。' : 'ずかんを見直して、もう一回ちょうせんしよう。';
+    view.innerHTML = `<div class="quiz"><div class="qcard result"><div>けっか</div><div class="score">${s.score} / ${Q.length}</div><div class="qtext">${msg}</div>
+      <div class="qnav"><button class="btn" data-tab="zukan">ずかんを見る</button><button class="btn solid" id="retry">もう一回</button></div></div></div>`;
+    document.getElementById('retry').onclick = ()=>{ quizState={i:0,score:0,answered:false}; renderQuiz(); };
+    return;
+  }
+  const q = Q[s.i];
+  view.innerHTML = `<div class="quiz"><p class="lead">提案プレゼンを作っていて、こんなときはどのワザを使う？</p><div class="qcard">
+    <div class="qmeta"><span>もんだい ${s.i+1} / ${Q.length}</span><span>正解 ${s.score}</span></div>
+    <div class="qbar"><i style="width:${s.i/Q.length*100}%"></i></div>
+    <div class="qtext"><small>こんなとき…</small>${q.q}</div>
+    <div class="opts">${q.o.map(id=>`<button class="opt" data-ans="${id}">${optLabel(id)}</button>`).join('')}</div>
+    <div id="fb"></div></div></div>`;
+  view.querySelectorAll('[data-ans]').forEach(b=>b.addEventListener('click',()=>{
+    if(s.answered) return; s.answered = true;
+    const ok = b.dataset.ans === q.a; if(ok) s.score++;
+    view.querySelectorAll('[data-ans]').forEach(x=>{ x.disabled = true; if(x.dataset.ans===q.a) x.classList.add('right'); });
+    if(!ok) b.classList.add('wrong');
+    document.getElementById('fb').innerHTML = `<div class="fb ${ok?'ok':'ng'}"><b>${ok?'せいかい！':'おしい！'}</b>答えは「${byId[q.a].name}」。${q.why}</div>
+      <div class="qnav" style="margin-top:12px"><button class="btn" data-go="${q.a}">このワザを見る</button><button class="btn solid" id="nextq">${s.i+1<Q.length?'次のもんだい →':'けっかを見る'}</button></div>`;
+    document.getElementById('nextq').onclick = ()=>{ s.i++; s.answered=false; renderQuiz(); };
+  }));
+}
+
+const CHECKS = ['さいしょに「○○のお願いに来ました」と言った','理由は3つにしぼった','アンケートや記録など、データで理由を見せた','学校の目標とのつながりを伝えた','計画（いつ・どこで・だれが・何を）を表にした','心配なことと、その対策を考えた','「まずは1か月」など、ためしにやる形にした','最後に、何を許可してほしいかをはっきり言った','聞かれそうな質問への答えを練習した'];
+function loadChecks(){ try{ return JSON.parse(localStorage.getItem('waza-checks3')||'[]'); }catch(e){ return []; } }
+function saveChecks(v){ try{ localStorage.setItem('waza-checks3', JSON.stringify(v)); }catch(e){} }
+
+function renderGuide(){
+  const parts = [
+    ['a','お願い','<b>多目的室を使わせてください</b><small>さいしょに言う</small>','お願いを先に'],
+    ['b','こまりごと','<b>52人中38人</b><small>アンケート・記録</small>','データで見せる'],
+    ['b','つながり','<b>学校の目標</b><small>なかよく・安全</small>','学校にもいいこと'],
+    ['b','計画','<b>いつ・どこ・だれ</b><small>表にまとめる</small>','くわしい計画'],
+    ['b','心配と対策','<b>けんか？片付け？</b><small>先に答える</small>','信用してもらう'],
+    ['c','ためしに＋お願い','<b>まずは1か月！</b><small>結果を報告します</small>','はっきりお願い'],
+  ];
+  const checked = loadChecks();
+  view.innerHTML = `
+  <section class="sec"><h2>提案プレゼンの組み立て</h2>
+    <p>この順番で話すと、校長先生が「いいよ」と言いやすくなります。</p>
+    <div class="flow">${parts.map(p=>`<div class="part"><div class="lab ${p[0]}">${p[1]}</div>${slideHTML(p[2])}<div class="sayit">${p[3]}</div></div>`).join('')}</div>
+  </section>
+  <section class="sec"><h2>提案プレゼンを作る手順</h2>
+    <p>いきなりパソコンで作り始めないのがコツ。先に「データ集め」と「心配さがし」をしよう。</p>
+    <ol class="make">
+      <li><b>やりたいことを1文にする</b><span>「○○を、○○で、○○させてください」と短く言えるようにする。</span></li>
+      <li><b>こまりごとをデータで集める</b><span>アンケート・数えた記録・インタビューで、本当にこまっていることを見せる。</span></li>
+      <li><b>計画をくわしくする</b><span>いつ・どこで・だれが・何を。お金や道具も。</span></li>
+      <li><b>心配なことを書き出す</b><span>先生の立場になって考え、対策を決める。担任の先生にも相談しよう。</span></li>
+      <li><b>紙に下書き → ワザでスライドに</b><span>1まい1つ。ワザずかんを見ながら作る。</span></li>
+      <li><b>本番のように練習</b><span>質問の答えも練習。話す役わりも決めておく。</span></li>
+    </ol>
+  </section>
+  <section class="sec"><h2>聞かれそうな質問を練習しよう</h2>
+    <p>校長先生は、プレゼンのあとに質問をすることがあります。答えを考えておくと、あわてずにすみます。</p>
+    <div class="qa">
+      <details><summary>先生たちの仕事がふえませんか？</summary><p>例：係の6人が交代で見回り、片付けまで自分たちでします。先生には、さいしょの1回だけ見に来ていただけると安心です。</p></details>
+      <details><summary>ほかの学年から「ずるい」と言われませんか？</summary><p>例：うまくいったら、ほかの学年も使えるように曜日を分けることを考えています。</p></details>
+      <details><summary>うまくいかなかったら、どうしますか？</summary><p>例：1か月でアンケートをとり、うまくいかなかったところを直します。それでもだめなら、やめることも考えます。</p></details>
+      <details><summary>なぜ、多目的室なのですか？</summary><p>例：広くて、ほかのクラスの授業のじゃまにならないからです。昼休みに使われていないことも、先生にたしかめました。</p></details>
+    </div>
+  </section>
+  <section class="sec"><h2>話し方でも、なっとくしてもらおう</h2>
+    <div class="talk">
+      <div><b>ていねいなことば</b><span>「〜させてください」「〜と考えています」「ご検討よろしくお願いします」。</span></div>
+      <div><b>相手の顔を見る</b><span>スライドばかり見ないで、校長先生の顔を見て話す。</span></div>
+      <div><b>ゆっくり・はっきり</b><span>数字やお願いの前で、少し間をあける。</span></div>
+      <div><b>役わりを分ける</b><span>「お願い係」「データ係」「計画係」など、グループで分担して話す。</span></div>
+    </div>
+  </section>
+  <section class="sec"><h2>ワザえらび表</h2>
+    <p>「こんなとき」を見つけたら、右のワザを使おう。</p>
+    <div class="tablewrap"><table class="cheat"><tr><th>こんなとき</th><th>使うワザ</th></tr>
+    ${T.map((t,i)=>`<tr class="${t.g==='hook'?'h':''}"><td>${t.when}</td><td><a href="#${t.id}">ワザ${i+1}<br>${t.name}</a></td></tr>`).join('')}</table></div>
+  </section>
+  <section class="sec"><h2>できたかな？チェックリスト</h2>
+    <p>プレゼンができたら、1つずつたしかめよう。</p>
+    <div class="checks">${CHECKS.map((c,i)=>`<label class="check"><input type="checkbox" id="ck${i}" ${checked.includes(i)?'checked':''}><span>${c}</span></label>`).join('')}</div>
+    <div class="done" id="done"></div>
+  </section>`;
+  const upd = ()=>{
+    const v = CHECKS.map((_,i)=>document.getElementById('ck'+i).checked?i:-1).filter(i=>i>=0);
+    saveChecks(v);
+    document.getElementById('done').textContent = v.length===CHECKS.length ? 'ぜんぶできた！自信をもって提案しよう。' : `${v.length} / ${CHECKS.length} できた`;
+  };
+  view.querySelectorAll('.check input').forEach(x=>x.addEventListener('change',upd)); upd();
+}
+
+function setTab(tab){ document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===tab)); }
+function route(){
+  const h = location.hash.slice(1);
+  if(byId[h]){ setTab('zukan'); renderDetail(h); }
+  else if(h==='demo'){ setTab('demo'); renderDemo(); }
+  else if(h==='data'){ setTab('data'); renderData(); }
+  else if(h==='quiz'){ setTab('quiz'); renderQuiz(); }
+  else if(h==='guide'){ setTab('guide'); renderGuide(); }
+  else { setTab('zukan'); renderZukan(); }
+}
+function go(h){ if(location.hash.slice(1)===h){ route(); } else { location.hash = h; } window.scrollTo({top:0}); }
+window.addEventListener('hashchange', ()=>{ route(); window.scrollTo({top:0}); });
+
+document.addEventListener('click', e=>{
+  const r = e.target.closest('[data-reveal]');
+  if(r){ const s = r.closest('.slide'); const on = s.classList.toggle('revealed'); r.textContent = on ? r.dataset.reveal : '答えを見る'; return; }
+  const dm = e.target.closest('[data-demo]'); if(dm){ demoIdx = +dm.dataset.demo; renderDemo(); return; }
+  const g = e.target.closest('[data-go]'); if(g){ go(g.dataset.go); return; }
+  const tb = e.target.closest('[data-tab]'); if(tb){ go(tb.dataset.tab); return; }
+});
+document.addEventListener('keydown', e=>{
+  if(location.hash.slice(1)!=='demo' || e.target.closest('input')) return;
+  if(e.key==='ArrowRight' && demoIdx<DEMO.length-1){ demoIdx++; renderDemo(); }
+  if(e.key==='ArrowLeft' && demoIdx>0){ demoIdx--; renderDemo(); }
+});
+route();
+</script>
+
+</body></html>
