@@ -412,8 +412,126 @@ def load_durs(ep, workdir):
     return tts(ep, workdir)
 
 # ---------------------------------------------------------------- audio
+SR = 44100
+
+def _lowpass(x, fc, order=2):
+    """Zero-phase lowpass via FFT (no scipy needed)."""
+    X = np.fft.rfft(x)
+    f = np.fft.rfftfreq(len(x), 1 / SR)
+    return np.fft.irfft(X / np.sqrt(1 + (f / fc) ** (2 * order)), len(x))
+
+def _highpass(x, fc, order=2):
+    X = np.fft.rfft(x)
+    f = np.fft.rfftfreq(len(x), 1 / SR)
+    return np.fft.irfft(X / np.sqrt(1 + (fc / np.maximum(f, 1e-3)) ** (2 * order)), len(x))
+
+def _hz(m): return 440.0 * 2 ** ((m - 69) / 12)
+
+def bgm(n, seed=0, bpm=124):
+    """Upbeat, stylish house loop: four-on-the-floor, swung hats, claps, Rhodes-like chord stabs
+    (Dm9 - G13 - Cmaj9 - Am9), syncopated bass, ping-pong plucks, kick sidechain. Returns (n, 2)."""
+    rng = np.random.default_rng(seed)
+    beat = 60 / bpm; six = beat / 4
+    t_all = np.arange(n) / SR
+    drums, keys, bass, pluck, pad = (np.zeros((n, 2)) for _ in range(5))
+
+    def put(buf, sig, at, g=1.0, pan=0.0):
+        s = int(round(at * SR))
+        if s >= n: return
+        if s < 0: sig, s = sig[-s:], 0
+        e = min(n, s + len(sig))
+        buf[s:e, 0] += sig[: e - s] * g * (1 - max(0, pan))
+        buf[s:e, 1] += sig[: e - s] * g * (1 + min(0, pan))
+
+    def tt(sec): return np.arange(int(sec * SR)) / SR
+
+    # --- drum sounds
+    x = tt(0.32)
+    kick = np.sin(2 * np.pi * np.cumsum(48 + 160 * np.exp(-x * 38)) / SR) * np.exp(-x * 9)
+    kick[:60] += np.linspace(0.6, 0, 60) * rng.standard_normal(60) * 0.3
+    x = tt(0.25)
+    nz = _highpass(rng.standard_normal(len(x)), 900)
+    clap_env = sum(np.exp(-np.maximum(x - d, 0) * 90) * (x >= d) for d in (0, 0.011, 0.022)) + 0.6 * np.exp(-x * 18)
+    clap = _lowpass(nz, 6000) * clap_env * 0.5
+    x = tt(0.05); hat_c = _highpass(rng.standard_normal(len(x)), 7000) * np.exp(-x * 90)
+    x = tt(0.16); hat_o = _highpass(rng.standard_normal(len(x)), 7500) * np.exp(-x * 22)
+
+    # --- tonal sounds
+    def rhodes(m, dur):
+        f = _hz(m); x = tt(dur + 0.25)
+        idx = 1.6 * np.exp(-x * 7) + 0.25
+        s = np.sin(2 * np.pi * f * x + idx * np.sin(2 * np.pi * f * x))
+        s += 0.18 * np.sin(2 * np.pi * f * 4.01 * x) * np.exp(-x * 14)          # tine "ping"
+        env = np.minimum(1, x / 0.004) * np.exp(-x * 2.4)
+        env *= np.clip(1 - (x - dur) / 0.25, 0, 1)                                 # release
+        return s * env
+    def bass_note(m, dur):
+        f = _hz(m); x = tt(dur + 0.05)
+        s = np.sin(2 * np.pi * f * x) + 0.35 * np.sin(4 * np.pi * f * x) + 0.12 * np.sin(6 * np.pi * f * x)
+        return s * np.minimum(1, x / 0.006) * np.exp(-x * 3) * np.clip(1 - (x - dur) / 0.05, 0, 1)
+    def pluck_note(m):
+        f = _hz(m); x = tt(0.22)
+        s = sum(np.sin(2 * np.pi * f * k * x) / k for k in (1, 3, 5, 7))
+        return s * np.minimum(1, x / 0.002) * np.exp(-x * 22)
+    def pad_chord(ms, dur):
+        x = tt(dur)
+        s = sum(np.sin(2 * np.pi * _hz(m) * d * x + rng.uniform(0, 6)) for m in ms for d in (0.997, 1.0, 1.003))
+        return s * np.minimum(1, x / 0.3) * np.minimum(1, (dur - x) / 0.3)
+
+    CHORDS = [  # (bass root, Rhodes voicing, arp notes)
+        (38, [53, 57, 60, 64], [65, 69, 72, 76, 72, 69]),     # Dm9
+        (43, [53, 59, 64, 69], [65, 71, 76, 81, 76, 71]),     # G13
+        (36, [52, 55, 59, 62], [64, 67, 71, 74, 71, 67]),     # Cmaj9
+        (45, [55, 59, 60, 64], [67, 71, 72, 76, 72, 71]),     # Am9
+    ]
+    STABS = [(0, 3), (6, 2), (10, 3), (14, 2)]                 # (16th step, length in 16ths) — house syncopation
+    BASS = [(0, 2, 0), (3, 1, 0), (6, 2, 12), (8, 2, 0), (11, 1, 7), (14, 2, 0)]   # (step, len, interval)
+    bar = beat * 4
+    nbars = int(n / SR / bar) + 2
+    for b in range(nbars):
+        root, voicing, arp = CHORDS[b % 4]
+        t0 = b * bar
+        for step, ln in STABS:
+            for j, m in enumerate(voicing):
+                put(keys, rhodes(m, ln * six * 0.9), t0 + step * six + j * 0.004, 0.30, pan=(j - 1.5) * 0.3)
+        for step, ln, iv in BASS:
+            put(bass, bass_note(root + iv, ln * six * 0.85), t0 + step * six, 0.42)
+        for s16 in range(16):
+            swing = six * 0.18 if s16 % 2 else 0
+            put(pluck, pluck_note(arp[s16 % len(arp)]), t0 + s16 * six + swing, 0.07, pan=0.5 if s16 % 2 else -0.5)
+        put(pad, pad_chord(voicing, bar), t0, 0.03)
+        for k in range(4):
+            put(drums, kick, t0 + k * beat, 0.85)
+            if k in (1, 3): put(drums, clap, t0 + k * beat, 0.28, pan=0.05)
+            put(drums, hat_o, t0 + k * beat + beat / 2, 0.13, pan=0.25)
+        for s16 in range(16):
+            swing = six * 0.18 if s16 % 2 else 0
+            vel = (0.5, 0.25, 0.0, 0.3)[s16 % 4]
+            if vel: put(drums, hat_c, t0 + s16 * six + swing, 0.26 * vel, pan=-0.3)
+
+    # ping-pong delay on the plucks (dotted 8th)
+    d = int(beat * 0.75 * SR)
+    wet = np.zeros_like(pluck); src = pluck.copy()
+    for k in range(1, 5):
+        src = np.roll(src[:, ::-1], d, axis=0); src[:d] = 0; src *= 0.45
+        wet += src
+    pluck = pluck + _lowpass_stereo(wet, 3500)
+    # sidechain: everything melodic ducks on each kick
+    ph = (t_all % beat)
+    sc = (0.3 + 0.7 * (1 - np.exp(-ph / 0.075)))[:, None]
+    keys = _lowpass_stereo(keys, 5000); pad = _lowpass_stereo(pad, 2500)
+    haas = int(0.014 * SR)                                     # widen keys/pad: delay the right channel
+    for buf in (keys, pad): buf[haas:, 1] = buf[:-haas, 1].copy(); buf[:haas, 1] = 0
+    mix = drums + (keys + _lowpass_stereo(bass, 900) + pluck + pad) * sc
+    # short intro fade-in so the first kick doesn't click
+    mix *= np.minimum(1, t_all / 0.02)[:, None]
+    return mix / (np.max(np.abs(mix)) + 1e-9) * 0.55
+
+def _lowpass_stereo(x, fc):
+    return np.stack([_lowpass(x[:, 0], fc), _lowpass(x[:, 1], fc)], 1)
+
 def make_audio(path, ep, T, workdir):
-    sr = 44100; n = int(sr * TOTAL)
+    sr = SR; n = int(sr * TOTAL)
     out = np.zeros(n); rng = np.random.default_rng(ep.NUM)
     def add(sig, at, g=1.0):
         s = int(at * sr)
@@ -423,15 +541,6 @@ def make_audio(path, ep, T, workdir):
     def env(ls, dec):
         x = np.arange(int(ls * sr)) / sr
         return x, np.exp(-x * dec)
-    x, e = env(0.35, 14); kick = np.sin(2 * np.pi * (45 + 120 * np.exp(-x * 30)) * x) * e
-    x, e = env(0.06, 70); hat = np.diff(rng.standard_normal(len(x)) * e, prepend=0)
-    notes = [55.0, 55.0, 43.65, 49.0]
-    for b in range(int(TOTAL / 0.5) + 1):
-        at = b * 0.5
-        if at < 0.05: continue
-        add(kick, at, 0.32); add(hat, at + 0.25, 0.09)
-        x, e = env(0.45, 5)
-        add(np.sin(2 * np.pi * notes[(b // 4) % 4] * 2 * x) * e * (1 - np.exp(-x * 200)), at, 0.12)
     def whoosh(at, g=0.4):
         x, _ = env(0.35, 0)
         k = np.convolve(rng.standard_normal(len(x)), np.ones(12) / 12, mode="same")
@@ -455,12 +564,14 @@ def make_audio(path, ep, T, workdir):
         s = int(at * sr); e = min(n, s + len(v)); voice[s:e] += v[: e - s]
     win = int(0.15 * sr)
     mask = np.convolve((np.abs(voice) > 0.01).astype(float), np.ones(win) / win, mode="same")
-    out = out * (1 - 0.55 * np.clip(mask * 4, 0, 1)) + voice * 1.1
-    out *= np.clip((TOTAL - np.arange(n) / sr) / 0.6, 0, 1)
-    out = np.tanh(out * 1.2) * 0.85
-    pcm = (out * 32767).astype(np.int16)
+    duck = (1 - 0.5 * np.clip(mask * 4, 0, 1))[:, None]
+    music = bgm(n, seed=ep.NUM) * duck
+    mix = music + ((out * 0.8) * (1 - 0.3 * np.clip(mask * 4, 0, 1)) + voice * 1.1)[:, None]
+    mix *= np.clip((TOTAL - np.arange(n) / sr) / 0.6, 0, 1)[:, None]
+    mix = np.tanh(mix * 1.2) * 0.88
+    pcm = (mix * 32767).astype(np.int16)
     with wave.open(path, "wb") as w:
-        w.setnchannels(2); w.setsampwidth(2); w.setframerate(sr); w.writeframes(np.repeat(pcm[:, None], 2, 1).tobytes())
+        w.setnchannels(2); w.setsampwidth(2); w.setframerate(sr); w.writeframes(pcm.tobytes())
 
 # ---------------------------------------------------------------- frame + runner
 def frame(ep, T, t):
