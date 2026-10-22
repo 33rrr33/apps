@@ -1,0 +1,27 @@
+{
+  "timezone": "Asia/Tokyo",
+  "episodes_per_series": 5,
+  "current_series": "s01_renkei",
+  "series": [
+    {
+      "key": "s01_renkei",
+      "title": "MacとiPhoneの神連携機能",
+      "spoken": "MacとiPhoneの、かみ連携機能",
+      "hook_split": ["MacとiPhoneの", "神連携機能"],
+      "episodes": [
+        {"num": 1, "slug": "handoff", "topic": "Handoff（iPhoneのSafariのページをMacのDock右端から続きで開く）", "status": "done", "date": "2026-10-21"},
+        {"num": 2, "slug": "clipboard", "topic": "ユニバーサルクリップボード（iPhoneでコピー→Macで⌘V、写真も・逆向きもOK）", "status": "todo"},
+        {"num": 3, "slug": "mirroring", "topic": "iPhoneミラーリング（macOS Sequoia/iOS 18以降、iPhoneはロックしたままMacで操作）", "status": "todo"},
+        {"num": 4, "slug": "hotspot", "topic": "インスタントホットスポット（MacのWi-FiメニューにiPhoneが出てワンクリックでテザリング）", "status": "todo"},
+        {"num": 5, "slug": "code_autofill", "topic": "SMS認証コードの自動入力（テキストメッセージ転送オン→MacのSafariで候補に出る）", "status": "todo"}
+      ]
+    }
+  ],
+  "used_topics_outside_series": [
+    "Macの神ショートカット⑤: Finderで⌘C→⌘⌥Vでファイル移動",
+    "5分動画『MacとiPhoneの連携技10選』: ユニバーサルクリップボード, Handoff, iPhoneミラーリング, 連係カメラ, iPhoneで書類スキャン→Mac, Macで電話, MacでSMS, インスタントホットスポット, iPhoneの通知をMacで, 認証コード自動入力"
+  ],
+  "history": [
+    {"date": "2026-10-21", "series": "s01_renkei", "num": 1, "file": "episodes/s01_renkei/ep01_handoff.py"}
+  ]
+}
