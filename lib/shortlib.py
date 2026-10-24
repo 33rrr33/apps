@@ -19,7 +19,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, ".cache")
 OUT_DIR = os.path.join(ROOT, "out")
-W, H, FPS, TOTAL = 1080, 1920, 30, 15.0
+W, H, FPS, TOTAL = 1080, 1920, 30, 20.0
 YEL, WHITE, BLUE, RED, GREEN, GRAY, INK, PURPLE, ORANGE = (255, 214, 10), (255, 255, 255), (10, 132, 255), (255, 69, 58), (48, 209, 88), (142, 142, 147), (28, 28, 32), (175, 82, 222), (255, 159, 10)
 
 # ---------------------------------------------------------------- fonts
@@ -368,6 +368,9 @@ def build_timeline(ep, durs):
     put("cta", T.cta + 0.3)
     if T.end["cta"] > TOTAL - 0.8:
         raise SystemExit(f"Too long: narration ends at {T.end['cta']:.2f}s (max {TOTAL - 0.8}s). Shorten lines or gaps/BODY_HOLD.")
+    if T.cta < TOTAL - 5.5:
+        raise SystemExit(f"Too short: the body ends at {T.cta:.2f}s, leaving {TOTAL - T.cta:.1f}s of CTA (max 5.5s). "
+                         "Add a body line or raise gaps/BODY_HOLD so the main scene fills the video.")
     return T
 
 def all_lines(ep):
@@ -600,6 +603,8 @@ def out_name(ep):
 def main():
     path = sys.argv[1]; mode = sys.argv[2] if len(sys.argv) > 2 else "render"
     ep = load_episode(path)
+    global TOTAL
+    TOTAL = getattr(ep, "DURATION", TOTAL)   # older episodes were made at 15s
     workdir = os.path.join(CACHE, out_name(ep)); os.makedirs(workdir, exist_ok=True); os.makedirs(OUT_DIR, exist_ok=True)
     durs = load_durs(ep, workdir)
     T = build_timeline(ep, durs)
