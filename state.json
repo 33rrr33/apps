@@ -59,7 +59,7 @@
       ],
       "total": 10,
       "long_video": null,
-      "note": "①〜⑤はユーザーが投稿済み（⌘⇧5のスクショ、⌘H、画面ロック、⌘C→⌘⌥Vのファイル移動など。正確な一覧はユーザーに確認）。こちらは⑥〜⑩を作る。",
+      "note": "①〜⑤はユーザーが投稿済み（番号が確かなのは②=⌘⇧5、④=画面ロック、⑤=⌘⌥V）。こちらは⑥〜⑩を作る。used_topics と被らないこと。",
       "episodes": [
         {
           "num": 6,
@@ -91,12 +91,18 @@
           "topic": "",
           "status": "todo"
         }
+      ],
+      "used_topics": [
+        "Control+Command+Q：画面ロック（④）",
+        "Command+Shift+5：画面収録・スクリーンショットのツールバー（②）",
+        "Command+H：アプリを隠す",
+        "Command+C → Command+Option+V：Finderでファイルを移動（⑤）"
       ]
     }
   ],
   "used_topics_outside_series": [
-    "Macの神ショートカット⑤: Finderで⌘C→⌘⌥Vでファイル移動",
-    "5分動画『MacとiPhoneの連携技10選』: ユニバーサルクリップボード, Handoff, iPhoneミラーリング, 連係カメラ, iPhoneで書類スキャン→Mac, Macで電話, MacでSMS, インスタントホットスポット, iPhoneの通知をMacで, 認証コード自動入力"
+    "長尺『【完全保存版】MacとiPhoneの神連携ワザ10選』の実際の収録順：1 ユニバーサルクリップボード, 2 Handoff, 3 iPhoneミラーリング, 4 連係カメラ（Webカメラ化）, 5 iPhoneで書類スキャン→Mac（写真を撮る・スケッチも紹介）, 6 Macで電話, 7 MacでSMS, 8 インスタントホットスポット, 9 iPhoneの通知をMacで, 10 認証コードの自動入力（AirDrop・Apple Watchでのロック解除は未収録）",
+    "Macの神ショートカット①〜⑤（上記 s02 の used_topics）"
   ],
   "history": [
     {
