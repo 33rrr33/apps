@@ -30,7 +30,8 @@
           "num": 3,
           "slug": "mirroring",
           "topic": "iPhoneミラーリング（macOS Sequoia/iOS 18以降、iPhoneはロックしたままMacで操作）",
-          "status": "todo"
+          "status": "done",
+          "date": "2026-10-24"
         },
         {
           "num": 4,
@@ -63,6 +64,12 @@
       "series": "s01_renkei",
       "num": 2,
       "file": "episodes/s01_renkei/ep02_clipboard.py"
+    },
+    {
+      "date": "2026-10-24",
+      "series": "s01_renkei",
+      "num": 3,
+      "file": "episodes/s01_renkei/ep03_mirroring.py"
     }
   ]
 }
