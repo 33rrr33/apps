@@ -41,7 +41,10 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
 
 ## 4. 届ける
 - `SendUserFile`（files=[mp4の絶対パス], status="proactive", display="render", caption="<シリーズ名><丸数字>（20秒）"）。
-- その後、短い日本語メッセージ：今日のネタ一言、YouTube用の **タイトル案・概要欄1〜2行・ハッシュタグ3〜5個**、次回予告（次のネタ or 新シリーズ予定）。
+- その後、短い日本語メッセージ：今日のネタ一言、YouTube用の **タイトル・概要欄1〜2行・ハッシュタグ3〜5個**、次回予告（次のネタ or 新シリーズ予定）。
+- **YouTubeタイトルは必ずこの形式で統一（ユーザー指定）**：`<シリーズ名><丸数字> #shorts`
+  - 例：`MacとiPhoneの神連携機能③ #shorts`
+  - ネタ名や【】・煽り文句などは付け足さない。シリーズ名は state.json の `title` そのまま、丸数字は①〜⑤。コピペしやすいようコードブロックで1行だけ示す。
 
 ## 5. 記録して push
 - `state.json`：今日の回を `"status": "done"`, `"date"` を付け、`history` に追加。
