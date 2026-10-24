@@ -59,7 +59,7 @@
       ],
       "total": 10,
       "long_video": null,
-      "note": "①〜⑤はユーザーが投稿済み（番号が確かなのは②=⌘⇧5、④=画面ロック、⑤=⌘⌥V）。こちらは⑥〜⑩を作る。used_topics と被らないこと。",
+      "note": "①〜⑤はユーザーが投稿済み。こちらは⑥〜⑩を作る。used_topics と被らないこと。",
       "episodes": [
         {
           "num": 6,
@@ -93,10 +93,12 @@
         }
       ],
       "used_topics": [
-        "Control+Command+Q：画面ロック（④）",
-        "Command+Shift+5：画面収録・スクリーンショットのツールバー（②）",
-        "Command+H：アプリを隠す",
-        "Command+C → Command+Option+V：Finderでファイルを移動（⑤）"
+        "① Command+H：アプリを隠す",
+        "② Command+Shift+5：画面収録・スクリーンショットのツールバー",
+        "③ Command+Z：取り消し",
+        "④ Control+Command+Q：画面ロック",
+        "⑤ Command+C → Command+Option+V：Finderでファイルを移動",
+        "（避ける）Command+Shift+4：⑤の説明欄に誤って書かれているため、視聴者が既出と感じる"
       ]
     }
   ],
