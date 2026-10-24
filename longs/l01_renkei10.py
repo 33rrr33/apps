@@ -1,0 +1,81 @@
+# 『【完全保存版】MacとiPhoneの神連携ワザ10選』(約5分, 公開済み) — reference long episode
+INTRO_TITLE = ("MacとiPhoneの", "連携技10選")
+OUTRO_TITLE = "まとめ：MacとiPhoneの連携技10選"
+TIP_WORD = "連携技"
+TIP_TARGET = 27.5
+TIP_FN = {}          # all ten use the built-in drawings in lib/longlib.py
+
+INTRO = [
+    "MacとiPhone、両方持っているなら、これを使わないと損！",
+    "知っているだけで毎日がラクになる、連携技を10個まとめて紹介します。",
+]
+
+TIPS = [
+    dict(key="clip", name="ユニバーサルクリップボード", req="同じApple ID ・ Handoffオン",
+         title="1つ目は、ユニバーサルクリップボード。",
+         steps=[("iPhoneでテキストや写真をコピーして、", "iPhoneでコピー"),
+                ("Macでコマンド、Vを押すだけで、そのまま貼り付けられます。", "Macで ⌘V を押すだけ"),
+                ("逆に、Macでコピーしたものを、iPhoneに貼り付けることもできます。", "Mac → iPhone もOK")],
+         point=("条件は、同じApple IDでサインインして、WiFiとBluetooth、Handoffをオンにしておくことです。",
+                "Wi-Fi・Bluetooth・Handoff をオンに")),
+    dict(key="handoff", name="Handoff", req="同じApple ID ・ Handoffオン",
+         title="2つ目は、Handoff。",
+         steps=[("iPhoneのSafariで見ていたページを、Macで続きから見たいとき、ありますよね。", "iPhoneでページを開く"),
+                ("そんなときは、MacのDockの右端を見てください。Safariのアイコンが出ています。", "MacのDock右端にアイコン"),
+                ("これをクリックするだけで、同じページがMacで開きます。", "クリックで続きから開く")],
+         point=("メールやメモなど、対応しているアプリでも使えます。", "メール・メモなどでも使える")),
+    dict(key="mirror", name="iPhoneミラーリング", req="macOS Sequoia ・ iOS 18 以降",
+         title="3つ目は、iPhoneミラーリング。",
+         steps=[("Macで、iPhoneミラーリングというアプリを開くと、", "「iPhoneミラーリング」を開く"),
+                ("Macの画面の中に、iPhoneがまるごと表示されます。", "iPhoneの画面がMacに"),
+                ("キーボードとトラックパッドで操作できて、iPhoneはロックしたまま、カバンの中でもOKです。", "iPhoneはロックしたままでOK")],
+         point=("macOS SequoiaとiOS 18以降で使える機能です。", "macOS Sequoia / iOS 18 以降")),
+    dict(key="camera", name="連係カメラ", req="macOS Ventura ・ iOS 16 以降",
+         title="4つ目は、連係カメラ。",
+         steps=[("iPhoneを横向きにして、Macの近くに固定するだけで、", "iPhoneを横向きで固定"),
+                ("iPhoneのカメラを、MacのWebカメラとして使えます。", "MacのWebカメラになる"),
+                ("FaceTimeやZoomでも選べて、Macの内蔵カメラより、ぐっとキレイに映ります。", "Zoomなどでも選べる")],
+         point=("センターフレームやポートレートなどの、エフェクトも使えます。", "センターフレーム等も使える")),
+    dict(key="scan", name="iPhoneでスキャン → Macへ", req="同じApple ID",
+         title="5つ目は、iPhoneで撮って、Macに直接入れる技。",
+         steps=[("Finderやメモで右クリックして、iPhoneから読み込む、を選び、", "右クリック →「iPhoneから読み込む」"),
+                ("書類をスキャン、を選ぶと、iPhoneのカメラが自動で起動します。", "「書類をスキャン」を選択"),
+                ("書類を撮影すると、そのままMacにPDFとして保存されます。", "撮るだけでMacにPDF保存")],
+         point=("写真を撮る、や、スケッチを追加、も選べます。AirDropするより速いです。", "写真・スケッチも直接入れられる")),
+    dict(key="call", name="Macで電話", req="同じApple ID",
+         title="6つ目は、Macで電話。",
+         steps=[("iPhoneにかかってきた電話を、Macでそのまま受けられます。", "Macに着信が届く"),
+                ("iPhoneの設定、電話から、他のデバイスでの通話をオンにして、Macを選ぶだけ。", "設定 → 電話 → 他のデバイスでの通話"),
+                ("Macから電話をかけることもできます。", "Macから発信もOK")],
+         point=("iPhoneを取りに行かなくても、作業しながら通話できます。", "作業しながら通話できる")),
+    dict(key="sms", name="MacでSMS", req="同じApple ID",
+         title="7つ目は、MacでSMS。",
+         steps=[("iMessageだけでなく、Androidの人とのSMSも、Macで送受信できます。", "SMSもMacで送受信"),
+                ("iPhoneの設定、メッセージ、テキストメッセージ転送で、Macをオンにするだけ。", "設定 → メッセージ → テキストメッセージ転送"),
+                ("長い文章も、Macのキーボードでサクサク打てます。", "キーボードで速く返信")],
+         point=("この設定は、このあと紹介する10個目の技にも関係してきます。", "10個目の技にも関係！")),
+    dict(key="hotspot", name="インスタントホットスポット", req="同じApple ID ・ テザリング契約",
+         title="8つ目は、インスタントホットスポット。",
+         steps=[("外出先でWiFiがないとき、MacのWiFiメニューを開くと、", "MacのWi-Fiメニューを開く"),
+                ("iPhoneの名前が表示されています。", "iPhoneの名前が出る"),
+                ("クリックするだけで、iPhoneを触らずにテザリングできます。", "クリックでテザリング")],
+         point=("インターネット共有が使える契約かどうか、事前に確認しておきましょう。", "テザリング対応の契約が必要")),
+    dict(key="notif", name="iPhoneの通知をMacで", req="macOS Sequoia ・ iOS 18 以降",
+         title="9つ目は、iPhoneの通知を、Macで受け取る技。",
+         steps=[("iPhoneミラーリングを設定しておくと、", "iPhoneミラーリングを設定"),
+                ("iPhoneのアプリの通知が、Macの通知センターに届きます。", "iPhoneの通知がMacに届く"),
+                ("通知をクリックすると、そのアプリがMacの中で開きます。", "クリックでアプリが開く")],
+         point=("iPhoneを見るたびに集中が切れる、なんてこともなくなります。", "スマホを見ずに集中できる")),
+    dict(key="code", name="認証コードの自動入力", req="テキストメッセージ転送オン",
+         title="10個目は、認証コードの自動入力。",
+         steps=[("MacのSafariでログインするとき、iPhoneにSMSで認証コードが届くと、", "iPhoneにSMSでコードが届く"),
+                ("入力欄に、そのコードが候補として表示されます。", "Macの入力欄に候補が出る"),
+                ("クリックするだけで入力完了。スマホを見て打ち込む必要はありません。", "クリックで入力完了")],
+         point=("さっき紹介した、テキストメッセージ転送をオンにしておくのがポイントです。", "7つ目の設定をオンに")),
+]
+
+OUTRO = [
+    "以上、MacとiPhoneの連携技10選でした。",
+    "気になる技があったら、ぜひ今日から試してみてください。",
+    "役に立ったら、高評価とチャンネル登録をお願いします！",
+]

@@ -46,7 +46,52 @@
           "status": "todo"
         }
       ],
-      "long_video": "【完全保存版】MacとiPhoneの神連携ワザ10選"
+      "long_video": "【完全保存版】MacとiPhoneの神連携ワザ10選",
+      "total": 5
+    },
+    {
+      "key": "s02_shortcut",
+      "title": "Macユーザーの9割が知らない神ショートカット",
+      "spoken": "Macユーザーの9割が知らない、かみショートカット",
+      "hook_split": [
+        "Macユーザーの9割が知らない",
+        "神ショートカット"
+      ],
+      "total": 10,
+      "long_video": null,
+      "note": "①〜⑤はユーザーが投稿済み（⌘⇧5のスクショ、⌘H、画面ロック、⌘C→⌘⌥Vのファイル移動など。正確な一覧はユーザーに確認）。こちらは⑥〜⑩を作る。",
+      "episodes": [
+        {
+          "num": 6,
+          "slug": "",
+          "topic": "",
+          "status": "todo"
+        },
+        {
+          "num": 7,
+          "slug": "",
+          "topic": "",
+          "status": "todo"
+        },
+        {
+          "num": 8,
+          "slug": "",
+          "topic": "",
+          "status": "todo"
+        },
+        {
+          "num": 9,
+          "slug": "",
+          "topic": "",
+          "status": "todo"
+        },
+        {
+          "num": 10,
+          "slug": "",
+          "topic": "",
+          "status": "todo"
+        }
+      ]
     }
   ],
   "used_topics_outside_series": [
@@ -72,5 +117,54 @@
       "num": 3,
       "file": "episodes/s01_renkei/ep03_mirroring.py"
     }
-  ]
+  ],
+  "schedule": {
+    "note": "日付(JST)ごとの予定。ここに無い日は weekly ルール。",
+    "2026-10-25": {
+      "type": "short",
+      "series": "s01_renkei",
+      "num": 4
+    },
+    "2026-10-26": {
+      "type": "short",
+      "series": "s01_renkei",
+      "num": 5
+    },
+    "2026-10-27": {
+      "type": "short",
+      "series": "s02_shortcut",
+      "num": 6
+    },
+    "2026-10-28": {
+      "type": "short",
+      "series": "s02_shortcut",
+      "num": 7
+    },
+    "2026-10-29": {
+      "type": "short",
+      "series": "s02_shortcut",
+      "num": 8
+    },
+    "2026-10-30": {
+      "type": "short",
+      "series": "s02_shortcut",
+      "num": 9
+    },
+    "2026-10-31": {
+      "type": "short",
+      "series": "s02_shortcut",
+      "num": 10
+    },
+    "2026-11-01": {
+      "type": "long",
+      "series": "s02_shortcut",
+      "note": "神ショートカット①〜⑩の完全版（約5分）。公開後 s02 の long_video に設定"
+    }
+  },
+  "weekly": {
+    "from": "2026-11-02",
+    "mon_fri": "その週のシリーズの①〜⑤（月曜に新シリーズを企画・state.json に追加）",
+    "sat": "長尺：その週の①〜⑤の完全版（約5分・横型）。完成したらそのシリーズの long_video に設定",
+    "sun": "一気見ショート：その週の①〜⑤（約30秒）＋来週のシリーズ予告。来週のシリーズもこの日に企画しておく"
+  }
 }

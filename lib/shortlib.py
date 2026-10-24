@@ -399,7 +399,9 @@ def end_card(c, t, ep, T):
     nxt = getattr(ep, "NEXT", None)
     if nxt:
         total = ep.SERIES.get("total", 5)
-        label = f"次回 {CIRCLED[ep.NUM]}：{nxt}" if ep.NUM < total else f"次回：{nxt}"
+        if is_recap(ep): label = f"来週：{nxt}"
+        elif ep.NUM < total: label = f"次回 {CIRCLED[ep.NUM]}：{nxt}"
+        else: label = f"次回：{nxt}"
         badge(c, t, s + 1.0, label, 1140 if long_video(ep) else 1080, PURPLE, size=40)
 
 # ---------------------------------------------------------------- timeline
@@ -407,6 +409,7 @@ class Timeline:
     pass
 
 def build_timeline(ep, durs):
+    if is_recap(ep): return recap_timeline(ep, durs)
     T = Timeline(); T.at, T.end = {}, {}
     def put(cid, at):
         T.at[cid] = at; T.end[cid] = at + durs[cid]
@@ -437,6 +440,7 @@ def build_timeline(ep, durs):
     return T
 
 def all_lines(ep):
+    if is_recap(ep): return recap_lines(ep)
     lines = {"hook": f"{ep.SERIES['spoken']}、その{ep.NUM}！"}
     for cid, text, _ in ep.BODY: lines[cid] = text
     lines["cta"] = ep.CTA["spoken"]
@@ -622,6 +626,8 @@ def make_audio(path, ep, T, workdir):
         add((np.sin(2 * np.pi * 1760 * x) + 0.5 * np.sin(2 * np.pi * 2637 * x)) * e, at + 0.1, 0.15)
     kinds = dict(pop=pop, click=click, ding=ding, whoosh=whoosh)
     for s in (T.body, T.cta): whoosh(s)
+    if is_recap(ep):
+        for a, _ in T.segs[1:]: whoosh(a, 0.3)
     for a in (0.15, 0.45, 1.2, T.cta + 1.0): pop(a)
     if T.final < TOTAL:
         whoosh(T.final)
@@ -645,8 +651,94 @@ def make_audio(path, ep, T, workdir):
     with wave.open(path, "wb") as w:
         w.setnchannels(2); w.setsampwidth(2); w.setframerate(sr); w.writeframes(pcm.tobytes())
 
+# ---------------------------------------------------------------- weekly recap ("一気見") Shorts
+# A recap module defines RECAP = [(episode_file, name_on_screen, spoken), ...] (episode files relative to the recap file),
+# NEXT / NEXT_SPOKEN (next week's series) and SERIES/NUM like a normal episode. Length is automatic (~30-40s).
+DEFAULT_TOTAL = TOTAL
+SEG_MIN = 3.6
+
+def is_recap(ep): return hasattr(ep, "RECAP")
+
+def prepare_recap(ep, path):
+    global TOTAL
+    base = os.path.dirname(os.path.abspath(path))
+    ep._subs = []
+    for f, name, spoken in ep.RECAP:
+        sub = load_episode(os.path.join(base, f))
+        wd = os.path.join(CACHE, out_name(sub)); os.makedirs(wd, exist_ok=True)
+        saved = TOTAL; TOTAL = getattr(sub, "DURATION", DEFAULT_TOTAL)
+        Ts = build_timeline(sub, load_durs(sub, wd))
+        TOTAL = saved
+        at = sub.RECAP_AT(Ts) if hasattr(sub, "RECAP_AT") else Ts.at[sub.BODY[min(1, len(sub.BODY) - 1)][0]] - 0.4
+        ep._subs.append((sub, Ts, at, name))
+
+def recap_lines(ep):
+    n = len(ep.RECAP)
+    lines = {"hook": getattr(ep, "HOOK_SPOKEN", f"今週の{ep.SERIES['spoken']}、{n}つ一気に見せます！")}
+    for k, (_, _, spoken) in enumerate(ep.RECAP): lines[f"r{k}"] = f"{k + 1}つ目、{spoken}"
+    lines["next"] = ep.NEXT_SPOKEN
+    lines["final"] = final_spoken(ep)
+    return lines
+
+def recap_timeline(ep, durs):
+    global TOTAL
+    T = Timeline(); T.at, T.end = {}, {}
+    def put(cid, at): T.at[cid] = at; T.end[cid] = at + durs[cid]
+    put("hook", 0.3)
+    T.body = T.end["hook"] + 0.3
+    t = T.body; T.segs = []
+    for k in range(len(ep.RECAP)):
+        put(f"r{k}", t + 0.15)
+        ln = max(SEG_MIN, durs[f"r{k}"] + 0.5)
+        T.segs.append((t, t + ln)); t += ln
+    T.cta = t
+    put("next", t + 0.2)
+    T.final = T.end["next"] + 0.6
+    put("final", T.final + 0.15)
+    TOTAL = round(max(T.end["final"] + 0.6, T.final + FINAL_LEN), 2)
+    return T
+
+def recap_frame_body(c, t, ep, T):
+    k = next(i for i, (a, b) in enumerate(T.segs) if a <= t < b)
+    a, b = T.segs[k]
+    sub, Ts, at, name = ep._subs[k]
+    sub.draw_body(c, at + (t - a), Ts)
+    # cover the episode's own headline with the recap label
+    c.alpha_composite(BG.crop((0, 240, W, 590)), (0, 240))     # opaque: hide the episode's own headline
+    p = clamp((t - a) / 0.25)
+    telop(c, t, a, [(f"{CIRCLED[k]} {name}", YEL)], y0=360, size=100)
+    txt(c, (540, 500), f"{k + 1} / {len(ep.RECAP)}", 40, (200, 200, 210), anchor="mm")
+
+def recap_frame(ep, T, t):
+    c = BG.copy()
+    s = f"{ep.SERIES['title']}  今週のまとめ"
+    w = font(36).getlength(s) + 60
+    rra(c, (540 - w / 2, 170, 540 + w / 2, 226), 28, (255, 255, 255, 40), outline=(255, 255, 255, 120), width=2)
+    txt(c, (540, 198), s, 36, WHITE, anchor="mm")
+    if t < T.body:
+        telop(c, t, 0.15, [("今週の神ワザ", WHITE)], y0=640, size=110)
+        telop(c, t, 0.4, [(f"{len(ep.RECAP)}連発！", YEL)], y0=800, size=170)
+        badge(c, t, 1.0, ep.SERIES["title"], 1010, RED, size=46)
+    elif t < T.cta:
+        recap_frame_body(c, t, ep, T)
+    elif t < T.final:
+        telop(c, t, T.cta, [("来週は…", WHITE)], y0=640, size=110)
+        telop(c, t, T.cta + 0.25, [(ep.NEXT, YEL)], y0=800, size=120)
+        badge(c, t, T.cta + 0.6, "お楽しみに！", 990, PURPLE)
+    else:
+        end_card(c, t, ep, T)
+    for s0 in [T.body] + [a for a, _ in T.segs[1:]] + [T.cta, T.final]:
+        if s0 <= t < s0 + 0.1:
+            c.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(110 * (1 - (t - s0) / 0.1)))))
+    if TOTAL - t < 0.5:
+        c.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * clamp(1 - (TOTAL - t) / 0.5)))))
+    rra(c, (0, 0, W, 10), 0, (255, 255, 255, 40))
+    ImageDraw.Draw(c).rectangle((0, 0, int(W * t / TOTAL), 10), fill=YEL + (255,))
+    return c.convert("RGB")
+
 # ---------------------------------------------------------------- frame + runner
 def frame(ep, T, t):
+    if is_recap(ep): return recap_frame(ep, T, t)
     c = BG.copy()
     series_tag(c, ep)
     if t < T.body: hook_scene(c, t, ep)
@@ -675,12 +767,14 @@ def main():
     ep = load_episode(path)
     global TOTAL
     TOTAL = getattr(ep, "DURATION", TOTAL)   # older episodes were made at 15s
+    if is_recap(ep): prepare_recap(ep, path)
     workdir = os.path.join(CACHE, out_name(ep)); os.makedirs(workdir, exist_ok=True); os.makedirs(OUT_DIR, exist_ok=True)
     durs = load_durs(ep, workdir)
     T = build_timeline(ep, durs)
     print("cues:", {k: round(v, 2) for k, v in T.at.items()}, "body", round(T.body, 2), "cta", round(T.cta, 2))
     if mode == "stills":
-        ts = [1.8] + (ep.stills(T) if hasattr(ep, "stills") else [T.body + 0.8, (T.body + T.cta) / 2, T.cta - 0.3]) + ([T.cta + 1.2, T.final + 2.0] if T.final < TOTAL else [T.cta + 2.4])
+        if is_recap(ep): ts = [1.5] + [(a + b) / 2 for a, b in T.segs] + [T.cta + 1.0, T.final + 2.0]
+        else: ts = [1.8] + (ep.stills(T) if hasattr(ep, "stills") else [T.body + 0.8, (T.body + T.cta) / 2, T.cta - 0.3]) + ([T.cta + 1.2, T.final + 2.0] if T.final < TOTAL else [T.cta + 2.4])
         ims = [frame(ep, T, x).resize((360, 640)) for x in ts]
         sheet = Image.new("RGB", (360 * len(ims), 640))
         for k, im in enumerate(ims): sheet.paste(im, (k * 360, 0))
