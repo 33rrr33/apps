@@ -5,6 +5,7 @@ from shortlib import *
 SERIES = dict(key="s01_renkei", title="MacとiPhoneの神連携機能", spoken="MacとiPhoneの、かみ連携機能",
               hook_split=("MacとiPhoneの", "神連携機能"), total=5)
 DURATION = 15.0   # made before the switch to 20s
+END_CARD = False  # made before the standard end card
 NUM, SLUG = 2, "clipboard"
 BODY = [
     ("b1", "iPhoneでコピーして、", 0.3),

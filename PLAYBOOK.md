@@ -27,7 +27,9 @@ python3 -c "import edge_tts" 2>/dev/null || pip install -q edge-tts
 `episodes/<series>/epNN_<slug>.py` を作る。**`episodes/s01_renkei/ep01_handoff.py` を手本に**同じ構成で（ep01〜03は15秒時代の作品。20秒では本編を1行増やす）：
 - `SERIES` は state.json の内容と一致させる。`NUM`, `SLUG`。
 - `BODY` は4行前後の (id, 読み上げ文, 次までの間)。ナレーション全体で11〜13秒程度。手順①②→結果→おまけ（応用・注意点）の流れにすると20秒が自然に埋まる。`build_timeline` は、20秒に収まらない場合と、本編が短すぎて締め（CTA）が5.5秒を超える場合にエラーになる。前者は文を短く、後者は1行足すか間/`BODY_HOLD`を延ばす。
-- `CTA`：締めの大見出し2行（例「同じApple IDで / Handoffをオン」）と読み上げ（例「保存して試してね！」）。
+- `CTA`：締めの大見出し2行（例「同じApple IDで / Handoffをオン」）と読み上げ（例「保存して試してね！」）。約1.5〜3秒の短い場面。
+- `NEXT`：次回のネタ名（例 `NEXT = "インスタントホットスポット"`）。シリーズ最終回は次シリーズ名。エンドカードの次回予告に出る。
+- 最後の約4秒は shortlib が**標準エンドカード**（完全版への誘導・下向き矢印・登録のお願い・次回予告・音声）を自動で付ける。エピソード側で作らない。長尺のリンク先は state.json の series `long_video`（新シリーズで対応する長尺がまだ無ければ null にすると「登録してね」版になる）。
 - `draw_body(c, t, T)`：実際の画面操作を再現するアニメーション。`stage()` で Mac + iPhone、または必要なら片方だけ。見出しは `telop()`（「① …」「② …」→結果）、補足は `badge()`。キー操作は `keycaps()`、移動は `fly()`。
 - `sfx(T)` と `stills(T)` も用意する。
 - 半透明の塗りは必ず `rra()` / `fade()` を使う（`rr()` に半透明色を渡すと下が抜けて黒くなる）。
@@ -35,17 +37,18 @@ python3 -c "import edge_tts" 2>/dev/null || pip install -q edge-tts
 
 ## 3. 確認 → 書き出し
 ```bash
-python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py stills   # out/<name>_sheet.png を Read で目視確認
+python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py stills   # out/<name>_sheet.png を Read で目視確認（最後のコマはエンドカード）
 python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.mp4（約1分）
 ```
 シートで「文字のはみ出し・重なり・隠れ・誤字・事実の誤り」を確認し、直してから render。
 `ffprobe` で長さ20.0秒・音声ありを確認。
 
 ## 4. 届ける
+- 動画は `/tmp/claude-0/-home-user-apps/<session>/scratchpad/` など、ユーザーが開ける場所にコピーしてから送る。
 - `SendUserFile`（files=[mp4の絶対パス], status="proactive", display="render", caption="<シリーズ名><丸数字>（20秒）"）。
-- その後、短い日本語メッセージ：今日のネタ一言、YouTube用の **タイトル** と **詳しい説明欄（CHANNEL.md の「説明欄のルール」どおり）**、次回予告（次のネタ or 新シリーズ予定）。関連動画に設定する長尺動画名も一言添える。
-- **YouTubeタイトルは必ずこの形式で統一（ユーザー指定）**：`<シリーズ名><丸数字> #shorts`
-  - 例：`MacとiPhoneの神連携機能③ #shorts`
+- その後、日本語メッセージで **CHANNEL.md の「投稿メタデータ一式」**（タイトル・詳しい説明欄・タグ・固定コメント案・関連動画に設定する長尺・公開時間と24時間放置のリマインド）を渡し、今日のネタ一言と次回予告を添える。
+- **YouTubeタイトルは必ずこの形式で統一（ユーザー指定）**：`<シリーズ名><丸数字> #Shorts`
+  - 例：`MacとiPhoneの神連携機能③ #Shorts`
   - ネタ名や【】・煽り文句などは付け足さない。シリーズ名は state.json の `title` そのまま、丸数字は①〜⑤。コピペしやすいようコードブロックで1行だけ示す。
 
 ## 5. 記録して push

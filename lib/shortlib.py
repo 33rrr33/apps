@@ -346,10 +346,61 @@ def cta_scene(c, t, ep, T):
     y = 980
     if ep.CTA.get("chip"):
         badge(c, t, s + 0.9, ep.CTA["chip"], y, (70, 70, 84), size=40); y += 140
-    badge(c, t, s + 1.4, "保存して試してみてね！", y, RED); y += 150
+    badge(c, t, s + 1.0, "保存して試してみてね！", y, RED); y += 150
+    if end_card_on(ep): return
     total = ep.SERIES.get("total", 5)
     nxt = f"フォローで{CIRCLED[ep.NUM]}もチェック" if ep.NUM < total else "次のシリーズもお楽しみに！"
     badge(c, t, s + 2.0, nxt, y, WHITE, tc=INK, size=44)
+
+# ---------------------------------------------------------------- standard end card (last ~4s)
+FINAL_LEN = 3.8
+
+def end_card_on(ep): return getattr(ep, "END_CARD", True)
+
+def long_video(ep):
+    """Long-form video this series links to (state.json series.long_video), or None."""
+    try:
+        st = json.load(open(os.path.join(ROOT, "state.json")))
+        for sr in st["series"]:
+            if sr["key"] == ep.SERIES["key"]: return sr.get("long_video")
+    except Exception:
+        pass
+    return ep.SERIES.get("long_video")
+
+def final_spoken(ep):
+    return "完全版は画面下のリンクから！登録もしてね！" if long_video(ep) else "次回もかみワザ届けるので、チャンネル登録してね！"
+
+def down_arrow(c, t, x, y_tip, a=1.0):
+    bob = 18 * math.sin(t * 7)
+    ly = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(ly)
+    yt = y_tip + bob
+    d.rectangle((x - 22, yt - 230, x + 22, yt - 70), fill=YEL)
+    d.polygon([(x - 80, yt - 90), (x + 80, yt - 90), (x, yt)], fill=YEL)
+    if a < 1: ly.putalpha(ly.getchannel("A").point(lambda v: int(v * a)))
+    c.alpha_composite(ly)
+
+def end_card(c, t, ep, T):
+    s = T.final
+    if long_video(ep):
+        telop(c, t, s, [("完全版（5分）は", WHITE)], y0=560, size=96)
+        telop(c, t, s + 0.2, [("画面下のリンクから！", YEL)], y0=700, size=110)
+        badge(c, t, s + 0.5, "▶ " + long_video(ep), 860, (70, 70, 84), size=34)
+        p = e_at(t, s + 0.6, 0.3)
+        if p > 0:
+            # points at the related-video link Shorts shows above the title (bottom left)
+            down_arrow(c, t, 300, 1530, p)
+            badge(c, t, s + 0.6, "ここをタップ", 1420, YEL, tc=INK, size=40, cx=560)
+        badge(c, t, s + 1.4, "次回も神ワザ届けます！ 登録してね", 1020, RED, size=44)
+    else:
+        telop(c, t, s, [("次回も神ワザ", WHITE)], y0=600, size=110)
+        telop(c, t, s + 0.2, [("届けます！", YEL)], y0=740, size=130)
+        badge(c, t, s + 0.7, "チャンネル登録してね", 940, RED)
+    nxt = getattr(ep, "NEXT", None)
+    if nxt:
+        total = ep.SERIES.get("total", 5)
+        label = f"次回 {CIRCLED[ep.NUM]}：{nxt}" if ep.NUM < total else f"次回：{nxt}"
+        badge(c, t, s + 1.0, label, 1140 if long_video(ep) else 1080, PURPLE, size=40)
 
 # ---------------------------------------------------------------- timeline
 class Timeline:
@@ -366,10 +417,22 @@ def build_timeline(ep, durs):
         put(cid, t); t = T.end[cid] + gap
     T.cta = T.end[ep.BODY[-1][0]] + getattr(ep, "BODY_HOLD", 1.5)
     put("cta", T.cta + 0.3)
-    if T.end["cta"] > TOTAL - 0.8:
-        raise SystemExit(f"Too long: narration ends at {T.end['cta']:.2f}s (max {TOTAL - 0.8}s). Shorten lines or gaps/BODY_HOLD.")
-    if T.cta < TOTAL - 5.5:
-        raise SystemExit(f"Too short: the body ends at {T.cta:.2f}s, leaving {TOTAL - T.cta:.1f}s of CTA (max 5.5s). "
+    if not end_card_on(ep):                      # legacy (15s) episodes
+        T.final = TOTAL + 1
+        if T.end["cta"] > TOTAL - 0.8:
+            raise SystemExit(f"Too long: narration ends at {T.end['cta']:.2f}s (max {TOTAL - 0.8}s). Shorten lines or gaps/BODY_HOLD.")
+        if T.cta < TOTAL - 5.5:
+            raise SystemExit(f"Too short: the body ends at {T.cta:.2f}s, leaving {TOTAL - T.cta:.1f}s of CTA (max 5.5s).")
+        return T
+    T.final = TOTAL - FINAL_LEN
+    put("final", T.final + 0.15)
+    if T.end["final"] > TOTAL - 0.25:
+        raise SystemExit(f"End-card narration too long ({durs['final']:.2f}s); shorten final_spoken().")
+    if T.end["cta"] > T.final - 0.1:
+        raise SystemExit(f"Too long: the CTA line ends at {T.end['cta']:.2f}s but the end card starts at {T.final:.2f}s. "
+                         "Shorten body lines, gaps or BODY_HOLD, or the CTA spoken line.")
+    if T.final - T.cta > 3.0:
+        raise SystemExit(f"Too short: the body ends at {T.cta:.2f}s, leaving {T.final - T.cta:.1f}s before the end card (max 3.0s). "
                          "Add a body line or raise gaps/BODY_HOLD so the main scene fills the video.")
     return T
 
@@ -377,6 +440,7 @@ def all_lines(ep):
     lines = {"hook": f"{ep.SERIES['spoken']}、その{ep.NUM}！"}
     for cid, text, _ in ep.BODY: lines[cid] = text
     lines["cta"] = ep.CTA["spoken"]
+    if end_card_on(ep): lines["final"] = final_spoken(ep)
     return lines
 
 # ---------------------------------------------------------------- TTS
@@ -558,7 +622,12 @@ def make_audio(path, ep, T, workdir):
         add((np.sin(2 * np.pi * 1760 * x) + 0.5 * np.sin(2 * np.pi * 2637 * x)) * e, at + 0.1, 0.15)
     kinds = dict(pop=pop, click=click, ding=ding, whoosh=whoosh)
     for s in (T.body, T.cta): whoosh(s)
-    for a in (0.15, 0.45, 1.2, T.cta + 1.4, T.cta + 2.0): pop(a)
+    for a in (0.15, 0.45, 1.2, T.cta + 1.0): pop(a)
+    if T.final < TOTAL:
+        whoosh(T.final)
+        for a in (T.final + 0.6, T.final + 1.0, T.final + 1.4): pop(a)
+    else:
+        pop(T.cta + 2.0)
     for kind, at in (ep.sfx(T) if hasattr(ep, "sfx") else []): kinds[kind](at)
     voice = np.zeros(n)
     for k, at in T.at.items():
@@ -582,8 +651,9 @@ def frame(ep, T, t):
     series_tag(c, ep)
     if t < T.body: hook_scene(c, t, ep)
     elif t < T.cta: ep.draw_body(c, t, T)
-    else: cta_scene(c, t, ep, T)
-    for s in (T.body, T.cta):
+    elif t < T.final: cta_scene(c, t, ep, T)
+    else: end_card(c, t, ep, T)
+    for s in (T.body, T.cta, T.final):
         if s <= t < s + 0.12:
             c.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(120 * (1 - (t - s) / 0.12)))))
     if TOTAL - t < 0.5:
@@ -610,7 +680,7 @@ def main():
     T = build_timeline(ep, durs)
     print("cues:", {k: round(v, 2) for k, v in T.at.items()}, "body", round(T.body, 2), "cta", round(T.cta, 2))
     if mode == "stills":
-        ts = [1.8] + (ep.stills(T) if hasattr(ep, "stills") else [T.body + 0.8, (T.body + T.cta) / 2, T.cta - 0.3]) + [T.cta + 2.4]
+        ts = [1.8] + (ep.stills(T) if hasattr(ep, "stills") else [T.body + 0.8, (T.body + T.cta) / 2, T.cta - 0.3]) + ([T.cta + 1.2, T.final + 2.0] if T.final < TOTAL else [T.cta + 2.4])
         ims = [frame(ep, T, x).resize((360, 640)) for x in ts]
         sheet = Image.new("RGB", (360 * len(ims), 640))
         for k, im in enumerate(ims): sheet.paste(im, (k * 360, 0))
