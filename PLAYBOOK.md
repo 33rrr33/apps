@@ -12,6 +12,8 @@ python3 -c "import edge_tts" 2>/dev/null || pip install -q edge-tts
 ```
 （フォントは初回に自動ダウンロード。ffmpeg / Pillow / numpy は環境に入っている前提。）
 
+（`CHANNEL.md` も必ず読む：チャンネル名・長尺動画との連動・説明欄のルール）
+
 ## 1. 今日のネタを決める
 - `state.json` を読む。`current_series` の中で最初の `"status": "todo"` が今日の回。
 - 全部 `done` なら **新シリーズを企画**する：
@@ -41,7 +43,7 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
 
 ## 4. 届ける
 - `SendUserFile`（files=[mp4の絶対パス], status="proactive", display="render", caption="<シリーズ名><丸数字>（20秒）"）。
-- その後、短い日本語メッセージ：今日のネタ一言、YouTube用の **タイトル・概要欄1〜2行・ハッシュタグ3〜5個**、次回予告（次のネタ or 新シリーズ予定）。
+- その後、短い日本語メッセージ：今日のネタ一言、YouTube用の **タイトル** と **詳しい説明欄（CHANNEL.md の「説明欄のルール」どおり）**、次回予告（次のネタ or 新シリーズ予定）。関連動画に設定する長尺動画名も一言添える。
 - **YouTubeタイトルは必ずこの形式で統一（ユーザー指定）**：`<シリーズ名><丸数字> #shorts`
   - 例：`MacとiPhoneの神連携機能③ #shorts`
   - ネタ名や【】・煽り文句などは付け足さない。シリーズ名は state.json の `title` そのまま、丸数字は①〜⑤。コピペしやすいようコードブロックで1行だけ示す。
