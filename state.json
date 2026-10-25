@@ -31,7 +31,12 @@
           "slug": "mirroring",
           "topic": "iPhoneミラーリング（macOS Sequoia/iOS 18以降、iPhoneはロックしたままMacで操作）",
           "status": "done",
-          "date": "2026-10-24"
+          "date": "2026-10-24",
+          "remake": {
+            "file": "episodes/s01_renkei/ep03b_mirroring_v2.py",
+            "status": "ready",
+            "note": "10/26朝に旧③が20回未満なら、旧③を非公開にしてこれを投稿"
+          }
         },
         {
           "num": 4,
