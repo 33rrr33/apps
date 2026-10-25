@@ -89,7 +89,7 @@ def phone(t, k):
     d.arc((lock_c[0] - 9, lock_c[1] - 12, lock_c[0] + 9, lock_c[1] + 4), 180, 360, fill=WHITE, width=3)
     rr(ps, (lock_c[0] - 12, lock_c[1] - 4, lock_c[0] + 12, lock_c[1] + 14), 4, WHITE)
     txt(ps, (PW / 2, 150), "9:41", 70, WHITE, anchor="mm")
-    txt(ps, (PW / 2, 200), "10月24日 土曜日", 17, WHITE, bold=False, anchor="mm")
+    txt(ps, (PW / 2, 200), "10月25日 日曜日", 17, WHITE, bold=False, anchor="mm")
     if t >= k["open"]:
         fade(ps, e_at(t, k["open"], 0.4), lambda l: (rr(l, (40, 470, PW - 40, 512), 21, (255, 255, 255, 60)),
                                                     txt(l, (PW / 2, 491), "Macで使用中", 17, WHITE, anchor="mm")))
