@@ -42,7 +42,8 @@
           "num": 4,
           "slug": "hotspot",
           "topic": "インスタントホットスポット（MacのWi-FiメニューにiPhoneが出てワンクリックでテザリング）",
-          "status": "todo"
+          "status": "done",
+          "date": "2026-10-25"
         },
         {
           "num": 5,
@@ -129,6 +130,12 @@
       "series": "s01_renkei",
       "num": 3,
       "file": "episodes/s01_renkei/ep03_mirroring.py"
+    },
+    {
+      "date": "2026-10-25",
+      "series": "s01_renkei",
+      "num": 4,
+      "file": "episodes/s01_renkei/ep04_hotspot.py"
     }
   ],
   "schedule": {
