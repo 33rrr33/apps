@@ -44,7 +44,7 @@
           "slug": "hotspot",
           "topic": "インスタントホットスポット（MacのWi-FiメニューにiPhoneが出てワンクリックでテザリング）",
           "status": "done",
-          "date": "2026-10-25",
+          "date": "2026-10-26",
           "note": "APIで非公開アップロード済み。ユーザーがStudioで10/26 6:00に予約",
           "youtube_id": "k4ZnhWtI2wE",
           "uploaded": "2026-10-25"
@@ -53,7 +53,9 @@
           "num": 5,
           "slug": "code_autofill",
           "topic": "SMS認証コードの自動入力（テキストメッセージ転送オン→MacのSafariで候補に出る）",
-          "status": "todo"
+          "status": "done",
+          "date": "2026-10-26",
+          "youtube_id": "cN4q1VlilT0"
         }
       ],
       "long_video": "【完全保存版】MacとiPhoneの神連携ワザ10選",
@@ -147,6 +149,13 @@
       "num": 3,
       "file": "episodes/s01_renkei/ep03b_mirroring_v2.py",
       "note": "③作り直し版（④は作成済みで未投稿）"
+    },
+    {
+      "date": "2026-10-26",
+      "series": "s01_renkei",
+      "num": 5,
+      "file": "episodes/s01_renkei/ep05_code.py",
+      "youtube_id": "cN4q1VlilT0"
     }
   ],
   "schedule": {
@@ -205,6 +214,13 @@
       "id": "k4ZnhWtI2wE",
       "title": "MacとiPhoneの神連携機能④ #Shorts",
       "comment": "完全版（5分）は関連動画のリンクから👇 ほかに知りたい連携ワザがあればコメントで教えてください！",
+      "comment_posted": true
+    },
+    {
+      "date": "2026-10-26",
+      "id": "cN4q1VlilT0",
+      "title": "MacとiPhoneの神連携機能⑤ #Shorts",
+      "comment": "シリーズ完結！5つまとめた完全版（5分）は関連動画のリンクから👇 次回からは神ショートカット編です！",
       "comment_posted": false
     }
   ]
