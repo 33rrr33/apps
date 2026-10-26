@@ -79,7 +79,8 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
 - 環境変数が無い・エラーの時は、従来どおり動画ファイルとメタデータ一式を送る（エラーは一言だけ）。
 
 ## 4c. LINEにも知らせる（環境変数 LINE_CHANNEL_TOKEN がある時）
-- 送るのは短文1通だけ：`python3 lib/notify_line.py "【Macun】<タイトル> を非公開でアップしました。Studioで公開・関連動画の設定をお願いします🎬 <youtube.com/shorts/ID>"`
+- 送るのは1通だけ。**文面はユーザー指定のこの言葉で固定**（タイトルやURLは付けない）：
+  `python3 lib/notify_line.py "$(printf '今日の予定は終わりましたか？\n終わっていない場合は終わらせましょうね！')"`
 - 失敗しても動画づくりは止めない（Claudeアプリの通知は別に届くので、エラーは一言だけ）。無料枠は月200通なので1日1〜2通まで。
 
 ## 5. 記録して push
