@@ -78,6 +78,10 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
 - 前日に上げた動画が公開済みなら、その動画に `python3 lib/ytupload.py comment <id> "<comment>"` で固定コメント案を投稿し、「固定するだけ」と伝える。
 - 環境変数が無い・エラーの時は、従来どおり動画ファイルとメタデータ一式を送る（エラーは一言だけ）。
 
+## 4c. LINEにも知らせる（環境変数 LINE_CHANNEL_TOKEN がある時）
+- 送るのは短文1通だけ：`python3 lib/notify_line.py "【Macun】<タイトル> を非公開でアップしました。Studioで公開・関連動画の設定をお願いします🎬 <youtube.com/shorts/ID>"`
+- 失敗しても動画づくりは止めない（Claudeアプリの通知は別に届くので、エラーは一言だけ）。無料枠は月200通なので1日1〜2通まで。
+
 ## 5. 記録して push
 - `state.json`：今日の回を `"status": "done"`, `"date"` を付け、`history` に追加。
 - `git add -A && git commit -m "<シリーズ名><丸数字>: <ネタ>"`（コミットメッセージ末尾にセッションの指定どおりの Co-Authored-By / Claude-Session 行）
