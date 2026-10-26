@@ -15,14 +15,16 @@ python3 -c "import edge_tts" 2>/dev/null || pip install -q edge-tts
 （`CHANNEL.md` も必ず読む：チャンネル名・長尺動画との連動・説明欄のルール）
 
 ## 1. 今日やることを決める（曜日ごと）
-今日の日付（JST）で `state.json` の `schedule` を見る。載っていなければ `weekly` のルール：
-- **月〜金：ショート**（20秒）＝その週のシリーズの①〜⑤（月=①…金=⑤）。下の「2. エピソードを書く」
-- **土：長尺**（約5分・横型）＝その週の①〜⑤の完全版。下の「長尺の作り方」
-- **日：一気見ショート**（約30秒）＝その週の①〜⑤＋来週の予告。下の「一気見ショートの作り方」
+今日の日付（JST）で `state.json` の `schedule` を見る。載っていなければ `weekly` のルール（2026-10-26 にユーザーが変更）：
+- **月・火・水：シリーズA ①②③**（各20秒ショート）
+- **木・金・土：シリーズB ①②③**（各20秒ショート）
+- **日：長尺**（約6分・横型）＝今週のA①〜③＋B①〜③の6本を、それぞれ約1分にくわしくしたまとめ。あわせて来週のA・Bを企画して state.json に追加。
+- シリーズは毎週新しいテーマで①から、3本（`total: 3`）で完結。最終回③の `NEXT` は次のシリーズ名。
+- アップロードは常に**非公開**まで。公開・予約はユーザーが決める（ユーザーの指示）。
 
 ### 長尺の作り方（土曜）
-- `longs/l01_renkei10.py` を手本に `longs/lNN_<series key>.py` を作り、`python3 lib/longlib.py <file> stills` → シートを Read で確認 → `render`（10〜15分）。
-- `INTRO_TITLE`（2行）、`OUTRO_TITLE`、`TIP_WORD`、`TIPS`（ショート①〜⑤と同じネタ。ショートでは入らなかった手順の続き・応用・注意点まで。steps は3〜4個）。5本なら `TIP_TARGET = 50` 前後で全体約5分。
+- `longs/l01_renkei10.py` を手本に `longs/lNN_<日付>.py` を作り、`python3 lib/longlib.py <file> stills` → シートを Read で確認 → `render`（10〜15分）。
+- `INTRO_TITLE`（2行）、`OUTRO_TITLE`、`TIP_WORD`、`TIPS`（ショート①〜⑤と同じネタ。ショートでは入らなかった手順の続き・応用・注意点まで。steps は3〜4個）。6本（A①〜③＋B①〜③）なら `TIP_TARGET = 55` 前後で全体約6分。INTRO_TITLE は例 ("今週の", "神ワザ6選")。
 - 画面アニメは `TIP_FN` に自作（ctx.ms=Mac画面 820x500, ctx.ps=iPhone画面 190x420, ctx.on(k)/ctx.e(k) でフェーズ。点はphase len(steps)+1）。組み込み（clip, handoff, mirror, camera, scan, call, sms, hotspot, notif, code）は key 名だけで再利用可。
 - 完成後 state.json のそのシリーズに `"long_video": "<長尺タイトル>"` を入れる（翌日からのショートのエンドカードがこの長尺を案内する）。
 - 長尺のタイトル案：`【完全保存版】<テーマ><N>選`。説明欄には各ワザの**チャプター（0:00 形式）**を必ず入れる。

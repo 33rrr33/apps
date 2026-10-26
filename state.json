@@ -1,7 +1,7 @@
 {
   "timezone": "Asia/Tokyo",
   "episodes_per_series": 5,
-  "current_series": "s01_renkei",
+  "current_series": "s03_iphone_hidden",
   "series": [
     {
       "key": "s01_renkei",
@@ -71,7 +71,7 @@
       ],
       "total": 10,
       "long_video": null,
-      "note": "①〜⑤はユーザーが投稿済み。こちらは⑥〜⑩を作る。used_topics と被らないこと。",
+      "note": "週2シリーズ×3本の新サイクルに変更したため中止（2026-10-26）。ネタは今後のシリーズで使ってよい（used_topicsは避ける）",
       "episodes": [
         {
           "num": 6,
@@ -111,6 +111,71 @@
         "④ Control+Command+Q：画面ロック",
         "⑤ Command+C → Command+Option+V：Finderでファイルを移動",
         "（避ける）Command+Shift+4：⑤の説明欄に誤って書かれているため、視聴者が既出と感じる"
+      ],
+      "status": "cancelled"
+    },
+    {
+      "key": "s03_iphone_hidden",
+      "title": "iPhoneの隠し神機能",
+      "spoken": "iPhoneの、隠し、かみ機能",
+      "hook_split": [
+        "iPhoneの",
+        "隠し神機能"
+      ],
+      "total": 3,
+      "long_video": null,
+      "week": "2026-10-27",
+      "episodes": [
+        {
+          "num": 1,
+          "slug": "back_tap",
+          "topic": "背面タップでスクショ（設定→アクセシビリティ→タッチ→背面タップ→ダブルタップ→スクリーンショット）",
+          "status": "todo"
+        },
+        {
+          "num": 2,
+          "slug": "space_cursor",
+          "topic": "キーボードのスペースバー長押しでトラックパッドのようにカーソル移動",
+          "status": "todo"
+        },
+        {
+          "num": 3,
+          "slug": "lift_subject",
+          "topic": "写真の被写体を長押しで切り抜き→メッセージなどに貼り付け（iOS 16以降）",
+          "status": "todo"
+        }
+      ]
+    },
+    {
+      "key": "s04_mac_settings",
+      "title": "Macの神設定",
+      "spoken": "Macの、かみ設定",
+      "hook_split": [
+        "Macの",
+        "神設定"
+      ],
+      "total": 3,
+      "long_video": null,
+      "week": "2026-10-27",
+      "episodes": [
+        {
+          "num": 1,
+          "slug": "hot_corners",
+          "topic": "ホットコーナー（システム設定→デスクトップとDock→ホットコーナー。画面の角にマウスを寄せるだけでデスクトップ表示・ロック等）",
+          "status": "todo"
+        },
+        {
+          "num": 2,
+          "slug": "tap_to_click",
+          "topic": "トラックパッドの『タップでクリック』（システム設定→トラックパッド）。押し込まずに軽く触れるだけでクリック",
+          "status": "todo"
+        },
+        {
+          "num": 3,
+          "slug": "path_bar",
+          "topic": "Finderのパスバー（表示→パスバーを表示）。今いるフォルダの場所がわかり、ダブルクリックで移動",
+          "status": "todo"
+        }
       ]
     }
   ],
@@ -160,53 +225,43 @@
   ],
   "schedule": {
     "note": "日付(JST)ごとの予定。ここに無い日は weekly ルール。",
-    "2026-10-25": {
-      "type": "short",
-      "series": "s01_renkei",
-      "num": 4
-    },
-    "2026-10-26": {
-      "type": "short",
-      "series": "s01_renkei",
-      "num": 5,
-      "note": "この日は2本。④（10/25作成済み）はユーザーが朝7:30に投稿。16:24の自動作成では⑤だけ作り、メッセージで④を朝に出したか軽く確認（未投稿なら⑤の前に出すよう案内）"
-    },
     "2026-10-27": {
       "type": "short",
-      "series": "s02_shortcut",
-      "num": 6
+      "series": "s03_iphone_hidden",
+      "num": 1
     },
     "2026-10-28": {
       "type": "short",
-      "series": "s02_shortcut",
-      "num": 7
+      "series": "s03_iphone_hidden",
+      "num": 2
     },
     "2026-10-29": {
       "type": "short",
-      "series": "s02_shortcut",
-      "num": 8
+      "series": "s03_iphone_hidden",
+      "num": 3
     },
     "2026-10-30": {
       "type": "short",
-      "series": "s02_shortcut",
-      "num": 9
+      "series": "s04_mac_settings",
+      "num": 1
     },
     "2026-10-31": {
       "type": "short",
-      "series": "s02_shortcut",
-      "num": 10
+      "series": "s04_mac_settings",
+      "num": 2
     },
     "2026-11-01": {
-      "type": "long",
-      "series": "s02_shortcut",
-      "note": "神ショートカット①〜⑩の完全版（約5分）。公開後 s02 の long_video に設定"
+      "type": "short+long",
+      "series": "s04_mac_settings",
+      "num": 3,
+      "long": "今週の神ワザ6選（s03の①〜③＋s04の①〜③、各約1分・約6分・横型）。この日は2本：B③と長尺を両方作って非公開アップロード。来週の2シリーズも企画して state.json に追加"
     }
   },
   "weekly": {
     "from": "2026-11-02",
-    "mon_fri": "その週のシリーズの①〜⑤（月曜に新シリーズを企画・state.json に追加）",
-    "sat": "長尺：その週の①〜⑤の完全版（約5分・横型）。完成したらそのシリーズの long_video に設定",
-    "sun": "一気見ショート：その週の①〜⑤（約30秒）＋来週のシリーズ予告。来週のシリーズもこの日に企画しておく"
+    "mon_tue_wed": "シリーズA ①〜③（各20秒ショート）。シリーズは毎週新しいテーマで①から、3本で完結",
+    "thu_fri_sat": "シリーズB ①〜③（各20秒ショート）",
+    "sun": "長尺：今週のA①〜③＋B①〜③の6本を、各約1分にくわしくして約6分（横型・チャプター付き）。完成後、A・B両シリーズの long_video に設定。来週のA・Bを企画して state.json に追加"
   },
   "uploads": [
     {
