@@ -130,7 +130,9 @@
           "num": 1,
           "slug": "back_tap",
           "topic": "背面タップでスクショ（設定→アクセシビリティ→タッチ→背面タップ→ダブルタップ→スクリーンショット）",
-          "status": "todo"
+          "status": "done",
+          "date": "2026-10-27",
+          "youtube_id": "0Yhwm8sUFu4"
         },
         {
           "num": 2,
@@ -221,6 +223,13 @@
       "num": 5,
       "file": "episodes/s01_renkei/ep05_code.py",
       "youtube_id": "cN4q1VlilT0"
+    },
+    {
+      "date": "2026-10-27",
+      "series": "s03_iphone_hidden",
+      "num": 1,
+      "file": "episodes/s03_iphone_hidden/ep01_back_tap.py",
+      "youtube_id": "0Yhwm8sUFu4"
     }
   ],
   "schedule": {
@@ -276,6 +285,13 @@
       "id": "9cooVZRmVOo",
       "title": "MacとiPhoneの神連携機能⑤ #Shorts",
       "comment": "シリーズ完結！5つまとめた完全版（5分）は関連動画のリンクから👇 次回からは神ショートカット編です！",
+      "comment_posted": false
+    },
+    {
+      "date": "2026-10-27",
+      "id": "0Yhwm8sUFu4",
+      "title": "iPhoneの隠し神機能① #Shorts",
+      "comment": "背面タップ、ケース付きでも反応しましたか？👇 3回タップに何を割り当てたかもコメントで教えてください！",
       "comment_posted": false
     }
   ]
