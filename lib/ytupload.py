@@ -2,8 +2,8 @@
 
 Credentials come from environment variables set in the cloud environment's settings (never from chat):
     YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN
-    YT_AUDITED=1   only after Google approves the API audit: then publishAt (scheduled publishing) is applied.
-                   Before that, uploads from an unverified API project are forced to private by YouTube.
+    publish_at in meta.json is sent as a scheduled publish time (status.publishAt). Check the printed
+    "publish_at": if YouTube dropped it (unverified API project), the user schedules it in Studio instead.
 
 Usage:
     python3 lib/ytupload.py check                       # verify credentials, print the channel name
@@ -72,7 +72,7 @@ def upload(video, meta_path):
     meta = json.load(open(meta_path))
     tok = token()
     status = {"privacyStatus": "private", "selfDeclaredMadeForKids": False}
-    if os.environ.get("YT_AUDITED") == "1" and meta.get("publish_at"):
+    if meta.get("publish_at") and (os.environ.get("YT_AUDITED") == "1" or meta.get("schedule", True)):
         status["publishAt"] = meta["publish_at"]          # stays private until then, then goes public
     body = {"snippet": {"title": meta["title"], "description": meta["description"], "tags": meta.get("tags", []),
                         "categoryId": "28", "defaultLanguage": "ja", "defaultAudioLanguage": "ja"}, "status": status}

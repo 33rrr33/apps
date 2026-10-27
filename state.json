@@ -295,6 +295,7 @@
       "comment_posted": false
     }
   ],
-  "upload_mode": "manual",
-  "upload_mode_note": "2026-10-27: APIで上げた動画（iPhoneの隠し神機能①）が公開1時間で0回。スマホから手動アップした③作り直しは5分で22回。原因切り分けのため、ユーザーがスマホから手動アップロードする（APIアップロードはしない）。"
+  "upload_mode": "api",
+  "upload_mode_note": "2026-10-27: ユーザーの判断でAPIに戻す。毎日14:24に作成→15時ごろまでに非公開アップロード＋17:30の予約公開(publishAt)を試す。予約が入らなかった日はユーザーにStudioで予約してもらう。",
+  "publish_time": "17:30"
 }
