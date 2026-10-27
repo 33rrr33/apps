@@ -71,7 +71,7 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
   - 例：`MacとiPhoneの神連携機能③ #Shorts`
   - ネタ名や【】・煽り文句などは付け足さない。シリーズ名は state.json の `title` そのまま、丸数字は①〜⑤。コピペしやすいようコードブロックで1行だけ示す。
 
-## 4b. YouTubeへ自動アップロード（環境変数 YT_CLIENT_ID / YT_CLIENT_SECRET / YT_REFRESH_TOKEN がある時）
+## 4b. YouTubeへ自動アップロード（**state.json の upload_mode が "api" の時だけ**。今は "manual"：APIでは上げず、動画ファイル＋投稿メタデータ一式を SendUserFile とメッセージで渡す）
 - `out/<name>.meta.json` を書く：`{"title", "description", "tags": [...], "playlist": "<シリーズ名>", "publish_at": "<公開日>T17:30:00+09:00", "comment": "<固定コメント案>"}`（ショートの公開時刻は state.json の予定・ユーザーの指示に合わせる）
 - `python3 lib/ytupload.py upload out/<name>.mp4 out/<name>.meta.json` → 結果の id / url を state.json の history に保存。
 - 審査前（`YT_AUDITED` 未設定）は **非公開で上がる**。メッセージでは「アップロード済み：Studioで公開設定を“スケジュール 17:30”に切り替え＋関連動画を選ぶだけ」と伝える（説明欄などの長いコピペは不要になる。タイトル等はメッセージに短く添えるだけでよい）。
