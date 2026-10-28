@@ -1,319 +1,336 @@
 {
-  "timezone": "Asia/Tokyo",
-  "episodes_per_series": 5,
-  "current_series": "s03_iphone_hidden",
-  "series": [
+ "timezone": "Asia/Tokyo",
+ "episodes_per_series": 5,
+ "current_series": "s03_iphone_hidden",
+ "series": [
+  {
+   "key": "s01_renkei",
+   "title": "MacとiPhoneの神連携機能",
+   "spoken": "MacとiPhoneの、かみ連携機能",
+   "hook_split": [
+    "MacとiPhoneの",
+    "神連携機能"
+   ],
+   "episodes": [
     {
-      "key": "s01_renkei",
-      "title": "MacとiPhoneの神連携機能",
-      "spoken": "MacとiPhoneの、かみ連携機能",
-      "hook_split": [
-        "MacとiPhoneの",
-        "神連携機能"
-      ],
-      "episodes": [
-        {
-          "num": 1,
-          "slug": "handoff",
-          "topic": "Handoff（iPhoneのSafariのページをMacのDock右端から続きで開く）",
-          "status": "done",
-          "date": "2026-10-21"
-        },
-        {
-          "num": 2,
-          "slug": "clipboard",
-          "topic": "ユニバーサルクリップボード（iPhoneでコピー→Macで⌘V、写真も・逆向きもOK）",
-          "status": "done",
-          "date": "2026-10-23"
-        },
-        {
-          "num": 3,
-          "slug": "mirroring",
-          "topic": "iPhoneミラーリング（macOS Sequoia/iOS 18以降、iPhoneはロックしたままMacで操作）",
-          "status": "done",
-          "date": "2026-10-24",
-          "remake": {
-            "file": "episodes/s01_renkei/ep03b_mirroring_v2.py",
-            "status": "posted_today",
-            "note": "旧③は非公開にして、作り直し版を10/25に投稿",
-            "date": "2026-10-25"
-          }
-        },
-        {
-          "num": 4,
-          "slug": "hotspot",
-          "topic": "インスタントホットスポット（MacのWi-FiメニューにiPhoneが出てワンクリックでテザリング）",
-          "status": "done",
-          "date": "2026-10-26",
-          "note": "APIで非公開アップロード済み。ユーザーがStudioで10/26 6:00に予約",
-          "youtube_id": "k4ZnhWtI2wE",
-          "uploaded": "2026-10-25"
-        },
-        {
-          "num": 5,
-          "slug": "code_autofill",
-          "topic": "SMS認証コードの自動入力（テキストメッセージ転送オン→MacのSafariで候補に出る）",
-          "status": "done",
-          "date": "2026-10-26",
-          "youtube_id": "9cooVZRmVOo"
-        }
-      ],
-      "long_video": "【完全保存版】MacとiPhoneの神連携ワザ10選",
-      "total": 5
+     "num": 1,
+     "slug": "handoff",
+     "topic": "Handoff（iPhoneのSafariのページをMacのDock右端から続きで開く）",
+     "status": "done",
+     "date": "2026-10-21"
     },
     {
-      "key": "s02_shortcut",
-      "title": "Macユーザーの9割が知らない神ショートカット",
-      "spoken": "Macユーザーの9割が知らない、かみショートカット",
-      "hook_split": [
-        "Macユーザーの9割が知らない",
-        "神ショートカット"
-      ],
-      "total": 10,
-      "long_video": null,
-      "note": "週2シリーズ×3本の新サイクルに変更したため中止（2026-10-26）。ネタは今後のシリーズで使ってよい（used_topicsは避ける）",
-      "episodes": [
-        {
-          "num": 6,
-          "slug": "",
-          "topic": "",
-          "status": "todo"
-        },
-        {
-          "num": 7,
-          "slug": "",
-          "topic": "",
-          "status": "todo"
-        },
-        {
-          "num": 8,
-          "slug": "",
-          "topic": "",
-          "status": "todo"
-        },
-        {
-          "num": 9,
-          "slug": "",
-          "topic": "",
-          "status": "todo"
-        },
-        {
-          "num": 10,
-          "slug": "",
-          "topic": "",
-          "status": "todo"
-        }
-      ],
-      "used_topics": [
-        "① Command+H：アプリを隠す",
-        "② Command+Shift+5：画面収録・スクリーンショットのツールバー",
-        "③ Command+Z：取り消し",
-        "④ Control+Command+Q：画面ロック",
-        "⑤ Command+C → Command+Option+V：Finderでファイルを移動",
-        "（避ける）Command+Shift+4：⑤の説明欄に誤って書かれているため、視聴者が既出と感じる"
-      ],
-      "status": "cancelled"
+     "num": 2,
+     "slug": "clipboard",
+     "topic": "ユニバーサルクリップボード（iPhoneでコピー→Macで⌘V、写真も・逆向きもOK）",
+     "status": "done",
+     "date": "2026-10-23"
     },
     {
-      "key": "s03_iphone_hidden",
-      "title": "iPhoneの隠し神機能",
-      "spoken": "iPhoneの、隠し、かみ機能",
-      "hook_split": [
-        "iPhoneの",
-        "隠し神機能"
-      ],
-      "total": 3,
-      "long_video": null,
-      "week": "2026-10-27",
-      "episodes": [
-        {
-          "num": 1,
-          "slug": "back_tap",
-          "topic": "背面タップでスクショ（設定→アクセシビリティ→タッチ→背面タップ→ダブルタップ→スクリーンショット）",
-          "status": "done",
-          "date": "2026-10-27",
-          "youtube_id": "0Yhwm8sUFu4"
-        },
-        {
-          "num": 2,
-          "slug": "space_cursor",
-          "topic": "キーボードのスペースバー長押しでトラックパッドのようにカーソル移動",
-          "status": "done",
-          "date": "2026-10-28",
-          "youtube_id": "6xBvEuina7M",
-          "scheduled": "2026-10-28T17:30+09:00"
-        },
-        {
-          "num": 3,
-          "slug": "lift_subject",
-          "topic": "写真の被写体を長押しで切り抜き→メッセージなどに貼り付け（iOS 16以降）",
-          "status": "todo"
-        }
-      ]
-    },
-    {
-      "key": "s04_mac_settings",
-      "title": "Macの神設定",
-      "spoken": "Macの、かみ設定",
-      "hook_split": [
-        "Macの",
-        "神設定"
-      ],
-      "total": 3,
-      "long_video": null,
-      "week": "2026-10-27",
-      "episodes": [
-        {
-          "num": 1,
-          "slug": "hot_corners",
-          "topic": "ホットコーナー（システム設定→デスクトップとDock→ホットコーナー。画面の角にマウスを寄せるだけでデスクトップ表示・ロック等）",
-          "status": "todo"
-        },
-        {
-          "num": 2,
-          "slug": "tap_to_click",
-          "topic": "トラックパッドの『タップでクリック』（システム設定→トラックパッド）。押し込まずに軽く触れるだけでクリック",
-          "status": "todo"
-        },
-        {
-          "num": 3,
-          "slug": "path_bar",
-          "topic": "Finderのパスバー（表示→パスバーを表示）。今いるフォルダの場所がわかり、ダブルクリックで移動",
-          "status": "todo"
-        }
-      ]
-    }
-  ],
-  "used_topics_outside_series": [
-    "長尺『【完全保存版】MacとiPhoneの神連携ワザ10選』の実際の収録順：1 ユニバーサルクリップボード, 2 Handoff, 3 iPhoneミラーリング, 4 連係カメラ（Webカメラ化）, 5 iPhoneで書類スキャン→Mac（写真を撮る・スケッチも紹介）, 6 Macで電話, 7 MacでSMS, 8 インスタントホットスポット, 9 iPhoneの通知をMacで, 10 認証コードの自動入力（AirDrop・Apple Watchでのロック解除は未収録）",
-    "Macの神ショートカット①〜⑤（上記 s02 の used_topics）"
-  ],
-  "history": [
-    {
-      "date": "2026-10-21",
-      "series": "s01_renkei",
-      "num": 1,
-      "file": "episodes/s01_renkei/ep01_handoff.py"
-    },
-    {
-      "date": "2026-10-23",
-      "series": "s01_renkei",
-      "num": 2,
-      "file": "episodes/s01_renkei/ep02_clipboard.py"
-    },
-    {
-      "date": "2026-10-24",
-      "series": "s01_renkei",
-      "num": 3,
-      "file": "episodes/s01_renkei/ep03_mirroring.py"
-    },
-    {
-      "date": "2026-10-25",
-      "series": "s01_renkei",
-      "num": 4,
-      "file": "episodes/s01_renkei/ep04_hotspot.py"
-    },
-    {
-      "date": "2026-10-25",
-      "series": "s01_renkei",
-      "num": 3,
+     "num": 3,
+     "slug": "mirroring",
+     "topic": "iPhoneミラーリング（macOS Sequoia/iOS 18以降、iPhoneはロックしたままMacで操作）",
+     "status": "done",
+     "date": "2026-10-24",
+     "remake": {
       "file": "episodes/s01_renkei/ep03b_mirroring_v2.py",
-      "note": "③作り直し版（④は作成済みで未投稿）"
+      "status": "posted_today",
+      "note": "旧③は非公開にして、作り直し版を10/25に投稿",
+      "date": "2026-10-25"
+     }
     },
     {
-      "date": "2026-10-26",
-      "series": "s01_renkei",
-      "num": 5,
-      "file": "episodes/s01_renkei/ep05_code.py",
-      "youtube_id": "cN4q1VlilT0"
+     "num": 4,
+     "slug": "hotspot",
+     "topic": "インスタントホットスポット（MacのWi-FiメニューにiPhoneが出てワンクリックでテザリング）",
+     "status": "done",
+     "date": "2026-10-26",
+     "note": "APIで非公開アップロード済み。ユーザーがStudioで10/26 6:00に予約",
+     "youtube_id": "k4ZnhWtI2wE",
+     "uploaded": "2026-10-25"
     },
     {
-      "date": "2026-10-27",
-      "series": "s03_iphone_hidden",
-      "num": 1,
-      "file": "episodes/s03_iphone_hidden/ep01_back_tap.py",
-      "youtube_id": "0Yhwm8sUFu4"
-    },
-    {
-      "date": "2026-10-28",
-      "series": "s03_iphone_hidden",
-      "num": 2,
-      "file": "episodes/s03_iphone_hidden/ep02_space_cursor.py",
-      "youtube_id": "6xBvEuina7M"
+     "num": 5,
+     "slug": "code_autofill",
+     "topic": "SMS認証コードの自動入力（テキストメッセージ転送オン→MacのSafariで候補に出る）",
+     "status": "done",
+     "date": "2026-10-26",
+     "youtube_id": "9cooVZRmVOo"
     }
-  ],
-  "schedule": {
-    "note": "日付(JST)ごとの予定。ここに無い日は weekly ルール。",
-    "2026-10-27": {
-      "type": "short",
-      "series": "s03_iphone_hidden",
-      "num": 1
-    },
-    "2026-10-28": {
-      "type": "short",
-      "series": "s03_iphone_hidden",
-      "num": 2
-    },
-    "2026-10-29": {
-      "type": "short",
-      "series": "s03_iphone_hidden",
-      "num": 3
-    },
-    "2026-10-30": {
-      "type": "short",
-      "series": "s04_mac_settings",
-      "num": 1
-    },
-    "2026-10-31": {
-      "type": "short",
-      "series": "s04_mac_settings",
-      "num": 2
-    },
-    "2026-11-01": {
-      "type": "short+long",
-      "series": "s04_mac_settings",
-      "num": 3,
-      "long": "今週の神ワザ6選（s03の①〜③＋s04の①〜③、各約1分・約6分・横型）。この日は2本：B③と長尺を両方作って非公開アップロード。来週の2シリーズも企画して state.json に追加"
-    }
+   ],
+   "long_video": "【完全保存版】MacとiPhoneの神連携ワザ10選",
+   "total": 5
   },
-  "weekly": {
-    "from": "2026-11-02",
-    "mon_tue_wed": "シリーズA ①〜③（各20秒ショート）。シリーズは毎週新しいテーマで①から、3本で完結",
-    "thu_fri_sat": "シリーズB ①〜③（各20秒ショート）",
-    "sun": "長尺：今週のA①〜③＋B①〜③の6本を、各約1分にくわしくして約6分（横型・チャプター付き）。完成後、A・B両シリーズの long_video に設定。来週のA・Bを企画して state.json に追加"
-  },
-  "uploads": [
+  {
+   "key": "s02_shortcut",
+   "title": "Macユーザーの9割が知らない神ショートカット",
+   "spoken": "Macユーザーの9割が知らない、かみショートカット",
+   "hook_split": [
+    "Macユーザーの9割が知らない",
+    "神ショートカット"
+   ],
+   "total": 10,
+   "long_video": null,
+   "note": "週2シリーズ×3本の新サイクルに変更したため中止（2026-10-26）。ネタは今後のシリーズで使ってよい（used_topicsは避ける）",
+   "episodes": [
     {
-      "date": "2026-10-26",
-      "id": "dhRzheb8rnk",
-      "title": "MacとiPhoneの神連携機能④ #Shorts",
-      "note": "ユーザーが手動で投稿（APIの④は削除済み）",
-      "comment_posted": true
+     "num": 6,
+     "slug": "",
+     "topic": "",
+     "status": "todo"
     },
     {
-      "date": "2026-10-26",
-      "id": "9cooVZRmVOo",
-      "title": "MacとiPhoneの神連携機能⑤ #Shorts",
-      "comment": "シリーズ完結！5つまとめた完全版（5分）は関連動画のリンクから👇 次回からは神ショートカット編です！",
-      "comment_posted": false
+     "num": 7,
+     "slug": "",
+     "topic": "",
+     "status": "todo"
     },
     {
-      "date": "2026-10-27",
-      "id": "0Yhwm8sUFu4",
-      "title": "iPhoneの隠し神機能① #Shorts",
-      "comment": "背面タップ、ケース付きでも反応しましたか？👇 3回タップに何を割り当てたかもコメントで教えてください！",
-      "comment_posted": true
+     "num": 8,
+     "slug": "",
+     "topic": "",
+     "status": "todo"
     },
     {
-      "date": "2026-10-28",
-      "id": "6xBvEuina7M",
-      "title": "iPhoneの隠し神機能② #Shorts",
-      "scheduled": "17:30",
-      "comment": "これ知ってましたか？👇 知ってた人は「知ってた」、初めての人は「知らなかった」でコメントしてください！",
-      "comment_posted": true
+     "num": 9,
+     "slug": "",
+     "topic": "",
+     "status": "todo"
+    },
+    {
+     "num": 10,
+     "slug": "",
+     "topic": "",
+     "status": "todo"
     }
-  ],
-  "upload_mode": "api",
-  "upload_mode_note": "2026-10-27: ユーザーの判断でAPIに戻す。毎日14:24に作成→15時ごろまでに非公開アップロード＋17:30の予約公開(publishAt)を試す。予約が入らなかった日はユーザーにStudioで予約してもらう。 2026-10-28: API の publishAt（予約公開）が反映されることを確認。",
-  "publish_time": "17:30"
+   ],
+   "used_topics": [
+    "① Command+H：アプリを隠す",
+    "② Command+Shift+5：画面収録・スクリーンショットのツールバー",
+    "③ Command+Z：取り消し",
+    "④ Control+Command+Q：画面ロック",
+    "⑤ Command+C → Command+Option+V：Finderでファイルを移動",
+    "（避ける）Command+Shift+4：⑤の説明欄に誤って書かれているため、視聴者が既出と感じる"
+   ],
+   "status": "cancelled"
+  },
+  {
+   "key": "s03_iphone_hidden",
+   "title": "iPhoneの隠し神機能",
+   "spoken": "iPhoneの、隠し、かみ機能",
+   "hook_split": [
+    "iPhoneの",
+    "隠し神機能"
+   ],
+   "total": 3,
+   "long_video": null,
+   "week": "2026-10-27",
+   "episodes": [
+    {
+     "num": 1,
+     "slug": "back_tap",
+     "topic": "背面タップでスクショ（設定→アクセシビリティ→タッチ→背面タップ→ダブルタップ→スクリーンショット）",
+     "status": "done",
+     "date": "2026-10-27",
+     "youtube_id": "0Yhwm8sUFu4"
+    },
+    {
+     "num": 2,
+     "slug": "space_cursor",
+     "topic": "キーボードのスペースバー長押しでトラックパッドのようにカーソル移動",
+     "status": "done",
+     "date": "2026-10-28",
+     "youtube_id": "6xBvEuina7M",
+     "scheduled": "2026-10-28T17:30+09:00"
+    },
+    {
+     "num": 3,
+     "slug": "lift_subject",
+     "topic": "写真の被写体を長押しで切り抜き→メッセージなどに貼り付け（iOS 16以降）",
+     "status": "done",
+     "date": "2026-10-29",
+     "youtube_id": "KKGO0MecjkY",
+     "scheduled": "2026-10-29T17:30+09:00",
+     "uploaded": "2026-10-28"
+    }
+   ]
+  },
+  {
+   "key": "s04_mac_settings",
+   "title": "Macの神設定",
+   "spoken": "Macの、かみ設定",
+   "hook_split": [
+    "Macの",
+    "神設定"
+   ],
+   "total": 3,
+   "long_video": null,
+   "week": "2026-10-27",
+   "episodes": [
+    {
+     "num": 1,
+     "slug": "hot_corners",
+     "topic": "ホットコーナー（システム設定→デスクトップとDock→ホットコーナー。画面の角にマウスを寄せるだけでデスクトップ表示・ロック等）",
+     "status": "todo"
+    },
+    {
+     "num": 2,
+     "slug": "tap_to_click",
+     "topic": "トラックパッドの『タップでクリック』（システム設定→トラックパッド）。押し込まずに軽く触れるだけでクリック",
+     "status": "todo"
+    },
+    {
+     "num": 3,
+     "slug": "path_bar",
+     "topic": "Finderのパスバー（表示→パスバーを表示）。今いるフォルダの場所がわかり、ダブルクリックで移動",
+     "status": "todo"
+    }
+   ]
+  }
+ ],
+ "used_topics_outside_series": [
+  "長尺『【完全保存版】MacとiPhoneの神連携ワザ10選』の実際の収録順：1 ユニバーサルクリップボード, 2 Handoff, 3 iPhoneミラーリング, 4 連係カメラ（Webカメラ化）, 5 iPhoneで書類スキャン→Mac（写真を撮る・スケッチも紹介）, 6 Macで電話, 7 MacでSMS, 8 インスタントホットスポット, 9 iPhoneの通知をMacで, 10 認証コードの自動入力（AirDrop・Apple Watchでのロック解除は未収録）",
+  "Macの神ショートカット①〜⑤（上記 s02 の used_topics）"
+ ],
+ "history": [
+  {
+   "date": "2026-10-21",
+   "series": "s01_renkei",
+   "num": 1,
+   "file": "episodes/s01_renkei/ep01_handoff.py"
+  },
+  {
+   "date": "2026-10-23",
+   "series": "s01_renkei",
+   "num": 2,
+   "file": "episodes/s01_renkei/ep02_clipboard.py"
+  },
+  {
+   "date": "2026-10-24",
+   "series": "s01_renkei",
+   "num": 3,
+   "file": "episodes/s01_renkei/ep03_mirroring.py"
+  },
+  {
+   "date": "2026-10-25",
+   "series": "s01_renkei",
+   "num": 4,
+   "file": "episodes/s01_renkei/ep04_hotspot.py"
+  },
+  {
+   "date": "2026-10-25",
+   "series": "s01_renkei",
+   "num": 3,
+   "file": "episodes/s01_renkei/ep03b_mirroring_v2.py",
+   "note": "③作り直し版（④は作成済みで未投稿）"
+  },
+  {
+   "date": "2026-10-26",
+   "series": "s01_renkei",
+   "num": 5,
+   "file": "episodes/s01_renkei/ep05_code.py",
+   "youtube_id": "cN4q1VlilT0"
+  },
+  {
+   "date": "2026-10-27",
+   "series": "s03_iphone_hidden",
+   "num": 1,
+   "file": "episodes/s03_iphone_hidden/ep01_back_tap.py",
+   "youtube_id": "0Yhwm8sUFu4"
+  },
+  {
+   "date": "2026-10-28",
+   "series": "s03_iphone_hidden",
+   "num": 2,
+   "file": "episodes/s03_iphone_hidden/ep02_space_cursor.py",
+   "youtube_id": "6xBvEuina7M"
+  }
+ ],
+ "schedule": {
+  "note": "日付(JST)ごとの予定。ここに無い日は weekly ルール。",
+  "2026-10-27": {
+   "type": "short",
+   "series": "s03_iphone_hidden",
+   "num": 1
+  },
+  "2026-10-28": {
+   "type": "short",
+   "series": "s03_iphone_hidden",
+   "num": 2
+  },
+  "2026-10-29": {
+   "type": "short",
+   "series": "s03_iphone_hidden",
+   "num": 3
+  },
+  "2026-10-30": {
+   "type": "short",
+   "series": "s04_mac_settings",
+   "num": 1
+  },
+  "2026-10-31": {
+   "type": "short",
+   "series": "s04_mac_settings",
+   "num": 2
+  },
+  "2026-11-01": {
+   "type": "short+long",
+   "series": "s04_mac_settings",
+   "num": 3,
+   "long": "今週の神ワザ6選（s03の①〜③＋s04の①〜③、各約1分・約6分・横型）。この日は2本：B③と長尺を両方作って非公開アップロード。来週の2シリーズも企画して state.json に追加"
+  }
+ },
+ "weekly": {
+  "from": "2026-11-02",
+  "mon_tue_wed": "シリーズA ①〜③（各20秒ショート）。シリーズは毎週新しいテーマで①から、3本で完結",
+  "thu_fri_sat": "シリーズB ①〜③（各20秒ショート）",
+  "sun": "長尺：今週のA①〜③＋B①〜③の6本を、各約1分にくわしくして約6分（横型・チャプター付き）。完成後、A・B両シリーズの long_video に設定。来週のA・Bを企画して state.json に追加"
+ },
+ "uploads": [
+  {
+   "date": "2026-10-26",
+   "id": "dhRzheb8rnk",
+   "title": "MacとiPhoneの神連携機能④ #Shorts",
+   "note": "ユーザーが手動で投稿（APIの④は削除済み）",
+   "comment_posted": true
+  },
+  {
+   "date": "2026-10-26",
+   "id": "9cooVZRmVOo",
+   "title": "MacとiPhoneの神連携機能⑤ #Shorts",
+   "comment": "シリーズ完結！5つまとめた完全版（5分）は関連動画のリンクから👇 次回からは神ショートカット編です！",
+   "comment_posted": false
+  },
+  {
+   "date": "2026-10-27",
+   "id": "0Yhwm8sUFu4",
+   "title": "iPhoneの隠し神機能① #Shorts",
+   "comment": "背面タップ、ケース付きでも反応しましたか？👇 3回タップに何を割り当てたかもコメントで教えてください！",
+   "comment_posted": true
+  },
+  {
+   "date": "2026-10-28",
+   "id": "6xBvEuina7M",
+   "title": "iPhoneの隠し神機能② #Shorts",
+   "scheduled": "17:30",
+   "comment": "これ知ってましたか？👇 知ってた人は「知ってた」、初めての人は「知らなかった」でコメントしてください！",
+   "comment_posted": true
+  },
+  {
+   "date": "2026-10-29",
+   "id": "KKGO0MecjkY",
+   "title": "iPhoneの隠し神機能③ #Shorts",
+   "scheduled": "17:30",
+   "comment": "シリーズ完結！①〜③どれが一番使えそうでしたか？👇 次回からは「Macの神設定」編です！",
+   "comment_posted": false
+  }
+ ],
+ "upload_mode": "api",
+ "upload_mode_note": "2026-10-27: ユーザーの判断でAPIに戻す。毎日14:24に作成→15時ごろまでに非公開アップロード＋17:30の予約公開(publishAt)を試す。予約が入らなかった日はユーザーにStudioで予約してもらう。 2026-10-28: API の publishAt（予約公開）が反映されることを確認。 2026-10-28: ユーザーの希望で「前日に作って予約」方式に変更。毎日17:35に、その日の動画へコメント→翌日分を作成・非公開アップロード＋翌日17:30の予約公開。",
+ "publish_time": "17:30",
+ "daily_run": {
+  "time": "17:35 JST",
+  "makes": "翌日の回（schedule の翌日の日付）",
+  "comment_on": "当日17:30に公開された回"
+ }
 }
