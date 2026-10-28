@@ -138,7 +138,10 @@
           "num": 2,
           "slug": "space_cursor",
           "topic": "キーボードのスペースバー長押しでトラックパッドのようにカーソル移動",
-          "status": "todo"
+          "status": "done",
+          "date": "2026-10-28",
+          "youtube_id": "6xBvEuina7M",
+          "scheduled": "2026-10-28T17:30+09:00"
         },
         {
           "num": 3,
@@ -230,6 +233,13 @@
       "num": 1,
       "file": "episodes/s03_iphone_hidden/ep01_back_tap.py",
       "youtube_id": "0Yhwm8sUFu4"
+    },
+    {
+      "date": "2026-10-28",
+      "series": "s03_iphone_hidden",
+      "num": 2,
+      "file": "episodes/s03_iphone_hidden/ep02_space_cursor.py",
+      "youtube_id": "6xBvEuina7M"
     }
   ],
   "schedule": {
@@ -292,10 +302,18 @@
       "id": "0Yhwm8sUFu4",
       "title": "iPhoneの隠し神機能① #Shorts",
       "comment": "背面タップ、ケース付きでも反応しましたか？👇 3回タップに何を割り当てたかもコメントで教えてください！",
+      "comment_posted": true
+    },
+    {
+      "date": "2026-10-28",
+      "id": "6xBvEuina7M",
+      "title": "iPhoneの隠し神機能② #Shorts",
+      "scheduled": "17:30",
+      "comment": "これ知ってましたか？👇 知ってた人は「知ってた」、初めての人は「知らなかった」でコメントしてください！",
       "comment_posted": false
     }
   ],
   "upload_mode": "api",
-  "upload_mode_note": "2026-10-27: ユーザーの判断でAPIに戻す。毎日14:24に作成→15時ごろまでに非公開アップロード＋17:30の予約公開(publishAt)を試す。予約が入らなかった日はユーザーにStudioで予約してもらう。",
+  "upload_mode_note": "2026-10-27: ユーザーの判断でAPIに戻す。毎日14:24に作成→15時ごろまでに非公開アップロード＋17:30の予約公開(publishAt)を試す。予約が入らなかった日はユーザーにStudioで予約してもらう。 2026-10-28: API の publishAt（予約公開）が反映されることを確認。",
   "publish_time": "17:30"
 }
