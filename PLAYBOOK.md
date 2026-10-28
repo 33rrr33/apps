@@ -76,7 +76,7 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
 - `out/<name>.meta.json` を書く：`{"title", "description", "tags": [...], "playlist": "<シリーズ名>", "publish_at": "<公開日>T17:30:00+09:00", "comment": "<固定コメント案>"}`（ショートの公開時刻は state.json の予定・ユーザーの指示に合わせる）
 - `python3 lib/ytupload.py upload out/<name>.mp4 out/<name>.meta.json` → 結果の id / url を state.json の history に保存。
 - 審査前（`YT_AUDITED` 未設定）は **非公開で上がる**。メッセージでは「アップロード済み：Studioで公開設定を“スケジュール 17:30”に切り替え＋関連動画を選ぶだけ」と伝える（説明欄などの長いコピペは不要になる。タイトル等はメッセージに短く添えるだけでよい）。
-- 前日に上げた動画が公開済みなら、その動画に `python3 lib/ytupload.py comment <id> "<comment>"` で固定コメント案を投稿し、「固定するだけ」と伝える。
+- **公開されたらすぐコメントする**（ユーザーの希望）：予約公開を入れたら、send_later で「公開5分後（17:35 JST）」に自分宛てのリマインドを入れ、その時に `python3 lib/ytupload.py comment <id> "<comment>"` で固定コメント案を投稿して state.json の comment_posted を true にする。非公開・予約中の動画にはコメントできない。
 - 環境変数が無い・エラーの時は、従来どおり動画ファイルとメタデータ一式を送る（エラーは一言だけ）。
 
 ## 4c. LINEにも知らせる（環境変数 LINE_CHANNEL_TOKEN がある時）
