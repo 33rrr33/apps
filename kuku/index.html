@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>九九フラッシュカード</title>
+<meta name="description" content="九九をじゅんばん・ランダムでタップしてめくるフラッシュカード">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c96f3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="九九カード">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root{
+    --bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;
+    --accent:#c96f3f;--accent-soft:#fbeee4;--ans:#2f7d5b;--shadow:0 2px 12px rgba(90,70,40,.08);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#211d18;--panel:#2c2721;--ink:#f0e9dd;--sub:#a99f90;--line:#3d362d;
+    --accent:#e0895a;--accent-soft:#3a2f26;--ans:#6fc79c;--shadow:0 2px 14px rgba(0,0,0,.35);
+  }}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;-webkit-text-size-adjust:100%;
+    -webkit-user-select:none;user-select:none}
+  button{font:inherit;color:inherit}
+  [hidden]{display:none!important}
+
+  /* せってい */
+  #setup{max-width:620px;margin:0 auto;
+    padding:calc(env(safe-area-inset-top) + 24px) 16px calc(40px + env(safe-area-inset-bottom))}
+  .top{display:flex;align-items:center;gap:8px}
+  .top a{color:var(--sub);text-decoration:none;font-size:.85rem}
+  h1{font-size:1.5rem;margin:6px 0 2px;text-align:center}
+  .lead{color:var(--sub);margin:0 0 18px;font-size:.85rem;text-align:center}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:20px;
+    padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+  .box h2{font-size:.95rem;margin:0 0 10px}
+  .dans{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .chip{border:2px solid var(--line);background:var(--bg);border-radius:14px;
+    padding:10px 0;font-weight:700;font-size:1rem;cursor:pointer}
+  .chip.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .seg .chip{padding:14px 0;font-size:1.05rem}
+  .opt{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:8px 0;font-size:.92rem}
+  .opt + .opt{border-top:1px solid var(--line)}
+  .opt small{display:block;color:var(--sub);font-size:.75rem}
+  .opt input{width:24px;height:24px;accent-color:var(--accent);flex:none}
+  #startBtn{display:block;width:100%;border:0;border-radius:18px;padding:18px;
+    background:var(--accent);color:#fff;font-size:1.25rem;font-weight:700;cursor:pointer;
+    box-shadow:var(--shadow)}
+  #startBtn:disabled{opacity:.4}
+  #startBtn:active{transform:scale(.98)}
+
+  /* カード */
+  #play{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);
+    padding:calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 12px)}
+  .bar{display:flex;align-items:center;gap:10px;font-size:.95rem;color:var(--sub)}
+  .bar button{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:6px 12px;cursor:pointer}
+  .bar .count{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+  .prog{height:6px;border-radius:3px;background:var(--line);margin:10px 0 12px;overflow:hidden}
+  .prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+  #card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);
+    cursor:pointer;touch-action:manipulation;text-align:center;padding:16px;min-height:0}
+  #card.pop{animation:pop .18s ease-out}
+  @keyframes pop{from{transform:scale(.96);opacity:.5}to{transform:none;opacity:1}}
+  .q{font-weight:800;font-size:min(22vw,24vh);line-height:1.1;letter-spacing:.04em;
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .a{font-weight:800;font-size:min(20vw,20vh);line-height:1.1;color:var(--ans);
+    font-variant-numeric:tabular-nums;min-height:1.1em}
+  .a.hide{visibility:hidden}
+  .yomi{font-size:min(7vw,6vh);color:var(--sub);margin-top:.3em;min-height:1.4em;font-weight:700}
+  .hint{color:var(--sub);font-size:.85rem;text-align:center;margin-top:10px}
+
+  /* おわり */
+  .done-mark{font-size:min(30vw,30vh);line-height:1}
+  .done-msg{font-size:min(9vw,8vh);font-weight:800;margin:.2em 0 .6em}
+  .done-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .done-btns button{border:0;border-radius:16px;padding:14px 22px;font-size:1.1rem;font-weight:700;cursor:pointer}
+  .done-btns .again{background:var(--accent);color:#fff}
+  .done-btns .back{background:var(--accent-soft);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<section id="setup">
+  <div class="top"><a href="../">← アプリ一覧</a></div>
+  <h1>✖️ 九九フラッシュカード</h1>
+  <p class="lead">タップしてどんどんめくろう</p>
+
+  <div class="box">
+    <h2>だん をえらぶ</h2>
+    <div class="dans" id="dans"></div>
+  </div>
+
+  <div class="box">
+    <h2>じゅんばん</h2>
+    <div class="seg">
+      <button class="chip on" data-order="seq">➡️ じゅんばん</button>
+      <button class="chip" data-order="rand">🔀 ランダム</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <label class="opt">
+      <span>こたえを見せてから次へ<small>オフにすると、タップですぐ次の問題へ</small></span>
+      <input type="checkbox" id="optAns" checked>
+    </label>
+    <label class="opt">
+      <span>よみかたを出す<small>「ににんがし」など</small></span>
+      <input type="checkbox" id="optYomi" checked>
+    </label>
+  </div>
+
+  <button id="startBtn">スタート</button>
+</section>
+
+<section id="play" hidden>
+  <div class="bar">
+    <button id="quitBtn">✕ やめる</button>
+    <button id="prevBtn">◀ もどる</button>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="prog"><i id="progBar"></i></div>
+  <div id="card">
+    <div id="face">
+      <div class="q" id="q"></div>
+      <div class="a" id="a"></div>
+      <div class="yomi" id="yomi"></div>
+    </div>
+    <div id="done" hidden>
+      <div class="done-mark">🎉</div>
+      <div class="done-msg">おわり！</div>
+      <div class="done-btns">
+        <button class="again" id="againBtn">もういちど</button>
+        <button class="back" id="backBtn">せっていへ</button>
+      </div>
+    </div>
+  </div>
+  <div class="hint" id="hint">カードをタップ（スペースキーでもOK）</div>
+</section>
+
+<script>
+// 九九のよみかた [だん][かける数]
+const YOMI = {
+  1:["いんいちがいち","いんにがに","いんさんがさん","いんしがし","いんごがご","いんろくがろく","いんしちがしち","いんはちがはち","いんくがく"],
+  2:["にいちがに","ににんがし","にさんがろく","にしがはち","にごじゅう","にろくじゅうに","にしちじゅうし","にはちじゅうろく","にくじゅうはち"],
+  3:["さんいちがさん","さんにがろく","さざんがく","さんしじゅうに","さんごじゅうご","さぶろくじゅうはち","さんしちにじゅういち","さんぱにじゅうし","さんくにじゅうしち"],
+  4:["しいちがし","しにがはち","しさんじゅうに","ししじゅうろく","しごにじゅう","しろくにじゅうし","ししちにじゅうはち","しはさんじゅうに","しくさんじゅうろく"],
+  5:["ごいちがご","ごにじゅう","ごさんじゅうご","ごしにじゅう","ごごにじゅうご","ごろくさんじゅう","ごしちさんじゅうご","ごはしじゅう","ごっくしじゅうご"],
+  6:["ろくいちがろく","ろくにじゅうに","ろくさんじゅうはち","ろくしにじゅうし","ろくごさんじゅう","ろくろくさんじゅうろく","ろくしちしじゅうに","ろくはしじゅうはち","ろっくごじゅうし"],
+  7:["しちいちがしち","しちにじゅうし","しちさんにじゅういち","しちしにじゅうはち","しちごさんじゅうご","しちろくしじゅうに","しちしちしじゅうく","しちはごじゅうろく","しちくろくじゅうさん"],
+  8:["はちいちがはち","はちにじゅうろく","はちさんにじゅうし","はちしさんじゅうに","はちごしじゅう","はちろくしじゅうはち","はちしちごじゅうろく","はっぱろくじゅうし","はっくしちじゅうに"],
+  9:["くいちがく","くにじゅうはち","くさんにじゅうしち","くしさんじゅうろく","くごしじゅうご","くろくごじゅうし","くしちろくじゅうさん","くはしちじゅうに","くくはちじゅういち"],
+};
+
+const $ = id => document.getElementById(id);
+const KEY = "kuku-flash-settings";
+let settings = {dans:[1,2,3,4,5,6,7,8,9], order:"seq", ans:true, yomi:true};
+try { Object.assign(settings, JSON.parse(localStorage.getItem(KEY)) || {}); } catch(e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(settings)); } catch(e) {} };
+
+// だん ボタン
+const dansEl = $("dans");
+for (let d = 1; d <= 9; d++) {
+  const b = document.createElement("button");
+  b.className = "chip"; b.textContent = d + "のだん"; b.dataset.dan = d;
+  dansEl.appendChild(b);
+}
+const allBtn = document.createElement("button");
+allBtn.className = "chip"; allBtn.textContent = "ぜんぶ";
+dansEl.appendChild(allBtn);
+
+function renderSetup() {
+  dansEl.querySelectorAll("[data-dan]").forEach(b =>
+    b.classList.toggle("on", settings.dans.includes(+b.dataset.dan)));
+  allBtn.classList.toggle("on", settings.dans.length === 9);
+  document.querySelectorAll("[data-order]").forEach(b =>
+    b.classList.toggle("on", b.dataset.order === settings.order));
+  $("optAns").checked = settings.ans;
+  $("optYomi").checked = settings.yomi;
+  $("startBtn").disabled = settings.dans.length === 0;
+}
+dansEl.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b === allBtn) {
+    settings.dans = settings.dans.length === 9 ? [] : [1,2,3,4,5,6,7,8,9];
+  } else {
+    const d = +b.dataset.dan;
+    settings.dans = settings.dans.includes(d) ? settings.dans.filter(x => x !== d) : [...settings.dans, d].sort();
+  }
+  save(); renderSetup();
+});
+document.querySelectorAll("[data-order]").forEach(b => b.addEventListener("click", () => {
+  settings.order = b.dataset.order; save(); renderSetup();
+}));
+$("optAns").addEventListener("change", e => { settings.ans = e.target.checked; save(); });
+$("optYomi").addEventListener("change", e => { settings.yomi = e.target.checked; save(); });
+
+// カード
+let deck = [], idx = 0, shown = false, finished = false;
+
+function buildDeck() {
+  const cards = [];
+  for (const d of settings.dans) for (let n = 1; n <= 9; n++) cards.push([d, n]);
+  if (settings.order === "rand") {
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+  }
+  return cards;
+}
+
+function start() {
+  deck = buildDeck(); idx = 0; shown = false; finished = false;
+  $("setup").hidden = true; $("play").hidden = false;
+  render();
+}
+
+function render() {
+  const total = deck.length;
+  $("face").hidden = finished; $("done").hidden = !finished;
+  $("hint").hidden = finished;
+  $("prevBtn").disabled = idx === 0 && !shown && !finished;
+  $("count").textContent = (finished ? total : idx + 1) + " / " + total;
+  $("progBar").style.width = ((finished ? total : idx + (shown || !settings.ans ? 1 : 0)) / total * 100) + "%";
+  if (finished) return;
+  const [d, n] = deck[idx];
+  $("q").textContent = d + " × " + n;
+  const showAns = shown;
+  $("a").textContent = "= " + d * n;
+  $("a").classList.toggle("hide", !showAns);
+  $("yomi").textContent = settings.yomi && showAns ? YOMI[d][n - 1] : "";
+}
+
+function bump() {
+  const c = $("card"); c.classList.remove("pop"); void c.offsetWidth; c.classList.add("pop");
+}
+
+function next() {
+  if (finished) return;
+  if (settings.ans && !shown) { shown = true; render(); return; }
+  if (idx + 1 >= deck.length) { finished = true; render(); bump(); return; }
+  idx++; shown = false; render(); bump();
+}
+
+function prev() {
+  if (finished) { finished = false; shown = settings.ans; render(); return; }
+  if (shown) { shown = false; render(); return; }
+  if (idx === 0) return;
+  idx--; shown = false; render(); bump();
+}
+
+$("card").addEventListener("click", e => { if (!e.target.closest("button")) next(); });
+$("prevBtn").addEventListener("click", prev);
+$("quitBtn").addEventListener("click", () => { $("play").hidden = true; $("setup").hidden = false; });
+$("againBtn").addEventListener("click", start);
+$("backBtn").addEventListener("click", () => { $("play").hidden = true; $("setup").hidden = false; });
+$("startBtn").addEventListener("click", start);
+document.addEventListener("keydown", e => {
+  if ($("play").hidden) return;
+  if (e.key === " " || e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); if (finished) start(); else next(); }
+  else if (e.key === "ArrowLeft" || e.key === "Backspace") { e.preventDefault(); prev(); }
+  else if (e.key === "Escape") $("quitBtn").click();
+});
+
+renderSetup();
+</script>
+</body>
+</html>
