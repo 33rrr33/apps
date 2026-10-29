@@ -1,7 +1,7 @@
 {
  "timezone": "Asia/Tokyo",
  "episodes_per_series": 5,
- "current_series": "s03_iphone_hidden",
+ "current_series": "s04_mac_settings",
  "series": [
   {
    "key": "s01_renkei",
@@ -171,7 +171,11 @@
      "num": 1,
      "slug": "hot_corners",
      "topic": "ホットコーナー（システム設定→デスクトップとDock→ホットコーナー。画面の角にマウスを寄せるだけでデスクトップ表示・ロック等）",
-     "status": "todo"
+     "status": "done",
+     "date": "2026-10-30",
+     "youtube_id": "U7yL4G9wMBs",
+     "scheduled": "2026-10-30T17:30+09:00",
+     "uploaded": "2026-10-29"
     },
     {
      "num": 2,
@@ -322,6 +326,14 @@
    "title": "iPhoneの隠し神機能③ #Shorts",
    "scheduled": "17:30",
    "comment": "シリーズ完結！①〜③どれが一番使えそうでしたか？👇 次回からは「Macの神設定」編です！",
+   "comment_posted": true
+  },
+  {
+   "date": "2026-10-30",
+   "id": "U7yL4G9wMBs",
+   "title": "Macの神設定① #Shorts",
+   "scheduled": "17:30",
+   "comment": "どの角に何を割り当てましたか？👇 おすすめの使い方があればコメントで教えてください！",
    "comment_posted": false
   }
  ],
