@@ -61,7 +61,7 @@ def slot(publish):
     if d < start_monday():
         st = json.load(open(os.path.join(ROOT, "state.json")))
         legacy = st.get("schedule", {}).get(d.isoformat())
-        return {"kind": "legacy", "publish_at": publish.isoformat(), "legacy": legacy} if legacy and hm == st.get("publish_time", "17:30") else None
+        return {"kind": "legacy", "publish_at": publish.isoformat(), "legacy": legacy} if legacy and hm == legacy.get("time", st.get("publish_time", "17:30")) else None
     for t, half, num in WEEK[d.weekday()]:
         if t != hm: continue
         wk = week_info(d); h = wk[half]

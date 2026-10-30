@@ -184,7 +184,7 @@
      "status": "done",
      "date": "2026-10-31",
      "youtube_id": "s6kqqowiqEY",
-     "scheduled": "2026-10-31T17:30+09:00",
+     "scheduled": "2026-10-31T06:00+09:00",
      "uploaded": "2026-10-30"
     },
     {
@@ -279,13 +279,15 @@
   "2026-10-31": {
    "type": "short",
    "series": "s04_mac_settings",
-   "num": 2
+   "num": 2,
+   "time": "06:00"
   },
   "2026-11-01": {
    "type": "short+long",
    "series": "s04_mac_settings",
    "num": 3,
-   "long": "今週の神ワザ6選（s03の①〜③＋s04の①〜③、各約1分・約6分・横型）。この日は2本：B③と長尺を両方作って非公開アップロード。来週の2シリーズも企画して state.json に追加"
+   "long": "今週の神ワザ6選（s03の①〜③＋s04の①〜③、各約1分・約6分・横型）。この日は2本：B③と長尺を両方作って非公開アップロード。来週の2シリーズも企画して state.json に追加",
+   "time": "06:00"
   }
  },
  "weekly": {
@@ -344,7 +346,7 @@
    "date": "2026-10-31",
    "id": "s6kqqowiqEY",
    "title": "Macの神設定② #Shorts",
-   "scheduled": "17:30",
+   "scheduled": "06:00",
    "comment": "押し込む派？タップ派？👇 どっちでクリックしているかコメントで教えてください！",
    "comment_posted": false
   }
