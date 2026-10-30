@@ -181,7 +181,11 @@
      "num": 2,
      "slug": "tap_to_click",
      "topic": "トラックパッドの『タップでクリック』（システム設定→トラックパッド）。押し込まずに軽く触れるだけでクリック",
-     "status": "todo"
+     "status": "done",
+     "date": "2026-10-31",
+     "youtube_id": "s6kqqowiqEY",
+     "scheduled": "2026-10-31T17:30+09:00",
+     "uploaded": "2026-10-30"
     },
     {
      "num": 3,
@@ -334,6 +338,14 @@
    "title": "Macの神設定① #Shorts",
    "scheduled": "17:30",
    "comment": "どの角に何を割り当てましたか？👇 おすすめの使い方があればコメントで教えてください！",
+   "comment_posted": true
+  },
+  {
+   "date": "2026-10-31",
+   "id": "s6kqqowiqEY",
+   "title": "Macの神設定② #Shorts",
+   "scheduled": "17:30",
+   "comment": "押し込む派？タップ派？👇 どっちでクリックしているかコメントで教えてください！",
    "comment_posted": false
   }
  ],
