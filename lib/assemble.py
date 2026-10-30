@@ -1,8 +1,8 @@
 """Weekend long video (~5 min, 1920x1080): OP with table of contents + the week's five 60s parts + ED.
 
-    python3 lib/assemble.py 2026-11-07T17:30 stills    # OP/ED preview sheet
-    python3 lib/assemble.py 2026-11-07T17:30 render    # out/<series_key>_long.mp4 + .meta.json (chapters, short links)
-    python3 lib/assemble.py 2026-11-07T17:30 upload    # render (if needed) + private upload with publishAt, notifySubscribers=true
+    python3 lib/assemble.py 2026-11-07T06:00 stills    # OP/ED preview sheet
+    python3 lib/assemble.py 2026-11-07T06:00 render    # out/<series_key>_long.mp4 + .meta.json (chapters, short links)
+    python3 lib/assemble.py 2026-11-07T06:00 upload    # render (if needed) + private upload with publishAt, notifySubscribers=true
 
 Missing or stale parts (storage/weekly_<half>_half/part_N.mp4 whose .json names another episode) are re-rendered
 from the episode files with partlib, so the container may be recycled between weekdays.

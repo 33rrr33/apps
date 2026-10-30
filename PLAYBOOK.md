@@ -4,8 +4,8 @@
 
 ## 仕様の要点
 - **iPhone特化・週替わり2シリーズ**：前半（月朝〜水朝 ①〜⑤）／後半（水夕〜金夕 ①〜⑤）。テーマは `config/themes.json` の pool を週ごとに順番に（前半=pool[2w%6]・後半=pool[(2w+1)%6]、一周したらループ）。
-- **枠（公開時刻 JST）**：月〜金 06:00 と 17:30（計10本・各20秒ショート）、土17:30 前半まとめ長尺、日17:30 後半まとめ長尺（各約5分）。土日の朝は配信なし。
-- **公開の24時間前に生成・予約**：06:00 のトリガーは翌日06:00枠、17:30 のトリガーは翌日17:30枠を作る（枠が無ければスキップ）。`python3 lib/schedule.py next morning|evening` が「何を作るか」を返す（`plan` で3週間分の一覧）。
+- **枠（公開時刻 JST）**：月〜金 06:00 と 17:30（計10本・各20秒ショート）、**土06:00 前半まとめ長尺、日06:00 後半まとめ長尺**（各約5分）。土日の夕方は配信なし（2026-10-30 ユーザー指定で土日は朝6時）。
+- **公開の24時間前に生成・予約**：06:00 のトリガーは翌日06:00枠（金→土の前半まとめ、土→日の後半まとめもここ）、17:30 のトリガーは翌日17:30枠を作る（金・土の夕方はスキップ）。`python3 lib/schedule.py next morning|evening` が「何を作るか」を返す（`plan` で3週間分の一覧）。
 - **デュアル生成**：平日は1つのエピソードファイルから ①20秒の縦ショート（shortlib）と ②約60秒の横型パート（partlib、`PART` 定義）を作る。パートは `storage/weekly_<first|second>_half/part_N.mp4`（git 管理外。コンテナが消えても週末に assemble がエピソードから自動で作り直す）。
 - **YouTube**：`privacyStatus=private`＋`publishAt`（+09:00）。`notify_subscribers`：ショート false／週末長尺 true（meta.json に書く）。
 - タイトル：ショート `{テーマ}{丸数字} #Shorts`、土曜 `【保存版】今すぐ使える！{前半テーマ}5選まとめ`、日曜 `【決定版】知らなきゃ損する！{後半テーマ}5選まとめ`（schedule.py が出す）。
@@ -44,7 +44,7 @@ python3 lib/partlib.py  <episode> render --out <schedule の part>
 ```
 
 ## 4. アップロード（ショート）
-`out/<name>.meta.json`：title（schedule の title）、詳しい description（使い方・ここもすごい・シリーズ①〜⑤の一覧・「土曜/日曜17:30に5分まとめ」・投稿時間の案内）、tags（#なし）、playlist=テーマ名、`publish_at`、`"notify_subscribers": false`、comment。
+`out/<name>.meta.json`：title（schedule の title）、詳しい description（使い方・ここもすごい・シリーズ①〜⑤の一覧・「土曜/日曜の朝6:00に5分まとめ」・投稿時間の案内）、tags（#なし）、playlist=テーマ名、`publish_at`、`"notify_subscribers": false`、comment。
 `python3 lib/ytupload.py upload out/<name>.mp4 out/<name>.meta.json` → state.json `v2.slots[<YYYY-MM-DDTHH:MM>]` に id などを記録（comment_posted=false）。
 playlist_error が出ても動画は上がっている → `python3 lib/ytupload.py playlist <id> <テーマ名>`。id が分からない時は `python3 lib/ytupload.py recent`。
 
