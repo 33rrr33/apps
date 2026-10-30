@@ -1,3 +1,69 @@
+# 毎日の自動運用 v2（2026-11-02 公開分から・ユーザー確定仕様）
+
+**main ブランチには絶対に触らない。** このブランチ `shorts-bot` だけを使う。鍵は環境変数のみ（チャットに出さない）。
+
+## 仕様の要点
+- **iPhone特化・週替わり2シリーズ**：前半（月朝〜水朝 ①〜⑤）／後半（水夕〜金夕 ①〜⑤）。テーマは `config/themes.json` の pool を週ごとに順番に（前半=pool[2w%6]・後半=pool[(2w+1)%6]、一周したらループ）。
+- **枠（公開時刻 JST）**：月〜金 06:00 と 17:30（計10本・各20秒ショート）、土17:30 前半まとめ長尺、日17:30 後半まとめ長尺（各約5分）。土日の朝は配信なし。
+- **公開の24時間前に生成・予約**：06:00 のトリガーは翌日06:00枠、17:30 のトリガーは翌日17:30枠を作る（枠が無ければスキップ）。`python3 lib/schedule.py next morning|evening` が「何を作るか」を返す（`plan` で3週間分の一覧）。
+- **デュアル生成**：平日は1つのエピソードファイルから ①20秒の縦ショート（shortlib）と ②約60秒の横型パート（partlib、`PART` 定義）を作る。パートは `storage/weekly_<first|second>_half/part_N.mp4`（git 管理外。コンテナが消えても週末に assemble がエピソードから自動で作り直す）。
+- **YouTube**：`privacyStatus=private`＋`publishAt`（+09:00）。`notify_subscribers`：ショート false／週末長尺 true（meta.json に書く）。
+- タイトル：ショート `{テーマ}{丸数字} #Shorts`、土曜 `【保存版】今すぐ使える！{前半テーマ}5選まとめ`、日曜 `【決定版】知らなきゃ損する！{後半テーマ}5選まとめ`（schedule.py が出す）。
+
+## 0. 準備
+```bash
+cd /home/user/apps && git fetch origin shorts-bot
+[ -d /home/user/shorts-bot ] || git worktree add /home/user/shorts-bot origin/shorts-bot
+cd /home/user/shorts-bot && git checkout -B shorts-bot origin/shorts-bot
+python3 -c "import edge_tts" 2>/dev/null || pip install -q edge-tts
+```
+CHANNEL.md も読む。
+
+## 1. 何を作るか
+`python3 lib/schedule.py next morning`（06:00 実行）/ `next evening`（17:30 実行）。
+- `kind: skip` → 作らない（コメントだけして終わり）。
+- `kind: legacy` → 旧方式（下の「旧方式」節。2026-11-01 の Macの神設定③＋6選長尺だけ）。
+- `kind: short` → 2〜4。
+- `kind: long` → 5。
+- state.json の `v2.slots[<公開日時>]` に `id` が既にあれば**作り直さない**（二重アップロード防止）。
+
+## 2. エピソードを書く（kind: short）
+- ファイルは schedule の `episode`（例 `episodes/w20261102_first/ep01_calc_delete.py`）。**`episodes/w20261102_first/ep01_calc_delete.py` を手本に**。
+- `SERIES = dict(key=<series_key>, title=<theme>, spoken=<theme_spoken>, hook_split=<hook_split>, total=5)`、`NUM`、`SLUG`、`NEXT`（次回ネタの短い名前。⑤は「まとめ動画は土曜17:30」または「日曜17:30」）。
+- **冒頭0〜3秒の強いフック**：`HOOK_BADGE` を回ごとに変える（例「9割が知らない神ワザ」「これやってない人 全員損してます」「知らないと一生損」）。
+- 本編は核心の操作だけをテンポよく（20秒・shortlib のガードに従う）。読み上げの「神」は「かみ」。
+- **`PART`**（60秒の詳細版）：`title`、`intro`、`steps`＝5〜6個の（画面ラベル, 読み上げ, ショートのアニメの区間）、`outro`。設定アプリの場所・手順を丁寧に。長さ 55〜65 秒を目安（partlib が長さを表示）。
+- ネタ（topic）は themes.json のもの。事実は正確に（メニュー名・対応iOS）。自信がない細部は出さない。テーマが2周目で topics が足りない（topic が null）時は、avoid と過去回に被らない5本を themes.json の topics に追加してから作る。
+
+## 3. 確認 → 書き出し
+```bash
+python3 lib/shortlib.py <episode> stills   # Read で目視確認 → 直す
+python3 lib/shortlib.py <episode> render
+python3 lib/partlib.py  <episode> stills   # 横型パートの確認
+python3 lib/partlib.py  <episode> render --out <schedule の part>
+```
+
+## 4. アップロード（ショート）
+`out/<name>.meta.json`：title（schedule の title）、詳しい description（使い方・ここもすごい・シリーズ①〜⑤の一覧・「土曜/日曜17:30に5分まとめ」・投稿時間の案内）、tags（#なし）、playlist=テーマ名、`publish_at`、`"notify_subscribers": false`、comment。
+`python3 lib/ytupload.py upload out/<name>.mp4 out/<name>.meta.json` → state.json `v2.slots[<YYYY-MM-DDTHH:MM>]` に id などを記録（comment_posted=false）。
+playlist_error が出ても動画は上がっている → `python3 lib/ytupload.py playlist <id> <テーマ名>`。id が分からない時は `python3 lib/ytupload.py recent`。
+
+## 5. 週末の長尺（kind: long）
+`python3 lib/assemble.py <YYYY-MM-DDTHH:MM> stills` で OP/ED を確認 → `python3 lib/assemble.py <…> upload`。
+OP（タイトル＋目次）＋パート①〜⑤＋ED（登録誘導）を結合し、説明欄にチャプター・元ショートのリンク・登録誘導を自動で入れ、notifySubscribers=true で予約。日曜分のアップロード後はパートを storage/archive/<週> に移す。
+
+## 6. コメント・通知・記録
+- 実行のたびに最後に：**今日のこの時刻に公開された枠**（v2.slots の今日の 06:00 / 17:30）が comment_posted=false なら `python3 lib/ytupload.py comment <id> "<comment>"` → true に。ユーザーへは一言「コメントを付けました、固定してね」。
+- LINE は**夕方（17:30）の実行だけ** 1通、固定文：`python3 lib/notify_line.py "$(printf '今日の予定は終わりましたか？\n終わっていない場合は終わらせましょうね！')"`
+- ショートを SendUserFile（status=proactive）で送り、短く落ち着いた日本語で結果を伝える（何を何時に予約したか）。
+- state.json 更新 → `git add -A && git commit`（末尾にセッション指定の Co-Authored-By / Claude-Session 行）→ `git push -q origin shorts-bot`（失敗時のみ 2,4,8,16 秒で再試行）。
+
+## 失敗したとき
+作れなかった時は低品質なものを出さず、理由を1〜2行で伝える（24時間前なので、次の実行か手動で間に合う）。
+
+---
+
+# 旧方式（〜2026-11-01 公開分）
 # 毎日のショート動画づくり（17:35 JST 自動実行・**翌日分を前日に予約**）
 
 **2026-10-28 から（ユーザー指定）**：毎日17:35に実行し、

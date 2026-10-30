@@ -8,9 +8,11 @@ Credentials come from environment variables set in the cloud environment's setti
 Usage:
     python3 lib/ytupload.py check                       # verify credentials, print the channel name
     python3 lib/ytupload.py upload <video.mp4> <meta.json>
-    python3 lib/ytupload.py comment <video_id> <text>   # e.g. the next day, once the video is public
+    python3 lib/ytupload.py comment <video_id> <text>   # once the video is public
+    python3 lib/ytupload.py recent                      # latest uploads (id + title)
+    python3 lib/ytupload.py playlist <video_id> <playlist title>
 meta.json: {"title", "description", "tags": [...], "playlist": "<series title>", "publish_at": "2026-10-26T17:30:00+09:00",
-            "comment": "..."}
+            "comment": "...", "notify_subscribers": false}
 Prints one JSON line with the result.
 """
 import json, os, ssl, sys, urllib.error, urllib.parse, urllib.request
@@ -77,19 +79,39 @@ def upload(video, meta_path):
     body = {"snippet": {"title": meta["title"], "description": meta["description"], "tags": meta.get("tags", []),
                         "categoryId": "28", "defaultLanguage": "ja", "defaultAudioLanguage": "ja"}, "status": status}
     size = os.path.getsize(video)
-    _, h, _ = http("POST", f"{UPLOAD}?uploadType=resumable&part=snippet,status", body,
+    notify = "true" if meta.get("notify_subscribers", True) else "false"   # Shorts: false / weekend longs: true
+    _, h, _ = http("POST", f"{UPLOAD}?uploadType=resumable&part=snippet,status&notifySubscribers={notify}", body,
                    {**auth(tok), "X-Upload-Content-Type": "video/mp4", "X-Upload-Content-Length": str(size)})
     loc = h.get("Location") or h.get("location")
     _, _, v = http("PUT", loc, raw=open(video, "rb").read(), headers={**auth(tok), "Content-Type": "video/mp4"})
     vid = v["id"]
     out = {"ok": True, "id": vid, "url": f"https://youtube.com/shorts/{vid}", "privacy": v["status"]["privacyStatus"],
-           "publish_at": v["status"].get("publishAt")}
+           "publish_at": v["status"].get("publishAt"), "notify_subscribers": notify == "true"}
     if meta.get("playlist"):
-        pid = playlist_id(tok, meta["playlist"])
-        http("POST", f"{API}/playlistItems?part=snippet",
-             {"snippet": {"playlistId": pid, "resourceId": {"kind": "youtube#video", "videoId": vid}}}, auth(tok))
-        out["playlist"] = meta["playlist"]
+        try:
+            add_to_playlist(tok, vid, meta["playlist"]); out["playlist"] = meta["playlist"]
+        except SystemExit as e:                    # the video is up; a playlist hiccup must not hide its id
+            out["playlist_error"] = str(e)[:200]
     print(json.dumps(out, ensure_ascii=False))
+
+def add_to_playlist(tok, vid, title):
+    import time
+    for i in range(4):
+        try:
+            pid = playlist_id(tok, title)
+            return http("POST", f"{API}/playlistItems?part=snippet",
+                        {"snippet": {"playlistId": pid, "resourceId": {"kind": "youtube#video", "videoId": vid}}}, auth(tok))
+        except SystemExit:
+            if i == 3: raise
+            time.sleep(3 * (i + 1))
+
+def recent(n=5):
+    tok = token()
+    _, _, r = http("GET", f"{API}/channels?part=contentDetails&mine=true", headers=auth(tok))
+    up = r["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+    _, _, r = http("GET", f"{API}/playlistItems?part=snippet,status&maxResults={n}&playlistId={up}", headers=auth(tok))
+    for i in r.get("items", []):
+        print(i["snippet"]["resourceId"]["videoId"], i["snippet"]["title"])
 
 def comment(vid, text):
     tok = token()
@@ -102,4 +124,6 @@ if __name__ == "__main__":
     if cmd == "check": check()
     elif cmd == "upload": upload(sys.argv[2], sys.argv[3])
     elif cmd == "comment": comment(sys.argv[2], sys.argv[3])
+    elif cmd == "recent": recent()
+    elif cmd == "playlist": add_to_playlist(token(), sys.argv[2], sys.argv[3]); print(json.dumps({"ok": True}))
     else: raise SystemExit(__doc__)

@@ -357,5 +357,32 @@
   "makes": "翌日の回（schedule の翌日の日付）",
   "comment_on": "当日17:30に公開された回"
  },
- "youtube_auth": "2026-10-28: OAuthアプリを本番に公開し、Refresh tokenを出し直し済み（7日の期限なし）。Googleのパスワード変更・アクセス取り消しの時だけ出し直しが必要。"
+ "youtube_auth": "2026-10-28: OAuthアプリを本番に公開し、Refresh tokenを出し直し済み（7日の期限なし）。Googleのパスワード変更・アクセス取り消しの時だけ出し直しが必要。",
+ "v2": {
+  "note": "2026-10-30 ユーザー確定仕様：iPhone特化・週替わり2シリーズ（各①〜⑤）・平日ショート10本（朝06:00/夕17:30）・土日17:30に5分まとめ長尺・公開24時間前に生成と予約・ショートと60秒パートのデュアル生成。テーマは config/themes.json、枠は lib/schedule.py。",
+  "start": "2026-11-02",
+  "triggers": {
+   "morning": "毎日06:00 JST → 翌日06:00枠（金・土はスキップ）",
+   "evening": "毎日17:30 JST → 翌日17:30枠（金→土の前半まとめ長尺、土→日の後半まとめ長尺）"
+  },
+  "notify_subscribers": {
+   "short": false,
+   "long": true
+  },
+  "slots": {
+   "2026-11-02T06:00": {
+    "kind": "short",
+    "series_key": "w20261102_first",
+    "theme": "iPhone爆速神操作",
+    "num": 1,
+    "episode": "episodes/w20261102_first/ep01_calc_delete.py",
+    "part": "storage/weekly_first_half/part_1.mp4",
+    "id": "5vbx_l8wOp4",
+    "title": "iPhone爆速神操作① #Shorts",
+    "made": "2026-10-30",
+    "comment": "これ知ってましたか？👇 知ってた人は「知ってた」、初めての人は「知らなかった」でコメントしてね！",
+    "comment_posted": false
+   }
+  }
+ }
 }
