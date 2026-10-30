@@ -123,7 +123,7 @@
     "隠し神機能"
    ],
    "total": 3,
-   "long_video": null,
+   "long_video": "【保存版】今すぐ使える！iPhone＆Macの神ワザ6選まとめ",
    "week": "2026-10-27",
    "episodes": [
     {
@@ -153,7 +153,8 @@
      "scheduled": "2026-10-29T17:30+09:00",
      "uploaded": "2026-10-28"
     }
-   ]
+   ],
+   "long_video_id": "ZaS40qfeDJ8"
   },
   {
    "key": "s04_mac_settings",
@@ -164,7 +165,7 @@
     "神設定"
    ],
    "total": 3,
-   "long_video": null,
+   "long_video": "【保存版】今すぐ使える！iPhone＆Macの神ワザ6選まとめ",
    "week": "2026-10-27",
    "episodes": [
     {
@@ -191,9 +192,14 @@
      "num": 3,
      "slug": "path_bar",
      "topic": "Finderのパスバー（表示→パスバーを表示）。今いるフォルダの場所がわかり、ダブルクリックで移動",
-     "status": "todo"
+     "status": "done",
+     "date": "2026-11-01",
+     "youtube_id": "v2GA3FsK4oQ",
+     "scheduled": "2026-11-01T06:00+09:00",
+     "uploaded": "2026-10-31"
     }
-   ]
+   ],
+   "long_video_id": "ZaS40qfeDJ8"
   }
  ],
  "used_topics_outside_series": [
@@ -348,6 +354,23 @@
    "title": "Macの神設定② #Shorts",
    "scheduled": "06:00",
    "comment": "押し込む派？タップ派？👇 どっちでクリックしているかコメントで教えてください！",
+   "comment_posted": true
+  },
+  {
+   "date": "2026-11-01",
+   "id": "v2GA3FsK4oQ",
+   "title": "Macの神設定③ #Shorts",
+   "scheduled": "06:00",
+   "comment": "シリーズ完結！①〜③どれが一番使えそうでしたか？👇 明日からは「iPhone爆速神操作」編です！",
+   "comment_posted": false
+  },
+  {
+   "date": "2026-11-01",
+   "id": "ZaS40qfeDJ8",
+   "title": "【保存版】今すぐ使える！iPhone＆Macの神ワザ6選まとめ",
+   "scheduled": "06:00",
+   "kind": "long",
+   "comment": "6つの中で、どれが一番役に立ちましたか？👇 番号でコメントしてね！",
    "comment_posted": false
   }
  ],
