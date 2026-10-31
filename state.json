@@ -195,7 +195,7 @@
      "status": "done",
      "date": "2026-11-01",
      "youtube_id": "v2GA3FsK4oQ",
-     "scheduled": "2026-11-01T06:00+09:00",
+     "scheduled": "2026-11-01T17:30+09:00",
      "uploaded": "2026-10-31"
     }
    ],
@@ -360,7 +360,7 @@
    "date": "2026-11-01",
    "id": "v2GA3FsK4oQ",
    "title": "Macの神設定③ #Shorts",
-   "scheduled": "06:00",
+   "scheduled": "17:30",
    "comment": "シリーズ完結！①〜③どれが一番使えそうでしたか？👇 明日からは「iPhone爆速神操作」編です！",
    "comment_posted": false
   },
@@ -409,5 +409,8 @@
     "comment_posted": false
    }
   }
- }
+ },
+ "rules": [
+  "同じ時刻に2本以上公開しない（ショートと長尺、内容が違っても禁止）。2026-10-31 ユーザー指定。ytupload.py が state.json の予約と重なるアップロードを止める。"
+ ]
 }

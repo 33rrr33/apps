@@ -70,8 +70,24 @@ def playlist_id(tok, title):
                    {"snippet": {"title": title, "defaultLanguage": "ja"}, "status": {"privacyStatus": "public"}}, auth(tok))
     return p["id"]
 
+def taken_slots():
+    """Publish times already used (YYYY-MM-DDTHH:MM, JST) according to state.json."""
+    st = json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "state.json")))
+    out = {}
+    for u in st.get("uploads", []):
+        if u.get("scheduled") and u.get("date"): out[f"{u['date']}T{u['scheduled']}"] = u.get("title")
+    for k, u in st.get("v2", {}).get("slots", {}).items():
+        if u.get("id"): out[k] = u.get("title")
+    return out
+
 def upload(video, meta_path):
     meta = json.load(open(meta_path))
+    # rule (user, 2026-10-31): never publish two videos at the same time, Short or long alike
+    if meta.get("publish_at") and not meta.get("allow_same_time"):
+        key = meta["publish_at"][:16]
+        clash = taken_slots().get(key)
+        if clash and clash != meta.get("title"):
+            raise SystemExit(f"refused: {key} is already used by '{clash}'. Same-time publishing is not allowed; pick another slot.")
     tok = token()
     status = {"privacyStatus": "private", "selfDeclaredMadeForKids": False}
     if meta.get("publish_at") and (os.environ.get("YT_AUDITED") == "1" or meta.get("schedule", True)):
