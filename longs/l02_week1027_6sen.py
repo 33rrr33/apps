@@ -6,13 +6,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 import assemble as A, partlib as PL, shortlib as SL
 
 ROOT = SL.ROOT
-S = dict(title="【保存版】今すぐ使える！iPhone＆Macの神ワザ6選まとめ", theme_spoken="iPhoneとMacの、かみワザ",
-         theme="今週の神ワザ6選", publish_at="2026-11-01T06:00:00+09:00")
+# 2026-10-31: ユーザー指定「全てiPhoneで統一」により、Macの3本を外して iPhoneの隠し神機能①〜③ の3選に変更
+S = dict(title="【保存版】今すぐ使える！iPhoneの隠し神機能3選まとめ", theme_spoken="iPhoneの、隠し、かみ機能",
+         theme="iPhoneの隠し神機能", publish_at="2026-11-01T06:00:00+09:00")
 EPS = ["episodes/s03_iphone_hidden/ep01_back_tap.py", "episodes/s03_iphone_hidden/ep02_space_cursor.py",
-       "episodes/s03_iphone_hidden/ep03_lift_subject.py", "episodes/s04_mac_settings/ep01_hot_corners.py",
-       "episodes/s04_mac_settings/ep02_tap_to_click.py", "episodes/s04_mac_settings/ep03_path_bar.py"]
-SHORTS = ["0Yhwm8sUFu4", "6xBvEuina7M", "KKGO0MecjkY", "U7yL4G9wMBs", "s6kqqowiqEY", "v2GA3FsK4oQ"]
-SERIES = ["iPhoneの隠し神機能①", "iPhoneの隠し神機能②", "iPhoneの隠し神機能③", "Macの神設定①", "Macの神設定②", "Macの神設定③"]
+       "episodes/s03_iphone_hidden/ep03_lift_subject.py"]
+SHORTS = ["0Yhwm8sUFu4", "6xBvEuina7M", "KKGO0MecjkY"]
+SERIES = ["iPhoneの隠し神機能①", "iPhoneの隠し神機能②", "iPhoneの隠し神機能③"]
 
 def main(mode):
     parts = []
@@ -29,14 +29,14 @@ def main(mode):
         sh = Image.new("RGB", (1920, 360))
         for k, im in enumerate(ims): sh.paste(im, (k * 640, 0))
         p = os.path.join(SL.OUT_DIR, "l02_week1027_sheet.png"); sh.save(p); print("sheet:", p); return
-    vo = A.say({"op": "今週の、iPhoneとMacの、かみワザ6選をまとめました。気になるところから見てね！",
+    vo = A.say({"op": "iPhoneの、隠し、かみ機能、3選をまとめました。気になるところから見てね！",
                 "ed": "最後まで見てくれてありがとう！明日からは、平日毎日、朝と夕方にショートを投稿します。チャンネル登録してね！"}, wd)
     op_len = max(9.0, 0.6 + len(vo["op"]) / SL.SR + 1.6); ed_len = max(7.0, 0.6 + len(vo["ed"]) / SL.SR + 1.4)
     op, ed = os.path.join(wd, "op.mp4"), os.path.join(wd, "ed.mp4")
     A.card_video(op, lambda t: A.op_frame(S, parts, t), vo["op"], op_len, 7)
     A.card_video(ed, lambda t: A.ed_frame(S, t), vo["ed"], ed_len, 9)
     seq = [op] + [p["mp4"] for p in parts] + [ed]
-    out = os.path.join(SL.OUT_DIR, "l02_week1027_6sen.mp4")
+    out = os.path.join(SL.OUT_DIR, "l02_iphone_hidden_3sen.mp4")
     ins = sum([["-i", x] for x in seq], [])
     fc = "".join(f"[{i}:v][{i}:a]" for i in range(len(seq))) + f"concat=n={len(seq)}:v=1:a=1[v][a]"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *ins, "-filter_complex", fc, "-map", "[v]", "-map", "[a]",
@@ -47,16 +47,16 @@ def main(mode):
         ch.append(f"{A.mmss(t)} {SL.CIRCLED[i]} {p['title']}"); t += p["length"]
     ch.append(f"{A.mmss(t)} エンディング")
     shorts = "\n".join(f"{SL.CIRCLED[i]} {SERIES[i]}：{p['title']}\nhttps://youtube.com/shorts/{SHORTS[i]}" for i, p in enumerate(parts))
-    desc = ("今週のショート「iPhoneの隠し神機能」①〜③と「Macの神設定」①〜③の6本を、1本ずつくわしく解説したまとめ版です📱💻\n"
+    desc = ("ショート「iPhoneの隠し神機能」①〜③の3本を、1本ずつくわしく解説したまとめ版です📱\n"
             "設定の場所や手順をステップごとに見せているので、保存して見ながら試してください。\n\n"
             "━━━━━━━━━━━━━━━━\n▼目次\n━━━━━━━━━━━━━━━━\n" + "\n".join(ch) +
             "\n\n━━━━━━━━━━━━━━━━\n▼元のショート動画\n━━━━━━━━━━━━━━━━\n" + shorts +
             "\n\n▼チャンネル登録はこちら\nhttps://www.youtube.com/@mac_oic?sub_confirmation=1\n"
             "11/2からは、平日毎日 朝6:00 と 夕方17:30 にiPhoneの便利技ショート、土日の朝6:00に5分のまとめ動画を投稿します。\n"
-            "役に立ったら高評価とチャンネル登録をお願いします🙏\n\n#iPhone #Mac #iPhone便利技 #Mac便利技 #iOS #macOS #Apple #保存版")
+            "役に立ったら高評価とチャンネル登録をお願いします🙏\n\n#iPhone #iPhone便利技 #iPhone裏技 #iOS #Apple #保存版")
     meta = dict(title=S["title"], description=desc, publish_at=S["publish_at"], notify_subscribers=True,
-                tags=["iPhone", "Mac", "iPhone 便利技", "Mac 便利技", "iPhone 裏技", "MacBook", "iOS", "macOS", "Apple", "まとめ", "保存版"],
-                comment="6つの中で、どれが一番役に立ちましたか？👇 番号でコメントしてね！")
+                tags=["iPhone", "iPhoneの隠し神機能", "iPhone 便利技", "iPhone 裏技", "iPhone 使い方", "背面タップ", "切り抜き", "iOS", "Apple", "まとめ", "保存版"],
+                playlist="iPhoneの隠し神機能", comment="3つの中で、どれが一番役に立ちましたか？👇 番号でコメントしてね！")
     mp = os.path.splitext(out)[0] + ".meta.json"
     json.dump(meta, open(mp, "w"), ensure_ascii=False, indent=1)
     print(json.dumps({"long": out, "length": round(t + ed_len, 1), "chapters": ch}, ensure_ascii=False, indent=1))
