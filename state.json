@@ -513,6 +513,58 @@
     "made": "2026-10-31",
     "comment": "今週の5つ、どれが一番役に立ちましたか？👇 番号でコメントしてね！（①計算機で1桁だけ消す、②片手キーボード、③画面上タップで一番上へ、④Safariのタブを一気に閉じる、⑤アプリを一瞬で切り替え）",
     "comment_posted": false
+   },
+   "2026-11-04T17:30": {
+    "kind": "short",
+    "series_key": "w20261102_second",
+    "theme": "iPhone隠し神機能",
+    "num": 1,
+    "episode": "episodes/w20261102_second/ep01_live_text_copy.py",
+    "part": "storage/weekly_second_half/part_1.mp4",
+    "id": "lj8vgAyUf5E",
+    "title": "iPhone隠し神機能① #Shorts",
+    "made": "2026-10-31",
+    "comment": "写真の文字、いつも手打ちしてた人いますか？👇 何をコピーしたいか（Wi-Fi・メニュー・名刺など）コメントで教えてね！",
+    "comment_posted": false,
+    "publish_at_check": "2026-11-04T08:30:00Z"
+   },
+   "2026-11-05T06:00": {
+    "kind": "short",
+    "series_key": "w20261102_second",
+    "theme": "iPhone隠し神機能",
+    "num": 2,
+    "episode": "episodes/w20261102_second/ep02_live_text_translate.py",
+    "part": "storage/weekly_second_half/part_2.mp4",
+    "id": "W3BKAYnXzLs",
+    "title": "iPhone隠し神機能② #Shorts",
+    "made": "2026-10-31",
+    "comment": "海外旅行で使えそうな人は🙋‍♀️ 次に行きたい国をコメントで教えてね！",
+    "comment_posted": false,
+    "publish_at_check": "2026-11-04T21:00:00Z"
+   },
+   "2026-11-05T17:30": {
+    "kind": "short",
+    "series_key": "w20261102_second",
+    "theme": "iPhone隠し神機能",
+    "num": 3,
+    "episode": "episodes/w20261102_second/ep03_grid_level.py",
+    "part": "storage/weekly_second_half/part_3.mp4",
+    "id": "5Lz7aD-WKIM",
+    "title": "iPhone隠し神機能③ #Shorts",
+    "made": "2026-10-31",
+    "comment": "グリッド、もともとオンにしてた人いますか？👇「オンだった」「今オンにした」でコメントしてね！",
+    "comment_posted": false,
+    "publish_at_check": "2026-11-05T08:30:00Z"
+   },
+   "2026-11-08T06:00": {
+    "kind": "long",
+    "series_key": "w20261102_second",
+    "theme": "iPhone隠し神機能",
+    "id": "1VNksL05WS4",
+    "title": "【決定版】知らなきゃ損する！iPhone隠し神機能5選まとめ",
+    "made": "2026-10-31",
+    "comment": "今週の5つ、どれが一番役に立ちましたか？👇 番号でコメントしてね！（①写真の文字をコピー、②写真の外国語を翻訳、③グリッドと水平器、④カメラの明るさをスライドで調整、⑤音量ボタンでシャッター）",
+    "comment_posted": false
    }
   }
  },
