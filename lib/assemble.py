@@ -1,8 +1,8 @@
 """Weekend long video (~5 min, 1920x1080): OP with table of contents + the week's five 60s parts + ED.
 
-    python3 lib/assemble.py 2026-11-07T06:00 stills    # OP/ED preview sheet
-    python3 lib/assemble.py 2026-11-07T06:00 render    # out/<series_key>_long.mp4 + .meta.json (chapters, short links)
-    python3 lib/assemble.py 2026-11-07T06:00 upload    # render (if needed) + private upload with publishAt, notifySubscribers=true
+    python3 lib/assemble.py 2026-11-07T17:30 stills    # OP/ED preview sheet
+    python3 lib/assemble.py 2026-11-07T17:30 render    # out/<series_key>_long.mp4 + .meta.json (chapters, short links)
+    python3 lib/assemble.py 2026-11-07T17:30 upload    # render (if needed) + private upload with publishAt, notifySubscribers=true
 
 Missing or stale parts (storage/weekly_<half>_half/part_N.mp4 whose .json names another episode) are re-rendered
 from the episode files with partlib, so the container may be recycled between weekdays.
@@ -163,7 +163,7 @@ def build(when, mode):
             f"▼チャンネル登録はこちら\nhttps://www.youtube.com/@mac_oic?sub_confirmation=1\n"
             f"平日は毎日 朝6:00 と 夕方17:30 に、iPhoneの便利技ショートを投稿しています。\n"
             f"役に立ったら高評価とチャンネル登録をお願いします🙏\n\n#iPhone #iPhone便利技 #iPhone裏技 #iOS #Apple #保存版")
-    meta = dict(title=s["title"], description=desc, playlist=s["theme"], publish_at=s["publish_at"], notify_subscribers=True,
+    meta = dict(kind="long", title=s["title"], description=desc, playlist=s["theme"], publish_at=s["publish_at"], notify_subscribers=True,
                 tags=["iPhone", s["theme"], "iPhone 便利技", "iPhone 裏技", "iPhone 使い方", "iOS", "Apple", "まとめ", "保存版"],
                 comment=f"今週の5つ、どれが一番役に立ちましたか？👇 番号でコメントしてね！（{ja}）")
     json.dump(meta, open(os.path.splitext(out)[0] + ".meta.json", "w"), ensure_ascii=False, indent=1)

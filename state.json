@@ -292,7 +292,7 @@
    "series": "s04_mac_settings",
    "num": 3,
    "long": "今週の神ワザ6選（s03の①〜③＋s04の①〜③、各約1分・約6分・横型）。この日は2本：B③と長尺を両方作って非公開アップロード。来週の2シリーズも企画して state.json に追加",
-   "time": "06:00"
+   "time": "17:30"
   }
  },
  "weekly": {
@@ -376,7 +376,7 @@
    "date": "2026-11-01",
    "id": "atyjFNZHZtA",
    "title": "【保存版】今すぐ使える！iPhoneの隠し神機能3選まとめ",
-   "scheduled": "06:00",
+   "scheduled": "17:30",
    "kind": "long",
    "comment": "3つの中で、どれが一番役に立ちましたか？👇 番号でコメントしてね！",
    "comment_posted": false
@@ -441,12 +441,16 @@
     "num": 5,
     "episode": "episodes/w20261102_second/ep05_volume_shutter.py",
     "part": "storage/weekly_second_half/part_5.mp4",
-    "id": "LXd9fQroo-M",
+    "id": "zKFeGGp1Yms",
     "title": "iPhone隠し神機能⑤ #Shorts",
     "made": "2026-10-31",
     "comment": "シリーズ全5回、どれが一番使えそう？①〜⑤の番号でコメントしてね👇 日曜朝6時の5分まとめもお楽しみに！",
     "comment_posted": false,
-    "publish_at_check": "2026-11-06T08:30:00Z"
+    "publish_at_check": "2026-11-06T08:30:00Z",
+    "replaced": {
+     "old_id": "LXd9fQroo-M",
+     "why": "エンドカードの「朝6時」を17:30に直して差し替え"
+    }
    },
    "2026-11-02T17:30": {
     "kind": "short",
@@ -497,22 +501,16 @@
     "num": 5,
     "episode": "episodes/w20261102_first/ep05_app_switch.py",
     "part": "storage/weekly_first_half/part_5.mp4",
-    "id": "pdvDKbfR15k",
+    "id": "b7fks6jTL8w",
     "title": "iPhone爆速神操作⑤ #Shorts",
     "made": "2026-10-31",
     "comment": "この5本の中で、いちばん使えそうなのはどれ？👇 ①〜⑤の番号でコメントしてね！",
     "comment_posted": false,
-    "publish_at_check": "2026-11-03T21:00:00Z"
-   },
-   "2026-11-07T06:00": {
-    "kind": "long",
-    "series_key": "w20261102_first",
-    "theme": "iPhone爆速神操作",
-    "id": "znWv4YUhSQQ",
-    "title": "【保存版】今すぐ使える！iPhone爆速神操作5選まとめ",
-    "made": "2026-10-31",
-    "comment": "今週の5つ、どれが一番役に立ちましたか？👇 番号でコメントしてね！（①計算機で1桁だけ消す、②片手キーボード、③画面上タップで一番上へ、④Safariのタブを一気に閉じる、⑤アプリを一瞬で切り替え）",
-    "comment_posted": false
+    "publish_at_check": "2026-11-03T21:00:00Z",
+    "replaced": {
+     "old_id": "pdvDKbfR15k",
+     "why": "エンドカードの「朝6時」を17:30に直して差し替え"
+    }
    },
    "2026-11-04T17:30": {
     "kind": "short",
@@ -556,7 +554,17 @@
     "comment_posted": false,
     "publish_at_check": "2026-11-05T08:30:00Z"
    },
-   "2026-11-08T06:00": {
+   "2026-11-07T17:30": {
+    "kind": "long",
+    "series_key": "w20261102_first",
+    "theme": "iPhone爆速神操作",
+    "id": "znWv4YUhSQQ",
+    "title": "【保存版】今すぐ使える！iPhone爆速神操作5選まとめ",
+    "made": "2026-10-31",
+    "comment": "今週の5つ、どれが一番役に立ちましたか？👇 番号でコメントしてね！（①計算機で1桁だけ消す、②片手キーボード、③画面上タップで一番上へ、④Safariのタブを一気に閉じる、⑤アプリを一瞬で切り替え）",
+    "comment_posted": false
+   },
+   "2026-11-08T17:30": {
     "kind": "long",
     "series_key": "w20261102_second",
     "theme": "iPhone隠し神機能",
@@ -571,6 +579,7 @@
  "rules": [
   "同じ時刻に2本以上公開しない（ショートと長尺、内容が違っても禁止）。2026-10-31 ユーザー指定。ytupload.py が state.json の予約と重なるアップロードを止める。",
   "全てiPhoneで統一（Macのネタは出さない）。2026-10-31 ユーザー指定。",
-  "2026-10-31 視聴維持率・CTR改善版：上30%黒帯に特大フック（0秒から・点滅）、中55%に実機画面を最大表示、下15%に操作キャプション。挨拶・前置き禁止。前半は毎週『iPhone爆速神操作』①〜⑤、後半は毎週『iPhone隠し神機能』①〜⑤。土日の長尺はユーザー確認のうえ朝6:00のまま。"
+  "2026-10-31 視聴維持率・CTR改善版：上30%黒帯に特大フック（0秒から・点滅）、中55%に実機画面を最大表示、下15%に操作キャプション。挨拶・前置き禁止。前半は毎週『iPhone爆速神操作』①〜⑤、後半は毎週『iPhone隠し神機能』①〜⑤。土日の長尺はユーザー確認のうえ朝6:00のまま。",
+  "2026-10-31（後）ユーザー依頼：土日のまとめ長尺は必ず夕方17:30公開（朝6:00は禁止）。11/1・11/7・11/8 の長尺を17:30に変更済み。"
  ]
 }

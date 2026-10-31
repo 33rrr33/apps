@@ -80,8 +80,36 @@ def taken_slots():
         if u.get("id"): out[k] = u.get("title")
     return out
 
+CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩"
+LONG_TIME = "17:30"            # weekend longs: always 17:30 JST (user rule 2026-10-31)
+
+def validate(meta, video):
+    """Fix up metadata before any API call: Shorts titles must be '<series><number> #Shorts'; longs publish at 17:30."""
+    import re
+    is_long = meta.get("kind") == "long" or meta.get("notify_subscribers") is True
+    title = (meta.get("title") or "").strip()
+    if not is_long:
+        body = re.sub(r"#shorts", "", title, flags=re.I).strip()
+        if not body:                                 # empty or only '#Shorts' -> rebuild from series + number
+            series = meta.get("series") or meta.get("playlist")
+            num = meta.get("num")
+            if not num:
+                m = re.search(r"_(\d{2})_", os.path.basename(video))
+                num = int(m.group(1)) if m else None
+            if not (series and num): raise SystemExit(f"refused: title is empty/only #Shorts and series/number are unknown ({video})")
+            meta["title"] = f"{series}{CIRCLED[int(num) - 1]} #Shorts"
+            print(f"title completed -> {meta['title']}", file=sys.stderr)
+        elif "#shorts" not in title.lower():
+            meta["title"] = f"{title} #Shorts"
+    elif meta.get("publish_at") and meta["publish_at"][11:16] != LONG_TIME:
+        fixed = meta["publish_at"][:11] + LONG_TIME + ":00+09:00"
+        print(f"long publish time {meta['publish_at']} -> {fixed} (longs are always 17:30)", file=sys.stderr)
+        meta["publish_at"] = fixed
+    if not meta.get("title", "").strip(): raise SystemExit("refused: empty title")
+    return meta
+
 def upload(video, meta_path):
-    meta = json.load(open(meta_path))
+    meta = validate(json.load(open(meta_path)), video)
     # rule (user, 2026-10-31): never publish two videos at the same time, Short or long alike
     if meta.get("publish_at") and not meta.get("allow_same_time"):
         key = meta["publish_at"][:16]

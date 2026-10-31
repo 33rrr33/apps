@@ -6,7 +6,7 @@ from shortlib import *
 SERIES = dict(key="w20261102_second", title="iPhone隠し神機能", spoken="iPhone隠し、かみ機能",
               hook_split=("iPhone", "隠し神機能"), total=5)
 NUM, SLUG = 5, "volume_shutter"
-NEXT = "まとめは日曜の朝6時"
+NEXT = "まとめは日曜の17:30"
 SCREEN_CROP = (0, 40, 400, 836)            # keep the left edge (volume buttons) and the shutter
 HOOK = "9割が知らない\n[カメラの神ワザ]"
 HOOK_SPOKEN = "9割が知らない、カメラのかみワザ！"

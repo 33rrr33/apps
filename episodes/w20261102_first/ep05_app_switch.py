@@ -6,7 +6,7 @@ from shortlib import *
 SERIES = dict(key="w20261102_first", title="iPhone爆速神操作", spoken="iPhone爆速、かみ操作",
               hook_split=("iPhone", "爆速神操作"), total=5)
 NUM, SLUG = 5, "app_switch"
-NEXT = "まとめは土曜の朝6時"
+NEXT = "まとめは土曜の17:30"
 SCREEN_CROP = (0, 200, 400, 860)          # lower part of the screen, with the home bar
 HOOK = "知らないと損\n[アプリ爆速切替]"
 HOOK_SPOKEN = "知らないと損、アプリの爆速切り替え！"

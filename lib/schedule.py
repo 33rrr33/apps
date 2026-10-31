@@ -3,7 +3,7 @@
 Slots (JST publish times), from config/themes.json start_monday:
     Mon 06:00 前半① / Mon 17:30 前半② / Tue 06:00 前半③ / Tue 17:30 前半④ / Wed 06:00 前半⑤
     Wed 17:30 後半① / Thu 06:00 後半② / Thu 17:30 後半③ / Fri 06:00 後半④ / Fri 17:30 後半⑤
-    Sat 06:00 前半まとめ長尺（約5分） / Sun 06:00 後半まとめ長尺（約5分）  ※2026-10-30 ユーザー指定で土日は朝6時
+    Sat 17:30 前半まとめ長尺（約5分） / Sun 17:30 後半まとめ長尺（約5分）  ※長尺は必ず17:30（LONG_TIME）
 A trigger at 06:00 or 17:30 on day D makes the slot at the same time on D+1 (no slot → skip).
 Publish dates before start_monday follow the old state.json "schedule" (legacy).
 
@@ -18,6 +18,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JST = dt.timezone(dt.timedelta(hours=9))
 CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩"
 DAYS = "月火水木金土日"
+# Weekend longs are ALWAYS published at 17:30 JST (user rule 2026-10-31; 06:00 is forbidden for longs).
+LONG_TIME = "17:30"
 # weekday -> [(time, half, num)] ; num 0 = weekend long
 WEEK = {
     0: [("06:00", "first", 1), ("17:30", "first", 2)],
@@ -25,8 +27,8 @@ WEEK = {
     2: [("06:00", "first", 5), ("17:30", "second", 1)],
     3: [("06:00", "second", 2), ("17:30", "second", 3)],
     4: [("06:00", "second", 4), ("17:30", "second", 5)],
-    5: [("06:00", "first", 0)],
-    6: [("06:00", "second", 0)],
+    5: [(LONG_TIME, "first", 0)],
+    6: [(LONG_TIME, "second", 0)],
 }
 LONG_TITLE = {"first": "【保存版】今すぐ使える！{t}5選まとめ", "second": "【決定版】知らなきゃ損する！{t}5選まとめ"}
 HALF_JA = {"first": "前半", "second": "後半"}
@@ -68,6 +70,7 @@ def slot(publish):
         base = dict(publish_at=publish.strftime("%Y-%m-%dT%H:%M:00+09:00"), half=half, half_ja=HALF_JA[half],
                     week=wk["monday"], theme=h["title"], theme_spoken=h["spoken"], series_key=h["series_key"])
         if num == 0:
+            assert t == LONG_TIME, "weekend longs must be published at 17:30"
             return dict(base, kind="long", notify_subscribers=True, title=h["long_title"],
                         parts=[f"{h['storage_dir']}/part_{i}.mp4" for i in range(1, 6)], episode_dir=h["episode_dir"])
         tp = h["topics"][num - 1] if h["topics"] else None
