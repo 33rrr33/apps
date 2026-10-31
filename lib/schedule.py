@@ -36,19 +36,19 @@ def themes(): return json.load(open(os.path.join(ROOT, "config", "themes.json"))
 def start_monday(): return dt.date.fromisoformat(themes()["start_monday"])
 
 def week_info(day):
-    """Themes for the week that contains `day` (dates before start_monday -> None)."""
+    """Series and topics for the week that contains `day` (dates before start_monday -> None).
+    2026-10-31: two fixed iPhone series every week (first = iPhone爆速神操作, second = iPhone隠し神機能),
+    topics advance five per week."""
     th = themes(); m0 = start_monday()
     monday = day - dt.timedelta(days=day.weekday())
     if monday < m0: return None
     w = (monday - m0).days // 7
-    pool = th["pool"]
     out = {"monday": monday.isoformat(), "week_index": w}
-    for half, idx in (("first", (2 * w) % len(pool)), ("second", (2 * w + 1) % len(pool))):
-        t = pool[idx]
-        cycle = (2 * w + (half == "second")) // len(pool)     # how many times this theme came round before
-        topics = t["topics"][cycle * 5: cycle * 5 + 5]
+    for half in ("first", "second"):
+        t = th["series"][half]
+        topics = t["topics"][w * 5: w * 5 + 5]
         out[half] = dict(theme_id=t["id"], title=t["title"], spoken=t["spoken"], hook_split=t["hook_split"],
-                         topics=topics if len(topics) == 5 else None, cycle=cycle,
+                         topics=topics if len(topics) == 5 else None, cycle=w,
                          series_key=f"w{monday.strftime('%Y%m%d')}_{half}",
                          episode_dir=f"episodes/w{monday.strftime('%Y%m%d')}_{half}",
                          storage_dir=f"storage/weekly_{half}_half",

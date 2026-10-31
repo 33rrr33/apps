@@ -1,59 +1,196 @@
 {
- "note": "iPhone特化の週替わりテーマ。週ごとに前半=pool[2w%6]、後半=pool[(2w+1)%6]（w=2026-11-02の週を0）。topics は5本ずつ使い、2周目以降は topics に次の5本を足す（avoid と過去回に被らせない）。spoken は読み上げ用（神→かみ）。",
+ "note": "2026-10-31 改訂（視聴維持率・CTR改善版）：iPhone 100%。前半（月朝〜水朝）は毎週『iPhone爆速神操作』①〜⑤、後半（水夕〜金夕）は毎週『iPhone隠し神機能』①〜⑤。週 w（2026-11-02 の週=0）は topics[5w:5w+5] を使う。足りなくなったら avoid と既出に被らない5本を末尾に追加する。Mac単体ネタは禁止。spoken は読み上げ用（神→かみ）。",
  "start_monday": "2026-11-02",
  "avoid": [
   "背面タップでスクショ（iPhoneの隠し神機能①で使用済み）",
   "スペースキー長押しでカーソル移動（同②）",
-  "写真の被写体を長押しで切り抜き（同③）"
+  "写真の被写体を長押しで切り抜き（同③）",
+  "Mac単体のネタ全般（2026-10-31 ユーザー指定：全てiPhone）"
  ],
- "pool": [
-  {"id": "speed", "title": "iPhone爆速神操作", "spoken": "iPhone爆速、かみ操作", "hook_split": ["iPhone", "爆速神操作"],
+ "series": {
+  "first": {
+   "id": "speed",
+   "title": "iPhone爆速神操作",
+   "spoken": "iPhone爆速、かみ操作",
+   "hook_split": [
+    "iPhone",
+    "爆速神操作"
+   ],
+   "scope": "文字入力・片手操作・スワイプ・Safari高速化・ジェスチャーなど、操作が速くなる技",
    "topics": [
-    {"slug": "calc_delete", "topic": "計算機で打ち間違えた数字を、表示部分を左右にスワイプして1桁だけ消す"},
-    {"slug": "one_hand_kb", "topic": "キーボードの地球儀（または絵文字）キー長押し→片手用キーボードで左右に寄せる"},
-    {"slug": "tap_top", "topic": "画面のいちばん上（時計のあたり）をタップすると、長いページの一番上まで一瞬で戻る"},
-    {"slug": "close_tabs", "topic": "Safariのタブボタンを長押し→『○個のタブをすべて閉じる』で一気に閉じる"},
-    {"slug": "app_switch", "topic": "画面下のバーを左右にスワイプして、直前のアプリと一瞬で行き来する"}
-   ]},
-  {"id": "camera", "title": "iPhoneカメラ＆写真隠し技", "spoken": "iPhoneカメラと写真の隠し技", "hook_split": ["iPhone", "カメラ隠し技"],
+    {
+     "slug": "calc_delete",
+     "topic": "計算機で打ち間違えた数字を、表示部分を左右にスワイプして1桁だけ消す"
+    },
+    {
+     "slug": "one_hand_kb",
+     "topic": "キーボードの地球儀（または絵文字）キー長押し→片手用キーボードで左右に寄せる"
+    },
+    {
+     "slug": "tap_top",
+     "topic": "画面のいちばん上（時計のあたり）をタップすると、長いページの一番上まで一瞬で戻る"
+    },
+    {
+     "slug": "close_tabs",
+     "topic": "Safariのタブボタンを長押し→『○個のタブをすべて閉じる』で一気に閉じる"
+    },
+    {
+     "slug": "app_switch",
+     "topic": "画面下のバーを左右にスワイプして、直前のアプリと一瞬で行き来する"
+    },
+    {
+     "slug": "three_finger_undo",
+     "topic": "3本指で左スワイプ（またはダブルタップ）で取り消し、右スワイプでやり直し"
+    },
+    {
+     "slug": "two_finger_select",
+     "topic": "メールやメモの一覧を2本指でなぞって、まとめて複数選択"
+    },
+    {
+     "slug": "shake_undo",
+     "topic": "シェイクで取り消し（入力した文字を振って取り消す）"
+    },
+    {
+     "slug": "cc_longpress",
+     "topic": "コントロールセンターのアイコンを長押しして詳細（懐中電灯の明るさ調整など）"
+    },
+    {
+     "slug": "assistive_touch",
+     "topic": "AssistiveTouch（画面上の丸ボタン）でスクショや画面ロックをワンタップ"
+    },
+    {
+     "slug": "safari_find",
+     "topic": "Safariの共有ボタン→『ページを検索』で、ページ内の単語を一発で探す"
+    },
+    {
+     "slug": "text_replace",
+     "topic": "設定→一般→キーボード→ユーザ辞書で、短い読みからメールアドレスなどを一発入力"
+    },
+    {
+     "slug": "reachability",
+     "topic": "簡易アクセス：画面の下端を下にスワイプすると、画面の上半分が降りてきて片手で届く（設定→アクセシビリティ→タッチ）"
+    },
+    {
+     "slug": "safari_tab_swipe",
+     "topic": "Safariのアドレスバーを左右にスワイプして、タブを一瞬で切り替え"
+    },
+    {
+     "slug": "spotlight_calc",
+     "topic": "ホーム画面を下にスワイプ（Spotlight）して、アプリ検索や計算をその場で"
+    },
+    {
+     "slug": "three_finger_copy",
+     "topic": "3本指でつまむとコピー、3本指で広げるとペースト"
+    },
+    {
+     "slug": "back_swipe",
+     "topic": "画面の左端から右へスワイプで『戻る』（左上のボタンを押さなくていい）"
+    },
+    {
+     "slug": "camera_lockscreen",
+     "topic": "ロック画面を左にスワイプして、カメラを一瞬で起動"
+    },
+    {
+     "slug": "reopen_tab",
+     "topic": "Safariのタブ一覧で＋を長押しすると、最近閉じたタブを復活できる"
+    },
+    {
+     "slug": "photo_swipe_select",
+     "topic": "写真アプリの『選択』後、指でなぞってまとめて複数選択"
+    }
+   ]
+  },
+  "second": {
+   "id": "hidden",
+   "title": "iPhone隠し神機能",
+   "spoken": "iPhone隠し、かみ機能",
+   "hook_split": [
+    "iPhone",
+    "隠し神機能"
+   ],
+   "scope": "写真・カメラ・バッテリー・標準アプリ・セキュリティなど、知られていない便利な機能や設定",
    "topics": [
-    {"slug": "live_text_copy", "topic": "写真に写った文字を長押しでコピー（テキスト認識表示）"},
-    {"slug": "live_text_translate", "topic": "写真の中の外国語をその場で翻訳（テキスト認識表示→翻訳）"},
-    {"slug": "grid_level", "topic": "設定→カメラ→グリッドをオン。真上・真下に向けると水平器（十字）も出る"},
-    {"slug": "exposure", "topic": "ピントを合わせた所をタップ→太陽マークを上下にスライドして明るさ（露出）を調整"},
-    {"slug": "volume_shutter", "topic": "音量ボタンでシャッター。長押しで動画撮影（QuickTake）"}
-   ]},
-  {"id": "battery", "title": "iPhoneバッテリー＆充電神設定", "spoken": "iPhoneバッテリーと充電の、かみ設定", "hook_split": ["iPhone", "バッテリー神設定"],
-   "topics": [
-    {"slug": "charge_limit", "topic": "設定→バッテリー→充電で上限を80%に（iPhone 15以降）。14以前は『最適化されたバッテリー充電』"},
-    {"slug": "bg_refresh", "topic": "設定→一般→Appのバックグラウンド更新で、使わないアプリをオフ"},
-    {"slug": "low_power_cc", "topic": "低電力モードをコントロールセンターに追加して、ワンタップで切り替え"},
-    {"slug": "battery_health", "topic": "設定→バッテリー→バッテリーの状態で最大容量を確認（交換の目安は80%）"},
-    {"slug": "auto_brightness", "topic": "画面の明るさの自動調節をオン（設定→アクセシビリティ→画面表示とテキストサイズ）"}
-   ]},
-  {"id": "apps", "title": "iPhone標準アプリ神活用", "spoken": "iPhone標準アプリ、かみ活用", "hook_split": ["iPhone", "標準アプリ神活用"],
-   "topics": [
-    {"slug": "notes_scan", "topic": "メモアプリで書類をスキャン（クリップ→書類をスキャン）"},
-    {"slug": "timer_stop", "topic": "時計のタイマー終了時を『再生停止』にして、音楽や動画を寝る前に自動で止める"},
-    {"slug": "reminder_place", "topic": "リマインダーを場所で通知（スーパーに着いたら買い物リストを通知）"},
-    {"slug": "measure", "topic": "計測アプリでカメラをかざして長さを測る"},
-    {"slug": "translate_talk", "topic": "翻訳アプリの会話モードで、話した言葉をその場で翻訳"}
-   ]},
-  {"id": "security", "title": "iPhoneセキュリティ神設定", "spoken": "iPhoneセキュリティ、かみ設定", "hook_split": ["iPhone", "セキュリティ神設定"],
-   "topics": [
-    {"slug": "no_tracking", "topic": "設定→プライバシーとセキュリティ→トラッキング→『Appからのトラッキング要求を許可』をオフ"},
-    {"slug": "precise_location", "topic": "位置情報で『正確な位置情報』をオフ（天気アプリ等は大まかな位置で十分）"},
-    {"slug": "photo_access", "topic": "写真へのアクセスを『選択した写真』だけに限定する"},
-    {"slug": "lock_screen_cc", "topic": "ロック中のコントロールセンター・通知プレビューを非表示（設定→Face IDとパスコード）"},
-    {"slug": "stolen_device", "topic": "盗難デバイスの保護をオン（iOS 17.3以降、設定→Face IDとパスコード）"}
-   ]},
-  {"id": "gesture", "title": "iPhone裏ジェスチャー", "spoken": "iPhone裏ジェスチャー", "hook_split": ["iPhone", "裏ジェスチャー"],
-   "topics": [
-    {"slug": "three_finger_undo", "topic": "3本指で左スワイプ（またはダブルタップ）で取り消し、右スワイプでやり直し"},
-    {"slug": "two_finger_select", "topic": "メールやメモの一覧を2本指でなぞって、まとめて複数選択"},
-    {"slug": "cc_longpress", "topic": "コントロールセンターのアイコンを長押しして詳細（懐中電灯の明るさ調整など）"},
-    {"slug": "assistive_touch", "topic": "AssistiveTouch（画面上の丸ボタン）でスクショや画面ロックをワンタップ"},
-    {"slug": "shake_undo", "topic": "シェイクで取り消し（入力した文字を振って取り消す）"}
-   ]}
- ]
+    {
+     "slug": "live_text_copy",
+     "topic": "写真に写った文字を長押しでコピー（テキスト認識表示）"
+    },
+    {
+     "slug": "live_text_translate",
+     "topic": "写真の中の外国語をその場で翻訳（テキスト認識表示→翻訳）"
+    },
+    {
+     "slug": "grid_level",
+     "topic": "設定→カメラ→グリッドをオン。真上・真下に向けると水平器（十字）も出る"
+    },
+    {
+     "slug": "exposure",
+     "topic": "ピントを合わせた所をタップ→太陽マークを上下にスライドして明るさ（露出）を調整"
+    },
+    {
+     "slug": "volume_shutter",
+     "topic": "音量ボタンでシャッター。長押しで動画撮影（QuickTake）"
+    },
+    {
+     "slug": "charge_limit",
+     "topic": "設定→バッテリー→充電で上限を80%に（iPhone 15以降）。14以前は『最適化されたバッテリー充電』"
+    },
+    {
+     "slug": "low_power_cc",
+     "topic": "低電力モードをコントロールセンターに追加して、ワンタップで切り替え"
+    },
+    {
+     "slug": "battery_health",
+     "topic": "設定→バッテリー→バッテリーの状態で最大容量を確認（交換の目安は80%）"
+    },
+    {
+     "slug": "bg_refresh",
+     "topic": "設定→一般→Appのバックグラウンド更新で、使わないアプリをオフ"
+    },
+    {
+     "slug": "notes_scan",
+     "topic": "メモアプリで書類をスキャン（クリップ→書類をスキャン）"
+    },
+    {
+     "slug": "timer_stop",
+     "topic": "時計のタイマー終了時を『再生停止』にして、音楽や動画を寝る前に自動で止める"
+    },
+    {
+     "slug": "measure",
+     "topic": "計測アプリでカメラをかざして長さを測る"
+    },
+    {
+     "slug": "reminder_place",
+     "topic": "リマインダーを場所で通知（スーパーに着いたら買い物リストを通知）"
+    },
+    {
+     "slug": "translate_talk",
+     "topic": "翻訳アプリの会話モードで、話した言葉をその場で翻訳"
+    },
+    {
+     "slug": "no_tracking",
+     "topic": "設定→プライバシーとセキュリティ→トラッキング→『Appからのトラッキング要求を許可』をオフ"
+    },
+    {
+     "slug": "precise_location",
+     "topic": "位置情報で『正確な位置情報』をオフ（天気アプリ等は大まかな位置で十分）"
+    },
+    {
+     "slug": "photo_access",
+     "topic": "写真へのアクセスを『選択した写真』だけに限定する"
+    },
+    {
+     "slug": "lock_screen_cc",
+     "topic": "ロック中のコントロールセンター・通知プレビューを非表示（設定→Face IDとパスコード）"
+    },
+    {
+     "slug": "stolen_device",
+     "topic": "盗難デバイスの保護をオン（iOS 17.3以降、設定→Face IDとパスコード）"
+    },
+    {
+     "slug": "auto_brightness",
+     "topic": "画面の明るさの自動調節をオン（設定→アクセシビリティ→画面表示とテキストサイズ）"
+    }
+   ]
+  }
+ }
 }

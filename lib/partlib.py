@@ -93,6 +93,16 @@ def timeline(ep, durs, ST):
 
 # ---------------------------------------------------------------- drawing
 def short_canvas(ep, ST, ts):
+    if hasattr(ep, "SCREEN"):                           # v3 episodes: the iPhone screen itself, as large as the box allows
+        box_w, box_h = DEV_BOX[2] - DEV_BOX[0], DEV_BOX[3] - DEV_BOX[1]
+        c = SL.grad(box_w, box_h, (30, 34, 70), (70, 36, 110))
+        scr = ep.SCREEN(ts, ST); s = (box_h - 40) / scr.height; w = int(scr.width * s)
+        scr = scr.resize((w, box_h - 40), Image.LANCZOS)
+        m = Image.new("L", scr.size, 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, w - 1, scr.height - 1), int(52 * s), fill=255)
+        x0 = (box_w - w) // 2
+        SL.rr(c, (x0 - 8, 12, x0 + w + 8, box_h - 12), int(58 * s), (30, 30, 34), outline=(110, 110, 120), width=3)
+        c.paste(scr, (x0, 20), m)
+        return c
     c = SL.BG.copy()
     ep.draw_body(c, ts, ST)
     return c.crop(CROP).resize((DEV_BOX[2] - DEV_BOX[0], DEV_BOX[3] - DEV_BOX[1]), Image.LANCZOS)

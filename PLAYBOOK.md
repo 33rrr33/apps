@@ -3,6 +3,8 @@
 **main ブランチには絶対に触らない。** このブランチ `shorts-bot` だけを使う。鍵は環境変数のみ（チャットに出さない）。
 
 ## 仕様の要点
+- **2026-10-31 改訂（脱・広告感）**：ショートは v3 レイアウト必須（`SCREEN` を定義したエピソード）。上30%＝黒帯に特大テロップ（`HOOK` は0秒から最大サイズで点滅、以降は `TELOPS`）、中55%＝実機のiPhone画面を最大表示（`SCREEN_CROP` で要の部分を拡大）、下15%＝操作キャプション（`ACTIONS`、例「空白キー長押し」「2本指スワイプ」）。イラストや小さいモックアップを主役にしない。**挨拶・前置き（今日は〜／紹介します等）は禁止**（shortlib が検出して止める）。`HOOK` は損失回避・限定の強い言葉（例「これ設定してない人\n[全員損]してます」「9割が知らない\n[iPhoneの神機能]」「今すぐ設定開いて！\n{放置厳禁}」）。
+- **シリーズ固定**：前半（月朝〜水朝）は毎週『iPhone爆速神操作』①〜⑤、後半（水夕〜金夕）は毎週『iPhone隠し神機能』①〜⑤。ネタは themes.json の topics を週5本ずつ（足りなければ追加）。
 - **全てiPhoneで統一**（Macのネタは出さない。2026-10-31 ユーザー指定）。
 - APIで公開設定（status）を変える時は、`embeddable: true`・`publicStatsViewable: true` も一緒に送る（送らないと埋め込みがオフになる）。
 - **同じ時刻に2本以上公開しない（ショートと長尺、内容が違っても禁止。ユーザー指定）**。ytupload.py は state.json の予約と同じ時刻のアップロードを拒否する。
@@ -31,9 +33,8 @@ CHANNEL.md も読む。
 - state.json の `v2.slots[<公開日時>]` に `id` が既にあれば**作り直さない**（二重アップロード防止）。
 
 ## 2. エピソードを書く（kind: short）
-- ファイルは schedule の `episode`（例 `episodes/w20261102_first/ep01_calc_delete.py`）。**`episodes/w20261102_first/ep01_calc_delete.py` を手本に**。
+- ファイルは schedule の `episode`（例 `episodes/w20261102_first/ep01_calc_delete.py`）。**`episodes/w20261102_first/ep01_calc_delete.py`（v3：SCREEN / SCREEN_CROP / HOOK / HOOK_SPOKEN / TELOPS / ACTIONS / PART）を手本に**。
 - `SERIES = dict(key=<series_key>, title=<theme>, spoken=<theme_spoken>, hook_split=<hook_split>, total=5)`、`NUM`、`SLUG`、`NEXT`（次回ネタの短い名前。⑤は「まとめ動画は土曜17:30」または「日曜17:30」）。
-- **冒頭0〜3秒の強いフック**：`HOOK_BADGE` を回ごとに変える（例「9割が知らない神ワザ」「これやってない人 全員損してます」「知らないと一生損」）。
 - 本編は核心の操作だけをテンポよく（20秒・shortlib のガードに従う）。読み上げの「神」は「かみ」。
 - **`PART`**（60秒の詳細版）：`title`、`intro`、`steps`＝5〜6個の（画面ラベル, 読み上げ, ショートのアニメの区間）、`outro`。設定アプリの場所・手順を丁寧に。長さ 55〜65 秒を目安（partlib が長さを表示）。
 - ネタ（topic）は themes.json のもの。事実は正確に（メニュー名・対応iOS）。自信がない細部は出さない。テーマが2周目で topics が足りない（topic が null）時は、avoid と過去回に被らない5本を themes.json の topics に追加してから作る。

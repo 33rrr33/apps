@@ -7,7 +7,13 @@ SERIES = dict(key="w20261102_first", title="iPhone爆速神操作", spoken="iPho
               hook_split=("iPhone", "爆速神操作"), total=5)
 NUM, SLUG = 1, "calc_delete"
 NEXT = "片手キーボード"
-HOOK_BADGE = "9割が知らない神ワザ"
+SCREEN_CROP = (0, 190, 400, 860)          # display + keypad (skip the empty top)
+HOOK = "計算機で全部消す人\n[全員損]してます"
+HOOK_SPOKEN = "計算機で全部消してる人、全員損してます！"
+TELOPS = [("b1", "数字を\n{打ち間違えた}…"), ("b2", "数字の部分を\n[横にスワイプ]"),
+          ("b3", "[最後の1桁]だけ\n消えた！"), ("b4", "そのまま\n[続きを打てる]")]
+ACTIONS = [("b1", "b2", "数字を入力"), ("b2", "b3", "数字部分を横スワイプ"),
+           ("b3", "b4", "1回で1桁消える"), ("b4", "cta", "続きを入力")]
 BODY = [
     ("b1", "計算機で、数字を打ち間違えたとき、", 0.3),
     ("b2", "上の数字の部分を、横にスワイプしてみてください。", 0.3),
@@ -117,6 +123,8 @@ def screen(t, k):
         fx, fy = fp
         fade(ps, 1.0, lambda l: ImageDraw.Draw(l).ellipse((fx - 30, fy - 30, fx + 30, fy + 30), fill=(255, 255, 255, 150), outline=(80, 80, 90, 200), width=3))
     return ps
+
+def SCREEN(t, T): return screen(t, times(T))
 
 def draw_body(c, t, T):
     k = times(T)

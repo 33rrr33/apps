@@ -413,7 +413,7 @@ def build_timeline(ep, durs):
     T = Timeline(); T.at, T.end = {}, {}
     def put(cid, at):
         T.at[cid] = at; T.end[cid] = at + durs[cid]
-    put("hook", 0.3)
+    put("hook", 0.05 if is_v3(ep) else 0.3)
     T.body = T.end["hook"] + 0.35
     t = T.body + 0.1
     for cid, _, gap in ep.BODY:
@@ -441,7 +441,7 @@ def build_timeline(ep, durs):
 
 def all_lines(ep):
     if is_recap(ep): return recap_lines(ep)
-    lines = {"hook": f"{ep.SERIES['spoken']}、その{ep.NUM}！"}
+    lines = {"hook": ep.HOOK_SPOKEN if is_v3(ep) else f"{ep.SERIES['spoken']}、その{ep.NUM}！"}
     for cid, text, _ in ep.BODY: lines[cid] = text
     lines["cta"] = ep.CTA["spoken"]
     if end_card_on(ep): lines["final"] = final_spoken(ep)
@@ -684,7 +684,7 @@ def recap_timeline(ep, durs):
     global TOTAL
     T = Timeline(); T.at, T.end = {}, {}
     def put(cid, at): T.at[cid] = at; T.end[cid] = at + durs[cid]
-    put("hook", 0.3)
+    put("hook", 0.05 if is_v3(ep) else 0.3)
     T.body = T.end["hook"] + 0.3
     t = T.body; T.segs = []
     for k in range(len(ep.RECAP)):
@@ -736,12 +736,121 @@ def recap_frame(ep, T, t):
     ImageDraw.Draw(c).rectangle((0, 0, int(W * t / TOTAL), 10), fill=YEL + (255,))
     return c.convert("RGB")
 
+
+# ---------------------------------------------------------------- v3 layout (2026-10-31: 脱・広告感 / 視聴維持率対策)
+# An episode opts in by defining SCREEN(t, T) -> 400x860 RGBA iPhone screen (real UI, finger drawn inside), plus
+#   HOOK = "これ設定してない人\n[全員損]してます"   # top band from t=0, biggest font; [..] = accent (yellow), {..} = red
+#   HOOK_SPOKEN = "これ設定してない人、全員損してます！" # no greetings ("今日は〜を紹介します" is forbidden)
+#   TELOPS = [("b1", "数字を[打ち間違えた]…"), ...]        # top band text from each cue
+#   ACTIONS = [("b2", "b3", "数字部分を横スワイプ"), ...]   # bottom band: the key/gesture being performed
+# Layout: top 30% (0-576) black band with huge text / middle 55% (576-1632) the iPhone screen as large as fits /
+# bottom 15% (1632-1920) action caption. CTA and end card are unchanged.
+TOP_H, MID_Y0, MID_Y1 = 576, 576, 1632
+SCR_W, SCR_H = 400, 860
+FORBIDDEN_OPENERS = ("今日は", "今回は", "こんにちは", "どうも", "紹介します")
+
+def is_v3(ep): return hasattr(ep, "SCREEN")
+
+def cue_t(T, spec):
+    if isinstance(spec, (int, float)): return float(spec)
+    import re as _re
+    m = _re.fullmatch(r"\s*(\w+)\s*([+-]\s*[\d.]+)?\s*", spec)
+    base = {"body": T.body, "cta": T.cta, "final": T.final}.get(m.group(1))
+    if base is None: base = T.at[m.group(1)]
+    return base + (float(m.group(2).replace(" ", "")) if m.group(2) else 0.0)
+
+def _segments(s):
+    """'普通[黄色]{赤}' -> [(text, color)]"""
+    out, cur, col = [], "", WHITE
+    for ch in s:
+        if ch in "[{":
+            if cur: out.append((cur, col))
+            cur, col = "", (YEL if ch == "[" else RED)
+        elif ch in "]}":
+            if cur: out.append((cur, col))
+            cur, col = "", WHITE
+        else: cur += ch
+    if cur: out.append((cur, col))
+    return out
+
+def big_text(c, s, cy, max_size=170, maxw=1000, flash=None):
+    """Huge, centered, multi-line accent text; the widest line fills ~90% of the width (>= 80% rule)."""
+    lines = [_segments(x) for x in s.split("\n")]
+    plain = ["".join(a for a, _ in ln) for ln in lines]
+    size = max_size
+    while size > 40 and max(font(size).getlength(p) for p in plain) > maxw: size -= 2
+    while size < 200 and max(font(size + 2).getlength(p) for p in plain) <= maxw * 0.9 and len(lines) == 1: size += 2
+    lh = size * 1.18; y = cy - lh * (len(lines) - 1) / 2
+    for ln, p in zip(lines, plain):
+        x = 540 - font(size).getlength(p) / 2
+        for seg, col in ln:
+            if flash is not None and col != WHITE: col = col if flash else WHITE
+            txt(c, (x, y), seg, size, col, anchor="lm", stroke=10, sf=(0, 0, 0)); x += font(size).getlength(seg)
+        y += lh
+    return size
+
+def v3_top(c, ep, t, T):
+    ImageDraw.Draw(c).rectangle((0, 0, W, TOP_H), fill=(8, 8, 12, 255))
+    ImageDraw.Draw(c).rectangle((0, TOP_H - 8, W, TOP_H), fill=YEL + (255,))
+    tag = f"{ep.SERIES['title']}{CIRCLED[ep.NUM - 1]}"
+    txt(c, (540, 70), tag, 40, (170, 170, 180), anchor="mm")
+    if t < T.body:                                        # hook: visible from frame 0, accent blinks for 2s
+        flash = None if t >= 2.0 else (int(t * 4) % 2 == 0)
+        big_text(c, ep.HOOK, 320, flash=flash)
+        return
+    cur = None
+    for cue, s in ep.TELOPS:
+        if cue_t(T, cue) <= t: cur = (cue_t(T, cue), s)
+    if cur:
+        k = back_out(clamp((t - cur[0]) / 0.18))
+        ly = Image.new("RGBA", (W, TOP_H), (0, 0, 0, 0)); big_text(ly, cur[1], 320)
+        if k < 1:
+            ly = ly.resize((max(1, int(W * k)), max(1, int(TOP_H * k))))
+        c.alpha_composite(ly, (int(540 - ly.width / 2), int(TOP_H / 2 - ly.height / 2) if k < 1 else 0))
+
+def v3_mid(c, ep, t, T):
+    ts = t if t >= T.body else T.body + 0.01          # the hook already shows the real screen, not an illustration
+    scr = ep.SCREEN(ts, T)
+    crop = getattr(ep, "SCREEN_CROP", None)             # (x0, y0, x1, y1) in screen coords: zoom into the part that matters
+    if crop: scr = scr.crop(crop)
+    cw, ch = scr.size
+    s = min((MID_Y1 - MID_Y0 - 24) / ch, 1000 / cw); w, h = int(cw * s), int(ch * s)
+    scr = scr.resize((w, h), Image.LANCZOS)
+    m = Image.new("L", (w, h), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, w - 1, h - 1), int(52 * s), fill=255)
+    x0, y0 = int(540 - w / 2), int((MID_Y0 + MID_Y1) / 2 - h / 2)
+    rr(c, (x0 - 10, y0 - 10, x0 + w + 10, y0 + h + 10), int(60 * s), (30, 30, 34), outline=(110, 110, 120), width=4)
+    c.paste(scr, (x0, y0), m)
+
+def v3_bottom(c, ep, t, T):
+    ImageDraw.Draw(c).rectangle((0, MID_Y1, W, H), fill=(8, 8, 12, 255))
+    for a, b, s in getattr(ep, "ACTIONS", []):
+        a, b = cue_t(T, a), cue_t(T, b)
+        if a <= t < b:
+            k = back_out(clamp((t - a) / 0.2))
+            f = font(64); w = f.getlength(s) + 120
+            ly = Image.new("RGBA", (int(w), 120), (0, 0, 0, 0))
+            rr(ly, (0, 0, w - 1, 119), 60, (255, 214, 10))
+            txt(ly, (w / 2, 60), s, 64, INK, anchor="mm")
+            if k < 1: ly = ly.resize((max(1, int(ly.width * k)), max(1, int(ly.height * k))))
+            c.alpha_composite(ly, (int(540 - ly.width / 2), int(1712 - ly.height / 2)))
+
+def v3_frame(c, ep, T, t):
+    c.alpha_composite(Image.new("RGBA", (W, H), (14, 14, 22, 255)))
+    v3_mid(c, ep, t, T); v3_top(c, ep, t, T); v3_bottom(c, ep, t, T)
+
+def check_v3(ep):
+    for s in [getattr(ep, "HOOK_SPOKEN", "")] + [x for _, x, _ in ep.BODY]:
+        for w in FORBIDDEN_OPENERS:
+            if w in s: raise SystemExit(f"Forbidden opener/greeting '{w}' in: {s}")
+
 # ---------------------------------------------------------------- frame + runner
 def frame(ep, T, t):
     if is_recap(ep): return recap_frame(ep, T, t)
     c = BG.copy()
-    series_tag(c, ep)
-    if t < T.body: hook_scene(c, t, ep)
+    if is_v3(ep) and t < T.cta: v3_frame(c, ep, T, t)
+    else: series_tag(c, ep)
+    if is_v3(ep) and t < T.cta: pass
+    elif t < T.body: hook_scene(c, t, ep)
     elif t < T.cta: ep.draw_body(c, t, T)
     elif t < T.final: cta_scene(c, t, ep, T)
     else: end_card(c, t, ep, T)
@@ -765,6 +874,7 @@ def out_name(ep):
 def main():
     path = sys.argv[1]; mode = sys.argv[2] if len(sys.argv) > 2 else "render"
     ep = load_episode(path)
+    if is_v3(ep): check_v3(ep)
     global TOTAL
     TOTAL = getattr(ep, "DURATION", TOTAL)   # older episodes were made at 15s
     if is_recap(ep): prepare_recap(ep, path)
