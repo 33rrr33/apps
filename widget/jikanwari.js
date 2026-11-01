@@ -3,8 +3,8 @@
 // ホーム画面（小・中・大）とロック画面（長方形・1行）のウィジェットに対応。
 //
 // 写真から時間割を入れるとき:
-//   「時間割カメラ」ページで写真を読み取り →「ウィジェットに送る」でコピー →
-//   Scriptable でこのスクリプトを ▶ 実行すると、コピーした時間割が保存される。
+//   ウィジェットをタップ →「写真で時間割を変える」→ 開いたページで写真を読み取り
+//   →「時間割をコピーする」→ もう一度ウィジェットをタップすると保存される。
 //   （下の「ここを書きかえる」は、写真から入れていないときの見本）
 
 // ====== ここを自分の時間割に書きかえる ======
@@ -35,7 +35,7 @@ let NEXT_DAY_AFTER = "16:00"
 // 休みの日（祝日・行事など）。この日はとばして次の登校日を出す
 const HOLIDAYS = ["2026-11-03", "2026-11-23"]
 
-// ウィジェットをタップしたときに開くURL（空なら Scriptable が開く）
+// ウィジェットをタップしたときに開くURL（空ならこのアプリのメニュー）
 const OPEN_URL = ""
 
 // 教科ごとの色（ない教科は灰色）
@@ -79,7 +79,10 @@ if (fm.fileExists(savePath)) {
   try { applyData(JSON.parse(fm.readString(savePath))) } catch (e) { /* 見本のまま */ }
 }
 
-// 2) アプリで ▶ 実行したとき: コピーされた時間割があれば保存する
+// 2) アプリで開いたとき（ウィジェットをタップしたときも）
+//    コピーされた時間割があれば保存する。なければメニューを出す
+const CAMERA_URL = "https://claude.ai/artifact/RCoYySGvSftnxM1gn2MCyo"
+let quit = false
 if (!config.runsInWidget) {
   const raw = String((args.queryParameters && args.queryParameters.data) || Pasteboard.pasteString() || "").trim()
   if (raw.startsWith(PREFIX)) {
@@ -87,9 +90,25 @@ if (!config.runsInWidget) {
       const d = JSON.parse(raw.slice(PREFIX.length))
       applyData(d)
       fm.writeString(savePath, JSON.stringify(d))
+      Pasteboard.copyString("") // 同じ時間割を何度も読みこまないように
       await showAlert("時間割を読みこみました", "ウィジェットにも数分以内に反映されます。")
     } catch (e) {
-      await showAlert("読みこめませんでした", "「時間割カメラ」でもう一度「ウィジェットに送る」を押してから実行してください。")
+      await showAlert("読みこめませんでした", "「時間割カメラ」でもう一度「時間割をコピーする」を押してから開いてください。")
+    }
+  } else {
+    const m = new Alert()
+    m.title = "時間割"
+    m.message = "なにをしますか？"
+    m.addAction("写真で時間割を変える")
+    m.addAction("今の時間割を見る")
+    m.addCancelAction("とじる")
+    const choice = await m.presentSheet()
+    if (choice === 0) {
+      await showAlert("写真で時間割を変える", "このあと開くページで写真を撮って「時間割をコピーする」を押し、もう一度このアプリ（ウィジェット）を開いてください。")
+      Safari.open(CAMERA_URL)
+      quit = true
+    } else if (choice !== 1) {
+      quit = true
     }
   }
 }
@@ -154,7 +173,7 @@ if (diff === 0) {
 // ---- ウィジェットを組み立てる ----
 const family = config.widgetFamily || "large"
 const w = new ListWidget()
-if (OPEN_URL) w.url = OPEN_URL
+w.url = OPEN_URL || URLScheme.forRunningScript() // タップでメニューを開く
 
 if (family === "accessoryInline") {
   const subj = periods.map((p) => (p.s ? p.s[0] : "・")).join("")
@@ -269,7 +288,7 @@ w.refreshAfterDate = refresh
 
 if (config.runsInWidget) {
   Script.setWidget(w)
-} else {
+} else if (!quit) {
   await w.presentLarge()
 }
 Script.complete()
