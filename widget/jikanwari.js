@@ -47,23 +47,62 @@ const SUBJECT_COLORS = {
 // ==========================================
 
 // ====== 写真から作った時間割の読みこみ ======
+// 時間割は「週ごと」に保存する（その週の月曜日の日付で区別）。
+// その週の分がなければ、いちばん近い前の週の時間割を出す。
 const PREFIX = "JIKANWARI:"
+const KEEP_WEEKS = 12
 const fm = FileManager.local()
 const savePath = fm.joinPath(fm.documentsDirectory(), "jikanwari.json")
+const DAY = ["日", "月", "火", "水", "木", "金", "土"]
 
-function applyData(d) {
+function ymd(d) {
+  const p = (n) => String(n).padStart(2, "0")
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+function mondayOf(d) {
+  const m = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  m.setDate(m.getDate() - ((m.getDay() + 6) % 7))
+  return ymd(m)
+}
+function md(key) {
+  const [, m, d] = key.split("-").map(Number)
+  return `${m}/${d}`
+}
+
+function clean(d) {
   if (!d || typeof d !== "object" || !d.days || typeof d.days !== "object") {
     throw new Error("時間割データの形がちがいます")
   }
-  if (d.title) TITLE = String(d.title)
-  if (Array.isArray(d.times) && d.times.length) {
-    TIMES = d.times.map((t) => [String((t && t[0]) || ""), String((t && t[1]) || "")])
-  }
-  TIMETABLE = {}
+  const days = {}
   for (const k of Object.keys(d.days)) {
-    TIMETABLE[k] = (Array.isArray(d.days[k]) ? d.days[k] : []).map((x) => String(x || ""))
+    days[k] = (Array.isArray(d.days[k]) ? d.days[k] : []).map((x) => String(x || ""))
   }
-  if (d.nextDayAfter) NEXT_DAY_AFTER = String(d.nextDayAfter)
+  const times = Array.isArray(d.times)
+    ? d.times.map((t) => [String((t && t[0]) || ""), String((t && t[1]) || "")])
+    : []
+  const weekStart = /^\d{4}-\d{2}-\d{2}$/.test(d.weekStart || "") ? d.weekStart : null
+  return { title: String(d.title || ""), times, days, nextDayAfter: String(d.nextDayAfter || ""), weekStart }
+}
+
+const SAMPLE_DATA = { title: TITLE, times: TIMES, days: TIMETABLE, nextDayAfter: NEXT_DAY_AFTER }
+let store = { base: null, weeks: {} }
+if (fm.fileExists(savePath)) {
+  try {
+    const raw = JSON.parse(fm.readString(savePath))
+    if (raw && raw.weeks) store = { base: raw.base || null, weeks: raw.weeks }
+    else store.base = clean(raw) // 前の形（週の区別なし）
+  } catch (e) { /* 見本のまま */ }
+}
+
+// その日に使う時間割と、それがその週ちょうどの分か
+function dataFor(d) {
+  const key = mondayOf(d)
+  const keys = Object.keys(store.weeks).sort()
+  if (store.weeks[key]) return { data: store.weeks[key], exact: true }
+  const prev = keys.filter((k) => k < key).pop()
+  if (prev) return { data: store.weeks[prev], exact: false, from: prev }
+  if (keys.length) return { data: store.weeks[keys[0]], exact: false, from: keys[0] }
+  return { data: store.base || SAMPLE_DATA, exact: true }
 }
 
 async function showAlert(title, message) {
@@ -74,24 +113,28 @@ async function showAlert(title, message) {
   await a.presentAlert()
 }
 
-// 1) 前に保存した時間割があれば使う
-if (fm.fileExists(savePath)) {
-  try { applyData(JSON.parse(fm.readString(savePath))) } catch (e) { /* 見本のまま */ }
-}
-
-// 2) アプリで開いたとき（ウィジェットをタップしたときも）
-//    コピーされた時間割があれば保存する。なければメニューを出す
+// アプリで開いたとき（ウィジェットをタップしたときも）
+// コピーされた時間割があれば保存する。なければメニューを出す
 const CAMERA_URL = "https://claude.ai/artifact/RCoYySGvSftnxM1gn2MCyo"
 let quit = false
 if (!config.runsInWidget) {
   const raw = String((args.queryParameters && args.queryParameters.data) || Pasteboard.pasteString() || "").trim()
   if (raw.startsWith(PREFIX)) {
     try {
-      const d = JSON.parse(raw.slice(PREFIX.length))
-      applyData(d)
-      fm.writeString(savePath, JSON.stringify(d))
+      const d = clean(JSON.parse(raw.slice(PREFIX.length)))
+      let msg
+      if (d.weekStart) {
+        store.weeks[d.weekStart] = d
+        const keys = Object.keys(store.weeks).sort()
+        while (keys.length > KEEP_WEEKS) delete store.weeks[keys.shift()]
+        msg = `${md(d.weekStart)}(月) からの週の時間割として保存しました。`
+      } else {
+        store.base = d
+        msg = "時間割を保存しました。"
+      }
+      fm.writeString(savePath, JSON.stringify(store))
       Pasteboard.copyString("") // 同じ時間割を何度も読みこまないように
-      await showAlert("時間割を読みこみました", "ウィジェットにも数分以内に反映されます。")
+      await showAlert("時間割を読みこみました", msg + "ウィジェットにも数分以内に反映されます。")
     } catch (e) {
       await showAlert("読みこめませんでした", "「時間割カメラ」でもう一度「時間割をコピーする」を押してから開いてください。")
     }
@@ -113,14 +156,13 @@ if (!config.runsInWidget) {
   }
 }
 
-const DAY = ["日", "月", "火", "水", "木", "金", "土"]
-
 const C = {
   bg: Color.dynamic(new Color("#FFFFFF"), new Color("#1C1C1E")),
   text: Color.dynamic(new Color("#1C1C1E"), new Color("#F2F2F7")),
   sub: new Color("#8E8E93"),
   accent: new Color("#FF9500"),
   hl: Color.dynamic(new Color("#FFF1DC"), new Color("#3A2A12")),
+  warn: new Color("#FF453A"),
 }
 
 function toMin(hm) {
@@ -129,15 +171,10 @@ function toMin(hm) {
   return h * 60 + m
 }
 
-function ymd(d) {
-  const p = (n) => String(n).padStart(2, "0")
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
-}
-
 // その日の教科リスト（休みなら null）。最後の空きコマは切りすてる
 function lessonsOf(d) {
   if (HOLIDAYS.includes(ymd(d))) return null
-  const list = (TIMETABLE[DAY[d.getDay()]] || []).slice()
+  const list = (dataFor(d).data.days[DAY[d.getDay()]] || []).slice()
   while (list.length && !list[list.length - 1]) list.pop()
   return list.length ? list : null
 }
@@ -146,16 +183,24 @@ function lessonsOf(d) {
 const now = new Date()
 const nowMin = now.getHours() * 60 + now.getMinutes()
 const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+const switchAt = dataFor(today).data.nextDayAfter || NEXT_DAY_AFTER
 const target = new Date(today)
-if (nowMin >= toMin(NEXT_DAY_AFTER)) target.setDate(target.getDate() + 1)
+if (nowMin >= toMin(switchAt)) target.setDate(target.getDate() + 1)
 for (let i = 0; i < 30 && !lessonsOf(target); i++) target.setDate(target.getDate() + 1)
+
+const picked = dataFor(target)
+const T = picked.data
+const SHOW_TITLE = T.title || TITLE
+const SHOW_TIMES = T.times && T.times.length ? T.times : TIMES
+// その週の時間割がまだ入っていないときの注意
+const warnText = picked.exact ? "" : "この週の時間割がまだです（前の週のを表示）"
 
 const list = lessonsOf(target) || []
 const diff = Math.round((target - today) / 86400000)
 const when = diff === 0 ? "きょう" : diff === 1 ? "あした" : `${DAY[target.getDay()]}曜日`
 const dateLabel = `${target.getMonth() + 1}/${target.getDate()}(${DAY[target.getDay()]})`
 
-const periods = list.map((s, i) => ({ i, n: i + 1, s, t: TIMES[i] && TIMES[i][0] && TIMES[i][1] ? TIMES[i] : null }))
+const periods = list.map((s, i) => ({ i, n: i + 1, s, t: SHOW_TIMES[i] && SHOW_TIMES[i][0] && SHOW_TIMES[i][1] ? SHOW_TIMES[i] : null }))
 
 // ---- いま／つぎの時間 ----
 let nowIdx = -1
@@ -179,7 +224,7 @@ if (family === "accessoryInline") {
   const subj = periods.map((p) => (p.s ? p.s[0] : "・")).join("")
   w.addText(`${when} ${subj || "なし"}`)
 } else if (family === "accessoryRectangular") {
-  const h = w.addText(`${when} ${dateLabel}`)
+  const h = w.addText(`${warnText ? "⚠︎ " : ""}${when} ${dateLabel}`)
   h.font = Font.boldSystemFont(13)
   const body = w.addText(periods.map((p) => p.s || "—").join("・") || "時間割なし")
   body.font = Font.systemFont(12)
@@ -207,7 +252,7 @@ function buildHomeWidget() {
   h2.textColor = C.text
   if (!small) {
     head.addSpacer()
-    const h3 = head.addText(TITLE)
+    const h3 = head.addText(SHOW_TITLE)
     h3.font = Font.mediumSystemFont(12)
     h3.textColor = C.sub
   }
@@ -237,6 +282,13 @@ function buildHomeWidget() {
     periods.forEach((p) => addRow(w, p, size, !small))
   }
   w.addSpacer()
+  if (warnText) {
+    const wt = w.addText(small ? "⚠︎ この週の分がまだです" : "⚠︎ " + warnText)
+    wt.font = Font.semiboldSystemFont(small ? 10 : 11)
+    wt.textColor = C.warn
+    wt.lineLimit = 1
+    wt.minimumScaleFactor = 0.7
+  }
 }
 
 function addRow(parent, p, size, showTime) {
@@ -278,7 +330,7 @@ function addRow(parent, p, size, showTime) {
 }
 
 // ---- 次に書きかえる時刻（授業の始まり・終わり、切りかえ時刻）----
-const marks = [toMin(NEXT_DAY_AFTER)]
+const marks = [toMin(switchAt)]
 if (diff === 0) periods.forEach((p) => p.t && marks.push(toMin(p.t[0]), toMin(p.t[1])))
 const nextMark = marks.filter((m) => m > nowMin).sort((a, b) => a - b)[0]
 const refresh = new Date(today)
