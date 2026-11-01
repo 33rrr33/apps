@@ -1,12 +1,17 @@
 // 時間割ウィジェット（Scriptable 用）
 // 使い方: Scriptable アプリで新しいスクリプトを作り、このファイルの中身を全部はりつける。
 // ホーム画面（小・中・大）とロック画面（長方形・1行）のウィジェットに対応。
+//
+// 写真から時間割を入れるとき:
+//   「時間割カメラ」ページで写真を読み取り →「ウィジェットに送る」でコピー →
+//   Scriptable でこのスクリプトを ▶ 実行すると、コピーした時間割が保存される。
+//   （下の「ここを書きかえる」は、写真から入れていないときの見本）
 
 // ====== ここを自分の時間割に書きかえる ======
-const TITLE = "時間割" // 見出し（例: "3年1組"）
+let TITLE = "時間割" // 見出し（例: "3年1組"）
 
 // 各時間の開始・終了時刻
-const TIMES = [
+let TIMES = [
   ["8:45", "9:30"],
   ["9:40", "10:25"],
   ["10:45", "11:30"],
@@ -16,7 +21,7 @@ const TIMES = [
 ]
 
 // 月〜金の教科。その時間がないときは "" にする。
-const TIMETABLE = {
+let TIMETABLE = {
   月: ["国語", "算数", "体育", "社会", "音楽", ""],
   火: ["算数", "国語", "理科", "理科", "図工", "図工"],
   水: ["国語", "算数", "英語", "社会", "", ""],
@@ -25,7 +30,7 @@ const TIMETABLE = {
 }
 
 // この時刻をすぎたら、次の日の時間割を出す
-const NEXT_DAY_AFTER = "16:00"
+let NEXT_DAY_AFTER = "16:00"
 
 // 休みの日（祝日・行事など）。この日はとばして次の登校日を出す
 const HOLIDAYS = ["2026-11-03", "2026-11-23"]
@@ -41,6 +46,54 @@ const SUBJECT_COLORS = {
 }
 // ==========================================
 
+// ====== 写真から作った時間割の読みこみ ======
+const PREFIX = "JIKANWARI:"
+const fm = FileManager.local()
+const savePath = fm.joinPath(fm.documentsDirectory(), "jikanwari.json")
+
+function applyData(d) {
+  if (!d || typeof d !== "object" || !d.days || typeof d.days !== "object") {
+    throw new Error("時間割データの形がちがいます")
+  }
+  if (d.title) TITLE = String(d.title)
+  if (Array.isArray(d.times) && d.times.length) {
+    TIMES = d.times.map((t) => [String((t && t[0]) || ""), String((t && t[1]) || "")])
+  }
+  TIMETABLE = {}
+  for (const k of Object.keys(d.days)) {
+    TIMETABLE[k] = (Array.isArray(d.days[k]) ? d.days[k] : []).map((x) => String(x || ""))
+  }
+  if (d.nextDayAfter) NEXT_DAY_AFTER = String(d.nextDayAfter)
+}
+
+async function showAlert(title, message) {
+  const a = new Alert()
+  a.title = title
+  a.message = message
+  a.addAction("OK")
+  await a.presentAlert()
+}
+
+// 1) 前に保存した時間割があれば使う
+if (fm.fileExists(savePath)) {
+  try { applyData(JSON.parse(fm.readString(savePath))) } catch (e) { /* 見本のまま */ }
+}
+
+// 2) アプリで ▶ 実行したとき: コピーされた時間割があれば保存する
+if (!config.runsInWidget) {
+  const raw = String((args.queryParameters && args.queryParameters.data) || Pasteboard.pasteString() || "").trim()
+  if (raw.startsWith(PREFIX)) {
+    try {
+      const d = JSON.parse(raw.slice(PREFIX.length))
+      applyData(d)
+      fm.writeString(savePath, JSON.stringify(d))
+      await showAlert("時間割を読みこみました", "ウィジェットにも数分以内に反映されます。")
+    } catch (e) {
+      await showAlert("読みこめませんでした", "「時間割カメラ」でもう一度「ウィジェットに送る」を押してから実行してください。")
+    }
+  }
+}
+
 const DAY = ["日", "月", "火", "水", "木", "金", "土"]
 
 const C = {
@@ -52,6 +105,7 @@ const C = {
 }
 
 function toMin(hm) {
+  if (!hm || !hm.includes(":")) return NaN
   const [h, m] = hm.split(":").map(Number)
   return h * 60 + m
 }
@@ -82,7 +136,7 @@ const diff = Math.round((target - today) / 86400000)
 const when = diff === 0 ? "きょう" : diff === 1 ? "あした" : `${DAY[target.getDay()]}曜日`
 const dateLabel = `${target.getMonth() + 1}/${target.getDate()}(${DAY[target.getDay()]})`
 
-const periods = list.map((s, i) => ({ i, n: i + 1, s, t: TIMES[i] || null }))
+const periods = list.map((s, i) => ({ i, n: i + 1, s, t: TIMES[i] && TIMES[i][0] && TIMES[i][1] ? TIMES[i] : null }))
 
 // ---- いま／つぎの時間 ----
 let nowIdx = -1
