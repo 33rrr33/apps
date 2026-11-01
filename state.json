@@ -379,7 +379,7 @@
    "scheduled": "17:30",
    "kind": "long",
    "comment": "3つの中で、どれが一番役に立ちましたか？👇 番号でコメントしてね！",
-   "comment_posted": false
+   "comment_posted": true
   }
  ],
  "upload_mode": "api",
