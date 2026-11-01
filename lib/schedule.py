@@ -57,6 +57,21 @@ def week_info(day):
                          long_title=LONG_TITLE[half].format(t=t["title"]))
     return out
 
+# 2026-11-01 (user): the weekend long comes FIRST, so the following week's Shorts can link it as their related video.
+# From AHEAD_FROM on, Sat 17:30 = next week's 前半 long, Sun 17:30 = next week's 後半 long (made from the 60s parts of
+# next week's episodes, which are therefore written on Fri/Sat; the weekday runs then only render/upload the Shorts).
+# The week of 2026-11-09 has no long of its own: its Shorts link the 11/7・11/8 longs.
+AHEAD_FROM = dt.date(2026, 11, 14)
+
+def related_long(half, monday):
+    """(publish time, title) of the long the Shorts of this half-week should use as their related video:
+    the weekend long published just before the week (from the 11/9 week on; the 11/9 week uses 11/7・11/8),
+    or, for the 11/2 week, its own weekend long."""
+    m = dt.date.fromisoformat(monday) if isinstance(monday, str) else monday
+    off = 2 if half == "first" else 1
+    day = m - dt.timedelta(days=off) if m >= AHEAD_FROM - dt.timedelta(days=5) else m + dt.timedelta(days=7 - off)
+    return f"{day.isoformat()}T{LONG_TIME}", week_info(m)[half]["long_title"]
+
 def slot(publish):
     """publish: aware datetime (JST). Returns the slot description or None."""
     d = publish.date(); hm = publish.strftime("%H:%M")
@@ -66,18 +81,23 @@ def slot(publish):
         return {"kind": "legacy", "publish_at": publish.isoformat(), "legacy": legacy} if legacy and hm == legacy.get("time", st.get("publish_time", "17:30")) else None
     for t, half, num in WEEK[d.weekday()]:
         if t != hm: continue
-        wk = week_info(d); h = wk[half]
+        ahead = num == 0 and d >= AHEAD_FROM
+        wk = week_info(d + dt.timedelta(days=2) if ahead else d); h = wk[half]
         base = dict(publish_at=publish.strftime("%Y-%m-%dT%H:%M:00+09:00"), half=half, half_ja=HALF_JA[half],
                     week=wk["monday"], theme=h["title"], theme_spoken=h["spoken"], series_key=h["series_key"])
         if num == 0:
             assert t == LONG_TIME, "weekend longs must be published at 17:30"
-            return dict(base, kind="long", notify_subscribers=True, title=h["long_title"],
-                        parts=[f"{h['storage_dir']}/part_{i}.mp4" for i in range(1, 6)], episode_dir=h["episode_dir"])
+            eps = [f"{h['episode_dir']}/ep{i + 1:02d}_{tp['slug']}.py" for i, tp in enumerate(h["topics"] or [])]
+            return dict(base, kind="long", ahead=ahead, notify_subscribers=True, title=h["long_title"],
+                        parts=[f"{h['storage_dir']}/part_{i}.mp4" for i in range(1, 6)], episode_dir=h["episode_dir"],
+                        episodes=eps, topics=h["topics"],
+                        note=("先出し長尺：来週の①〜⑤のエピソード（ショート＋PART）をここで全部書き、パートから長尺を作る。"
+                              "ショートは平日の各実行が、このエピソードを render して予約する。") if ahead else None)
         tp = h["topics"][num - 1] if h["topics"] else None
         return dict(base, kind="short", num=num, notify_subscribers=False,
                     title=f"{h['title']}{CIRCLED[num - 1]} #Shorts", hook_split=h["hook_split"],
                     topic=tp, episode=f"{h['episode_dir']}/ep{num:02d}_{tp['slug']}.py" if tp else None,
-                    part=f"{h['storage_dir']}/part_{num}.mp4",
+                    part=f"{h['storage_dir']}/part_{num}.mp4", related_long=related_long(half, wk["monday"]),
                     next_topic=(h["topics"][num]["topic"] if h["topics"] and num < 5 else None))
     return None
 

@@ -135,7 +135,7 @@ def build(when, mode):
         p = os.path.join(SL.OUT_DIR, s["series_key"] + "_long_sheet.png"); sheet.save(p); print("sheet:", p); return
     parts = ensure_parts(s, eps)
     ja = "、".join(f"{CIRCLED[i]}{p['title']}" for i, p in enumerate(parts))
-    vo = say({"op": f"今週の、{s['theme_spoken']}、5選をまとめました。気になるところから見てね！",
+    vo = say({"op": (f"{s['theme_spoken']}、5選をまとめました。気になるところから見てね！" if s.get("ahead") else f"今週の、{s['theme_spoken']}、5選をまとめました。気になるところから見てね！"),
               "ed": "最後まで見てくれてありがとう！平日は毎日、朝と夕方にショートを投稿しています。チャンネル登録してね！"}, wd)
     op_len = max(8.0, 0.6 + len(vo["op"]) / SL.SR + 1.6); ed_len = max(7.0, 0.6 + len(vo["ed"]) / SL.SR + 1.4)
     op, ed = os.path.join(wd, "op.mp4"), os.path.join(wd, "ed.mp4")
@@ -156,10 +156,18 @@ def build(when, mode):
     links = short_links(s)
     shorts = "\n".join(f"{CIRCLED[i]} {p['title']}" + (f"\nhttps://youtube.com/shorts/{links[i + 1]}" if links.get(i + 1) else "")
                        for i, p in enumerate(parts))
-    desc = (f"今週のショート「{s['theme']}」①〜⑤を、1本約1分でくわしく解説したまとめ版です📱\n"
+    if s.get("ahead"):                                    # long-first: the Shorts come out next week, after this
+        days = ("月朝〜水朝" if s["half"] == "first" else "水夕〜金夕")
+        lead = (f"「{s['theme']}」の5つの技を、1本約1分でくわしく解説したまとめ版です📱\n"
+                f"来週（{days}）には、同じ5つをショートで1本ずつ公開します。\n")
+        shorts_head = "▼来週のショート（予定）"
+    else:
+        lead = f"今週のショート「{s['theme']}」①〜⑤を、1本約1分でくわしく解説したまとめ版です📱\n"
+        shorts_head = "▼元のショート動画"
+    desc = (lead +
             f"設定の場所や手順をステップごとに見せているので、保存して見ながら試してください。\n\n"
             f"━━━━━━━━━━━━━━━━\n▼目次\n━━━━━━━━━━━━━━━━\n" + "\n".join(chapters) +
-            f"\n\n━━━━━━━━━━━━━━━━\n▼元のショート動画\n━━━━━━━━━━━━━━━━\n{shorts}\n\n"
+            f"\n\n━━━━━━━━━━━━━━━━\n{shorts_head}\n━━━━━━━━━━━━━━━━\n{shorts}\n\n"
             f"▼チャンネル登録はこちら\nhttps://www.youtube.com/@mac_oic?sub_confirmation=1\n"
             f"平日は毎日 朝6:00 と 夕方17:30 に、iPhoneの便利技ショートを投稿しています。\n"
             f"役に立ったら高評価とチャンネル登録をお願いします🙏\n\n#iPhone #iPhone便利技 #iPhone裏技 #iOS #Apple #保存版")
