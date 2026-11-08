@@ -572,7 +572,7 @@
     "title": "【決定版】知らなきゃ損する！iPhone隠し神機能5選まとめ",
     "made": "2026-10-31",
     "comment": "今週の5つ、どれが一番役に立ちましたか？👇 番号でコメントしてね！（①写真の文字をコピー、②写真の外国語を翻訳、③グリッドと水平器、④カメラの明るさをスライドで調整、⑤音量ボタンでシャッター）",
-    "comment_posted": false
+    "comment_posted": true
    },
    "2026-11-09T06:00": {
     "kind": "short",
@@ -585,6 +585,19 @@
     "made": "2026-11-08",
     "related_long": "znWv4YUhSQQ",
     "comment": "3本指スワイプ、知ってましたか？👇 「知ってた」「初めて知った」でコメントしてね！",
+    "comment_posted": false
+   },
+   "2026-11-09T17:30": {
+    "kind": "short",
+    "series_key": "w20261109_first",
+    "theme": "iPhone爆速神操作",
+    "num": 2,
+    "episode": "episodes/w20261109_first/ep02_two_finger_select.py",
+    "id": "QonEhVK7tlE",
+    "title": "iPhone爆速神操作② #Shorts",
+    "made": "2026-11-08",
+    "related_long": "znWv4YUhSQQ",
+    "comment": "メモ、何個たまってますか？👇 この技でまとめて整理してみてね！",
     "comment_posted": false
    }
   }
