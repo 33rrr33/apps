@@ -2,6 +2,12 @@
 
 **main ブランチには絶対に触らない。** このブランチ `shorts-bot` だけを使う。鍵は環境変数のみ（チャットに出さない）。
 
+## 改善ループ（2026-11-09 ユーザー依頼：毎回1,000回以上をめざす）
+- **作る前に `config/strategy.json` を読む**（長さ・構成・フックの今のルールと、走っている実験）。v3 エピソードはそこに従う（例：DURATION=12〜13.5・END_CARD=False）。
+- **毎回の実行の最後に**：`python3 lib/analytics.py fetch` → `python3 lib/dashboard_data.py` で data/dash_videos.json・dash_channel.json を作り、ダッシュボード（https://claude.ai/artifact/3a6HTkN4BosBpdeGCktEza）に Artifact の `asset: true` でアップロード → ArtifactData で `datasets/videos`・`datasets/channel` の `source.url` と `updated`・`edit` を update（古い asset は delete してよい）。
+- **金曜の夕方（週次レビュー）**：公開48時間以上のショートを条件別（長さ・時間帯・シリーズの回・フック）に比べ、running_experiment を判定。data/insights.json（わかったこと／やること／次の候補）と strategy.json を書き直し、insights も同じ手順でダッシュボードへ。時間やタイトルの決まりを変える案は、変える前にユーザーに選択式で確認する。結果は短く落ち着いた日本語で報告。
+- 1回に変えるのは1つだけ（原因がわかるように）。
+
 ## 仕様の要点
 - **長尺が先、ショートが後（2026-11-01 ユーザー指定）**：11/14（土）から、土曜17:30＝**翌週の前半**まとめ、日曜17:30＝**翌週の後半**まとめ。ショートの関連動画に、すでに公開済みの長尺を選べるようにするため。
   - 金曜夕方の実行（土曜の長尺）／土曜夕方の実行（日曜の長尺）で、`schedule.py next evening` の `episodes`（翌週①〜⑤）を**全部書いて**ショートとパートを render し、パートから長尺を作って予約する（エピソードが多いので subagent に分担してよい）。ショートのアップロードは平日の各実行に任せる。

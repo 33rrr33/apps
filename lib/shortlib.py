@@ -730,7 +730,7 @@ def recap_frame(ep, T, t):
     for s0 in [T.body] + [a for a, _ in T.segs[1:]] + [T.cta, T.final]:
         if s0 <= t < s0 + 0.1:
             c.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(110 * (1 - (t - s0) / 0.1)))))
-    if TOTAL - t < 0.5:
+    if TOTAL - t < 0.5 and not (is_v3(ep) and not end_card_on(ep)):   # short v3 cuts loop straight back to the hook
         c.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * clamp(1 - (TOTAL - t) / 0.5)))))
     rra(c, (0, 0, W, 10), 0, (255, 255, 255, 40))
     ImageDraw.Draw(c).rectangle((0, 0, int(W * t / TOTAL), 10), fill=YEL + (255,))
@@ -857,7 +857,7 @@ def frame(ep, T, t):
     for s in (T.body, T.cta, T.final):
         if s <= t < s + 0.12:
             c.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(120 * (1 - (t - s) / 0.12)))))
-    if TOTAL - t < 0.5:
+    if TOTAL - t < 0.5 and not (is_v3(ep) and not end_card_on(ep)):   # short v3 cuts loop straight back to the hook
         c.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * clamp(1 - (TOTAL - t) / 0.5)))))
     rra(c, (0, 0, W, 10), 0, (255, 255, 255, 40))
     ImageDraw.Draw(c).rectangle((0, 0, int(W * t / TOTAL), 10), fill=YEL + (255,))

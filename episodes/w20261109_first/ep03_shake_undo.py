@@ -8,6 +8,8 @@ SERIES = dict(key="w20261109_first", title="iPhone爆速神操作", spoken="iPho
 NUM, SLUG = 3, "shake_undo"
 NEXT = "アイコン長押しで詳細"
 SCREEN_CROP = (0, 60, 400, 860)
+# 2026-11-09 実験：短縮版（約12秒・エンドカードなし）。20秒版より最後まで見られてループしやすくする
+DURATION, END_CARD = 12.0, False
 HOOK = "削除キー連打は\n{今すぐやめて}"
 HOOK_SPOKEN = "削除キー連打、今すぐやめて！"
 TELOPS = [("b1", "打った文字を\n[まとめて消したい]"), ("b2", "iPhoneを\n[軽く振る]だけ"),
@@ -15,13 +17,13 @@ TELOPS = [("b1", "打った文字を\n[まとめて消したい]"), ("b2", "iPho
 ACTIONS = [("b1", "b2", "削除キーを連打…"), ("b2", "b3", "iPhoneを軽く振る"),
            ("b3", "b4", "「取り消す」をタップ"), ("b4", "cta", "アクセシビリティ→タッチ")]
 BODY = [
-    ("b1", "打った文字を、まとめて消したいとき、", 0.3),
-    ("b2", "iPhoneを、軽く振ってみてください。", 0.3),
-    ("b3", "取り消すを押すだけで、一発で消せます！", 0.4),
-    ("b4", "設定のアクセシビリティで、オンオフもできます。", 0.0),
+    ("b1", "打った文字をまとめて消したいとき、", 0.15),
+    ("b2", "iPhoneを軽く振って、", 0.15),
+    ("b3", "取り消すを押すだけ！", 0.3),
+    ("b4", "設定でオフにもできます。", 0.0),
 ]
-BODY_HOLD = 1.6
-CTA = dict(lines=[("iPhoneを", WHITE, 100), ("振って取り消し！", YEL, 116)], spoken="保存して試してね！",
+BODY_HOLD = 0.8
+CTA = dict(lines=[("iPhoneを", WHITE, 100), ("振って取り消し！", YEL, 116)], spoken="保存してね！",
            chip="削除キー連打いらず")
 
 PART = dict(
@@ -55,8 +57,8 @@ BASE = ["週末の予定", "土曜：買い物"]
 TYPED = "日曜は朝からカフェで作業して、夜は映画を観に行く予定"
 
 def times(T):
-    return dict(type0=T.at["b1"] - 1.2, typed=T.at["b1"] + 0.6, press=T.at["b1"] + 1.0, shake=T.at["b2"] + 0.8,
-                alert=T.at["b2"] + 1.6, tap=T.at["b3"] + 0.9, gone=T.at["b3"] + 1.1, settings=T.at["b4"])
+    return dict(type0=T.at["b1"] - 1.2, typed=T.at["b1"] + 0.6, press=T.at["b1"] + 1.0, shake=T.at["b2"] + 0.3,
+                alert=T.at["b2"] + 1.0, tap=T.at["b3"] + 0.6, gone=T.at["b3"] + 0.8, settings=T.at["b4"] + 0.8)
 
 def wrap_text(s, size, maxw):
     f = font(size, False); out, cur = [], ""

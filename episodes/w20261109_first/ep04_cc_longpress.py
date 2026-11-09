@@ -8,6 +8,8 @@ SERIES = dict(key="w20261109_first", title="iPhone爆速神操作", spoken="iPho
 NUM, SLUG = 4, "cc_longpress"
 NEXT = "AssistiveTouch"
 SCREEN_CROP = (0, 40, 400, 700)
+# 2026-11-09 実験：短縮版（約13秒・エンドカードなし）
+DURATION, END_CARD = 13.5, False
 HOOK = "タップしかしない人\n{全員損}してます"
 HOOK_SPOKEN = "タップしかしてない人、全員損してます！"
 TELOPS = [("b1", "コントロールセンター\n{タップだけ}…？"), ("b2", "懐中電灯を\n[長押し]"),
@@ -15,13 +17,13 @@ TELOPS = [("b1", "コントロールセンター\n{タップだけ}…？"), ("b
 ACTIONS = [("b1", "b2", "右上から下にスワイプ"), ("b2", "b3", "懐中電灯を長押し"),
            ("b3", "b4", "指で上下にスライド"), ("b4", "cta", "通信ボタンを長押し")]
 BODY = [
-    ("b1", "コントロールセンター、タップだけで使っていませんか？", 0.3),
-    ("b2", "懐中電灯を、長押ししてみてください。", 0.3),
-    ("b3", "明るさを、指で細かく調整できます！", 0.3),
-    ("b4", "通信のボタンも、長押しでエアドロップまで出せます。", 0.0),
+    ("b1", "コントロールセンター、長押ししてますか？", 0.15),
+    ("b2", "懐中電灯を長押しすると、", 0.15),
+    ("b3", "明るさを細かく調整できます！", 0.2),
+    ("b4", "通信ボタンも長押しで詳細に。", 0.0),
 ]
-BODY_HOLD = 0.8
-CTA = dict(lines=[("アイコンを", WHITE, 100), ("長押し！", YEL, 132)], spoken="保存して試してね！",
+BODY_HOLD = 0.9
+CTA = dict(lines=[("アイコンを", WHITE, 100), ("長押し！", YEL, 132)], spoken="保存してね！",
            chip="懐中電灯・通信・明るさなど")
 
 PART = dict(
@@ -55,8 +57,8 @@ TILE = (60, 60, 60, 230)
 ON_BLUE = (10, 132, 255)
 
 def times(T):
-    return dict(open=T.at["b1"] + 0.3, press=T.at["b2"] + 0.5, big=T.at["b2"] + 1.3, slide=T.at["b3"] + 0.2,
-                slid=T.at["b3"] + 1.8, conn=T.at["b4"] + 0.4, conn_open=T.at["b4"] + 1.2)
+    return dict(open=T.at["b1"] + 0.2, press=T.at["b2"] + 0.2, big=T.at["b2"] + 0.9, slide=T.at["b3"] + 0.1,
+                slid=T.at["b3"] + 1.2, conn=T.at["b4"] + 0.2, conn_open=T.at["b4"] + 0.9)
 
 def finger(ps, x, y):
     fade(ps, 1.0, lambda l: ImageDraw.Draw(l).ellipse((x - 30, y - 30, x + 30, y + 30), fill=(255, 255, 255, 150), outline=(80, 80, 90, 200), width=3))

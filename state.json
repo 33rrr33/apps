@@ -606,12 +606,17 @@
     "theme": "iPhone爆速神操作",
     "num": 3,
     "episode": "episodes/w20261109_first/ep03_shake_undo.py",
-    "id": "V0qUmIWZxa0",
+    "id": "-ZIU-9oTaHA",
     "title": "iPhone爆速神操作③ #Shorts",
     "made": "2026-11-09",
     "related_long": "znWv4YUhSQQ",
     "comment": "振ったら何か出てきてビックリしたこと、ありませんか？👇 これの正体です！",
-    "comment_posted": false
+    "comment_posted": false,
+    "replaced": {
+     "old_id": "V0qUmIWZxa0",
+     "why": "2026-11-09 実験：約12〜13秒・エンドカードなしの短縮版に差し替え"
+    },
+    "experiment": "short_length"
    },
    "2026-11-10T17:30": {
     "kind": "short",
@@ -619,12 +624,17 @@
     "theme": "iPhone爆速神操作",
     "num": 4,
     "episode": "episodes/w20261109_first/ep04_cc_longpress.py",
-    "id": "TLRyBeKJaDU",
+    "id": "iE8W1L4YtAo",
     "title": "iPhone爆速神操作④ #Shorts",
     "made": "2026-11-09",
     "related_long": "znWv4YUhSQQ",
     "comment": "懐中電灯の明るさ、変えられるの知ってましたか？👇 「知ってた」「初めて知った」で教えてね！",
-    "comment_posted": false
+    "comment_posted": false,
+    "replaced": {
+     "old_id": "TLRyBeKJaDU",
+     "why": "2026-11-09 実験：約12〜13秒・エンドカードなしの短縮版に差し替え"
+    },
+    "experiment": "short_length"
    }
   }
  },
