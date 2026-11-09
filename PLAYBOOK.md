@@ -4,7 +4,8 @@
 
 ## 改善ループ（2026-11-09 ユーザー依頼：毎回1,000回以上をめざす）
 - **作る前に `config/strategy.json` を読む**（長さ・構成・フックの今のルールと、走っている実験）。v3 エピソードはそこに従う（例：DURATION=12〜13.5・END_CARD=False）。
-- **毎回の実行の最後に**：`python3 lib/analytics.py fetch` → `python3 lib/dashboard_data.py` で data/dash_videos.json・dash_channel.json を作り、ダッシュボード（https://claude.ai/artifact/3a6HTkN4BosBpdeGCktEza）に Artifact の `asset: true` でアップロード → ArtifactData で `datasets/videos`・`datasets/channel` の `source.url` と `updated`・`edit` を update（古い asset は delete してよい）。
+- **PDCA（自動）**：Plan＝`config/experiments.json` の上から1つ／Do＝strategy.json どおりに作り、エピソードに `TAGS = {"<tag_field>": "<条件>"}` を書く／Check＝毎回 `python3 lib/pdca.py check`（48時間の再生を data/results.json に記録）／Act＝金曜 `python3 lib/pdca.py judge` の判定（採用→strategy.json の short と history に反映し next_experiment を running_experiment へ、見送り→元に戻して次へ。auto=false はユーザーに選択式で確認）→ `python3 lib/pdca.py insights` で data/insights.json を作り直す。
+- **毎回の実行の最後に**：`python3 lib/analytics.py fetch` → `python3 lib/pdca.py check` → `python3 lib/pdca.py insights` → `python3 lib/dashboard_data.py` で data/dash_videos.json・dash_channel.json を作り、ダッシュボード（https://claude.ai/artifact/3a6HTkN4BosBpdeGCktEza）に Artifact の `asset: true` でアップロード → ArtifactData で `datasets/videos`・`datasets/channel`・`datasets/insights` の `source.url` と `updated`・`edit` を update（古い asset は delete してよい）。
 - **金曜の夕方（週次レビュー）**：公開48時間以上のショートを条件別（長さ・時間帯・シリーズの回・フック）に比べ、running_experiment を判定。data/insights.json（わかったこと／やること／次の候補）と strategy.json を書き直し、insights も同じ手順でダッシュボードへ。時間やタイトルの決まりを変える案は、変える前にユーザーに選択式で確認する。結果は短く落ち着いた日本語で報告。
 - 1回に変えるのは1つだけ（原因がわかるように）。
 
