@@ -17,8 +17,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JST = dt.timezone(dt.timedelta(hours=9))
 
 def iso_dur(s):
-    m = re.fullmatch(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", s or "PT0S")
-    h, mi, se = (int(x) if x else 0 for x in m.groups()); return h * 3600 + mi * 60 + se
+    m = re.fullmatch(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?", s or "PT0S")
+    if not m: return 0                                   # e.g. a video still processing
+    d, h, mi, se = (int(x) if x else 0 for x in m.groups()); return d * 86400 + h * 3600 + mi * 60 + se
 
 def our_meta():
     st = json.load(open(os.path.join(ROOT, "state.json")))

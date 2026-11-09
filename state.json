@@ -611,7 +611,7 @@
     "made": "2026-11-09",
     "related_long": "znWv4YUhSQQ",
     "comment": "振ったら何か出てきてビックリしたこと、ありませんか？👇 これの正体です！",
-    "comment_posted": false,
+    "comment_posted": true,
     "replaced": {
      "old_id": "V0qUmIWZxa0",
      "why": "2026-11-09 実験：約12〜13秒・エンドカードなしの短縮版に差し替え"
@@ -634,6 +634,20 @@
      "old_id": "TLRyBeKJaDU",
      "why": "2026-11-09 実験：約12〜13秒・エンドカードなしの短縮版に差し替え"
     },
+    "experiment": "short_length"
+   },
+   "2026-11-11T06:00": {
+    "kind": "short",
+    "series_key": "w20261109_first",
+    "theme": "iPhone爆速神操作",
+    "num": 5,
+    "episode": "episodes/w20261109_first/ep05_assistive_touch.py",
+    "id": "8WOR5NnEFow",
+    "title": "iPhone爆速神操作⑤ #Shorts",
+    "made": "2026-11-10",
+    "related_long": "znWv4YUhSQQ",
+    "comment": "スクショ、いつもどうやって撮ってますか？👇 ボタン同時押し派？背面タップ派？丸ボタン派？",
+    "comment_posted": false,
     "experiment": "short_length"
    }
   }
