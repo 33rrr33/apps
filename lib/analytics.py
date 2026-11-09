@@ -67,6 +67,7 @@ def fetch():
             series=m.get("theme") or re.sub(r"[①-⑩].*$", "", title.replace("#Shorts", "")).strip(),
             layout=m.get("layout") or ("legacy"), hook=hook_of(m.get("episode")), slot=m.get("slot")))
     rows.sort(key=lambda x: x["published"])
+    add_analytics(tok, rows, now)
     out = dict(fetched=now.isoformat(), channel=dict(title=ch["snippet"]["title"], subscribers=int(ch["statistics"].get("subscriberCount", 0)),
                                                     views=int(ch["statistics"].get("viewCount", 0)), videos=int(ch["statistics"].get("videoCount", 0))),
                videos=rows)
@@ -78,6 +79,27 @@ def fetch():
         f.write(json.dumps(dict(t=now.isoformat(), ch=out["channel"], v={r["id"]: r["views"] for r in rows if r["privacy"] == "public"})) + "\n")
     print(f"{len(rows)} videos, {out['channel']}")
     return out
+
+def add_analytics(tok, rows, now):
+    """YouTube Analytics (needs yt-analytics.readonly on the token). Adds retention etc. per video; skipped quietly if not allowed."""
+    pub = [r for r in rows if r["privacy"] == "public"]
+    if not pub: return
+    start = min(r["published"][:10] for r in pub); end = now.strftime("%Y-%m-%d")
+    metrics = "views,averageViewDuration,averageViewPercentage,likes,subscribersGained,shares"
+    for i in range(0, len(pub), 40):
+        ids = ",".join(r["id"] for r in pub[i:i + 40])
+        url = (f"https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate={start}&endDate={end}"
+               f"&metrics={metrics}&dimensions=video&filters=video=={ids}&maxResults=200")
+        try:
+            _, _, r = Y.http("GET", url, headers=Y.auth(tok))
+        except SystemExit as e:
+            print("analytics skipped:", str(e)[:120]); return
+        cols = [c["name"] for c in r.get("columnHeaders", [])]
+        for row in r.get("rows", []):
+            d = dict(zip(cols, row)); v = next((x for x in pub if x["id"] == d["video"]), None)
+            if v: v.update(avg_view_pct=d.get("averageViewPercentage"), avg_view_sec=d.get("averageViewDuration"),
+                           subs_gained=d.get("subscribersGained"), shares=d.get("shares"))
+    print("analytics added")
 
 def report():
     d = json.load(open(os.path.join(ROOT, "data", "stats.json")))

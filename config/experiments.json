@@ -1,13 +1,66 @@
 {
- "note": "PDCAの実験リスト。上から順に1つずつ試す。auto=true は判定ルールで自動採用、false は変える前にユーザーに選択式で確認。",
- "rule": {"min_videos": 3, "adopt_if": "テスト群の48時間再生の中央値が、比べる群の1.5倍以上 または 1,000回達成率が20ポイント以上高い", "drop_if": "6本以上試して上の条件に届かない"},
+ "note": "PDCAの実験リスト。上から順に1つずつ試す。2026-11-09 ユーザー許可：投稿時間・タイトルの形も、判定ルールで効果が出たら自動で採用してよい（変えたら必ず報告）。同じ時刻に2本出さないルールは常に守る。",
+ "rule": {
+  "min_videos": 3,
+  "adopt_if": "テスト群の48時間再生の中央値が、比べる群の1.5倍以上 または 1,000回達成率が20ポイント以上高い",
+  "drop_if": "6本以上試して上の条件に届かない"
+ },
  "backlog": [
-  {"id": "short_length", "auto": true, "variable": "長さ", "test": "約12〜13秒・次回予告なし", "baseline": "20秒・エンドカードあり", "tag_field": "length"},
-  {"id": "hook_style", "auto": true, "variable": "フックの型", "test": "問いかけ型（例：これ知ってた？）", "baseline": "損失型（例：〇〇の人 全員損してます）", "tag_field": "hook_type"},
-  {"id": "result_first", "auto": true, "variable": "最初の1秒", "test": "結果（完成した画面）を先に見せてから手順", "baseline": "手順から見せる", "tag_field": "opening"},
-  {"id": "cta_follow", "auto": true, "variable": "最後の一言", "test": "「フォローで続きも見てね」", "baseline": "「保存してね」", "tag_field": "cta"},
-  {"id": "topic_mass", "auto": true, "variable": "ネタの選び方", "test": "誰でも毎日使う機能（カメラ・キーボード・充電）を優先", "baseline": "テーマ表の順番どおり", "tag_field": "topic_kind"},
-  {"id": "slot_morning_only", "auto": false, "variable": "投稿時間", "test": "夕方17:30をやめて朝6:00の1日1本（または夕方を12:00へ）", "baseline": "朝6:00＋夕方17:30", "tag_field": "slot"},
-  {"id": "title_content", "auto": false, "variable": "タイトル", "test": "「中身｜シリーズ名① #Shorts」", "baseline": "「シリーズ名① #Shorts」", "tag_field": "title_style"}
+  {
+   "id": "short_length",
+   "auto": true,
+   "variable": "長さ",
+   "test": "約12〜13秒・次回予告なし",
+   "baseline": "20秒・エンドカードあり",
+   "tag_field": "length"
+  },
+  {
+   "id": "hook_style",
+   "auto": true,
+   "variable": "フックの型",
+   "test": "問いかけ型（例：これ知ってた？）",
+   "baseline": "損失型（例：〇〇の人 全員損してます）",
+   "tag_field": "hook_type"
+  },
+  {
+   "id": "result_first",
+   "auto": true,
+   "variable": "最初の1秒",
+   "test": "結果（完成した画面）を先に見せてから手順",
+   "baseline": "手順から見せる",
+   "tag_field": "opening"
+  },
+  {
+   "id": "cta_follow",
+   "auto": true,
+   "variable": "最後の一言",
+   "test": "「フォローで続きも見てね」",
+   "baseline": "「保存してね」",
+   "tag_field": "cta"
+  },
+  {
+   "id": "topic_mass",
+   "auto": true,
+   "variable": "ネタの選び方",
+   "test": "誰でも毎日使う機能（カメラ・キーボード・充電）を優先",
+   "baseline": "テーマ表の順番どおり",
+   "tag_field": "topic_kind"
+  },
+  {
+   "id": "slot_morning_only",
+   "auto": true,
+   "variable": "投稿時間",
+   "test": "夕方17:30をやめて朝6:00の1日1本（または夕方を12:00へ）",
+   "baseline": "朝6:00＋夕方17:30",
+   "tag_field": "slot"
+  },
+  {
+   "id": "title_content",
+   "auto": true,
+   "variable": "タイトル",
+   "test": "「中身｜シリーズ名① #Shorts」",
+   "baseline": "「シリーズ名① #Shorts」",
+   "tag_field": "title_style"
+  }
  ]
 }
