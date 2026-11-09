@@ -1,0 +1,212 @@
+<meta name="dash-one-writer">
+<style>
+  .mc { display: flex; flex-direction: column; gap: var(--cds-gap-xl); }
+  .mc h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+  .mc h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-sm); }
+  .mc .lede { color: var(--color-fg); font-size: var(--cds-font-size-body); margin: var(--cds-gap-xs) 0 0; max-width: 60ch; }
+  .mc .muted { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .mc .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--cds-gap-md); }
+  .mc .tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-xs); min-width: 0; }
+  .mc .tile .big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 2rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .mc .chart { position: relative; min-height: 260px; }
+  .mc .chart svg text { fill: var(--cds-text-secondary); font-size: var(--cds-font-size-caption); }
+  .mc .tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); box-shadow: var(--cds-shadow-popover); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); font-size: var(--cds-font-size-caption); max-width: 260px; }
+  .mc .legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .mc .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .mc .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--cds-gap-md); }
+  .mc .note { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-xs); min-width: 0; }
+  .mc .note b { font-weight: var(--cds-font-weight-medium); }
+  .mc .note .ev { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .mc .tag { align-self: flex-start; font-size: var(--cds-font-size-caption); border-radius: 999px; padding: 1px 10px; border: 1px solid var(--color-border-line); }
+  .mc .tag.finding { color: var(--color-warn); border-color: currentColor; }
+  .mc .tag.action { color: var(--color-ok); border-color: currentColor; }
+  .mc .tag.next { color: var(--color-fg-muted); }
+  .mc .groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--cds-gap-lg); }
+  .mc .tbl { overflow-x: auto; }
+  .mc table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .mc th, .mc td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .mc td.num, .mc th.num { text-align: right; }
+  .mc tr.low td.v { color: var(--color-bad); }
+  .mc tr.hit td.v { color: var(--color-ok); font-weight: var(--cds-font-weight-medium); }
+  [data-dash-source-state=refreshing] { opacity: .5; }
+</style>
+
+<div class="mc">
+  <header id="top">
+    <h1>Macun 運用ダッシュボード</h1>
+    <p class="lede" id="takeaway">公開から48時間たったショート <b data-draw="judgedN" data-source="kpi" data-field="judged" data-row="0">—</b> 本のうち、1,000回を超えたのは <b data-draw="hitN" data-source="kpi" data-field="hits" data-row="0">—</b> 本。11〜16秒の動画は <b data-draw="shortRate" data-source="groups" data-field="hit_rate" data-where="label=11〜16秒">—</b>、20秒の動画は <b data-draw="longRate" data-source="groups" data-field="hit_rate" data-where="label=20秒">—</b> が1,000回を超えています。</p>
+    <p class="muted">データ取得：<span data-draw="fetched" data-source="channel" data-field="fetched" data-row="0">—</span>（毎日の自動実行で更新）</p>
+  </header>
+
+  <section class="tiles" id="kpis" aria-label="主な数字">
+    <div class="tile"><span class="muted">チャンネル登録者</span><span class="big" data-draw="subs" data-source="channel" data-field="subscribers" data-row="0">—</span><span class="muted">現在</span></div>
+    <div class="tile"><span class="muted">チャンネルの総再生</span><span class="big" data-draw="totalViews" data-source="channel" data-field="views" data-row="0">—</span><span class="muted">全期間</span></div>
+    <div class="tile"><span class="muted">1,000回を超えた割合</span><span class="big" data-draw="hitRate" data-source="kpi" data-field="hit_rate" data-row="0">—</span><span class="muted">公開48時間以上のショート</span></div>
+    <div class="tile"><span class="muted">ショート再生の中央値</span><span class="big" data-draw="median" data-source="kpi" data-field="median" data-row="0">—</span><span class="muted">公開48時間以上のショート</span></div>
+  </section>
+
+  <section id="perVideo">
+    <h2>ショート1本ごとの再生回数</h2>
+    <div class="legend"><span><i data-draw="swA"></i>11〜16秒</span><span><i data-draw="swB"></i>20秒</span><span><i data-draw="swC"></i>短縮版（12〜13秒・11/10〜の実験）</span><span>点線＝目標 1,000回</span></div>
+    <div class="chart" data-draw="bars" data-source="videos" role="img" aria-label="ショートごとの再生回数（公開順）"></div>
+    <p class="muted">公開から48時間たっていない動画は薄く表示しています（まだ伸びる途中）。</p>
+  </section>
+
+  <section id="compare">
+    <h2>どの条件の動画が伸びたか（再生の中央値）</h2>
+    <div class="groups">
+      <div><p class="muted">長さ別</p><div class="chart" style="min-height:120px" data-draw="gLength" data-source="groups"></div></div>
+      <div><p class="muted">公開時間別（20秒の動画だけ）</p><div class="chart" style="min-height:120px" data-draw="gSlot" data-source="groups"></div></div>
+      <div><p class="muted">シリーズの何回目か</p><div class="chart" style="min-height:180px" data-draw="gNum" data-source="groups"></div></div>
+    </div>
+  </section>
+
+  <section id="analysis">
+    <h2>分析と対策</h2>
+    <div class="notes" data-draw="notes" data-source="insights"></div>
+  </section>
+
+  <section id="queue">
+    <h2>予約中の動画</h2>
+    <div class="tbl"><table data-source="videos" data-row-key="id">
+      <thead><tr><th data-field="published">公開日時</th><th data-field="title">タイトル</th><th data-field="length">長さ</th></tr></thead>
+      <tbody data-draw="queueRows"></tbody>
+    </table></div>
+  </section>
+
+  <section id="all">
+    <h2>公開済みの全動画</h2>
+    <div class="tbl"><table data-source="videos" data-row-key="id">
+      <thead><tr><th data-field="published">公開日時</th><th data-field="weekday">曜日</th><th data-field="title">タイトル</th><th data-field="length">長さ</th><th class="num" data-field="views">再生</th><th class="num" data-field="likes">高評価</th><th class="num" data-field="comments">コメント</th></tr></thead>
+      <tbody data-draw="allRows"></tbody>
+    </table></div>
+  </section>
+</div>
+
+<script>
+  dash.loader('videos', { description: 'JSONの配列をそのまま行にする', fn: ({answer}) => answer });
+  dash.loader('insights', { description: 'JSONの配列をそのまま行にする', fn: ({answer}) => answer });
+  dash.loader('channel', { description: 'JSONの配列をそのまま行にする', fn: ({answer}) => answer });
+
+  dash.calc('kpi', {
+    title: '1,000回達成の集計', description: '公開から48時間以上たった公開中のショートだけで数える',
+    inputs: ['videos'],
+    fn: (videos) => {
+      const s = videos.filter((v) => v.kind === 'ショート' && v.judged === true).map((v) => Number(v.views)).sort((a, b) => a - b);
+      const m = s.length ? (s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : null;
+      const hits = s.filter((x) => x >= 1000).length;
+      return [{ judged: s.length, hits, hit_rate: s.length ? hits / s.length : null, median: m }];
+    },
+  });
+
+  dash.calc('groups', {
+    title: '条件別の再生（中央値・1,000回達成率）', description: '公開から48時間以上たった公開中のショートを、長さ・公開時間・シリーズの回で分けた集計',
+    inputs: ['videos'],
+    fn: (videos) => {
+      const s = videos.filter((v) => v.kind === 'ショート' && v.judged === true);
+      const med = (a) => { a = a.slice().sort((x, y) => x - y); return a.length ? (a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2) : null; };
+      const out = [];
+      const add = (group, label, rows) => { const v = rows.map((r) => Number(r.views)); if (v.length) out.push({ group, label, n: v.length, median: med(v), hit_rate: v.filter((x) => x >= 1000).length / v.length }); };
+      ['11〜16秒', '20秒', '短縮版'].forEach((l) => add('length', l, s.filter((r) => r.length === l)));
+      ['朝6:00', '夕方17:30'].forEach((l) => add('slot', l, s.filter((r) => r.length === '20秒' && r.slot === l)));
+      ['①', '②', '③', '④', '⑤'].forEach((l) => add('num', l, s.filter((r) => r.title.includes(l))));
+      return out;
+    },
+  });
+
+  const fmt = d3.format(',');
+  const pct = d3.format('.0%');
+  const COL = { a: dash.colors[0], b: dash.colors[1], c: dash.colors[2] };
+
+  const one = (id, field) => { const r = dash.data(id); return r.status === 'ok' && r.data && r.data[0] ? r.data[0][field] : null; };
+  const set = (el, v) => { el.textContent = v == null ? '—' : v; };
+
+  dash.draw('judgedN', (el) => set(el, one('kpi', 'judged')));
+  dash.draw('hitN', (el) => set(el, one('kpi', 'hits')));
+  dash.draw('hitRate', (el) => { const v = one('kpi', 'hit_rate'); set(el, v == null ? null : pct(v)); });
+  dash.draw('median', (el) => { const v = one('kpi', 'median'); set(el, v == null ? null : fmt(Math.round(v)) + '回'); });
+  dash.draw('subs', (el) => { const v = one('channel', 'subscribers'); set(el, v == null ? null : fmt(v) + '人'); });
+  dash.draw('totalViews', (el) => { const v = one('channel', 'views'); set(el, v == null ? null : fmt(v) + '回'); });
+  dash.draw('fetched', (el) => set(el, one('channel', 'fetched')?.replace('T', ' ')));
+  const groupRate = (label) => { const g = dash.data('groups'); const r = g.status === 'ok' ? (g.data || []).find((x) => x.label === label) : null; return r ? `${r.n}本中 ${pct(r.hit_rate)}` : null; };
+  dash.draw('shortRate', (el) => set(el, groupRate('11〜16秒')));
+  dash.draw('longRate', (el) => set(el, groupRate('20秒')));
+  dash.draw('swA', (el) => { el.style.background = COL.a; });
+  dash.draw('swB', (el) => { el.style.background = COL.b; });
+  dash.draw('swC', (el) => { el.style.background = COL.c; });
+
+  dash.draw('bars', (el) => {
+    const r = dash.data('videos');
+    el.replaceChildren();
+    if (r.status !== 'ok') { el.textContent = r.status === 'error' ? '読み込めませんでした' : '—'; return; }
+    const rows = r.data.filter((v) => v.kind === 'ショート' && v.status === '公開中');
+    const W = el.clientWidth || 600, H = 260, m = { t: 12, r: 8, b: 26, l: 44 };
+    const x = d3.scaleBand().domain(rows.map((d) => d.id)).range([m.l, W - m.r]).padding(0.18);
+    const y = d3.scaleLinear().domain([0, Math.max(1100, d3.max(rows, (d) => +d.views))]).nice().range([H - m.b, m.t]);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'ショートごとの再生回数');
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(fmt)).call((g) => g.select('.domain').remove())
+      .call((g) => g.selectAll('line').clone().attr('x2', W - m.l - m.r).style('stroke', 'var(--cds-chart-grid)'));
+    svg.selectAll('rect').data(rows).join('rect')
+      .attr('x', (d) => x(d.id)).attr('width', x.bandwidth()).attr('y', (d) => y(+d.views)).attr('height', (d) => y(0) - y(+d.views))
+      .style('fill', (d) => (d.length === '20秒' ? COL.b : d.length === '短縮版' ? COL.c : COL.a)).style('opacity', (d) => (d.judged ? 1 : 0.35));
+    svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(1000)).attr('y2', y(1000)).style('stroke', 'var(--cds-chart-reference)').style('stroke-dasharray', '4 3');
+    const ticks = rows.filter((_, i) => i % Math.max(1, Math.ceil(rows.length / Math.max(2, Math.floor((W - 60) / 70)))) === 0);
+    svg.append('g').selectAll('text').data(ticks).join('text').attr('x', (d) => x(d.id) + x.bandwidth() / 2).attr('y', H - 8).attr('text-anchor', 'middle').text((d) => d.date.slice(5).replace('-', '/'));
+    const tip = d3.select(el).append('div').attr('class', 'tip').style('display', 'none');
+    svg.selectAll('rect').on('pointerenter pointermove', (ev, d) => {
+      const [px, py] = d3.pointer(ev, el);
+      tip.style('display', null).style('left', Math.min(px + 12, el.clientWidth - 270) + 'px').style('top', Math.max(0, py - 60) + 'px');
+      tip.selectAll('*').remove();
+      tip.append('div').text(d.title);
+      tip.append('div').text(`${d.published.replace('T', ' ')}（${d.weekday}）・${d.length}`);
+      tip.append('div').text(`再生 ${fmt(d.views)}回・高評価 ${d.likes}・コメント ${d.comments}`);
+    }).on('pointerleave', () => tip.style('display', 'none'));
+  });
+
+  const groupChart = (group) => (el) => {
+    const g = dash.data('groups');
+    el.replaceChildren();
+    if (g.status !== 'ok') { el.textContent = '—'; return; }
+    const rows = (g.data || []).filter((r) => r.group === group);
+    const W = el.clientWidth || 300, rowH = 30, m = { l: 84, r: 120 }, H = rows.length * rowH + 8;
+    const x = d3.scaleLinear().domain([0, Math.max(1000, d3.max(rows, (d) => d.median) || 0)]).range([m.l, W - m.r]);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', '条件ごとの再生の中央値');
+    const row = svg.selectAll('g').data(rows).join('g').attr('transform', (d, i) => `translate(0,${i * rowH + 4})`);
+    row.append('text').attr('x', m.l - 8).attr('y', 15).attr('text-anchor', 'end').text((d) => d.label);
+    row.append('rect').attr('x', m.l).attr('y', 4).attr('height', 16).attr('width', (d) => Math.max(1, x(d.median) - m.l)).style('fill', COL.a);
+    row.append('text').attr('x', (d) => x(d.median) + 6).attr('y', 15).text((d) => `${fmt(Math.round(d.median))}回（${d.n}本・達成${pct(d.hit_rate)}）`);
+    svg.append('line').attr('x1', x(1000)).attr('x2', x(1000)).attr('y1', 0).attr('y2', H).style('stroke', 'var(--cds-chart-reference)').style('stroke-dasharray', '4 3');
+  };
+  dash.draw('gLength', groupChart('length'));
+  dash.draw('gSlot', groupChart('slot'));
+  dash.draw('gNum', groupChart('num'));
+
+  dash.draw('notes', (el) => {
+    const r = dash.data('insights');
+    el.replaceChildren();
+    if (r.status !== 'ok') { el.textContent = '—'; return; }
+    const label = { finding: 'わかったこと', action: 'やること', next: '次の候補' };
+    r.data.forEach((n) => {
+      const card = document.createElement('div'); card.className = 'note'; card.dataset.where = 'id=' + encodeURIComponent(n.id);
+      const tag = document.createElement('span'); tag.className = 'tag ' + n.kind; tag.textContent = label[n.kind] || n.kind;
+      const t = document.createElement('b'); t.textContent = n.title;
+      const b = document.createElement('div'); b.textContent = n.body;
+      const e = document.createElement('div'); e.className = 'ev'; e.textContent = n.evidence;
+      card.append(tag, t, b, e); el.append(card);
+    });
+  });
+
+  const rowsOf = (pred, cols) => (tb) => {
+    const r = dash.data('videos');
+    tb.replaceChildren();
+    if (r.status !== 'ok') return;
+    r.data.filter(pred).sort((a, b) => (a.published < b.published ? 1 : -1)).forEach((v) => {
+      const tr = document.createElement('tr'); tr.dataset.key = encodeURIComponent(v.id);
+      if (v.judged && v.kind === 'ショート') tr.className = +v.views >= 1000 ? 'hit' : (+v.views < 200 ? 'low' : '');
+      cols.forEach(([f, cls, f2]) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = f2 ? f2(v[f]) : v[f]; tr.append(td); });
+      tb.append(tr);
+    });
+  };
+  dash.draw('queueRows', rowsOf((v) => v.status === '予約中', [['published', '', (s) => s.replace('T', ' ')], ['title'], ['length']]));
+  dash.draw('allRows', rowsOf((v) => v.status === '公開中', [['published', '', (s) => s.replace('T', ' ')], ['weekday'], ['title'], ['length'], ['views', 'num v', fmt], ['likes', 'num'], ['comments', 'num']]));
+</script>

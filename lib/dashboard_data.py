@@ -6,7 +6,9 @@ rows = []
 for r in d["videos"]:
     if r["privacy"] != "public" and not r.get("slot"): continue          # unlisted/cancelled privates are left out
     slot = "朝6:00" if r["hhmm"] == "06:00" else ("夕方17:30" if r["hhmm"] == "17:30" else "その他の時間")
-    length = "長尺" if r["kind"] == "long" else ("11〜16秒" if r["seconds"] <= 17 else "20秒")
+    if r["kind"] == "long": length = "長尺"
+    elif r["published"][:10] >= "2026-11-10" and r["seconds"] <= 15: length = "短縮版"     # experiment from 11/10
+    else: length = "11〜16秒" if r["seconds"] <= 17 else "20秒"
     rows.append(dict(id=r["id"], published=r["published"][:16], date=r["published"][:10], weekday=r["weekday"], slot=slot,
                      title=r["title"].replace("#Shorts", "").replace("⁠", "").strip(), kind="長尺" if r["kind"] == "long" else "ショート",
                      seconds=r["seconds"], length=length, status="公開中" if r["privacy"] == "public" else "予約中",
