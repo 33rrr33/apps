@@ -156,6 +156,7 @@
   .cand .hd .tx{padding:7px 9px;font-weight:700}
   .cand .em{width:46px;text-align:center;flex:none;padding:7px 2px!important}
   .cand .g3{margin-top:8px;grid-template-columns:1.2fr 1fr 1.1fr}
+  .cand .g3>*{min-width:0}
   .cand .g3 .tx{padding:7px 8px;font-size:.88rem}
   .cand .st{font-size:.8rem;color:var(--sub);margin:6px 0 0 32px}
   details.tr{font-size:.85rem;color:var(--sub);margin-bottom:12px}
@@ -187,6 +188,32 @@
   @keyframes tin{from{opacity:0;transform:translate(-50%,-10px)}}
   .conf{position:fixed;z-index:95;pointer-events:none;font-size:1.8rem;animation:fly 1.1s ease-out forwards}
   @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
+
+  /* 連携まわり */
+  .nudge{display:flex;align-items:center;gap:10px;border-style:dashed}
+  .nudge .tx2{flex:1;font-size:.86rem}
+  .nudge .tx2 b{display:block;font-size:.95rem}
+  details.sec{border:1px solid var(--line);border-radius:16px;margin-bottom:10px;background:var(--bg);overflow:hidden}
+  details.sec>summary{list-style:none;padding:13px 14px;font-weight:700;display:flex;align-items:center;gap:8px;cursor:pointer}
+  details.sec>summary::-webkit-details-marker{display:none}
+  details.sec>summary .st{margin-left:auto;white-space:nowrap;flex:none;font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--line);color:var(--sub)}
+  details.sec>summary .st.on{background:var(--ok-soft);color:var(--ok)}
+  details.sec .in2{padding:0 14px 14px;background:var(--panel);border-top:1px solid var(--line)}
+  ol.steps2{padding-left:1.4em;margin:10px 0;font-size:.88rem}
+  ol.steps2 li{margin-bottom:7px}
+  ol.steps2 b{color:var(--accent)}
+  .codebox{width:100%;height:90px;font-family:ui-monospace,Menlo,monospace;font-size:.7rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:8px}
+  .kind{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:6px 4px;font-size:.82rem;flex:none}
+  .cand.k-alarm,.cand.k-timer{border-style:dashed}
+  .fixbox{display:flex;gap:6px;margin:4px 0 10px}
+  .fixbox .tx{padding:9px 10px;font-size:.9rem;min-width:0}
+  .fixbox .btn{flex:none;white-space:nowrap}
+  .chkline{display:flex;align-items:center;gap:8px;font-size:.88rem;margin:6px 0}
+  .chkline input{width:22px;height:22px;accent-color:var(--accent)}
+  .srcbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%}
+  .srcbtns .btn{flex-direction:column;gap:2px;padding:10px 4px;font-size:.8rem}
+  .srcbtns .btn b{font-size:1.4rem;line-height:1.2}
+  .gpill{font-size:.68rem;color:var(--ok);margin-left:4px}
 </style>
 </head>
 <body>
@@ -194,13 +221,17 @@
   <div class="top">
     <a href="../">← アプリ一覧</a>
     <span class="sp"></span>
+    <button class="iconbtn" id="btnCam" title="写真から入れる">📷</button>
+    <button class="iconbtn" id="btnMail" title="メールから予定をさがす" hidden>📧</button>
     <button class="iconbtn" id="btnType" title="文字で入れる">✍️</button>
-    <button class="iconbtn" id="btnSet" title="せってい">⚙︎</button>
+    <button class="iconbtn" id="btnSet" title="せってい・連携">⚙︎</button>
   </div>
+  <input type="file" id="camFile" accept="image/*" hidden>
 
   <!-- 今日 -->
   <section id="vToday">
     <div class="today-h"><p class="d" id="todayD"></p><p class="c" id="todayC"></p></div>
+    <div id="nudgeBox"></div>
     <div id="heroBox"></div>
     <div id="overBox"></div>
     <div class="box">
@@ -214,7 +245,7 @@
 
   <!-- これから -->
   <section id="vNext" hidden>
-    <div class="today-h"><p class="d">🗓 これからの予定</p><p class="c">2週間ぶんを先に見ておこう</p></div>
+    <div class="today-h"><p class="d">🗓 これからの予定</p><p class="c" id="nextSub">2週間ぶんを先に見ておこう</p></div>
     <div id="nextList"></div>
   </section>
 
@@ -250,13 +281,19 @@
     <div class="rtime" id="recTime">0:00</div>
     <p class="rhint" id="recHint">思いついたことを、ぜんぶ話してOK。<br>順番バラバラでも整理します。</p>
     <div class="live" id="recLive" hidden></div>
-    <div class="examples" id="recEx">例：「明日10時に歯医者。あと金曜までに書類出さなきゃ。そういえば牛乳買う。来週火曜の3時から会議で、その前に資料印刷」</div>
+    <div class="examples" id="recEx">例：「明日10時に歯医者、30分前にアラームかけて。金曜までに書類出さなきゃ。牛乳買う。来週火曜の3時から会議で、その前に資料印刷」</div>
+    <p class="note" id="recAiNote" hidden style="text-align:center"></p>
     <button class="btn pri wide" id="recStop">✅ 話しおわった</button>
   </div>
 
   <div class="recmain" id="recText" hidden style="justify-content:flex-start">
-    <p class="rhint" style="align-self:flex-start">頭の中のことを、ぜんぶ書き出そう（箇条書きでも文章でもOK）</p>
-    <textarea class="tx" id="dumpTx" style="min-height:40vh" placeholder="明日10時 歯医者&#10;金曜までに書類&#10;牛乳"></textarea>
+    <p class="rhint" style="align-self:flex-start">頭の中のことを、ぜんぶ書き出そう（箇条書きでも文章でもOK）。<br>LINEやメールの文をコピーして貼ってもOK。</p>
+    <textarea class="tx" id="dumpTx" style="min-height:36vh" placeholder="明日10時 歯医者&#10;金曜までに書類&#10;牛乳&#10;7時にアラーム"></textarea>
+    <div class="srcbtns">
+      <button class="btn" id="dumpPaste"><b>📋</b>コピーした文</button>
+      <button class="btn" id="dumpCam"><b>📷</b>写真から</button>
+      <button class="btn" id="dumpMail"><b>📧</b>メールから</button>
+    </div>
     <button class="btn pri wide" id="dumpGo">🧹 整理する</button>
   </div>
 
@@ -271,8 +308,13 @@
 <div class="modal" id="mReview"><div class="sheet">
   <h2>🧹 こう整理しました</h2>
   <p class="note" style="margin:-4px 0 10px">ちがうところはタップして直せます。いらないものはチェックを外してね。</p>
-  <details class="tr" id="revTr"><summary>話した内容（文字おこし）を見る</summary><p id="revTrTx"></p></details>
+  <details class="tr" id="revTr"><summary>元の内容（文字おこし）を見る</summary><p id="revTrTx"></p></details>
+  <div class="fixbox" id="revFix">
+    <input class="tx" id="revFixTx" placeholder="🤖 AIに直してもらう（例：会議は4時から）">
+    <button class="btn sm pri" id="revFixGo">直す</button>
+  </div>
   <div id="revList"></div>
+  <label class="chkline" id="revGcalLine" hidden><input type="checkbox" id="revGcal"> 📅 Googleカレンダーにも入れる</label>
   <p class="status err" id="revStatus"></p>
   <div class="rowbtns">
     <button class="btn" id="revAgain">🎙 もう一回</button>
@@ -298,16 +340,22 @@
     <button class="btn sm" data-q="nextw">来週</button>
     <button class="btn sm" data-q="none">日にちなし（あとで）</button>
   </div>
+  <label class="fl">場所</label>
+  <input class="tx" id="edLoc" placeholder="（なくてもOK）">
   <label class="fl">小さなステップ（1行に1つ）— 大きいことは小分けにすると始めやすい</label>
   <textarea class="tx" id="edSteps" placeholder="書類をさがす&#10;名前を書く&#10;封筒に入れる"></textarea>
-  <label class="fl">メモ（持ち物・場所など）</label>
+  <label class="fl">メモ（持ち物など）</label>
   <textarea class="tx" id="edNote" style="min-height:60px"></textarea>
   <div class="rowbtns">
     <button class="btn" id="edDel">🗑</button>
-    <button class="btn" id="edIcs" title="iPhoneのカレンダーに入れる">📆 カレンダーへ</button>
     <button class="btn pri" id="edSave">ほぞん</button>
   </div>
-  <button class="btn wide" id="edFocus" style="margin-top:8px">🎯 これに集中する（タイマー）</button>
+  <div class="g2" style="margin-top:8px">
+    <button class="btn" id="edGcal">📅 Googleカレンダー</button>
+    <button class="btn" id="edAlarm">⏰ iPhoneアラーム</button>
+    <button class="btn" id="edIcs">📆 iPhoneカレンダー</button>
+    <button class="btn" id="edFocus">🎯 集中タイマー</button>
+  </div>
 </div></div>
 
 <!-- 集中モード -->
@@ -315,39 +363,120 @@
   <div class="top" style="width:100%"><button class="btn sm" id="fcClose">✕ とじる</button></div>
   <p class="fttl" id="fcTtl"></p>
   <div class="ring" id="fcRing"><span id="fcTime">25:00<small>のこり</small></span></div>
-  <div style="display:flex;gap:8px">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
     <button class="btn" id="fcPause">⏸ 一時停止</button>
     <button class="btn" id="fcPlus">＋5分</button>
+    <button class="btn" id="fcIos">⏱ iPhoneタイマーでも</button>
   </div>
   <div class="steps" id="fcSteps"></div>
   <button class="btn ok wide" id="fcDone">🎉 おわった！</button>
 </div></div>
 
-<!-- せってい -->
+<!-- せってい・連携 -->
 <div class="modal" id="mSet"><div class="sheet">
-  <h2>⚙︎ せってい</h2>
-  <label class="fl">AIで整理（Google Gemini APIキー）</label>
-  <input class="tx" id="setKey" type="password" placeholder="AIza..." autocomplete="off">
-  <p class="note">キーがあると、録音した声をAIが聞いて「予定」「やること」「ステップ」まで整理します。無料キーは <a class="link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> で取れます。キーはこの端末の中だけに保存されます。<br>キーがなくても、ブラウザの音声入力＋かんたん整理で使えます。</p>
-  <label class="fl">モデル名（ふつうはそのままでOK）</label>
-  <input class="tx" id="setModel" placeholder="gemini-3.6-flash">
-  <label class="fl">お知らせ（何分前に知らせる？）</label>
-  <div class="g2">
-    <select class="tx" id="setLead">
-      <option value="5">5分前</option><option value="10">10分前</option><option value="15">15分前</option>
-      <option value="30">30分前</option><option value="60">1時間前</option>
-    </select>
-    <button class="btn" id="setNotif">🔔 通知をゆるす</button>
-  </div>
-  <p class="note">アプリを開いている間は、時間になると音と表示でお知らせします。閉じていても確実に鳴らしたいときは「📆 カレンダーへ」でiPhoneのカレンダーに入れてください（アラーム付き）。</p>
-  <button class="btn wide" id="setIcsAll" style="margin-top:10px">📆 これからの予定をまとめてカレンダーへ</button>
-  <label class="fl">データ</label>
-  <div class="g2">
-    <button class="btn" id="setExport">💾 バックアップ</button>
-    <button class="btn" id="setImport">📂 読みこみ</button>
-  </div>
-  <input type="file" id="importFile" accept="application/json,.json" hidden>
-  <button class="btn wide" id="setClearDone" style="margin-top:8px">🧽 7日より前の「できた」を片づける</button>
+  <h2>⚙︎ せってい・つなぐ</h2>
+  <p class="note" style="margin:-4px 0 12px">上から順につなぐと便利になります。どれも最初に1回だけ。</p>
+
+  <!-- AI -->
+  <details class="sec" id="secAi">
+    <summary>🤖 AI（聞き取り・写真の読み取り） <span class="st" id="stAi">未設定</span></summary>
+    <div class="in2">
+      <p class="note">AIをつなぐと、話した言葉をちゃんと聞き取って、日時・場所・持ち物・アラームまで正確に整理します。写真（チラシ・プリント）の読み取りにも必要です。<b>無料</b>で使えます。</p>
+      <ol class="steps2">
+        <li>下の <b>「① キーを作るページを開く」</b> を押す（Googleアカウントでログイン）</li>
+        <li>青い <b>「APIキーを作成」</b>（Create API key）を押す。聞かれたらそのまま「作成」</li>
+        <li>出てきた <b>AIza…</b> で始まる文字の横の <b>コピー</b> を押す</li>
+        <li>この画面にもどって <b>「② 貼り付けてつなぐ」</b> を押す</li>
+      </ol>
+      <a class="btn wide" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="text-decoration:none">① キーを作るページを開く</a>
+      <input class="tx" id="setKey" type="password" placeholder="AIza..." autocomplete="off" style="margin-top:10px">
+      <div class="g2" style="margin-top:8px">
+        <button class="btn" id="aiPaste">② 貼り付けてつなぐ</button>
+        <button class="btn pri" id="aiTest">つなぐ／テスト</button>
+      </div>
+      <p class="status" id="aiStatus"></p>
+      <label class="fl">モデル名（ふつうはそのままでOK）</label>
+      <input class="tx" id="setModel" placeholder="gemini-3.6-flash">
+      <p class="note">キーはこの端末の中だけに保存されます。無料のキーでは、送った内容がGoogleのサービス改善に使われることがあります。気になる人は有料プランのキーを使ってください。</p>
+    </div>
+  </details>
+
+  <!-- Google -->
+  <details class="sec" id="secG">
+    <summary>📅 Googleカレンダー・📧 Gmail <span class="st" id="stG">未設定</span></summary>
+    <div class="in2">
+      <p class="note">つなぐと、入れた予定が<b>自動でGoogleカレンダーに登録</b>され（通知つき）、Googleカレンダーの予定もここに出ます。<b>📧</b> でGmailから予定やしめ切りをさがせます。<br>あなたのGoogleアカウントの中に、小さなプログラム（Apps Script）を置いてつなぎます。<b>パソコンでやるのがおすすめ</b>（10分くらい）。</p>
+      <ol class="steps2">
+        <li><b>「① コードをコピー」</b> を押す（あなた専用の合言葉が入っています）</li>
+        <li><a class="link" href="https://script.google.com/home/projects/create" target="_blank" rel="noopener">script.google.com</a> を開いて <b>「新しいプロジェクト」</b></li>
+        <li>最初から書いてある文字を<b>ぜんぶ消して貼り付け</b> → 💾 保存</li>
+        <li>右上 <b>「デプロイ」→「新しいデプロイ」</b> → 歯車 ⚙ →「<b>ウェブアプリ</b>」</li>
+        <li>「次のユーザーとして実行」= <b>自分</b>、「アクセスできるユーザー」= <b>全員</b> →「デプロイ」</li>
+        <li>「アクセスを承認」→ 自分のアカウント →（警告が出たら）「詳細」→「〜に移動」→「<b>許可</b>」</li>
+        <li>出てきた <b>ウェブアプリのURL</b>（…/exec で終わる）をコピーして、下に貼る →「つなぐ」</li>
+      </ol>
+      <button class="btn wide" id="gCopy">① コードをコピー</button>
+      <textarea class="codebox" id="gCode" readonly hidden></textarea>
+      <input class="tx" id="setGas" placeholder="https://script.google.com/macros/s/…/exec" style="margin-top:10px" autocomplete="off">
+      <button class="btn pri wide" id="gTest" style="margin-top:8px">つなぐ／テスト</button>
+      <p class="status" id="gStatus"></p>
+      <label class="chkline"><input type="checkbox" id="setAutoG"> 入れた予定を自動でGoogleカレンダーにも入れる</label>
+      <label class="chkline"><input type="checkbox" id="setSyncG"> Googleカレンダーの予定をここにも出す</label>
+      <label class="fl">📧 メールをさがす条件（Gmailの検索と同じ書き方）</label>
+      <input class="tx" id="setMailQ" placeholder="newer_than:3d -category:promotions -category:social">
+    </div>
+  </details>
+
+  <!-- iPhone -->
+  <details class="sec" id="secIos">
+    <summary>⏰ iPhoneのアラーム・タイマー <span class="st" id="stIos">未設定</span></summary>
+    <div class="in2">
+      <p class="note">「7時にアラームかけて」「25分タイマー」と話すと、iPhoneの時計アプリに本当にセットします。iPhoneの<b>「ショートカット」アプリ</b>で、2つだけ作っておきます。</p>
+      <p style="font-weight:700;margin:10px 0 0">⏰ アラーム用</p>
+      <ol class="steps2">
+        <li>「ショートカット」アプリ → 右上の <b>＋</b></li>
+        <li>上の名前を <b>予定帳アラーム</b> にする（ぴったり同じ名前）</li>
+        <li>「アクションを検索」で <b>アラームを作成</b> を追加</li>
+        <li>時刻のところをタップ →「<b>ショートカットの入力</b>」をえらぶ → 完了</li>
+      </ol>
+      <p style="font-weight:700;margin:10px 0 0">⏱ タイマー用</p>
+      <ol class="steps2">
+        <li>もう一度 <b>＋</b> → 名前を <b>予定帳タイマー</b> にする</li>
+        <li><b>タイマーを開始</b> を追加 → 数字のところを「<b>ショートカットの入力</b>」、単位は <b>分</b> → 完了</li>
+      </ol>
+      <div class="g2">
+        <button class="btn" id="iosTestA">⏰ ためす（2分後）</button>
+        <button class="btn" id="iosTestT">⏱ ためす（1分）</button>
+      </div>
+      <label class="chkline" style="margin-top:10px"><input type="checkbox" id="setIos"> 作った！（アラーム・タイマーを使う）</label>
+      <p class="note">セットしたあとは、左上の「◀ 予定帳」でもどってこられます。</p>
+    </div>
+  </details>
+
+  <!-- お知らせ -->
+  <details class="sec">
+    <summary>🔔 お知らせ・データ</summary>
+    <div class="in2">
+      <label class="fl">何分前に知らせる？</label>
+      <div class="g2">
+        <select class="tx" id="setLead">
+          <option value="5">5分前</option><option value="10">10分前</option><option value="15">15分前</option>
+          <option value="30">30分前</option><option value="60">1時間前</option>
+        </select>
+        <button class="btn" id="setNotif">🔔 通知をゆるす</button>
+      </div>
+      <p class="note">アプリを開いている間は音と表示でお知らせします。閉じていても確実に知らせたいときは、Googleカレンダー連携か iPhoneアラームを使ってください。</p>
+      <button class="btn wide" id="setIcsAll" style="margin-top:10px">📆 これからの予定をまとめてiPhoneカレンダーへ</button>
+      <label class="fl">データ</label>
+      <div class="g2">
+        <button class="btn" id="setExport">💾 バックアップ</button>
+        <button class="btn" id="setImport">📂 読みこみ</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <button class="btn wide" id="setClearDone" style="margin-top:8px">🧽 7日より前の「できた」を片づける</button>
+    </div>
+  </details>
+
   <p class="status" id="setStatus"></p>
   <div class="rowbtns"><button class="btn" id="setClose">とじる</button><button class="btn pri" id="setSave">ほぞん</button></div>
 </div></div>
@@ -363,11 +492,28 @@
   function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 
   var LS_ITEMS="yotei_items_v1", LS_KEY="yotei_apikey_v1", LS_MODEL="yotei_model_v1",
-      LS_LEAD="yotei_lead_v1", LS_NOTI="yotei_notified_v1";
+      LS_LEAD="yotei_lead_v1", LS_NOTI="yotei_notified_v1",
+      LS_GAS="yotei_gas_url_v1", LS_TOKEN="yotei_gas_token_v1", LS_AUTOG="yotei_auto_gcal_v1",
+      LS_SYNCG="yotei_sync_gcal_v1", LS_MAILQ="yotei_mail_q_v1", LS_IOS="yotei_ios_sc_v1",
+      LS_PEND="yotei_pending_alarms_v1", LS_NONUDGE="yotei_nonudge_v1";
   var FURI_KEY="furigana_apikey_v1"; // 同じサイトの「ふりがなテスト」で登録済みのキーも使う
   var DEF_MODEL="gemini-3.6-flash";
+  var DEF_MAILQ="newer_than:3d -category:promotions -category:social";
+  var SC_ALARM="予定帳アラーム", SC_TIMER="予定帳タイマー";
   function apiKey(){ return lsGet(LS_KEY,"")||lsGet(FURI_KEY,""); }
   function apiModel(){ return lsGet(LS_MODEL,"")||DEF_MODEL; }
+  function gasUrl(){ return lsGet(LS_GAS,""); }
+  function gasOn(){ return /^https:\/\/script\.google(usercontent)?\.com\//.test(gasUrl()); }
+  function iosOn(){ return lsGet(LS_IOS,"")==="1"; }
+  function gasToken(){
+    var t=lsGet(LS_TOKEN,"");
+    if(!t){
+      var a=new Uint8Array(12); (window.crypto||window.msCrypto).getRandomValues(a);
+      t=Array.prototype.map.call(a,function(b){ return ("0"+b.toString(16)).slice(-2); }).join("");
+      lsSet(LS_TOKEN,t);
+    }
+    return t;
+  }
 
   /* ============ 日付まわり ============ */
   var WD="日月火水木金土";
@@ -392,6 +538,7 @@
     var h=Math.floor(min/60), m=min%60; return h+"時間"+(m?m+"分":"");
   }
   function mmss(sec){ sec=Math.max(0,Math.round(sec)); return Math.floor(sec/60)+":"+pad(sec%60); }
+  function hhmm(s){ return /^\d{1,2}:\d{2}$/.test(s||"")?(pad(+s.split(":")[0])+":"+s.split(":")[1]):null; }
 
   /* ============ データ ============ */
   var items=[];
@@ -405,10 +552,11 @@
     return {
       id:o.id||uid(), title:String(o.title||"").trim()||"（なまえなし）", emoji:o.emoji||guessEmoji(o.title||""),
       date:/^\d{4}-\d{2}-\d{2}$/.test(o.date||"")?o.date:null,
-      time:/^\d{1,2}:\d{2}$/.test(o.time||"")?(pad(+o.time.split(":")[0])+":"+o.time.split(":")[1]):null,
-      dur:Math.max(5,Math.min(600,parseInt(o.dur,10)||30)),
-      steps:steps, note:String(o.note||""), done:!!o.done, doneAt:o.doneAt||null,
-      created:o.created||Date.now()
+      time:hhmm(o.time),
+      dur:Math.max(5,Math.min(1440,parseInt(o.dur,10)||30)),
+      steps:steps, note:String(o.note||""), location:String(o.location||""),
+      done:!!o.done, doneAt:o.doneAt||null, created:o.created||Date.now(),
+      gcalId:o.gcalId||null, gcalRec:!!o.gcalRec, src:o.src||""
     };
   }
   items=items.map(normItem);
@@ -420,7 +568,7 @@
     [/ご飯|ランチ|夕食|朝食|飲み会|食事|料理/,"🍽"],[/運動|ジム|散歩|ラン|ヨガ/,"🏃"],
     [/授業|学校|テスト|宿題|勉強|採点|丸付け/,"📚"],[/支払|振込|払う|お金|銀行/,"💴"],
     [/誕生日|プレゼント/,"🎁"],[/美容|髪|カット/,"💇"],[/出発|電車|駅|移動|迎え|送り/,"🚃"],
-    [/寝る|睡眠|休/,"😴"],[/予約/,"📌"]
+    [/寝る|睡眠|休/,"😴"],[/予約/,"📌"],[/アラーム|起き/,"⏰"],[/タイマー/,"⏱"]
   ];
   function guessEmoji(t){ for(var i=0;i<EMOJI_RULES.length;i++) if(EMOJI_RULES[i][0].test(t)) return EMOJI_RULES[i][1]; return "🔹"; }
 
@@ -445,11 +593,12 @@
     var sub=[];
     if(opt.showDate&&it.date) sub.push(dayLabel(it.date));
     if(it.time) sub.push(fmtDur(it.dur));
+    if(it.location) sub.push("📍"+it.location);
     if(it.note) sub.push(it.note.split("\n")[0].slice(0,24));
     return '<div class="row'+(it.done?" done":"")+(opt.now?" now":"")+'" data-id="'+it.id+'">'+
       '<span class="tm'+(it.time?"":" none")+'">'+(it.time||"いつでも")+'</span>'+
       '<button class="chk" data-act="tog" aria-label="できた">'+(it.done?"✓":"")+'</button>'+
-      '<div class="body" data-act="edit"><div class="t1">'+esc(it.emoji)+' '+esc(it.title)+'</div>'+
+      '<div class="body" data-act="edit"><div class="t1">'+esc(it.emoji)+' '+esc(it.title)+(it.gcalId?'<span class="gpill">📅</span>':'')+'</div>'+
       ((sub.length||st)?'<div class="t2">'+esc(sub.join(" ・ "))+esc(st)+'</div>':'')+'</div>'+
       (opt.extra||"")+'</div>';
   }
@@ -458,20 +607,44 @@
     var now=new Date(), t=todayStr();
     $("todayD").textContent=(now.getMonth()+1)+"月"+now.getDate()+"日（"+WD[now.getDay()]+"）";
     $("todayC").textContent=pad(now.getHours())+":"+pad(now.getMinutes())+" いま";
+    $("btnMail").hidden=!gasOn();
 
     var later=items.filter(function(i){ return !i.date&&!i.done; });
     $("laterBadge").hidden=!later.length; $("laterBadge").textContent=later.length;
 
+    renderNudge();
     if(view==="vToday") renderToday(now,t);
     else if(view==="vNext") renderNext(t);
     else if(view==="vLater") renderLater(later);
     else renderDone();
   }
 
+  // 上のおしらせ（のこりのアラーム・AI未設定）
+  function renderNudge(){
+    var h="", pend=pendingAlarms();
+    if(pend.length){
+      h+='<div class="box nudge warnbox"><span style="font-size:1.6rem">⏰</span><div class="tx2"><b>のこりのアラーム '+pend.length+'こ</b>'+
+        esc(pend.join("、"))+'</div><button class="btn sm pri" data-nudge="alarm">セット</button>'+
+        '<button class="btn sm" data-nudge="alarmx">✕</button></div>';
+    }
+    if(!apiKey()&&lsGet(LS_NONUDGE,"")!=="1"){
+      h+='<div class="box nudge"><span style="font-size:1.6rem">🤖</span><div class="tx2"><b>AIをつなぐと聞き取りが正確に</b>'+
+        'いまはAIなしの「かんたん整理」です。無料・3分でつなげます。</div>'+
+        '<button class="btn sm pri" data-nudge="ai">つなぐ</button></div>';
+    }
+    $("nudgeBox").innerHTML=h;
+  }
+  $("nudgeBox").addEventListener("click",function(e){
+    var b=e.target.closest("[data-nudge]"); if(!b) return;
+    var k=b.getAttribute("data-nudge");
+    if(k==="ai") openSet("secAi");
+    else if(k==="alarm") runNextAlarm();
+    else if(k==="alarmx"){ lsSet(LS_PEND,"[]"); render(); }
+  });
+
   function renderToday(now,t){
     var td=items.filter(function(i){ return i.date===t; }).sort(sortByTime);
     var undone=td.filter(function(i){ return !i.done; });
-    // いま／つぎ
     var cur=null,next=null;
     undone.forEach(function(it){
       var s=startOf(it); if(!s) return;
@@ -485,6 +658,7 @@
       h='<div class="box hero"><div class="lab">▶ いまの時間</div><div class="ttl">'+esc(cur.emoji+" "+cur.title)+'</div>'+
         '<div class="meta">のこり '+fmtDur(left)+' <small>（'+cur.time+'〜 '+fmtDur(cur.dur)+'）</small></div>'+
         '<div class="bar"><i style="width:'+(p*100)+'%"></i></div>'+
+        (cur.location?'<div class="note">📍 '+esc(cur.location)+'</div>':'')+
         (next?'<div class="note">つぎ：'+esc(next.time+" "+next.title)+'</div>':'')+
         '<div class="acts"><button class="btn ok" data-hero="done" data-id="'+cur.id+'">✓ おわった</button>'+
         '<button class="btn" data-hero="focus" data-id="'+cur.id+'">🎯 集中タイマー</button></div></div>';
@@ -494,6 +668,7 @@
         '<div class="ttl">'+esc(next.emoji+" "+next.title)+'</div>'+
         '<div class="meta">あと '+fmtDur(mins)+' <small>（'+next.time+' から）</small></div>'+
         (mins<=120?'<div class="bar"><i style="width:'+(Math.max(0,1-mins/120)*100)+'%"></i></div>':'')+
+        (next.location?'<div class="note">📍 '+esc(next.location)+'</div>':'')+
         (next.note?'<div class="note">📝 '+esc(next.note)+'</div>':'')+
         (next.steps.length?'<div class="note">準備：'+esc(next.steps.filter(function(s){return !s.done;}).map(function(s){return s.t;}).join(" → "))+'</div>':'')+
         '</div>';
@@ -509,13 +684,12 @@
         h='<div class="box hero free" style="text-align:center"><div class="ttl">🎉 今日の予定はぜんぶおわり！</div><div class="note">おつかれさま。ゆっくりしてね。</div></div>';
       }else{
         h='<div class="box hero free" style="text-align:center"><div class="ttl" style="font-size:1.15rem">今日の予定はまだありません</div>'+
-          '<div class="note">下の 🎙 を押して、思いついたことを話すだけでOK。</div></div>';
+          '<div class="note">下の 🎙 を押して話すか、📷 でチラシを撮るだけでOK。</div></div>';
       }
     }
     $("heroBox").innerHTML=h;
 
-    // やり残し（責めない）
-    var over=items.filter(function(i){ return i.date&&i.date<t&&!i.done; }).sort(function(a,b){ return a.date<b.date?-1:1; });
+    var over=items.filter(function(i){ return i.date&&i.date<t&&!i.done&&!i.gcalRec&&i.src!=="gcal"; }).sort(function(a,b){ return a.date<b.date?-1:1; });
     if(over.length){
       var oh='<div class="box warnbox"><h2>🧺 前の日のやり残し <span class="n">'+over.length+'件</span></h2>'+
         '<p class="note" style="margin:0 0 6px">よくあること！ 今日にまわすか、あとでにしよう。</p>';
@@ -528,7 +702,6 @@
       $("overBox").innerHTML=oh;
     }else $("overBox").innerHTML="";
 
-    // 今日の一覧
     var lh="";
     td.forEach(function(it){ lh+=rowHtml(it,{now:cur&&it.id===cur.id}); });
     if(!td.length) lh='<p class="empty">なにもない日。🎙 から入れられます。</p>';
@@ -556,6 +729,7 @@
       h+='<div class="dayh">もっと先</div><div class="box" style="padding:6px 14px">';
       far.forEach(function(it){ h+=rowHtml(it,{showDate:true}); }); h+='</div>';
     }
+    $("nextSub").textContent=gasOn()&&lsGet(LS_SYNCG,"1")==="1"?"2週間ぶん（📅 はGoogleカレンダーとつながっている予定）":"2週間ぶんを先に見ておこう";
     $("nextList").innerHTML=h||'<div class="box"><p class="empty">これからの予定はありません。</p></div>';
   }
 
@@ -585,9 +759,10 @@
     if(b.closest(".modal,#rec,#focus")) return;
     var bulk=b.getAttribute("data-bulk");
     if(bulk){
-      var t=todayStr();
-      items.forEach(function(i){ if(i.date&&i.date<t&&!i.done){ if(bulk==="today") i.date=t; else i.date=null; } });
-      save(); render(); toast(bulk==="today"?"今日にまとめました":"「あとで」に入れました"); return;
+      var t=todayStr(), moved=[];
+      items.forEach(function(i){ if(i.date&&i.date<t&&!i.done&&!i.gcalRec&&i.src!=="gcal"){ i.date=(bulk==="today")?t:null; moved.push(i); } });
+      save(); render(); syncPush(moved.filter(function(i){ return i.gcalId; }));
+      toast(bulk==="today"?"今日にまとめました":"「あとで」に入れました"); return;
     }
     var hero=b.getAttribute("data-hero");
     if(hero){ var hi=find(b.getAttribute("data-id")); if(!hi) return;
@@ -597,7 +772,7 @@
     var act=b.getAttribute("data-act");
     if(act==="tog") setDone(it,!it.done,b);
     else if(act==="edit") openEdit(it);
-    else if(act==="totoday"){ it.date=todayStr(); save(); render(); toast("今日に入れました"); }
+    else if(act==="totoday"){ it.date=todayStr(); save(); render(); if(it.gcalId) syncPush([it]); toast("今日に入れました"); }
   });
 
   function setDone(it,v,el){
@@ -608,15 +783,17 @@
 
   /* ============ 編集 ============ */
   var editing=null;
-  function openEdit(it,isNew){
+  function openEdit(it){
     editing=it||normItem({title:"",date:todayStr()});
-    editing._new=!!isNew||!it;
+    editing._new=!it;
     $("edH").textContent=editing._new?"＋ 予定を入れる":"予定を直す";
-    $("edEmoji").value=editing.emoji; $("edTitle").value=editing._new&&!it?"":editing.title;
+    $("edEmoji").value=editing.emoji; $("edTitle").value=editing._new?"":editing.title;
     $("edDate").value=editing.date||""; $("edTime").value=editing.time||""; $("edDur").value=editing.dur;
+    $("edLoc").value=editing.location;
     $("edSteps").value=editing.steps.map(function(s){return s.t;}).join("\n");
     $("edNote").value=editing.note;
     $("edDel").hidden=editing._new; $("edFocus").hidden=editing._new;
+    $("edGcal").textContent=editing.gcalId?"📅 Googleカレンダー ✓":"📅 Googleカレンダー";
     $("mEdit").classList.add("show");
   }
   document.querySelectorAll("[data-q]").forEach(function(b){
@@ -628,31 +805,64 @@
   });
   function readEdit(){
     var old={}; editing.steps.forEach(function(s){ old[s.t]=s.done; });
-    var o=normItem({
+    return normItem({
       id:editing.id, title:$("edTitle").value, emoji:$("edEmoji").value.trim()||guessEmoji($("edTitle").value),
-      date:$("edDate").value, time:$("edTime").value, dur:$("edDur").value,
+      date:$("edDate").value, time:$("edTime").value, dur:$("edDur").value, location:$("edLoc").value.trim(),
       steps:$("edSteps").value.split("\n").map(function(s){ s=s.trim(); return {t:s,done:!!old[s]}; }),
-      note:$("edNote").value.trim(), done:editing.done, doneAt:editing.doneAt, created:editing.created
+      note:$("edNote").value.trim(), done:editing.done, doneAt:editing.doneAt, created:editing.created,
+      gcalId:editing.gcalId, gcalRec:editing.gcalRec, src:editing.src
     });
+  }
+  function commitEdit(){
+    var o=readEdit();
+    if(editing._new){ items.push(o); editing._new=false; }
+    else for(var i=0;i<items.length;i++) if(items[i].id===o.id) items[i]=o;
+    editing=o; clearNotified(o.id); save(); render();
     return o;
   }
   $("edSave").addEventListener("click",function(){
     if(!$("edTitle").value.trim()){ $("edTitle").focus(); return; }
-    var o=readEdit();
-    if(editing._new) items.push(o);
-    else for(var i=0;i<items.length;i++) if(items[i].id===o.id) items[i]=o;
-    clearNotified(o.id);
-    save(); $("mEdit").classList.remove("show"); render(); toast("ほぞんしました");
+    var o=commitEdit();
+    $("mEdit").classList.remove("show"); toast("ほぞんしました");
+    if(o.gcalId&&o.date) syncPush([o]);
+    else if(!o.gcalId&&o.date&&gasOn()&&lsGet(LS_AUTOG,"1")==="1"&&o.src!=="gcal") syncPush([o]);
   });
   $("edDel").addEventListener("click",function(){
     if(!confirm("「"+editing.title+"」を消しますか？")) return;
+    var gid=editing.gcalId, rec=editing.gcalRec;
     items=items.filter(function(i){ return i.id!==editing.id; });
     save(); $("mEdit").classList.remove("show"); render();
+    if(gid&&!rec&&gasOn()&&confirm("Googleカレンダーからも消しますか？")){
+      gas("deleteEvent",{gcalId:gid}).then(function(){ toast("Googleカレンダーからも消しました"); },function(e){ toast("Google: "+e.message); });
+    }
   });
   $("edIcs").addEventListener("click",function(){
     var o=readEdit();
     if(!o.date){ toast("日にちを入れるとカレンダーに入れられます"); return; }
     downloadIcs([o], "yotei-"+o.date+".ics");
+  });
+  $("edGcal").addEventListener("click",function(){
+    if(!$("edTitle").value.trim()){ $("edTitle").focus(); return; }
+    var o=readEdit();
+    if(!o.date){ toast("日にちを入れるとGoogleカレンダーに入れられます"); return; }
+    if(gasOn()){
+      o=commitEdit();
+      $("edGcal").textContent="📅 入れています…";
+      syncPush([o]).then(function(){ $("edGcal").textContent=find(o.id)&&find(o.id).gcalId?"📅 Googleカレンダー ✓":"📅 Googleカレンダー"; });
+    }else{
+      window.open(gcalTemplateUrl(o),"_blank");
+    }
+  });
+  $("edAlarm").addEventListener("click",function(){
+    var o=readEdit();
+    if(!o.time){ toast("時間を入れるとアラームにできます"); return; }
+    var s=startOf(o)||new Date(), lead=+lsGet(LS_LEAD,"10");
+    var at=new Date(s.getTime()-lead*6e4);
+    var pick=prompt("何時にアラームをセットする？（"+lead+"分前をおすすめ）", pad(at.getHours())+":"+pad(at.getMinutes()));
+    if(!pick) return;
+    pick=hhmm(pick.replace("：",":")); if(!pick){ toast("7:30 のように入れてね"); return; }
+    if(!editing._new) commitEdit();
+    setAlarms([pick]);
   });
   $("edFocus").addEventListener("click",function(){ $("mEdit").classList.remove("show"); openFocus(editing); });
   $("mEdit").addEventListener("click",function(e){ if(e.target===$("mEdit")) $("mEdit").classList.remove("show"); });
@@ -700,9 +910,118 @@
     if(fc.left===300){ fc.last=Date.now(); clearInterval(fc.timer); fc.timer=setInterval(tickFocus,250); }
     tickFocus();
   });
+  $("fcIos").addEventListener("click",function(){ startIosTimer(Math.max(1,Math.round(fc.left/60))); });
   function closeFocus(){ clearInterval(fc.timer); $("focus").classList.remove("show"); render(); }
   $("fcClose").addEventListener("click",closeFocus);
   $("fcDone").addEventListener("click",function(){ var it=fc.it; closeFocus(); setDone(it,true,null); });
+
+  /* ============ iPhone（ショートカット）連携 ============ */
+  function runShortcut(name,text){
+    location.href="shortcuts://run-shortcut?name="+encodeURIComponent(name)+"&input=text&text="+encodeURIComponent(text);
+  }
+  function pendingAlarms(){ try{ return JSON.parse(lsGet(LS_PEND,"[]"))||[]; }catch(e){ return []; } }
+  function setAlarms(times){
+    if(!times.length) return;
+    if(!iosOn()){
+      toast("先に iPhoneアラームの準備をしてね（1回だけ）",3500);
+      openSet("secIos"); return;
+    }
+    lsSet(LS_PEND,JSON.stringify(times.slice(1)));
+    render();
+    runShortcut(SC_ALARM,times[0]);
+  }
+  function runNextAlarm(){
+    var p=pendingAlarms(); if(!p.length) return;
+    lsSet(LS_PEND,JSON.stringify(p.slice(1))); render();
+    runShortcut(SC_ALARM,p[0]);
+  }
+  function startIosTimer(min){
+    if(!iosOn()){ toast("先に iPhoneタイマーの準備をしてね（1回だけ）",3500); openSet("secIos"); return; }
+    runShortcut(SC_TIMER,String(min));
+  }
+
+  /* ============ Google（Apps Script）連携 ============ */
+  function gas(action,data){
+    var body=JSON.stringify(Object.assign({token:gasToken(),action:action},data||{}));
+    // Content-Type を付けない（text/plain）ことで、ブラウザの事前確認なしで送れる
+    return fetchTimeout(gasUrl(),{method:"POST",body:body,redirect:"follow"},60000)
+      .then(function(r){ return r.text(); })
+      .then(function(t){
+        var j; try{ j=JSON.parse(t); }catch(e){
+          if(/<html|<!DOCTYPE/i.test(t)) throw new Error("URLか「アクセスできるユーザー＝全員」の設定を確認してね");
+          throw new Error("返事が読めませんでした");
+        }
+        if(!j.ok) throw new Error(j.error||"エラー");
+        return j;
+      });
+  }
+  function toGcalEvent(it){
+    var desc=[];
+    if(it.steps.length) desc.push("ステップ:\n"+it.steps.map(function(s){return "・"+s.t;}).join("\n"));
+    if(it.note) desc.push(it.note);
+    desc.push("（しゃべって予定帳から）");
+    var o={id:it.id,gcalId:it.gcalId,title:(it.emoji&&it.emoji!=="🔹"?it.emoji+" ":"")+it.title,date:it.date,
+      description:desc.join("\n\n"),location:it.location||""};
+    if(it.time){ var s=startOf(it); o.start=s.getTime(); o.end=s.getTime()+it.dur*6e4; o.remind=+lsGet(LS_LEAD,"10"); }
+    return o;
+  }
+  function syncPush(list){
+    list=(list||[]).filter(function(i){ return i.date&&!i.gcalRec; });
+    if(!gasOn()||!list.length) return Promise.resolve();
+    return gas("upsertEvents",{events:list.map(toGcalEvent)}).then(function(j){
+      var ok=0, ng=0;
+      (j.results||[]).forEach(function(r){
+        var it=find(r.id); if(r.error||!it){ ng++; return; }
+        it.gcalId=r.gcalId; ok++;
+      });
+      save(); render();
+      if(ok) toast("📅 Googleカレンダーに "+ok+"件 入れました");
+      if(ng) toast("📅 "+ng+"件 入れられませんでした",4000);
+    },function(e){ toast("📅 Googleカレンダーに入れられませんでした（"+e.message+"）",4500); });
+  }
+  var lastPull=0;
+  function syncPull(force){
+    if(!gasOn()||lsGet(LS_SYNCG,"1")!=="1") return Promise.resolve();
+    if(!force&&Date.now()-lastPull<5*6e4) return Promise.resolve();
+    lastPull=Date.now();
+    var from=todayStr(), to=ymd(addDays(new Date(),30));
+    return gas("listEvents",{from:from,to:to}).then(function(j){
+      var seen={}, changed=false;
+      (j.events||[]).forEach(function(ev){
+        var key=ev.recurring?(ev.gcalId+"@"+ev.date):ev.gcalId;
+        seen[key]=1;
+        var it=null;
+        for(var i=0;i<items.length;i++){ var x=items[i]; if((x.gcalRec?(x.gcalId+"@"+x.date):x.gcalId)===key){ it=x; break; } }
+        var title=ev.title.replace(/^(\p{Extended_Pictographic}\uFE0F?)\s*/u,"");
+        var em=(ev.title.match(/^(\p{Extended_Pictographic}\uFE0F?)/u)||[])[1];
+        if(it){
+          if(it.date!==ev.date||it.time!==(ev.time||null)||it.title!==title){
+            it.date=ev.date; it.time=ev.time||null; it.title=title; if(ev.dur) it.dur=ev.dur; changed=true;
+          }
+        }else{
+          items.push(normItem({title:title,emoji:em||guessEmoji(title),date:ev.date,time:ev.time,dur:ev.dur||30,
+            location:ev.location,note:"",gcalId:ev.gcalId,gcalRec:ev.recurring,src:"gcal"}));
+          changed=true;
+        }
+      });
+      // Googleで消された予定は、ここからも消す（期間内・まだ終わっていないもの）
+      var before=items.length;
+      items=items.filter(function(x){
+        if(!x.gcalId||x.done||!x.date||x.date<from||x.date>to) return true;
+        return seen[x.gcalRec?(x.gcalId+"@"+x.date):x.gcalId];
+      });
+      if(items.length!==before) changed=true;
+      if(changed){ save(); render(); }
+    },function(){ /* 読めなくても静かに */ });
+  }
+  function gcalTemplateUrl(it){
+    var dates;
+    if(it.time){ var s=startOf(it), e=new Date(s.getTime()+it.dur*6e4); dates=icsDT(s)+"/"+icsDT(e); }
+    else{ dates=it.date.replace(/-/g,"")+"/"+ymd(addDays(parseYmd(it.date),1)).replace(/-/g,""); }
+    var det=[]; if(it.steps.length) det.push(it.steps.map(function(s){return "・"+s.t;}).join("\n")); if(it.note) det.push(it.note);
+    return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(it.emoji+" "+it.title)+
+      "&dates="+dates+"&details="+encodeURIComponent(det.join("\n\n"))+"&location="+encodeURIComponent(it.location||"");
+  }
 
   /* ============ 録音・入力 ============ */
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -715,6 +1034,7 @@
   }
   function openRec(textMode){
     $("rec").classList.add("show");
+    $("dumpMail").hidden=!gasOn();
     if(textMode){ recShow("recText"); setTimeout(function(){ $("dumpTx").focus(); },50); return; }
     recShow("recVoice");
     startRecording();
@@ -723,7 +1043,7 @@
   $("btnType").addEventListener("click",function(){ openRec(true); });
   $("recToText").addEventListener("click",function(){
     var tx=(rec.finalTx+rec.interim).trim();
-    stopAll(true); recShow("recText"); if(tx) $("dumpTx").value=tx; $("dumpTx").focus();
+    stopAll(true); recShow("recText"); $("dumpMail").hidden=!gasOn(); if(tx) $("dumpTx").value=tx; $("dumpTx").focus();
   });
   $("recCancel").addEventListener("click",function(){ stopAll(true); $("rec").classList.remove("show"); });
   $("recBtn").addEventListener("click",function(){ if(!rec.active) startRecording(); });
@@ -739,10 +1059,16 @@
     rec.finalTx=""; rec.interim=""; rec.chunks=[];
     $("recLive").hidden=true; $("recLive").innerHTML=""; $("recEx").hidden=false; $("recTime").textContent="0:00";
     var key=apiKey();
+    $("recAiNote").hidden=!!key;
+    $("recAiNote").innerHTML=key?"":'いまはAIなし（聞きまちがいが多め）。<a class="link" href="#" id="recAiLink">🤖 AIをつなぐ</a>';
     if(key&&navigator.mediaDevices&&window.MediaRecorder){ rec.mode="audio"; startAudio(); }
     else if(SR){ rec.mode="sr"; startSR(); }
     else{ recShow("recText"); toast("このブラウザは音声入力に対応していません。文字で書いてね"); }
   }
+  $("recAiNote").addEventListener("click",function(e){
+    if(e.target.id!=="recAiLink") return; e.preventDefault();
+    stopAll(true); $("rec").classList.remove("show"); openSet("secAi");
+  });
   function startTimer(){
     rec.t0=Date.now(); clearInterval(rec.timer);
     rec.timer=setInterval(function(){
@@ -751,12 +1077,12 @@
     },250);
   }
   function pickMime(){
-    var c=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/aac","audio/ogg;codecs=opus"];
+    var c=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/aac","audio/ogg;codecs=opus"];
     for(var i=0;i<c.length;i++){ try{ if(MediaRecorder.isTypeSupported(c[i])) return c[i]; }catch(e){} }
     return "";
   }
   function startAudio(){
-    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(function(stream){
       rec.stream=stream;
       var mt=pickMime();
       rec.mr=mt?new MediaRecorder(stream,{mimeType:mt}):new MediaRecorder(stream);
@@ -764,7 +1090,7 @@
       rec.mr.start(1000);
       meter(stream);
       startTimer();
-      setRecUI(true,"話しています…<br>終わったら「話しおわった」を押してね");
+      setRecUI(true,"🤖 AIが聞いています…<br>終わったら「話しおわった」を押してね");
     }).catch(function(){
       setRecUI(false);
       if(SR){ rec.mode="sr"; startSR(); }
@@ -801,14 +1127,14 @@
         stopAll(true); recShow("recText"); toast("マイクが使えませんでした。文字で書いてね");
       }
     };
-    sr.onend=function(){ if(rec.active&&rec.sr===sr){ try{ sr.start(); }catch(x){} } }; // 途中で切れたら続ける
+    sr.onend=function(){ if(rec.active&&rec.sr===sr){ try{ sr.start(); }catch(x){} } };
     try{ sr.start(); startTimer(); setRecUI(true,"聞いています…<br>終わったら「話しおわった」を押してね"); }
     catch(e){ recShow("recText"); }
   }
   function stopAll(discard){
     rec.active=false; clearInterval(rec.timer); cancelAnimationFrame(rec.raf);
     if(rec.sr){ var s=rec.sr; rec.sr=null; try{ s.stop(); }catch(e){} }
-    if(rec.mr&&rec.mr.state!=="inactive"){ if(discard) rec.mr.ondataavailable=null; try{ rec.mr.stop(); }catch(e){} }
+    if(rec.mr&&rec.mr.state!=="inactive"){ if(discard){ rec.mr.ondataavailable=null; rec.mr.onstop=null; } try{ rec.mr.stop(); }catch(e){} }
     if(rec.stream){ rec.stream.getTracks().forEach(function(t){ t.stop(); }); rec.stream=null; }
     if(rec.ctx){ try{ rec.ctx.close(); }catch(e){} rec.ctx=null; }
     setRecUI(false);
@@ -819,7 +1145,7 @@
     if(rec.mode==="audio"){
       var mr=rec.mr;
       mr.onstop=function(){
-        var type=(mr.mimeType||rec.chunks[0]&&rec.chunks[0].type||"audio/webm").split(";")[0];
+        var type=(mr.mimeType||rec.chunks[0]&&rec.chunks[0].type||"audio/mp4").split(";")[0];
         var blob=new Blob(rec.chunks,{type:type});
         if(blob.size<1500){ recShow("recVoice"); toast("声が入っていなかったみたい。もう一度どうぞ"); return; }
         processAudio(blob,type);
@@ -836,69 +1162,148 @@
     var tx=$("dumpTx").value.trim(); if(!tx){ $("dumpTx").focus(); return; }
     processText(tx);
   });
+  $("dumpPaste").addEventListener("click",function(){
+    if(!navigator.clipboard||!navigator.clipboard.readText){ toast("入力らんを長押し →「ペースト」で貼ってね"); $("dumpTx").focus(); return; }
+    navigator.clipboard.readText().then(function(t){
+      if(!t){ toast("コピーした文がありません"); return; }
+      var cur=$("dumpTx").value.trim(); $("dumpTx").value=(cur?cur+"\n":"")+t;
+    },function(){ toast("入力らんを長押し →「ペースト」で貼ってね"); $("dumpTx").focus(); });
+  });
+  $("dumpCam").addEventListener("click",startCamera);
+  $("dumpMail").addEventListener("click",startMail);
 
-  function busy(msg){ recShow("recBusy"); $("busyTxt").textContent=msg||"整理しています…"; }
+  function busy(msg){ $("rec").classList.add("show"); recShow("recBusy"); $("busyTxt").textContent=msg||"整理しています…"; }
 
+  function blobToB64(blob){
+    return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ res(String(fr.result).split(",")[1]); }; fr.onerror=rej; fr.readAsDataURL(blob); });
+  }
   function processAudio(blob,mime){
-    busy("AIが聞いて整理しています…");
-    var fr=new FileReader();
-    fr.onload=function(){
-      var b64=String(fr.result).split(",")[1];
-      callGemini([{text:buildPrompt(true)},{inline_data:{mime_type:mime,data:b64}}])
-        .then(function(res){ showReview(res.items,res.transcript,true); })
-        .catch(function(err){
-          recShow("recText");
-          toast("AIで整理できませんでした（"+err.message+"）。文字で入れてね");
-        });
-    };
-    fr.readAsDataURL(blob);
+    busy("🤖 AIが聞いて整理しています…");
+    blobToB64(blob).then(function(b64){
+      return callAI("audio",[{inline_data:{mime_type:mime,data:b64}}]);
+    }).then(function(res){ showReview(res.items,res.transcript,"audio"); })
+      .catch(function(err){
+        recShow("recText");
+        toast("AIで整理できませんでした（"+err.message+"）。文字で入れてね",5000);
+      });
   }
   function processText(tx){
     $("dumpTx").value="";
     if(apiKey()){
-      busy("AIが整理しています…");
-      callGemini([{text:buildPrompt(false)+"\n\n# 入力\n"+tx}])
-        .then(function(res){ showReview(res.items,tx,true); })
-        .catch(function(err){ showReview(localParse(tx),tx,false,"AIにつながらなかったので、かんたん整理にしました（"+err.message+"）"); });
+      busy("🤖 AIが整理しています…");
+      callAI("text",[{text:"# 入力\n"+tx}])
+        .then(function(res){ showReview(res.items,tx,"text"); })
+        .catch(function(err){ showReview(localParse(tx),tx,"local","AIにつながらなかったので、かんたん整理にしました（"+err.message+"）"); });
     }else{
-      showReview(localParse(tx),tx,false);
+      showReview(localParse(tx),tx,"local");
     }
   }
 
-  /* ============ Gemini ============ */
-  function buildPrompt(audio){
+  /* ---- 📷 カメラ・写真 ---- */
+  function startCamera(){
+    if(!apiKey()){ toast("写真を読むにはAIをつないでね（無料）",3500); $("rec").classList.remove("show"); openSet("secAi"); return; }
+    $("camFile").value=""; $("camFile").click();
+  }
+  $("btnCam").addEventListener("click",startCamera);
+  $("camFile").addEventListener("change",function(){
+    var f=this.files&&this.files[0]; if(!f) return;
+    busy("📷 写真を読んでいます…");
+    shrinkImage(f,1800).then(function(b64){
+      return callAI("image",[{inline_data:{mime_type:"image/jpeg",data:b64}}]);
+    }).then(function(res){ showReview(res.items,res.transcript,"image"); })
+      .catch(function(err){ $("rec").classList.remove("show"); toast("写真を読めませんでした（"+err.message+"）",5000); });
+  });
+  function shrinkImage(file,max){
+    return new Promise(function(res,rej){
+      var url=URL.createObjectURL(file), img=new Image();
+      img.onload=function(){
+        var w=img.naturalWidth,h=img.naturalHeight,s=Math.min(1,max/Math.max(w,h));
+        var c=document.createElement("canvas"); c.width=Math.round(w*s); c.height=Math.round(h*s);
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        URL.revokeObjectURL(url);
+        res(c.toDataURL("image/jpeg",0.85).split(",")[1]);
+      };
+      img.onerror=function(){ URL.revokeObjectURL(url); rej(new Error("画像をひらけません")); };
+      img.src=url;
+    });
+  }
+
+  /* ---- 📧 Gmail ---- */
+  function startMail(){
+    if(!gasOn()){ openSet("secG"); return; }
+    if(!apiKey()){ toast("メールを読むにはAIもつないでね",3500); openSet("secAi"); return; }
+    busy("📧 メールをさがしています…");
+    gas("searchMail",{query:lsGet(LS_MAILQ,"")||DEF_MAILQ,max:12}).then(function(j){
+      var mails=j.mails||[];
+      if(!mails.length) throw new Error("条件に合うメールがありませんでした");
+      busy("🤖 "+mails.length+"通のメールから予定をさがしています…");
+      var txt=mails.map(function(m,i){
+        return "## メール"+(i+1)+"\n件名: "+m.subject+"\n差出人: "+m.from+"\n受信: "+m.date+"\n本文:\n"+m.body;
+      }).join("\n\n");
+      return callAI("mail",[{text:txt}]).then(function(res){
+        showReview(res.items,mails.map(function(m){ return "・"+m.date+" "+m.subject; }).join("\n"),"mail");
+      });
+    }).catch(function(err){ $("rec").classList.remove("show"); toast("📧 "+err.message,5000); });
+  }
+  $("btnMail").addEventListener("click",startMail);
+
+  /* ============ AI（Gemini） ============ */
+  function contextLines(){
+    var t=todayStr(), end=ymd(addDays(new Date(),14));
+    var up=items.filter(function(i){ return i.date&&i.date>=t&&i.date<=end&&!i.done; }).sort(function(a,b){ return (a.date+(a.time||""))<(b.date+(b.time||""))?-1:1; }).slice(0,30);
+    return up.map(function(i){ return "- "+i.date+" "+(i.time||"")+" "+i.title; }).join("\n");
+  }
+  function buildPrompt(src){
     var n=new Date(), wk=[];
-    for(var i=0;i<14;i++){ var d=addDays(n,i); wk.push(ymd(d)+"("+WD[d.getDay()]+")"); }
+    for(var i=0;i<21;i++){ var d=addDays(n,i); wk.push(ymd(d)+"("+WD[d.getDay()]+")"); }
+    var intro={
+      audio:"添付の音声は、日本語のひとりごと・思いつきメモです。注意深く聞き取ってください。言いまちがい・言い直し（「3時、いや4時」など）は最後に言ったほうを正とします。",
+      text:"下の入力は、日本語の思いつきメモ（音声入力の誤変換をふくむことがあります）です。誤変換は文脈から正しく読みかえてください。",
+      image:"添付の画像は、チラシ・おたより・プリント・予約票・画面のスクリーンショットなどです。書いてある文字をすべて読み取ってください。",
+      mail:"下はGmailから取り出したメールです。予定・しめ切り・やるべきことが書いてあるものだけを取り出し、広告・お知らせだけのメールは無視してください。"
+    }[src];
     return [
-      "あなたはADHDの人の予定管理を手伝う、やさしい秘書です。",
-      audio?"添付の音声（日本語のひとりごと・思いつきメモ）を聞き取り、":"下の入力（日本語の思いつきメモ）を読み、",
-      "その中から「予定」と「やること」をすべて取り出して、整理したJSONを返してください。",
+      "あなたはADHDの人の予定管理を手伝う、正確でやさしい秘書です。",
+      intro,
+      "その中から「予定」「やること」「アラーム」「タイマー」をすべて取り出して、JSONで返してください。",
       "",
-      "# いまの日時",
+      "# いまの日時（日本時間）",
       ymd(n)+"("+WD[n.getDay()]+") "+pad(n.getHours())+":"+pad(n.getMinutes()),
-      "参考カレンダー: "+wk.join(", "),
+      "# カレンダー（曜日の計算はかならずこれを見ること）",
+      wk.join(", "),
+      "「来週◯曜」は、いまの週（月曜はじまり）の次の週の◯曜日。「今度の◯曜」「◯曜」は、今日以降でいちばん近い◯曜日。",
+      "",
+      "# すでに入っている予定（同じものはもう一度出さない。変更の話なら出す）",
+      contextLines()||"（なし）",
+      "",
+      "# kind の決め方",
+      "- event: 日時の決まった予定（会議、病院、イベント、行事など）",
+      "- task: やること・しめ切り（「〜までに」「〜しなきゃ」「買う」など）",
+      "- alarm: 「◯時にアラーム」「◯時に起こして」「◯分前に知らせて」など、iPhoneのアラームをかけてほしいもの。time にアラームの時刻を入れる（「10時の30分前」なら 09:30）。",
+      "- timer: 「◯分タイマー」「◯分はかって」など。duration_min に分数。",
       "",
       "# ルール",
       "- 1つの用事を1件にする。話が行ったり来たりしても、同じ用事はまとめる。",
-      "- title は短く具体的に（例: 「歯医者」「書類を学校に提出」）。15文字くらいまで。",
+      "- title は短く具体的に（例: 「歯医者」「書類を学校に提出」）。15文字くらいまで。日時や場所は title に入れない。",
       "- emoji は内容に合う絵文字を1つ。",
-      "- date は YYYY-MM-DD。「明日」「金曜」「来週火曜」などはいまの日時から計算する。日にちがわからないものは空文字。",
-      "- 「〜までに」の締め切りは、その締め切り日を date にし、note に「〆切」と書く。",
-      "- time は 24時間の HH:MM。「3時」のように午前午後があいまいで、ふつうの生活なら午後のときは15:00にする。時刻がなければ空文字。",
-      "- duration_min はかかりそうな分数（会議60、歯医者60、買い物30、電話10 など、わからなければ30）。",
-      "- steps: 取りかかりにくそうな用事は、最初の一歩がすぐできるくらい小さいステップ（2〜5個）に分ける。簡単な用事は空配列。",
-      "  話の中に「その前に〇〇」のような準備があれば steps に入れる。",
-      "- note: 持ち物・場所・相手など、話に出た補足。なければ空文字。",
-      "- えー、あのー などの言いよどみ、予定と関係ない雑談は入れない。",
-      audio?"- transcript には、聞き取った内容をそのまま（言いよどみは除いて）書く。":"- transcript には入力をそのまま入れる。"
+      "- date は YYYY-MM-DD。日にちがわからないものは空文字（「あとで」に入る）。年が書いていなければ、いまに近い未来の日付にする。",
+      "- しめ切り（「〜までに」）は、その日を date にし、note の最初に「〆切」と書く。",
+      "- time は 24時間の HH:MM。午前午後があいまいなときは、ふつうの生活で自然なほうにする（「3時に会議」→15:00、「7時に起きる」→07:00）。時刻がなければ空文字。",
+      "- 「◯時から◯時」なら duration_min はその差。わからなければ内容から推測（会議60、病院60、買い物30、電話10、ほかは30）。",
+      "- steps: 取りかかりにくそうな用事は、最初の一歩がすぐできる小さいステップ（2〜5個）に分ける。かんたんな用事は空配列。話の中の「その前に◯◯」も steps に入れる。",
+      "- location: 場所（あれば）。note: 持ち物・料金・連絡先・相手など大事な補足（あれば）。",
+      "- えー、あのー などの言いよどみや、予定と関係ない雑談は入れない。",
+      "- transcript には、"+(src==="audio"?"聞き取った内容を（言いよどみを除いて）そのまま":src==="image"?"画像から読み取った大事な文字を短く":"入力の要点を短く")+"書く。"
     ].join("\n");
   }
   var SCHEMA={type:"object",properties:{
     transcript:{type:"string"},
     items:{type:"array",items:{type:"object",properties:{
+      kind:{type:"string",enum:["event","task","alarm","timer"]},
       title:{type:"string"},emoji:{type:"string"},date:{type:"string"},time:{type:"string"},
-      duration_min:{type:"integer"},steps:{type:"array",items:{type:"string"}},note:{type:"string"}
-    },required:["title","emoji","date","time","duration_min","steps","note"]}}
+      duration_min:{type:"integer"},steps:{type:"array",items:{type:"string"}},
+      location:{type:"string"},note:{type:"string"}
+    },required:["kind","title","emoji","date","time","duration_min","steps","location","note"]}}
   },required:["transcript","items"]};
 
   function fetchTimeout(url,opts,ms){
@@ -908,36 +1313,53 @@
     return fetch(url,opts).then(function(r){ clearTimeout(t); return r; },function(e){ clearTimeout(t); throw to?new Error("時間切れ"):e; });
   }
   function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
-  function callGemini(parts){
+  function mapAiItem(x){
+    return {kind:x.kind||(x.time?"event":"task"),title:x.title,emoji:x.emoji,date:x.date,time:x.time,
+      dur:x.duration_min,steps:x.steps||[],location:x.location||"",note:x.note||""};
+  }
+  function geminiJSON(parts,maxTok){
     var url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(apiModel())+":generateContent?key="+encodeURIComponent(apiKey());
-    var full={temperature:0.2,maxOutputTokens:8192,responseMimeType:"application/json",responseSchema:SCHEMA,thinkingConfig:{thinkingBudget:0}};
-    var basic={temperature:0.2,maxOutputTokens:8192,responseMimeType:"application/json"};
+    var full={temperature:0.1,maxOutputTokens:maxTok||8192,responseMimeType:"application/json",responseSchema:SCHEMA};
+    var basic={temperature:0.1,maxOutputTokens:maxTok||8192,responseMimeType:"application/json"};
     var delays=[2500,6000,12000];
     function attempt(cfg,n){
       return fetchTimeout(url,{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({contents:[{parts:parts}],generationConfig:cfg})},90000)
+        body:JSON.stringify({contents:[{parts:parts}],generationConfig:cfg})},120000)
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
       .then(function(res){
         if(res.ok){
-          var txt; try{ txt=res.j.candidates[0].content.parts.map(function(p){return p.text||"";}).join(""); }
+          var txt; try{ txt=res.j.candidates[0].content.parts.filter(function(p){ return !p.thought; }).map(function(p){return p.text||"";}).join(""); }
           catch(e){ throw new Error("応答が空でした"); }
           txt=txt.replace(/^```(?:json)?\s*|\s*```$/g,"");
-          var o=JSON.parse(txt);
-          return {transcript:o.transcript||"",items:(o.items||[]).map(function(x){
-            return {title:x.title,emoji:x.emoji,date:x.date,time:x.time,dur:x.duration_min,steps:x.steps||[],note:x.note||""};
-          })};
+          return JSON.parse(txt);
         }
         var msg=(res.j.error&&res.j.error.message)||("HTTP "+res.status);
-        if(res.status===400&&cfg!==basic&&!/API key/i.test(msg)) return attempt(basic,n);
+        if(/API key|API_KEY/i.test(msg)) throw new Error("APIキーが正しくないようです");
+        if(res.status===400&&cfg!==basic) return attempt(basic,n);
         if((res.status===429||res.status>=500)&&n<delays.length){
-          busy("混んでいるので、もう一度ためしています…（"+(n+1)+"）");
+          if($("rec").classList.contains("show")) $("busyTxt").textContent="混んでいるので、もう一度ためしています…（"+(n+1)+"）";
           return sleep(delays[n]).then(function(){ return attempt(cfg,n+1); });
         }
-        if(/API key/i.test(msg)) msg="APIキーが正しくないようです";
+        if(res.status===404) msg="モデル名「"+apiModel()+"」が見つかりません（⚙︎で空にしてみてね）";
         throw new Error(msg);
       });
     }
     return attempt(full,0);
+  }
+  function callAI(src,parts){
+    return geminiJSON([{text:buildPrompt(src)}].concat(parts)).then(function(o){
+      return {transcript:o.transcript||"",items:(o.items||[]).map(mapAiItem)};
+    });
+  }
+  function fixWithAI(instruction){
+    var cur=cands.map(function(c){
+      return {kind:c.kind,title:c.title,emoji:c.emoji,date:c.date||"",time:c.time||"",duration_min:c.dur,
+        steps:c.steps.map(function(s){return s.t;}),location:c.location,note:c.note};
+    });
+    var p=buildPrompt("text")+"\n\n# いまの整理結果（JSON）\n"+JSON.stringify({transcript:$("revTrTx").textContent,items:cur})+
+      "\n\n# ユーザーからの直しの指示\n"+instruction+
+      "\n\n指示どおりに直した結果を、同じ形のJSONで返してください。指示に関係ないものはそのまま残してください。";
+    return geminiJSON([{text:p}]).then(function(o){ return {transcript:o.transcript||"",items:(o.items||[]).map(mapAiItem)}; });
   }
 
   /* ============ かんたん整理（キーなし） ============ */
@@ -960,9 +1382,11 @@
       .map(function(s){ return s.trim(); }).filter(function(s){ return s.replace(/[、,\s]/g,"").length>1; });
     var out=[];
     segs.forEach(function(seg){
-      var s=seg, date=null, time=null, dur=null, deadline=false, m;
+      var s=seg, date=null, time=null, dur=null, deadline=false, m, kind=null;
       function cut(re){ s=s.replace(re," "); }
       if(/までに/.test(s)) deadline=true;
+      if(/アラーム|起こして/.test(s)){ kind="alarm"; }
+      if((m=s.match(/(\d+)分(の)?タイマー|タイマー\s*(\d+)分/))){ kind="timer"; dur=+(m[1]||m[3]); cut(m[0]); }
       if((m=s.match(/(\d{1,2})月(\d{1,2})日/))){
         var d=new Date(today.getFullYear(),+m[1]-1,+m[2]); if(d<addDays(today,-60)) d.setFullYear(d.getFullYear()+1);
         date=ymd(d); cut(m[0]);
@@ -972,7 +1396,7 @@
       else if((m=s.match(/(来週|再来週|今週)?の?([日月火水木金土])曜日?/))){
         var w=WDIDX[m[2]], dd;
         if(m[1]==="来週"||m[1]==="再来週"){
-          var mon=addDays(today,-((today.getDay()+6)%7)); // 今週の月曜
+          var mon=addDays(today,-((today.getDay()+6)%7));
           dd=addDays(mon,(m[1]==="来週"?7:14)+((w+6)%7));
         }else{ dd=addDays(today,(w-today.getDay()+7)%7); }
         date=ymd(dd); cut(m[0]);
@@ -983,30 +1407,45 @@
       if((m=s.match(/(午前|午後|朝|昼|夕方|夜)?の?\s*(\d{1,2})時(半|(\d{1,2})分)?/))){
         var h=+m[2], mi=m[3]==="半"?30:(+m[4]||0), pre=m[1]||"";
         if(/午後|夕方|夜/.test(pre)&&h<12) h+=12;
-        else if(!pre&&h>=1&&h<=7) h+=12;
+        else if(!pre&&h>=1&&h<=6&&kind!=="alarm") h+=12;
         if(h<24){ time=pad(h)+":"+pad(mi); } cut(m[0]);
       }else if((m=s.match(/(\d{1,2}):(\d{2})/))){ time=pad(+m[1])+":"+m[2]; cut(m[0]); }
-      if((m=s.match(/(\d+)時間(半)?/))){ dur=+m[1]*60+(m[2]?30:0); cut(m[0]); }
-      else if((m=s.match(/(\d+)分間?/))){ dur=+m[1]; cut(m[0]); }
+      if(!kind){
+        if((m=s.match(/(\d+)時間(半)?/))){ dur=+m[1]*60+(m[2]?30:0); cut(m[0]); }
+        else if((m=s.match(/(\d+)分間?/))){ dur=+m[1]; cut(m[0]); }
+      }
       var title=s.replace(/えっと|えーと|えー|あのー?|そういえば|とりあえず|それで|で、/g," ")
         .replace(/\s+/g," ").replace(/^[\s、,]*(から|に|は|の|で|まで|までに|が|を|、)+/,"")
         .replace(/(から|に|は|で|まで|までに|、)\s*$/,"").replace(/^\s*(の|に)\s*/,"").trim();
+      if(kind==="alarm"&&!time) kind=null;
+      if(!title) title=kind==="alarm"?"アラーム":kind==="timer"?"タイマー":"";
       if(!title) return;
       if(time&&!date){ var t2=new Date(); var p=time.split(":"); t2.setHours(+p[0],+p[1],0,0); date=ymd(t2<now?addDays(today,1):today); }
-      out.push({title:title.slice(0,40),date:date||"",time:time||"",dur:dur||(/会議|打ち合わせ|病院|歯医者/.test(title)?60:30),
-        steps:[],note:deadline?"〆切":""});
+      out.push({kind:kind||(time?"event":"task"),title:title.slice(0,40),date:date||"",time:time||"",
+        dur:dur||(/会議|打ち合わせ|病院|歯医者/.test(title)?60:30),steps:[],note:deadline?"〆切":""});
     });
     return out;
   }
 
   /* ============ 整理結果の確認 ============ */
-  var cands=[];
-  function showReview(list,transcript,ai,warn){
+  var cands=[], revSrc="";
+  var KINDS=[["event","📅 予定"],["task","✅ やること"],["alarm","⏰ アラーム"],["timer","⏱ タイマー"]];
+  function toCand(x){
+    var o=normItem(x); o.kind=x.kind||(o.time?"event":"task"); o._on=true;
+    if(o.kind==="timer") o.dur=Math.max(1,parseInt(x.dur,10)||10);
+    return o;
+  }
+  function showReview(list,transcript,src,warn){
     $("rec").classList.remove("show");
-    cands=list.map(function(x){ var o=normItem(x); o._on=true; return o; });
+    revSrc=src;
+    cands=list.map(toCand);
     $("revTrTx").textContent=transcript||"";
     $("revTr").hidden=!transcript;
-    $("revStatus").textContent=warn||(ai?"":"※ かんたん整理です。⚙︎ でAPIキーを入れると、AIがステップ分けまでします。");
+    $("revFix").hidden=!apiKey();
+    $("revFixTx").value="";
+    $("revGcalLine").hidden=!gasOn();
+    $("revGcal").checked=lsGet(LS_AUTOG,"1")==="1";
+    $("revStatus").textContent=warn||(src==="local"?"※ AIなしの「かんたん整理」です。⚙︎ でAIをつなぐと、ずっと正確になります。":"");
     $("revStatus").className="status "+(warn?"err":"");
     renderCands();
     $("mReview").classList.add("show");
@@ -1015,17 +1454,28 @@
     var h="";
     if(!cands.length) h='<p class="empty">予定が見つかりませんでした。もう一回話すか、文字で入れてね。</p>';
     cands.forEach(function(c,i){
-      h+='<div class="cand'+(c._on?" on":"")+'" data-ci="'+i+'"><div class="hd">'+
+      var kindSel='<select class="kind" data-f="kind">'+KINDS.map(function(k){ return '<option value="'+k[0]+'"'+(c.kind===k[0]?" selected":"")+'>'+k[1]+'</option>'; }).join("")+'</select>';
+      var durs=(c.kind==="timer"?[1,3,5,10,15,20,25,30,45,60]:[10,15,30,45,60,90,120,180]).concat([c.dur])
+        .filter(function(v,j,a){return a.indexOf(v)===j;}).sort(function(a,b){return a-b;});
+      var durSel='<select class="tx" data-f="dur">'+durs.map(function(v){ return '<option value="'+v+'"'+(v===c.dur?" selected":"")+'>'+fmtDur(v)+'</option>'; }).join("")+'</select>';
+      var info;
+      if(c.kind==="alarm") info=c.time?("⏰ iPhoneのアラームを "+c.time+" にセット"+(c.date&&c.date>ymd(addDays(new Date(),1))?"（"+esc(dayLabel(c.date))+"の分。iPhoneのアラームは日付をえらべないので、前の日にセットしてね）":"")):"⏰ 時刻を入れてね";
+      else if(c.kind==="timer") info="⏱ iPhoneのタイマーを "+fmtDur(c.dur)+" でスタート";
+      else info=(c.date?esc(dayLabel(c.date)):"📥 日にちなし →「あとで」へ")+
+          (c.location?"<br>📍 "+esc(c.location):"")+
+          (c.steps.length?"<br>ステップ："+esc(c.steps.map(function(s){return s.t;}).join(" → ")):"")+
+          (c.note?"<br>📝 "+esc(c.note):"");
+      h+='<div class="cand k-'+c.kind+(c._on?" on":"")+'" data-ci="'+i+'"><div class="hd">'+
         '<input type="checkbox" data-f="_on"'+(c._on?" checked":"")+'>'+
         '<input class="tx em" data-f="emoji" value="'+esc(c.emoji)+'">'+
         '<input class="tx" data-f="title" value="'+esc(c.title)+'"></div>'+
-        '<div class="g3"><input class="tx" type="date" data-f="date" value="'+(c.date||"")+'">'+
-        '<input class="tx" type="time" data-f="time" value="'+(c.time||"")+'">'+
-        '<select class="tx" data-f="dur">'+[10,15,30,45,60,90,120,180].concat([c.dur]).filter(function(v,j,a){return a.indexOf(v)===j;})
-          .sort(function(a,b){return a-b;}).map(function(v){ return '<option value="'+v+'"'+(v===c.dur?" selected":"")+'>'+fmtDur(v)+'</option>'; }).join("")+'</select></div>'+
-        '<div class="st">'+(c.date?esc(dayLabel(c.date)):"📥 日にちなし →「あとで」へ")+
-          (c.steps.length?"<br>ステップ："+esc(c.steps.map(function(s){return s.t;}).join(" → ")):"")+
-          (c.note?"<br>📝 "+esc(c.note):"")+'</div></div>';
+        '<div class="g3">'+
+          (c.kind==="timer"?kindSel+durSel+'<span></span>':
+           c.kind==="alarm"?kindSel+'<input class="tx" type="time" data-f="time" value="'+(c.time||"")+'"><span></span>':
+           '<input class="tx" type="date" data-f="date" value="'+(c.date||"")+'"><input class="tx" type="time" data-f="time" value="'+(c.time||"")+'">'+durSel)+
+        '</div>'+
+        (c.kind==="event"||c.kind==="task"?'<div style="margin:6px 0 0 32px">'+kindSel+'</div>':'')+
+        '<div class="st">'+info+'</div></div>';
     });
     $("revList").innerHTML=h;
     var n=cands.filter(function(c){return c._on;}).length;
@@ -1033,7 +1483,7 @@
     $("revAdd").disabled=!n;
   }
   $("revList").addEventListener("change",onCandInput);
-  $("revList").addEventListener("input",function(e){ if(e.target.getAttribute("data-f")==="title"||e.target.getAttribute("data-f")==="emoji") onCandInput(e,true); });
+  $("revList").addEventListener("input",function(e){ var f=e.target.getAttribute("data-f"); if(f==="title"||f==="emoji") onCandInput(e,true); });
   function onCandInput(e,quiet){
     var box=e.target.closest(".cand"); if(!box) return;
     var c=cands[+box.getAttribute("data-ci")], f=e.target.getAttribute("data-f");
@@ -1041,14 +1491,38 @@
     else if(f==="dur") c.dur=+e.target.value;
     else if(f==="date") c.date=e.target.value||null;
     else if(f==="time") c.time=e.target.value||null;
+    else if(f==="kind"){ c.kind=e.target.value; if(c.kind==="timer"&&c.dur>180) c.dur=10; }
     else c[f]=e.target.value;
     if(!quiet) renderCands();
   }
+  $("revFixGo").addEventListener("click",function(){
+    var ins=$("revFixTx").value.trim(); if(!ins){ $("revFixTx").focus(); return; }
+    var b=$("revFixGo"); b.disabled=true; b.textContent="…";
+    fixWithAI(ins).then(function(res){
+      cands=res.items.map(toCand); $("revFixTx").value=""; renderCands(); toast("🤖 直しました");
+    },function(e){ toast("直せませんでした（"+e.message+"）",4000); })
+      .then(function(){ b.disabled=false; b.textContent="直す"; });
+  });
+  $("revFixTx").addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.isComposing){ e.preventDefault(); $("revFixGo").click(); } });
   $("revAdd").addEventListener("click",function(){
-    var add=cands.filter(function(c){ return c._on&&String(c.title).trim(); }).map(function(c){ delete c._on; return normItem(c); });
+    var on=cands.filter(function(c){ return c._on&&String(c.title).trim(); });
+    var add=[], alarms=[], timers=[];
+    on.forEach(function(c){
+      if(c.kind==="alarm"){ if(c.time) alarms.push(c.time); return; }
+      if(c.kind==="timer"){ timers.push(c.dur); return; }
+      var src=c.src||(revSrc==="local"?"":revSrc);
+      delete c._on; delete c.kind;
+      var o=normItem(c); o.src=src; add.push(o);
+    });
     items=items.concat(add); save();
     $("mReview").classList.remove("show");
-    render(); celebrate(null); toast(add.length+"件 入れました 📥");
+    render();
+    if(add.length){ celebrate(null); toast(add.length+"件 入れました 📥"); }
+    var p=(gasOn()&&$("revGcal").checked)?syncPush(add.filter(function(i){ return i.date; })):Promise.resolve();
+    p.then(function(){
+      if(alarms.length) setAlarms(alarms);
+      else if(timers.length) startIosTimer(timers[0]);
+    });
   });
   $("revAgain").addEventListener("click",function(){ $("mReview").classList.remove("show"); openRec(false); });
 
@@ -1068,7 +1542,6 @@
         alertUser("▶ いまから："+it.emoji+" "+it.title, it.note||"");
       }
     });
-    // 古い記録を掃除
     Object.keys(notified).forEach(function(k){ if(now-notified[k]>3*864e5){ delete notified[k]; changed=true; } });
     if(changed) lsSet(LS_NOTI,JSON.stringify(notified));
   }
@@ -1100,7 +1573,7 @@
   function icsDT(d){ return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"T"+pad(d.getHours())+pad(d.getMinutes())+"00"; }
   function makeIcs(list){
     var lead=+lsGet(LS_LEAD,"10"), L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//yotei//JA","CALSCALE:GREGORIAN"];
-    var stamp=new Date(); stamp=stamp.toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
+    var stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
     list.forEach(function(it){
       var desc=[]; if(it.steps.length) desc.push("ステップ:\n"+it.steps.map(function(s){return "・"+s.t;}).join("\n")); if(it.note) desc.push(it.note);
       L.push("BEGIN:VEVENT","UID:"+it.id+"@yotei","DTSTAMP:"+stamp,"SUMMARY:"+icsEsc(it.emoji+" "+it.title));
@@ -1111,6 +1584,7 @@
         var d=parseYmd(it.date), d2=addDays(d,1);
         L.push("DTSTART;VALUE=DATE:"+ymd(d).replace(/-/g,""),"DTEND;VALUE=DATE:"+ymd(d2).replace(/-/g,""));
       }
+      if(it.location) L.push("LOCATION:"+icsEsc(it.location));
       if(desc.length) L.push("DESCRIPTION:"+icsEsc(desc.join("\n\n")));
       L.push("BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(it.title),
         "TRIGGER:"+(it.time?"-PT"+lead+"M":"PT9H"),"END:VALARM","END:VEVENT");
@@ -1118,20 +1592,33 @@
     L.push("END:VCALENDAR");
     return L.join("\r\n");
   }
-  function downloadIcs(list,name){
-    var blob=new Blob([makeIcs(list)],{type:"text/calendar;charset=utf-8"});
+  function downloadBlob(blob,name){
     var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
     document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },2000);
   }
+  function downloadIcs(list,name){ downloadBlob(new Blob([makeIcs(list)],{type:"text/calendar;charset=utf-8"}),name); }
 
-  /* ============ せってい ============ */
-  function openSet(){
+  /* ============ せってい・連携 ============ */
+  function openSet(sec){
     $("setKey").value=lsGet(LS_KEY,"")||lsGet(FURI_KEY,"");
     $("setModel").value=lsGet(LS_MODEL,"");
     $("setLead").value=lsGet(LS_LEAD,"10");
-    $("setStatus").textContent="";
-    updNotifBtn();
+    $("setGas").value=gasUrl();
+    $("setAutoG").checked=lsGet(LS_AUTOG,"1")==="1";
+    $("setSyncG").checked=lsGet(LS_SYNCG,"1")==="1";
+    $("setMailQ").value=lsGet(LS_MAILQ,"");
+    $("setIos").checked=iosOn();
+    ["setStatus","aiStatus","gStatus"].forEach(function(k){ $(k).textContent=""; });
+    updStatus(); updNotifBtn();
+    document.querySelectorAll("#mSet details.sec").forEach(function(d){ d.open=(d.id===sec); });
     $("mSet").classList.add("show");
+    if(sec) setTimeout(function(){ $(sec).scrollIntoView({block:"start",behavior:"smooth"}); },80);
+  }
+  function setChip(id,on,txt){ var e=$(id); e.classList.toggle("on",on); e.textContent=on?(txt||"✅ つながり中"):"未設定"; }
+  function updStatus(){
+    setChip("stAi",!!apiKey());
+    setChip("stG",gasOn());
+    setChip("stIos",iosOn(),"✅ 準備OK");
   }
   function updNotifBtn(){
     var b=$("setNotif");
@@ -1139,14 +1626,77 @@
     b.disabled=Notification.permission==="granted";
     b.textContent=Notification.permission==="granted"?"🔔 通知ON":"🔔 通知をゆるす";
   }
-  $("btnSet").addEventListener("click",openSet);
-  $("setClose").addEventListener("click",function(){ $("mSet").classList.remove("show"); });
-  $("mSet").addEventListener("click",function(e){ if(e.target===$("mSet")) $("mSet").classList.remove("show"); });
-  $("setSave").addEventListener("click",function(){
+  function saveSettings(){
     lsSet(LS_KEY,$("setKey").value.trim()); lsSet(LS_MODEL,$("setModel").value.trim()); lsSet(LS_LEAD,$("setLead").value);
+    lsSet(LS_GAS,$("setGas").value.trim()); lsSet(LS_AUTOG,$("setAutoG").checked?"1":"0"); lsSet(LS_SYNCG,$("setSyncG").checked?"1":"0");
+    lsSet(LS_MAILQ,$("setMailQ").value.trim()); lsSet(LS_IOS,$("setIos").checked?"1":"0");
+    updStatus();
+  }
+  $("btnSet").addEventListener("click",function(){ openSet(); });
+  $("setClose").addEventListener("click",function(){ saveSettings(); $("mSet").classList.remove("show"); render(); });
+  $("mSet").addEventListener("click",function(e){ if(e.target===$("mSet")){ saveSettings(); $("mSet").classList.remove("show"); render(); } });
+  $("setSave").addEventListener("click",function(){
+    saveSettings();
     var s=$("setStatus"); s.className="status ok"; s.textContent="ほぞんしました。";
-    setTimeout(function(){ $("mSet").classList.remove("show"); render(); },600);
+    setTimeout(function(){ $("mSet").classList.remove("show"); render(); syncPull(true); },600);
   });
+  ["setAutoG","setSyncG","setIos"].forEach(function(id){ $(id).addEventListener("change",saveSettings); });
+
+  // AI
+  function status(id,cls,msg){ var s=$(id); s.className="status "+cls; s.textContent=msg; }
+  $("aiPaste").addEventListener("click",function(){
+    if(!navigator.clipboard||!navigator.clipboard.readText){ $("setKey").type="text"; $("setKey").focus(); status("aiStatus","","入力らんを長押し →「ペースト」で貼ってね"); return; }
+    navigator.clipboard.readText().then(function(t){
+      t=(t||"").trim();
+      if(!/^AIza[\w-]{20,}$/.test(t)){ status("aiStatus","err","コピーした文字が APIキー（AIza…）ではないみたい"); return; }
+      $("setKey").value=t; $("aiTest").click();
+    },function(){ $("setKey").type="text"; $("setKey").focus(); status("aiStatus","","入力らんを長押し →「ペースト」で貼ってね"); });
+  });
+  $("aiTest").addEventListener("click",function(){
+    var k=$("setKey").value.trim();
+    if(!k){ status("aiStatus","err","キーを入れてね"); return; }
+    saveSettings(); status("aiStatus","","テストしています…");
+    callAI("text",[{text:"# 入力\n明日の10時に歯医者"}]).then(function(r){
+      var it=r.items[0];
+      status("aiStatus","ok","✅ つながりました！（テスト：「明日の10時に歯医者」→ "+(it?(it.date+" "+it.time+" "+it.title):"OK")+"）");
+      lsSet(LS_NONUDGE,"1"); updStatus(); render();
+    },function(e){ status("aiStatus","err","つながりませんでした："+e.message); });
+  });
+
+  // Google
+  var gasCode="";
+  function loadGasCode(){
+    if(gasCode) return Promise.resolve(gasCode);
+    return fetch("google-renkei.gs",{cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.text(); })
+      .then(function(t){ gasCode=t.replace("__TOKEN__",gasToken()); return gasCode; });
+  }
+  $("gCopy").addEventListener("click",function(){
+    loadGasCode().then(function(code){
+      $("gCode").value=code; $("gCode").hidden=false;
+      var done=function(){ status("gStatus","ok","コピーしました。script.google.com に貼り付けてね"); };
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done,function(){
+        $("gCode").select(); status("gStatus","","下の枠を長押し →「すべてを選択」→「コピー」してね"); });
+      else{ $("gCode").select(); try{ document.execCommand("copy"); done(); }catch(e){} }
+    },function(){ status("gStatus","err","コードを読みこめませんでした"); });
+  });
+  $("gTest").addEventListener("click",function(){
+    var u=$("setGas").value.trim();
+    if(!/^https:\/\/script\.google(usercontent)?\.com\/.+/.test(u)){ status("gStatus","err","https://script.google.com/macros/s/…/exec の形のURLを貼ってね"); return; }
+    saveSettings(); status("gStatus","","テストしています…");
+    gas("ping").then(function(j){
+      status("gStatus","ok","✅ つながりました！（カレンダー：「"+j.calendar+"」）");
+      updStatus(); render(); syncPull(true);
+    },function(e){ status("gStatus","err","つながりませんでした："+e.message); });
+  });
+
+  // iPhone
+  $("iosTestA").addEventListener("click",function(){
+    var d=new Date(Date.now()+2*6e4); lsSet(LS_IOS,"1"); $("setIos").checked=true; updStatus();
+    runShortcut(SC_ALARM,pad(d.getHours())+":"+pad(d.getMinutes()));
+  });
+  $("iosTestT").addEventListener("click",function(){ lsSet(LS_IOS,"1"); $("setIos").checked=true; updStatus(); runShortcut(SC_TIMER,"1"); });
+
+  // お知らせ・データ
   $("setNotif").addEventListener("click",function(){
     beep(1);
     if(window.Notification) Notification.requestPermission().then(updNotifBtn);
@@ -1157,9 +1707,7 @@
     downloadIcs(up,"yotei-all.ics");
   });
   $("setExport").addEventListener("click",function(){
-    var blob=new Blob([JSON.stringify({app:"yotei",v:1,items:items},null,1)],{type:"application/json"});
-    var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="yotei-backup-"+todayStr()+".json";
-    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },2000);
+    downloadBlob(new Blob([JSON.stringify({app:"yotei",v:1,items:items},null,1)],{type:"application/json"}),"yotei-backup-"+todayStr()+".json");
   });
   $("setImport").addEventListener("click",function(){ $("importFile").click(); });
   $("importFile").addEventListener("change",function(){
@@ -1171,8 +1719,8 @@
         items.forEach(function(i){ have[i.id]=1; });
         var add=list.filter(function(i){ return !have[i.id]; });
         items=items.concat(add); save(); render();
-        $("setStatus").className="status ok"; $("setStatus").textContent=add.length+"件 読みこみました。";
-      }catch(e){ $("setStatus").className="status err"; $("setStatus").textContent="読みこめませんでした。"; }
+        status("setStatus","ok",add.length+"件 読みこみました。");
+      }catch(e){ status("setStatus","err","読みこめませんでした。"); }
     };
     fr.readAsText(f); this.value="";
   });
@@ -1180,7 +1728,7 @@
     var lim=Date.now()-7*864e5, n=items.length;
     items=items.filter(function(i){ return !(i.done&&(i.doneAt||0)<lim); });
     save(); render();
-    $("setStatus").className="status ok"; $("setStatus").textContent=(n-items.length)+"件 片づけました。";
+    status("setStatus","ok",(n-items.length)+"件 片づけました。");
   });
 
   /* ============ トースト・お祝い ============ */
@@ -1203,12 +1751,15 @@
   /* ============ はじまり ============ */
   render();
   checkReminders();
+  syncPull(true);
   setInterval(function(){
     checkReminders();
     var busyUI=document.querySelector(".modal.show")||$("rec").classList.contains("show");
     if(!busyUI) render();
   },20000);
-  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"){ checkReminders(); render(); } });
+  document.addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="visible"){ checkReminders(); render(); syncPull(false); }
+  });
 })();
 </script>
 </body>
