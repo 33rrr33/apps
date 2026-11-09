@@ -598,7 +598,7 @@
     "made": "2026-11-08",
     "related_long": "znWv4YUhSQQ",
     "comment": "メモ、何個たまってますか？👇 この技でまとめて整理してみてね！",
-    "comment_posted": false
+    "comment_posted": true
    },
    "2026-11-10T06:00": {
     "kind": "short",
@@ -611,6 +611,19 @@
     "made": "2026-11-09",
     "related_long": "znWv4YUhSQQ",
     "comment": "振ったら何か出てきてビックリしたこと、ありませんか？👇 これの正体です！",
+    "comment_posted": false
+   },
+   "2026-11-10T17:30": {
+    "kind": "short",
+    "series_key": "w20261109_first",
+    "theme": "iPhone爆速神操作",
+    "num": 4,
+    "episode": "episodes/w20261109_first/ep04_cc_longpress.py",
+    "id": "TLRyBeKJaDU",
+    "title": "iPhone爆速神操作④ #Shorts",
+    "made": "2026-11-09",
+    "related_long": "znWv4YUhSQQ",
+    "comment": "懐中電灯の明るさ、変えられるの知ってましたか？👇 「知ってた」「初めて知った」で教えてね！",
     "comment_posted": false
    }
   }
