@@ -209,7 +209,7 @@ function widgetData() {
   listEvents(from, to).forEach(function (ev) {
     if (have[evKey(ev.gcalId, ev.recurring, ev.date)]) return;
     const m = ev.title.match(/^(\p{Extended_Pictographic}️?)\s*/u);
-    items.push({ title: m ? ev.title.slice(m[0].length) : ev.title, emoji: m ? m[1] : '📅', date: ev.date, time: ev.time, dur: ev.dur || 30, done: false, location: ev.location });
+    items.push({ title: m ? ev.title.slice(m[0].length) : ev.title, emoji: m ? m[1] : '', date: ev.date, time: ev.time, dur: ev.dur || 30, done: false, location: ev.location });
   });
   const later = st.items.filter(function (i) { return !i.date && !i.done; }).length;
   const overdue = st.items.filter(function (i) { return i.date && i.date < from && !i.done && !i.gcalId; }).length;
@@ -221,7 +221,7 @@ function addText(t) {
   t = String(t || '').trim();
   if (!t) return '聞き取れませんでした。もう一度どうぞ';
   const key = prop('ai_key');
-  if (!key) return 'AIの準備がまだです。予定帳の ⚙︎ →「Apple Watch・Siri」で準備してね';
+  if (!key) return 'AIの準備がまだです。予定帳の「設定」→「Apple Watch・Siri」で準備してください';
   const res = gemini(key, prop('ai_model') || 'gemini-3.6-flash', buildPrompt() + '\n\n# 入力\n' + t);
   const lead = Number(prop('lead') || 10), now = Date.now(), today = ymdOf(new Date());
   const lines = [], newItems = [];
@@ -229,15 +229,15 @@ function addText(t) {
     const date = /^\d{4}-\d{2}-\d{2}$/.test(x.date || '') ? x.date : '';
     const time = /^\d{1,2}:\d{2}$/.test(x.time || '') ? ('0' + x.time).slice(-5) : '';
     const emoji = x.emoji || '🔹';
-    if (x.kind === 'timer') { lines.push('⏱ タイマー（' + (x.duration_min || '') + '分）はiPhoneかWatchのタイマーでセットしてね'); return; }
+    if (x.kind === 'timer') { lines.push('タイマー（' + (x.duration_min || '') + '分）はWatchのタイマーでセットしてください'); return; }
     if (x.kind === 'alarm') {
       if (!time) return;
       let d = date || today;
       if (!date && epochOf(d, time) < now) d = addDaysYmd(d, 1);
       const s = epochOf(d, time);
-      const ev = cal().createEvent('⏰ ' + (x.title || 'アラーム'), new Date(s), new Date(s + 60000), { description: '（しゃべって予定帳から）' });
+      const ev = cal().createEvent('アラーム：' + (x.title || ''), new Date(s), new Date(s + 60000), { description: '（しゃべって予定帳から）' });
       ev.removeAllReminders(); ev.addPopupReminder(0);
-      lines.push('⏰ ' + label(d, time) + ' にお知らせします');
+      lines.push('アラーム ' + label(d, time));
       return;
     }
     const it = {
@@ -251,18 +251,18 @@ function addText(t) {
       if (it.steps.length) desc.push('ステップ:\n' + it.steps.map(function (s) { return '・' + s.t; }).join('\n'));
       if (it.note) desc.push(it.note);
       desc.push('（しゃべって予定帳から）');
-      const ev = { id: it.id, title: (emoji !== '🔹' ? emoji + ' ' : '') + it.title, date: date, description: desc.join('\n\n'), location: it.location };
+      const ev = { id: it.id, title: it.title, date: date, description: desc.join('\n\n'), location: it.location };
       if (time) { ev.start = epochOf(date, time); ev.end = ev.start + it.dur * 60000; ev.remind = lead; }
       const r = upsert(ev);
       if (r.gcalId) it.gcalId = r.gcalId;
-      lines.push('📅 ' + label(date, time) + ' ' + it.title);
+      lines.push(label(date, time) + ' ' + it.title);
     } else {
-      lines.push('📥 あとで：' + it.title);
+      lines.push('あとで：' + it.title);
     }
     newItems.push(it);
   });
   if (newItems.length) syncItems(newItems, {});
-  return lines.length ? '入れました！\n' + lines.join('\n') : '予定は見つかりませんでした';
+  return lines.length ? '入れました\n' + lines.join('\n') : '予定は見つかりませんでした';
 }
 function label(date, time) {
   const d = dayOf(date), w = '日月火水木金土'.charAt(d.getDay());
