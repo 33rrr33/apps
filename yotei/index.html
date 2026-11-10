@@ -329,6 +329,7 @@
   <div class="top">
     <a class="back" href="../"><svg class="ic sm"><use href="#i-left"/></svg>アプリ一覧</a>
     <span class="sp"></span>
+    <button class="iconbtn" id="btnWidget" hidden aria-label="ウィジェットに反映"><svg class="ic"><use href="#i-widget"/></svg></button>
     <button class="iconbtn" id="btnSet" aria-label="設定"><svg class="ic"><use href="#i-gear"/></svg></button>
   </div>
   <input type="file" id="camFile" accept="image/*" hidden>
@@ -571,7 +572,7 @@
   <details class="sec" id="secW">
     <summary><span class="ico"><svg class="ic"><use href="#i-widget"/></svg></span>ウィジェット <span class="st" id="stW">未設定</span><svg class="ic sm chev"><use href="#i-chev"/></svg></summary>
     <div class="in2">
-      <p class="note">ホーム画面やロック画面に「つぎの予定・あと何分」を表示します。iPhoneのカレンダー（Googleカレンダーも）とリマインダーを読むので、ほかの設定はいりません。</p>
+      <p class="note">予定帳の画面（「いま」のカードと今日の一覧）を、そのままホーム画面やロック画面に出します。予定帳の予定に加えて、iPhoneのカレンダー（Googleカレンダーも）とリマインダーも出ます。</p>
       <ol class="steps2">
         <li>App Storeで <b>Scriptable</b> を入れる（無料）</li>
         <li>下の <b>コードをコピー</b></li>
@@ -583,6 +584,9 @@
       <button class="btn ink wide" id="wCopy">コードをコピー</button>
       <textarea class="codebox" id="wCode" readonly hidden></textarea>
       <p class="status" id="wStatus"></p>
+      <p class="subh">予定帳の予定をウィジェットに出す</p>
+      <p class="note">予定を入れたり「できた」にしたあと、今日の画面の右上の <b>ウィジェットボタン</b>（四角が3つのマーク）か、下のボタンを押すと反映されます。Scriptableが一瞬開いて「反映しました」と出たらOKです。Googleとつないでいるときは自動で反映されます。</p>
+      <button class="btn wide" id="wPush" style="margin-top:8px">ウィジェットに反映</button>
       <p class="note">Googleカレンダーの予定を出すには、iPhoneの「設定」→「カレンダー」→「アカウント」にGoogleを入れておきます。予定帳をGoogleとつないでいるときは、予定帳の予定（あとでの数など）も出ます。</p>
     </div>
   </details>
@@ -722,7 +726,21 @@
     items.forEach(function(it){ seen[it.id]=1; var ser=serOf(it); if(lastSer[it.id]!==ser){ it.upd=now; lastSer[it.id]=ser; } });
     Object.keys(lastSer).forEach(function(id){ if(!seen[id]){ tombs[id]=now; delete lastSer[id]; } });
     lsSet(LS_ITEMS,JSON.stringify(items)); lsSet(LS_TOMB,JSON.stringify(tombs));
+    if(widgetLocal()) lsSet(LS_WATCH+"_dirty","1");
     scheduleSync();
+  }
+  // ウィジェット（Googleなし）へは「反映」ボタンで送る
+  function widgetLocal(){ return lsGet(LS_WATCH+"_w","")==="1"&&!(gasOn()&&gasV2()); }
+  function pushWidget(){
+    var t=todayStr(), end=ymd(addDays(new Date(),2));
+    var list=items.filter(function(i){ return i.date&&i.date>=t&&i.date<=end; }).map(function(i){
+      return {title:i.title,date:i.date,time:i.time||"",dur:i.dur,done:i.done,location:i.location||""};
+    });
+    var payload={v:1,at:Date.now(),items:list,
+      later:items.filter(function(i){ return !i.date&&!i.done; }).length,
+      overdue:items.filter(function(i){ return i.date&&i.date<t&&!i.done&&i.src!=="gcal"; }).length};
+    lsSet(LS_WATCH+"_dirty","0"); render();
+    location.href="scriptable:///run/"+encodeURIComponent("予定帳")+"?data="+encodeURIComponent(JSON.stringify(payload));
   }
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
   function find(id){ for(var i=0;i<items.length;i++) if(items[i].id===id) return items[i]; return null; }
@@ -787,6 +805,7 @@
     $("todayD").textContent=(now.getMonth()+1)+"月"+now.getDate()+"日";
     $("todayC").textContent=WD[now.getDay()]+"曜日";
     $("modeMail").hidden=!gasOn();
+    $("btnWidget").hidden=!widgetLocal();
 
     var later=items.filter(function(i){ return !i.date&&!i.done; });
     $("laterBadge").hidden=!later.length; $("laterBadge").textContent=later.length;
@@ -805,6 +824,10 @@
       h+='<div class="strip">'+icon("alarm")+'<div class="tx2"><b>アラームがあと'+pend.length+'つ</b><small class="num">'+esc(pend.join("・"))+'</small></div>'+
         '<button class="btn pri sm" data-nudge="alarm">セット</button><button class="x" data-nudge="alarmx" aria-label="とじる">'+icon("x","sm")+'</button></div>';
     }
+    if(widgetLocal()&&lsGet(LS_WATCH+"_dirty","")==="1"){
+      h+='<div class="strip">'+icon("widget")+'<div class="tx2"><b>ウィジェットに反映していない変更があります</b><small>押すとScriptableが開いて反映されます</small></div>'+
+        '<button class="btn ink sm" data-nudge="widget">反映</button><button class="x" data-nudge="widgetx" aria-label="とじる">'+icon("x","sm")+'</button></div>';
+    }
     if(!apiKey()&&lsGet(LS_NONUDGE,"")!=="1"){
       h+='<div class="strip">'+icon("brain")+'<div class="tx2"><b>AIをつなぐと聞き取りが正確に</b><small>無料・3分で設定できます</small></div>'+
         '<button class="btn ink sm" data-nudge="ai">つなぐ</button><button class="x" data-nudge="aix" aria-label="とじる">'+icon("x","sm")+'</button></div>';
@@ -817,6 +840,8 @@
     if(k==="ai") openSet("secAi");
     else if(k==="aix"){ lsSet(LS_NONUDGE,"1"); render(); }
     else if(k==="alarm") runNextAlarm();
+    else if(k==="widget") pushWidget();
+    else if(k==="widgetx"){ lsSet(LS_WATCH+"_dirty","0"); render(); }
     else if(k==="alarmx"){ lsSet(LS_PEND,"[]"); render(); }
   });
 
@@ -1878,6 +1903,7 @@
     updStatus();
   }
   $("btnSet").addEventListener("click",function(){ openSet(); });
+  $("btnWidget").addEventListener("click",pushWidget);
   $("setClose").addEventListener("click",function(){ saveSettings(); $("mSet").classList.remove("show"); render(); });
   $("mSet").addEventListener("click",function(e){ if(e.target===$("mSet")){ saveSettings(); $("mSet").classList.remove("show"); render(); } });
   $("setSave").addEventListener("click",function(){
@@ -1953,8 +1979,9 @@
       var g=gasOn()&&gasV2();
       var code=t.replace("__GAS_URL__",g?gasUrl():"").replace("__TOKEN__",g?gasToken():"");
       return copyText(code,$("wCode"),"wStatus","コピーしました。Scriptable に貼り付けてください");
-    }).then(function(){ lsSet(LS_WATCH+"_w","1"); updStatus(); },function(){ status("wStatus","err","コードを読みこめませんでした"); });
+    }).then(function(){ lsSet(LS_WATCH+"_w","1"); lsSet(LS_WATCH+"_dirty","1"); updStatus(); render(); },function(){ status("wStatus","err","コードを読みこめませんでした"); });
   });
+  $("wPush").addEventListener("click",function(){ lsSet(LS_WATCH+"_w","1"); pushWidget(); });
 
   // Apple Watch・Siri
   function watchUrl(){ return gasUrl()+"?action=addText&token="+encodeURIComponent(gasToken())+"&text="; }
