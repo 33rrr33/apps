@@ -2,6 +2,14 @@
 
 **main ブランチには絶対に触らない。** このブランチ `shorts-bot` だけを使う。鍵は環境変数のみ（チャットに出さない）。
 
+## v3 再設計（2026-11-10 PdM）— いまのルールはここが最優先
+- **1日1本・毎日**。公開時刻は `schedule.py` が 12:00 → 19:00 → 06:00 で回す（A/Bテスト）。金曜の `pdca.py act` が勝った時刻を `strategy.json` の `slot_pin` に自動で固定する（ユーザー許可済み）。同じ時刻に2本は出さない。
+- **フックの型をA/B**：slot の `hook_type`（煽り型／疑問型／即効型）どおりに HOOK を書き、`TAGS = {"hook_type": ...}`。勝った型は `hook_pin` に自動固定。
+- **見た目は画面録画風**：エピソードに `LAYOUT, FOCUS_Y, CAPTION_Y = "rec", <見せたい画面のy>, <字幕のy>`。手本は `episodes/w20261109_second/ep01_charge_limit.py`。DURATION 12〜13.5・END_CARD False。0秒目から実際の画面。字幕で大事なUIを隠さない。
+- **長尺は週1本**：日曜17:30に、直前に終わったシリーズ（5本）のまとめ（`schedule.py` の kind=long、`assemble.py` で作る）。
+- **毎回の作業**：`python3 lib/schedule.py upcoming 2` で、この先2日の枠のうち state.json に id が無いものを作って予約 → `python3 lib/comment_new.py`（公開済みで未コメントの動画にコメント）→ PDCA・ダッシュボード更新。
+- **PDCAの記録**：`pdca.py check` が data/results.json（48時間）・data/performance_log.json（24h／48h）・config/patterns.json（特徴ごとの勝ち負け：600回以上＝勝ち、200回未満＝負け）を更新。次のエピソードは patterns.json の score が高い型・ネタを優先し、負けた HOOK の言い回しは使わない。
+
 ## 改善ループ（2026-11-09 ユーザー依頼：毎回1,000回以上をめざす）
 - **作る前に `config/strategy.json` を読む**（長さ・構成・フックの今のルールと、走っている実験）。v3 エピソードはそこに従う（例：DURATION=12〜13.5・END_CARD=False）。
 - **PDCA（自動）**：Plan＝`config/experiments.json` の上から1つ／Do＝strategy.json どおりに作り、エピソードに `TAGS = {"<tag_field>": "<条件>"}` を書く／Check＝毎回 `python3 lib/pdca.py check`（48時間の再生を data/results.json に記録）／Act＝金曜 `python3 lib/pdca.py judge` の判定（採用→strategy.json の short と history に反映し next_experiment を running_experiment へ、見送り→元に戻して次へ。auto=false はユーザーに選択式で確認）→ `python3 lib/pdca.py insights` で data/insights.json を作り直す。

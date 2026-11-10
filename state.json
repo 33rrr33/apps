@@ -650,19 +650,24 @@
     "comment_posted": false,
     "experiment": "short_length"
    },
-   "2026-11-11T17:30": {
+   "2026-11-12T12:00": {
     "kind": "short",
     "series_key": "w20261109_second",
     "theme": "iPhone隠し神機能",
     "num": 1,
     "episode": "episodes/w20261109_second/ep01_charge_limit.py",
-    "id": "-ewuLg9oukM",
+    "id": "nujTs-wkve0",
     "title": "iPhone隠し神機能① #Shorts",
     "made": "2026-11-10",
     "related_long": "1VNksL05WS4",
     "comment": "毎晩100%まで充電してましたか？👇 「してた」「もう80%にしてる」でコメントしてね！",
     "comment_posted": false,
-    "experiment": "short_length"
+    "experiment": "short_length",
+    "replaced": {
+     "old_id": "-ewuLg9oukM",
+     "why": "2026-11-10 PdM再設計：1日1本・画面録画風レイアウトに作り直し、11/12 12:00へ移動"
+    },
+    "layout": "rec"
    }
   }
  },

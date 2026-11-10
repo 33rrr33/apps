@@ -834,6 +834,48 @@ def v3_bottom(c, ep, t, T):
             if k < 1: ly = ly.resize((max(1, int(ly.width * k)), max(1, int(ly.height * k))))
             c.alpha_composite(ly, (int(540 - ly.width / 2), int(1712 - ly.height / 2)))
 
+# ---- "rec" layout (2026-11-10 PdM redesign, 脱・広告感): looks like a real screen recording. The iPhone UI fills the
+# whole 9:16 frame (no device bezel, no black banner), captions are plain white text with a black outline in the
+# middle third (like creator captions), and the action pill sits just above the Shorts UI. Episode: LAYOUT = "rec",
+# optional FOCUS_Y (screen y to keep centred; default 430).
+def rec_frame(c, ep, T, t):
+    ts = t if t >= T.body else T.body + 0.01
+    scr = ep.SCREEN(ts, T)
+    s = W / scr.width
+    big = scr.resize((W, int(scr.height * s)), Image.LANCZOS).filter(ImageFilter.UnsharpMask(radius=2, percent=80, threshold=2))
+    fy = getattr(ep, "FOCUS_Y", 430) * s
+    top = int(min(max(0, fy - H / 2), max(0, big.height - H)))
+    c.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, 255)))
+    c.alpha_composite(big.crop((0, top, W, top + H)) if big.height >= H else big, (0, 0) if big.height >= H else (0, (H - big.height) // 2))
+    # caption: hook from frame 0, then the current telop
+    if t < T.body:
+        cap = ep.HOOK; k = 1.0
+    elif t >= T.cta:                                     # no purple end card: the CTA is a caption over the last screen
+        ls = [s_ for s_, _, _ in ep.CTA["lines"]]
+        cap = ls[0] + ("\n[" + ls[1] + "]" if len(ls) > 1 else ""); k = back_out(clamp((t - T.cta) / 0.18))
+    else:
+        cap, k = None, 1.0
+        for cue, s_ in ep.TELOPS:
+            if cue_t(T, cue) <= t: cap, start = s_, cue_t(T, cue)
+        if cap: k = back_out(clamp((t - start) / 0.18))
+    if cap:
+        tl = Image.new("RGBA", (W, 520), (0, 0, 0, 0))
+        big_text(tl, cap, 260, max_size=104, maxw=920)
+        bb = tl.getbbox()
+        ly = Image.new("RGBA", (W, 520), (0, 0, 0, 0))
+        if bb: rra(ly, (bb[0] - 30, bb[1] - 22, bb[2] + 30, bb[3] + 22), 28, (0, 0, 0, 165))
+        ly.alpha_composite(tl)
+        if k < 1: ly = ly.resize((max(1, int(W * k)), max(1, int(520 * k))))
+        c.alpha_composite(ly, (int(540 - ly.width / 2), int(getattr(ep, "CAPTION_Y", 560) - ly.height / 2)))
+    for a, b, s_ in getattr(ep, "ACTIONS", []):
+        a, b = cue_t(T, a), cue_t(T, b)
+        if a <= t < b:
+            f = font(52); w = f.getlength(s_) + 90
+            ly = Image.new("RGBA", (int(w), 96), (0, 0, 0, 0))
+            rr(ly, (0, 0, w - 1, 95), 48, (255, 214, 10))
+            txt(ly, (w / 2, 48), s_, 52, INK, anchor="mm")
+            c.alpha_composite(ly, (int(540 - w / 2), 1440))
+
 def v3_frame(c, ep, T, t):
     c.alpha_composite(Image.new("RGBA", (W, H), (14, 14, 22, 255)))
     v3_mid(c, ep, t, T); v3_top(c, ep, t, T); v3_bottom(c, ep, t, T)
@@ -847,9 +889,11 @@ def check_v3(ep):
 def frame(ep, T, t):
     if is_recap(ep): return recap_frame(ep, T, t)
     c = BG.copy()
-    if is_v3(ep) and t < T.cta: v3_frame(c, ep, T, t)
+    rec = is_v3(ep) and getattr(ep, "LAYOUT", "") == "rec"
+    if rec: rec_frame(c, ep, T, t)
+    elif is_v3(ep) and t < T.cta: v3_frame(c, ep, T, t)
     else: series_tag(c, ep)
-    if is_v3(ep) and t < T.cta: pass
+    if rec or (is_v3(ep) and t < T.cta): pass
     elif t < T.body: hook_scene(c, t, ep)
     elif t < T.cta: ep.draw_body(c, t, T)
     elif t < T.final: cta_scene(c, t, ep, T)

@@ -10,7 +10,8 @@ NEXT = "低電力モードをすぐ切り替え"
 SCREEN_CROP = (0, 40, 400, 760)
 # PDCA 実験 short_length：約12〜13秒・エンドカードなし
 DURATION, END_CARD = 13.5, False
-TAGS = {"length": "短縮版"}
+TAGS = {"length": "短縮版", "layout": "画面録画風", "hook_type": "煽り型"}
+LAYOUT, FOCUS_Y, CAPTION_Y = "rec", 430, 1260
 HOOK = "毎晩100%まで\n{充電してる人へ}"
 HOOK_SPOKEN = "毎晩100%まで充電してる人へ！"
 TELOPS = [("b1", "毎晩{100%}まで\n充電してない？"), ("b2", "バッテリーが\n{劣化しやすい}"),

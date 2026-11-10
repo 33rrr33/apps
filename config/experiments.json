@@ -7,6 +7,14 @@
  },
  "backlog": [
   {
+   "id": "v3_redesign",
+   "auto": true,
+   "variable": "見た目・本数",
+   "test": "画面録画風・1日1本",
+   "baseline": "黒帯＋端末・1日2本",
+   "tag_field": "layout"
+  },
+  {
    "id": "short_length",
    "auto": true,
    "variable": "長さ",

@@ -72,9 +72,91 @@ def related_long(half, monday):
     day = m - dt.timedelta(days=off) if m >= AHEAD_FROM - dt.timedelta(days=5) else m + dt.timedelta(days=7 - off)
     return f"{day.isoformat()}T{LONG_TIME}", week_info(m)[half]["long_title"]
 
+# ---------------------------------------------------------------------------------------------------------------
+# v3 calendar (2026-11-10, PdM redesign): ONE Short a day, every day, at a rotating time (time A/B test),
+# hook type A/B-tested on a Latin square, series run back to back (5 parts each, alternating 隠し神機能 / 爆速神操作),
+# ONE long a week (Sunday 17:30) compiling the last finished series. Old weekday 2-a-day slots stop on 11/11.
+V3_START = dt.date(2026, 11, 12)
+V3_TIMES = ["12:00", "19:00", "06:00"]                  # rotation; pdca.py judges the winner, strategy.json can pin one
+HOOK_TYPES = ["煽り型", "疑問型", "即効型"]               # 煽り：〇〇な人全員損してます / 疑問：これ知ってた？ / 即効：3秒でできる
+LONG_TIME_V3 = "17:30"
+
+def v3_strategy():
+    p = os.path.join(ROOT, "config", "strategy.json")
+    return json.load(open(p)) if os.path.exists(p) else {}
+
+def v3_time(day):
+    pin = v3_strategy().get("slot_pin")                 # set by the weekly Act once a time wins
+    if pin: return pin
+    return V3_TIMES[(day - V3_START).days % len(V3_TIMES)]
+
+def v3_hook(day):
+    pin = v3_strategy().get("hook_pin")
+    if pin: return pin
+    i = (day - V3_START).days
+    return HOOK_TYPES[(i + i // 3) % 3]                   # Latin square: each hook meets each time slot
+
+def v3_block(i):
+    """block i of 5 Shorts: (half, topic offset, series_key)."""
+    half = "second" if i % 2 == 0 else "first"
+    off = 5 * ((i + 1) // 2 + 1)
+    start = V3_START + dt.timedelta(days=5 * i)
+    key = "w20261109_second" if i == 0 else f"b{start.strftime('%Y%m%d')}_{half}"
+    return half, off, key, start
+
+def v3_series(half, off, key):
+    th = themes()["series"][half]
+    topics = th["topics"][off:off + 5]
+    return dict(title=th["title"], spoken=th["spoken"], hook_split=th["hook_split"], topics=topics if len(topics) == 5 else None,
+                series_key=key, episode_dir=f"episodes/{key}", storage_dir=f"storage/{key}", long_title=LONG_TITLE[half].format(t=th["title"]))
+
+def v3_latest_long(before):
+    """(publish, title, id) of the newest long scheduled before `before` (from state.json)."""
+    st = json.load(open(os.path.join(ROOT, "state.json")))
+    best = None
+    for k, v in st.get("v2", {}).get("slots", {}).items():
+        if v.get("kind") == "long" and v.get("id") and k < before.strftime("%Y-%m-%dT%H:%M"):
+            if not best or k > best[0]: best = (k, v.get("title"), v.get("id"))
+    return best
+
+def v3_slot(publish):
+    d = publish.date(); hm = publish.strftime("%H:%M")
+    if d.weekday() == 6 and hm == LONG_TIME_V3:          # Sunday long: the last series finished before today
+        i = (d - V3_START).days // 5 - 1
+        while i >= 0 and V3_START + dt.timedelta(days=5 * i + 4) >= d: i -= 1
+        if i < 0: return None
+        half, off, key, _ = v3_block(i); h = v3_series(half, off, key)
+        eps = [f"{h['episode_dir']}/ep{n + 1:02d}_{tp['slug']}.py" for n, tp in enumerate(h["topics"] or [])]
+        return dict(kind="long", publish_at=publish.strftime("%Y-%m-%dT%H:%M:00+09:00"), half=half, half_ja=HALF_JA[half],
+                    theme=h["title"], theme_spoken=h["spoken"], series_key=key, week=key, ahead=False, notify_subscribers=True,
+                    title=h["long_title"], parts=[f"{h['storage_dir']}/part_{n}.mp4" for n in range(1, 6)],
+                    episode_dir=h["episode_dir"], episodes=eps, topics=h["topics"])
+    if hm != v3_time(d): return None
+    i = (d - V3_START).days
+    half, off, key, _ = v3_block(i // 5); h = v3_series(half, off, key); num = i % 5 + 1
+    tp = h["topics"][num - 1] if h["topics"] else None
+    rl = v3_latest_long(publish)
+    return dict(kind="short", publish_at=publish.strftime("%Y-%m-%dT%H:%M:00+09:00"), half=half, half_ja=HALF_JA[half],
+                theme=h["title"], theme_spoken=h["spoken"], series_key=key, week=key, num=num, notify_subscribers=False,
+                title=f"{h['title']}{CIRCLED[num - 1]} #Shorts", hook_split=h["hook_split"], hook_type=v3_hook(d),
+                topic=tp, episode=f"{h['episode_dir']}/ep{num:02d}_{tp['slug']}.py" if tp else None,
+                part=f"{h['storage_dir']}/part_{num}.mp4", related_long=[rl[0], rl[1]] if rl else None,
+                next_topic=(h["topics"][num]["topic"] if h["topics"] and num < 5 else None))
+
+def upcoming(day, days=2):
+    """All v3 slots in the next `days` days after `day` (for the daily production run)."""
+    out = []
+    for k in range(1, days + 1):
+        d = day + dt.timedelta(days=k)
+        for hm in sorted(set(V3_TIMES + [LONG_TIME_V3] + ([v3_strategy().get("slot_pin")] if v3_strategy().get("slot_pin") else []))):
+            s = slot(dt.datetime.combine(d, dt.time.fromisoformat(hm), JST))
+            if s and s.get("kind") in ("short", "long"): out.append(s)
+    return out
+
 def slot(publish):
     """publish: aware datetime (JST). Returns the slot description or None."""
     d = publish.date(); hm = publish.strftime("%H:%M")
+    if d >= V3_START: return v3_slot(publish)
     if d < start_monday():
         st = json.load(open(os.path.join(ROOT, "state.json")))
         legacy = st.get("schedule", {}).get(d.isoformat())
@@ -116,14 +198,16 @@ if __name__ == "__main__":
         print(json.dumps(next_for(a[1], day), ensure_ascii=False, indent=1))
     elif a[0] == "slot":
         print(json.dumps(slot(dt.datetime.fromisoformat(a[1]).replace(tzinfo=JST)), ensure_ascii=False, indent=1))
+    elif a[0] == "upcoming":
+        print(json.dumps(upcoming(today(), int(a[1]) if len(a) > 1 else 2), ensure_ascii=False, indent=1))
     elif a[0] == "plan":
         n = int(a[1]) if len(a) > 1 else 21
         for i in range(n):
             d = today() + dt.timedelta(days=i)
-            for hm in ("06:00", "17:30"):
+            for hm in ("06:00", "12:00", "17:30", "19:00"):
                 s = slot(dt.datetime.combine(d, dt.time.fromisoformat(hm), JST))
                 if not s: continue
                 if s["kind"] == "legacy": label = f"(旧) {s['legacy']}"
                 elif s["kind"] == "long": label = s["title"]
-                else: label = f"{s['title']}  {s['topic']['topic'][:28] if s['topic'] else '（ネタ未定）'}"
+                else: label = f"{s['title']}  [{s.get('hook_type', '')}] {s['topic']['topic'][:24] if s['topic'] else '（ネタ未定）'}"
                 print(f"{d} ({DAYS[d.weekday()]}) {hm}  {label}")

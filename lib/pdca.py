@@ -14,16 +14,19 @@ load = lambda p, d=None: json.load(open(p)) if os.path.exists(p) else d
 
 def tags_for(v, slot_meta):
     t = {"length": "短縮版" if v["seconds"] <= 15 and v["published"][:10] >= "2026-11-10" else ("11〜16秒" if v["seconds"] <= 17 else "20秒"),
-         "slot": {"06:00": "朝6:00", "17:30": "夕方17:30"}.get(v["hhmm"], "その他"),
+         "slot": {"06:00": "朝6:00", "12:00": "昼12:00", "17:30": "夕方17:30", "19:00": "夜19:00"}.get(v["hhmm"], "その他"),
+         "layout": "旧デザイン",
          "title_style": "中身入り" if "｜" in v["title"] else "シリーズ名だけ"}
     ep = (slot_meta or {}).get("episode")
     if ep and os.path.exists(P(ep)):
         src = open(P(ep)).read()
+        t["layout"] = "画面録画風" if re.search(r'LAYOUT[^=\n]*= *"rec"', src) else "黒帯＋端末"
         h = re.search(r'^HOOK = "(.*)"', src, re.M)
         if h:
             hook = h.group(1)
             t["hook"] = hook.replace("\\n", " ")
-            t["hook_type"] = "問いかけ型" if re.search(r"[？?]", hook) and "損" not in hook else "損失型"
+            t["hook_type"] = ("即効型" if re.search(r"\d+秒|一瞬|すぐ", hook) else
+                              "疑問型" if re.search(r"[？?]", hook) and "損" not in hook else "煽り型")
         c = re.search(r'spoken="([^"]*)"', src.split("CTA = dict", 1)[-1])
         if c: t["cta"] = "フォロー" if "フォロー" in c.group(1) else "保存"
         m = re.search(r"^TAGS = (\{.*\})", src, re.M)
@@ -48,6 +51,53 @@ def check():
         added += 1
     json.dump(res, open(P("data", "results.json"), "w"), ensure_ascii=False, indent=1)
     print(f"recorded {added} new results ({len(res)} total)")
+
+def perf_log():
+    """data/performance_log.json: per Short, snapshots at >=24h and >=48h (views, likes, comments, retention if available)."""
+    stats = load(P("data", "stats.json")); log = load(P("data", "performance_log.json"), {})
+    for v in stats["videos"]:
+        if v["privacy"] != "public" or v["kind"] != "short": continue
+        e = log.setdefault(v["id"], dict(title=v["title"], published=v["published"][:16]))
+        snap = dict(at_hours=v["age_hours"], views=v["views"], likes=v["likes"], comments=v["comments"],
+                    avg_view_pct=v.get("avg_view_pct"), subs_gained=v.get("subs_gained"))
+        if v["age_hours"] >= 24 and "h24" not in e: e["h24"] = snap
+        if v["age_hours"] >= 48 and "h48" not in e: e["h48"] = snap
+        e["latest"] = snap
+    json.dump(log, open(P("data", "performance_log.json"), "w"), ensure_ascii=False, indent=1)
+
+FEATURES = ("hook_type", "slot", "layout", "length", "topic_kind")
+
+def patterns():
+    """Score each feature value by its 48h median vs the overall median -> config/patterns.json (winners >=600, losers <200)."""
+    res = load(P("data", "results.json"), {}); rows = list(res.values())
+    if not rows: return {}
+    overall = S.median(r["views48"] for r in rows)
+    out = dict(updated=dt.datetime.now().isoformat(timespec="minutes"), overall_median=overall, features={},
+               winners=[r["tags"].get("hook") for r in rows if r["views48"] >= 600 and r["tags"].get("hook")],
+               losers=[r["tags"].get("hook") for r in rows if r["views48"] < 200 and r["tags"].get("hook")])
+    for f in FEATURES:
+        g = groups(res, f)
+        out["features"][f] = {k: dict(v, score=round(v["median"] / overall, 2) if overall else None) for k, v in g.items()}
+    json.dump(out, open(P("config", "patterns.json"), "w"), ensure_ascii=False, indent=1)
+    return out
+
+def act():
+    """Weekly Act (Friday): pin a winning time / hook once it clearly wins (user allowed automatic time/title changes)."""
+    pat = patterns(); strat = load(P("config", "strategy.json")); changes = []
+    since = strat.get("v3_since", "2026-11-12")
+    res = {k: v for k, v in load(P("data", "results.json"), {}).items() if v["published"][:10] >= since}
+    for f, key in (("slot", "slot_pin"), ("hook_type", "hook_pin")):
+        g = groups(res, f)
+        if len(g) < 2 or strat.get(key): continue
+        best, rest = max(g.items(), key=lambda kv: kv[1]["median"]), [v for k, v in g.items()]
+        others = [v for k, v in g.items() if k != best[0]]
+        if best[1]["n"] >= 3 and all(o["n"] >= 2 for o in others) and best[1]["median"] >= 1.5 * max(o["median"] for o in others):
+            val = {"朝6:00": "06:00", "昼12:00": "12:00", "夜19:00": "19:00"}.get(best[0], best[0]) if f == "slot" else best[0]
+            strat[key] = val; changes.append(f"{f} を「{best[0]}」に固定（中央値 {int(best[1]['median'])}回）")
+    if changes:
+        strat.setdefault("history", []).append(dict(date=dt.date.today().isoformat(), change="、".join(changes), why="A/Bテストで1.5倍以上の差"))
+        json.dump(strat, open(P("config", "strategy.json"), "w"), ensure_ascii=False, indent=1)
+    print(json.dumps(dict(changes=changes or ["変更なし（差がまだ小さい／本数不足）"]), ensure_ascii=False))
 
 def groups(res, field, rows=None):
     out = {}
@@ -80,7 +130,7 @@ def insights():
     out = [dict(kind="finding", id="overall", title=f"48時間で1,000回を超えたのは{n}本中{hit}本",
                 body=f"公開48時間の再生回数の中央値は{int(med):,}回。目標は「毎回1,000回以上」。",
                 evidence="data/results.json（各ショートの48時間時点の再生回数）")]
-    for field, title in (("length", "長さ別"), ("slot", "時間帯別"), ("hook_type", "フックの型別")):
+    for field, title in (("length", "長さ別"), ("slot", "時間帯別"), ("hook_type", "フックの型別"), ("layout", "見た目別")):
         g = groups(res, field)
         if len(g) >= 2:
             best = max(g.items(), key=lambda kv: kv[1]["median"])
@@ -99,4 +149,5 @@ def insights():
     print(f"{len(out)} insight rows")
 
 if __name__ == "__main__":
-    {"check": check, "judge": judge, "insights": insights}[sys.argv[1]]()
+    {"check": lambda: (check(), perf_log(), patterns()), "judge": judge, "insights": insights, "act": act,
+     "patterns": patterns}[sys.argv[1]]()

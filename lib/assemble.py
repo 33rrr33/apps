@@ -135,7 +135,7 @@ def build(when, mode):
         p = os.path.join(SL.OUT_DIR, s["series_key"] + "_long_sheet.png"); sheet.save(p); print("sheet:", p); return
     parts = ensure_parts(s, eps)
     ja = "、".join(f"{CIRCLED[i]}{p['title']}" for i, p in enumerate(parts))
-    vo = say({"op": (f"{s['theme_spoken']}、5選をまとめました。気になるところから見てね！" if s.get("ahead") else f"今週の、{s['theme_spoken']}、5選をまとめました。気になるところから見てね！"),
+    vo = say({"op": (f"{s['theme_spoken']}、5選をまとめました。気になるところから見てね！" if s.get("ahead") else f"この5つ、全部知ってたらiPhone上級者。1つでも知らなかったら、最後まで見てね！"),
               "ed": "最後まで見てくれてありがとう！平日は毎日、朝と夕方にショートを投稿しています。チャンネル登録してね！"}, wd)
     op_len = max(8.0, 0.6 + len(vo["op"]) / SL.SR + 1.6); ed_len = max(7.0, 0.6 + len(vo["ed"]) / SL.SR + 1.4)
     op, ed = os.path.join(wd, "op.mp4"), os.path.join(wd, "ed.mp4")
