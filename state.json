@@ -629,7 +629,7 @@
     "made": "2026-11-09",
     "related_long": "znWv4YUhSQQ",
     "comment": "懐中電灯の明るさ、変えられるの知ってましたか？👇 「知ってた」「初めて知った」で教えてね！",
-    "comment_posted": false,
+    "comment_posted": true,
     "replaced": {
      "old_id": "TLRyBeKJaDU",
      "why": "2026-11-09 実験：約12〜13秒・エンドカードなしの短縮版に差し替え"
@@ -647,6 +647,20 @@
     "made": "2026-11-10",
     "related_long": "znWv4YUhSQQ",
     "comment": "スクショ、いつもどうやって撮ってますか？👇 ボタン同時押し派？背面タップ派？丸ボタン派？",
+    "comment_posted": false,
+    "experiment": "short_length"
+   },
+   "2026-11-11T17:30": {
+    "kind": "short",
+    "series_key": "w20261109_second",
+    "theme": "iPhone隠し神機能",
+    "num": 1,
+    "episode": "episodes/w20261109_second/ep01_charge_limit.py",
+    "id": "-ewuLg9oukM",
+    "title": "iPhone隠し神機能① #Shorts",
+    "made": "2026-11-10",
+    "related_long": "1VNksL05WS4",
+    "comment": "毎晩100%まで充電してましたか？👇 「してた」「もう80%にしてる」でコメントしてね！",
     "comment_posted": false,
     "experiment": "short_length"
    }
