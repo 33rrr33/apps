@@ -571,17 +571,19 @@
   <details class="sec" id="secW">
     <summary><span class="ico"><svg class="ic"><use href="#i-widget"/></svg></span>ウィジェット <span class="st" id="stW">未設定</span><svg class="ic sm chev"><use href="#i-chev"/></svg></summary>
     <div class="in2">
-      <p class="note">ホーム画面やロック画面に「つぎの予定・あと何分」を表示します。Googleカレンダーとつないでから使えます。</p>
+      <p class="note">ホーム画面やロック画面に「つぎの予定・あと何分」を表示します。iPhoneのカレンダー（Googleカレンダーも）とリマインダーを読むので、ほかの設定はいりません。</p>
       <ol class="steps2">
         <li>App Storeで <b>Scriptable</b> を入れる（無料）</li>
         <li>下の <b>コードをコピー</b></li>
         <li>Scriptableで <b>＋</b>、貼り付けて名前を <b>予定帳</b> に</li>
+        <li>下の <b>▶</b> を一度押して、カレンダーとリマインダーを <b>許可</b></li>
         <li>ホーム画面を長押し → <b>＋</b> → Scriptable → 大きさを選んで追加</li>
         <li>ウィジェットを長押し → <b>ウィジェットを編集</b> → Script を <b>予定帳</b> に</li>
       </ol>
-      <button class="btn wide" id="wCopy">コードをコピー</button>
+      <button class="btn ink wide" id="wCopy">コードをコピー</button>
       <textarea class="codebox" id="wCode" readonly hidden></textarea>
       <p class="status" id="wStatus"></p>
+      <p class="note">Googleカレンダーの予定を出すには、iPhoneの「設定」→「カレンダー」→「アカウント」にGoogleを入れておきます。予定帳をGoogleとつないでいるときは、予定帳の予定（あとでの数など）も出ます。</p>
     </div>
   </details>
 
@@ -1853,7 +1855,7 @@
     setChip("stAi",!!apiKey());
     setChip("stG",gasOn());
     setChip("stIos",iosOn(),"設定済み");
-    setChip("stW",gasOn()&&gasV2()&&lsGet(LS_WATCH+"_w","")==="1","設定済み");
+    setChip("stW",lsGet(LS_WATCH+"_w","")==="1","設定済み");
     setChip("stWatch",gasOn()&&gasV2()&&lsGet(LS_WATCH,"")==="1","設定済み");
     $("gVerNote").textContent=gasOn()&&!gasV2()?"︎ ウィジェット・Watchを使うには、上の手順でプログラムを新しくしてください":"";
     $("gVerNote").className="status err";
@@ -1947,9 +1949,9 @@
     return false;
   }
   $("wCopy").addEventListener("click",function(){
-    if(needGas("wStatus")) return;
     fetch("widget.js",{cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.text(); }).then(function(t){
-      var code=t.replace("__GAS_URL__",gasUrl()).replace("__TOKEN__",gasToken());
+      var g=gasOn()&&gasV2();
+      var code=t.replace("__GAS_URL__",g?gasUrl():"").replace("__TOKEN__",g?gasToken():"");
       return copyText(code,$("wCode"),"wStatus","コピーしました。Scriptable に貼り付けてください");
     }).then(function(){ lsSet(LS_WATCH+"_w","1"); updStatus(); },function(){ status("wStatus","err","コードを読みこめませんでした"); });
   });

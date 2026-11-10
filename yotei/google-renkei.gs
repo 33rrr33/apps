@@ -209,7 +209,7 @@ function widgetData() {
   listEvents(from, to).forEach(function (ev) {
     if (have[evKey(ev.gcalId, ev.recurring, ev.date)]) return;
     const m = ev.title.match(/^(\p{Extended_Pictographic}️?)\s*/u);
-    items.push({ title: m ? ev.title.slice(m[0].length) : ev.title, emoji: m ? m[1] : '', date: ev.date, time: ev.time, dur: ev.dur || 30, done: false, location: ev.location });
+    items.push({ title: m ? ev.title.slice(m[0].length) : ev.title, emoji: m ? m[1] : '', date: ev.date, time: ev.time, dur: ev.dur || 30, done: false, allDay: ev.allDay, location: ev.location });
   });
   const later = st.items.filter(function (i) { return !i.date && !i.done; }).length;
   const overdue = st.items.filter(function (i) { return i.date && i.date < from && !i.done && !i.gcalId; }).length;
