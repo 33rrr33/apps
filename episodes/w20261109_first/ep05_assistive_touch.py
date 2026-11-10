@@ -5,6 +5,7 @@ from shortlib import *
 
 SERIES = dict(key="w20261109_first", title="iPhone爆速神操作", spoken="iPhone爆速、かみ操作",
               hook_split=("iPhone", "爆速神操作"), total=5, offset=5)
+TITLE = "iPhoneのスクショ、ボタン1回で撮れるの知ってた？ #Shorts"
 NUM, SLUG = 5, "assistive_touch"
 NEXT = "次は隠し神機能"
 SCREEN_CROP = (0, 40, 400, 860)

@@ -69,7 +69,7 @@ python3 lib/partlib.py  <episode> render --out <schedule の part>
 
 ## 4. アップロード（ショート）
 `ytupload.py` はアップロード前に検証する：タイトルが空・`#Shorts` だけなら `series`/`playlist`＋`num`（またはファイル名の番号）から `{シリーズ名}{丸数字} #Shorts` に補完、長尺（kind=long）は公開時刻を17:30に固定、同時刻の重複は拒否。meta.json に `"series"` と `"num"` も入れておく。
-`out/<name>.meta.json`：title（schedule の title）、詳しい description（使い方・ここもすごい・シリーズ①〜⑤の一覧・「土曜/日曜の夕方17:30に5分まとめ」・投稿時間の案内）、tags（#なし）、playlist=テーマ名、`publish_at`、`"notify_subscribers": false`、comment。
+`out/<name>.meta.json`：title（エピソードの TITLE。1本で完結する内容タイトル）、詳しい description（使い方・ここもすごい・「土曜/日曜の夕方17:30に5分まとめ」・投稿時間の案内）、tags（#なし）、playlist=テーマ名、`publish_at`、`"notify_subscribers": false`、comment。
 `python3 lib/ytupload.py upload out/<name>.mp4 out/<name>.meta.json` → state.json `v2.slots[<YYYY-MM-DDTHH:MM>]` に id などを記録（comment_posted=false）。
 playlist_error が出ても動画は上がっている → `python3 lib/ytupload.py playlist <id> <テーマ名>`。id が分からない時は `python3 lib/ytupload.py recent`。
 
@@ -188,6 +188,15 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
 
 ## 失敗したとき
 何かで作れなかった日は、無理に低品質なものを出さず、何が起きたかを1〜2行でユーザーに伝える（state.json は進めない）。
+
+## タイトルは1本で完結（2026-11-10 ユーザー決定・最優先）
+- ショートのタイトルは **シリーズ名＋番号にしない**。その1本の中身がわかる、初めて見た人が押したくなるタイトルにする（25〜35文字＋` #Shorts`）。
+  - 例：「iPhoneを毎晩100%まで充電してる人へ #Shorts」「iPhoneのスクショ、ボタン1回で撮れるの知ってた？ #Shorts」
+  - 型を回す：呼びかけ型（〜な人へ）／疑問型（〜知ってた？）／数字型（iPhoneユーザーの9割が知らない〜）。過去の実績では「9割が知らない」系が強い。毎回同じ型にはしない。
+  - 誇張・断定しすぎない（内容と合うこと）。
+- エピソードに `TITLE = "..."` を書き、meta.json の title にそれを使う（schedule の title は使わない）。
+- 概要欄に「シリーズ①〜⑤の一覧」は書かない（1本で完結させる）。再生リスト（playlist）へのシリーズ分けは続ける。
+- 以下の「通し番号」は動画内の小さな表示・内部管理用。タイトルの重複防止は上のルールで満たす。
 
 ## シリーズ番号は通し番号（2026-11-10）
 - 同じシリーズ名でも、2ブロック目は ⑥〜⑩、3ブロック目は ⑪〜⑮…と続ける（同じタイトルが2本あると再投稿に見えるため）。

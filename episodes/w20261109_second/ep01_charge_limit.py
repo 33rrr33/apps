@@ -5,6 +5,7 @@ from shortlib import *
 
 SERIES = dict(key="w20261109_second", title="iPhone隠し神機能", spoken="iPhone隠し、かみ機能",
               hook_split=("iPhone", "隠し神機能"), total=5, offset=5)
+TITLE = "iPhoneを毎晩100%まで充電してる人へ #Shorts"
 NUM, SLUG = 1, "charge_limit"
 NEXT = "低電力モードをすぐ切り替え"
 SCREEN_CROP = (0, 40, 400, 760)

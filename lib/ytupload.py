@@ -84,7 +84,7 @@ CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳"
 LONG_TIME = "17:30"            # weekend longs: always 17:30 JST (user rule 2026-10-31)
 
 def validate(meta, video):
-    """Fix up metadata before any API call: Shorts titles must be '<series><number> #Shorts'; longs publish at 17:30."""
+    """Fix up metadata before any API call: Shorts titles end with #Shorts (standalone content title, see PLAYBOOK); longs publish at 17:30."""
     import re
     is_long = meta.get("kind") == "long" or meta.get("notify_subscribers") is True
     title = (meta.get("title") or "").strip()
