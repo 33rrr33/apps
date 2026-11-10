@@ -157,6 +157,7 @@ def slot(publish):
     """publish: aware datetime (JST). Returns the slot description or None."""
     d = publish.date(); hm = publish.strftime("%H:%M")
     if d >= V3_START: return v3_slot(publish)
+    if publish.strftime("%Y-%m-%dT%H:%M") in ("2026-11-11T17:30",): return None   # moved to 2026-11-12 12:00 (v3)
     if d < start_monday():
         st = json.load(open(os.path.join(ROOT, "state.json")))
         legacy = st.get("schedule", {}).get(d.isoformat())
