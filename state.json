@@ -651,7 +651,7 @@
     "made": "2026-11-10",
     "related_long": "znWv4YUhSQQ",
     "comment": "スクショ、いつもどうやって撮ってますか？👇 ボタン同時押し派？背面タップ派？丸ボタン派？",
-    "comment_posted": false,
+    "comment_posted": true,
     "experiment": "short_length",
     "replaced_ids": [
      "8WOR5NnEFow"
@@ -677,6 +677,24 @@
     },
     "layout": "rec",
     "disp_num": 6
+   },
+   "2026-11-13T19:00": {
+    "kind": "short",
+    "series_key": "w20261109_second",
+    "theme": "iPhone隠し神機能",
+    "num": 2,
+    "episode": "episodes/w20261109_second/ep02_low_power_cc.py",
+    "id": "WcsUbzYrdtg",
+    "title": "iPhoneの低電力モード、毎回設定から探してない？ #Shorts",
+    "made": "2026-11-11",
+    "related_long": "1VNksL05WS4",
+    "comment": "低電力モード、いつも何%くらいでオンにしてますか？👇 20%派？50%派？ずっとオン派？",
+    "comment_posted": false,
+    "experiment": "short_length",
+    "layout": "rec",
+    "disp_num": 7,
+    "publish_at": "2026-11-13T19:00:00+09:00",
+    "hook_type": "疑問型"
    }
   }
  },
