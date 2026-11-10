@@ -121,7 +121,7 @@ def v3_latest_long(before):
 
 def v3_slot(publish):
     d = publish.date(); hm = publish.strftime("%H:%M")
-    if d.weekday() == 6 and hm == LONG_TIME_V3:          # Sunday long: the last series finished before today
+    if d.weekday() == 6 and hm == LONG_TIME_V3 and not v3_strategy().get("long_paused"):   # Sunday long (paused 2026-11-10)
         i = (d - V3_START).days // 5 - 1
         while i >= 0 and V3_START + dt.timedelta(days=5 * i + 4) >= d: i -= 1
         if i < 0: return None

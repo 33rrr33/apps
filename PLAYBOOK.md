@@ -204,6 +204,7 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
 - 概要欄のシリーズ一覧も通し番号で書く。投稿済みの番号を直すときは `python3 lib/renumber.py <id> <番号>`。
 
 ## 週次まとめ制作（2026-11-10 ユーザー指示）
+- **長尺は停止中**（strategy.json の long_paused=true。2026-11-10 ユーザー決定）。再開は相談してから。
 - **毎週日曜20:00** に翌週（月〜日）7日分をまとめて作って予約する（`schedule.py upcoming 7`）。作る前に analytics → pdca check/insights で最新の勝ちパターンを反映。
 - 平日朝6:00の実行は「安全網」：2日先までに予約漏れがあれば作る。普段はコメント・PDCA記録・ダッシュボード更新だけ。
 - 週の途中で PDCA が時刻やフックを固定しても、予約済みの分は動かさず翌週から反映（必要ならユーザーに報告のうえ予約時刻だけ変更してよい）。
