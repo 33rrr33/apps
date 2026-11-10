@@ -16,7 +16,7 @@ import datetime as dt, json, os, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JST = dt.timezone(dt.timedelta(hours=9))
-CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩"
+CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳"
 DAYS = "月火水木金土日"
 # Weekend longs are ALWAYS published at 17:30 JST (user rule 2026-10-31; 06:00 is forbidden for longs).
 LONG_TIME = "17:30"
@@ -138,7 +138,8 @@ def v3_slot(publish):
     rl = v3_latest_long(publish)
     return dict(kind="short", publish_at=publish.strftime("%Y-%m-%dT%H:%M:00+09:00"), half=half, half_ja=HALF_JA[half],
                 theme=h["title"], theme_spoken=h["spoken"], series_key=key, week=key, num=num, notify_subscribers=False,
-                title=f"{h['title']}{CIRCLED[num - 1]} #Shorts", hook_split=h["hook_split"], hook_type=v3_hook(d),
+                title=f"{h['title']}{CIRCLED[off + num - 1]} #Shorts", disp_num=off + num, num_offset=off,
+                hook_split=h["hook_split"], hook_type=v3_hook(d),
                 topic=tp, episode=f"{h['episode_dir']}/ep{num:02d}_{tp['slug']}.py" if tp else None,
                 part=f"{h['storage_dir']}/part_{num}.mp4", related_long=[rl[0], rl[1]] if rl else None,
                 next_topic=(h["topics"][num]["topic"] if h["topics"] and num < 5 else None))

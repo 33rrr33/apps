@@ -305,10 +305,14 @@ def big_cross(c, t, start, cx=540, cy=860, r=230):
     c.alpha_composite(ly)
 
 # ---------------------------------------------------------------- standard scenes
-CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩"
+def disp_num(ep):
+    """number shown to viewers: continues across blocks of the same series (SERIES offset=5 -> ⑥〜⑩)."""
+    return ep.NUM + ep.SERIES.get("offset", 0)
+
+CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳"
 
 def series_tag(c, ep):
-    s = f"{ep.SERIES['title']}  #{ep.NUM}"
+    s = f"{ep.SERIES['title']}  #{disp_num(ep)}"
     w = font(36).getlength(s) + 60
     rra(c, (540 - w / 2, 170, 540 + w / 2, 226), 28, (255, 255, 255, 40), outline=(255, 255, 255, 120), width=2)
     txt(c, (540, 198), s, 36, WHITE, anchor="mm")
@@ -316,7 +320,7 @@ def series_tag(c, ep):
 def hook_scene(c, t, ep):
     top, bottom = ep.SERIES.get("hook_split", (ep.SERIES["title"], ""))
     telop(c, t, 0.15, [(top, WHITE)], y0=640, size=104)
-    telop(c, t, 0.45, [(bottom + CIRCLED[ep.NUM - 1], YEL)], y0=800, size=150)
+    telop(c, t, 0.45, [(bottom + CIRCLED[disp_num(ep) - 1], YEL)], y0=800, size=150)
     badge(c, t, 1.2, getattr(ep, "HOOK_BADGE", "知らないと損してる…！"), 1010, RED)
     p = e_at(t, 0.6, 0.5)
     if p <= 0: return
@@ -349,7 +353,7 @@ def cta_scene(c, t, ep, T):
     badge(c, t, s + 1.0, "保存して試してみてね！", y, RED); y += 150
     if end_card_on(ep): return
     total = ep.SERIES.get("total", 5)
-    nxt = f"フォローで{CIRCLED[ep.NUM]}もチェック" if ep.NUM < total else "次のシリーズもお楽しみに！"
+    nxt = f"フォローで{CIRCLED[disp_num(ep)]}もチェック" if ep.NUM < total else "次のシリーズもお楽しみに！"
     badge(c, t, s + 2.0, nxt, y, WHITE, tc=INK, size=44)
 
 # ---------------------------------------------------------------- standard end card (last ~4s)
@@ -400,7 +404,7 @@ def end_card(c, t, ep, T):
     if nxt:
         total = ep.SERIES.get("total", 5)
         if is_recap(ep): label = f"来週：{nxt}"
-        elif ep.NUM < total: label = f"次回 {CIRCLED[ep.NUM]}：{nxt}"
+        elif ep.NUM < total: label = f"次回 {CIRCLED[disp_num(ep)]}：{nxt}"
         else: label = f"次回：{nxt}"
         badge(c, t, s + 1.0, label, 1140 if long_video(ep) else 1080, PURPLE, size=40)
 
@@ -792,7 +796,7 @@ def big_text(c, s, cy, max_size=170, maxw=1000, flash=None):
 def v3_top(c, ep, t, T):
     ImageDraw.Draw(c).rectangle((0, 0, W, TOP_H), fill=(8, 8, 12, 255))
     ImageDraw.Draw(c).rectangle((0, TOP_H - 8, W, TOP_H), fill=YEL + (255,))
-    tag = f"{ep.SERIES['title']}{CIRCLED[ep.NUM - 1]}"
+    tag = f"{ep.SERIES['title']}{CIRCLED[disp_num(ep) - 1]}"
     txt(c, (540, 70), tag, 40, (170, 170, 180), anchor="mm")
     if t < T.body:                                        # hook: visible from frame 0, accent blinks for 2s
         flash = None if t >= 2.0 else (int(t * 4) % 2 == 0)

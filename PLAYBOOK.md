@@ -188,3 +188,8 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
 
 ## 失敗したとき
 何かで作れなかった日は、無理に低品質なものを出さず、何が起きたかを1〜2行でユーザーに伝える（state.json は進めない）。
+
+## シリーズ番号は通し番号（2026-11-10）
+- 同じシリーズ名でも、2ブロック目は ⑥〜⑩、3ブロック目は ⑪〜⑮…と続ける（同じタイトルが2本あると再投稿に見えるため）。
+- `schedule.py` のスロットに `disp_num` / `num_offset` が入る。エピソードの `SERIES` に `offset=<num_offset>` を書くと、動画内の表示も通し番号になる（ファイル名の epNN は 1〜5 のまま）。
+- 概要欄のシリーズ一覧も通し番号で書く。投稿済みの番号を直すときは `python3 lib/renumber.py <id> <番号>`。

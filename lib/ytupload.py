@@ -80,7 +80,7 @@ def taken_slots():
         if u.get("id"): out[k] = u.get("title")
     return out
 
-CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩"
+CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳"
 LONG_TIME = "17:30"            # weekend longs: always 17:30 JST (user rule 2026-10-31)
 
 def validate(meta, video):

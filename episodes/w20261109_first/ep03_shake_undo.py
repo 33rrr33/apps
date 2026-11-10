@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw
 from shortlib import *
 
 SERIES = dict(key="w20261109_first", title="iPhone爆速神操作", spoken="iPhone爆速、かみ操作",
-              hook_split=("iPhone", "爆速神操作"), total=5)
+              hook_split=("iPhone", "爆速神操作"), total=5, offset=5)
 NUM, SLUG = 3, "shake_undo"
 NEXT = "アイコン長押しで詳細"
 SCREEN_CROP = (0, 60, 400, 860)
