@@ -1,5 +1,5 @@
 // しゃべって予定帳ウィジェット（Scriptable 用）
-// 使い方: 予定帳の ⚙︎ →「📱 ウィジェット」→「ウィジェット用コードをコピー」
+// 使い方: 予定帳の「設定」→「ウィジェット」→「コードをコピー」
 //         → Scriptable で新しいスクリプトを作り、全部はりつける（名前は「予定帳」）。
 // ホーム画面（小・中・大）とロック画面（長方形・丸・1行）に対応。
 
@@ -11,13 +11,13 @@ const OPEN_URL = "https://33rrr33.github.io/apps/yotei/"
 // =========================================================
 
 const C = {
-  bg: Color.dynamic(new Color("#f5f2ec"), new Color("#211d18")),
-  card: Color.dynamic(new Color("#ffffff"), new Color("#2c2721")),
-  ink: Color.dynamic(new Color("#2f2a24"), new Color("#f0e9dd")),
-  sub: Color.dynamic(new Color("#7c7367"), new Color("#a99f90")),
-  accent: Color.dynamic(new Color("#c96f3f"), new Color("#e0895a")),
-  warn: Color.dynamic(new Color("#b7791f"), new Color("#e5b45a")),
-  ok: Color.dynamic(new Color("#2f7d5b"), new Color("#6fc79c")),
+  bg: Color.dynamic(new Color("#F6F5F2"), new Color("#0C0C0D")),
+  card: Color.dynamic(new Color("#FFFFFF"), new Color("#17171A")),
+  ink: Color.dynamic(new Color("#17171A"), new Color("#F2F2F3")),
+  sub: Color.dynamic(new Color("#9C9CA3"), new Color("#6E6E76")),
+  accent: Color.dynamic(new Color("#E2553B"), new Color("#FF6B4E")),
+  warn: Color.dynamic(new Color("#C27C0E"), new Color("#F0A63A")),
+  ok: Color.dynamic(new Color("#1F9D6B"), new Color("#3CCB8F")),
 }
 const WD = "日月火水木金土"
 
@@ -101,8 +101,8 @@ function relDate(stack, date, size, color) {
 function hero(w, p, size) {
   const big = size === "small" ? 17 : 20
   if (p.cur) {
-    txt(w, "▶ いまの時間", 11, C.accent, true)
-    txt(w, (p.cur.it.emoji || "") + " " + p.cur.it.title, big, C.ink, true, 2)
+    txt(w, "いま", 11, C.accent, true)
+    txt(w, p.cur.it.title, big, C.ink, true, 2)
     const r = w.addStack(); r.centerAlignContent()
     txt(r, "のこり ", 12, C.sub)
     const d = r.addDate(p.cur.e); d.applyTimerStyle(); d.font = Font.boldMonospacedSystemFont(13); d.textColor = C.accent
@@ -110,20 +110,20 @@ function hero(w, p, size) {
   } else if (p.next) {
     const soon = !p.next.tomorrow && (p.next.s - p.now) <= 15 * 60000
     const col = soon ? C.warn : C.accent
-    txt(w, soon ? "⏰ そろそろ準備！" : (p.next.tomorrow ? "⏭ 明日のさいしょ" : "⏭ つぎの予定"), 11, col, true)
-    txt(w, (p.next.it.emoji || "") + " " + p.next.it.title, big, C.ink, true, 2)
+    txt(w, soon ? "まもなく" : (p.next.tomorrow ? "明日のはじめ" : "つぎ"), 11, col, true)
+    txt(w, p.next.it.title, big, C.ink, true, 2)
     const r = w.addStack(); r.centerAlignContent()
     txt(r, p.next.it.time + "  ", 12, C.sub, true)
     relDate(r, p.next.s, 12, col)
   } else if (p.undone.length) {
-    txt(w, "🌱 まずはこれだけ", 11, C.sub, true)
-    txt(w, (p.undone[0].emoji || "") + " " + p.undone[0].title, big, C.ink, true, 2)
-    txt(w, "時間の決まった予定はもうないよ", 11, C.sub)
+    txt(w, "まずはこれだけ", 11, C.sub, true)
+    txt(w, p.undone[0].title, big, C.ink, true, 2)
+    txt(w, "時間の決まった予定はもうありません", 11, C.sub, false, 2)
   } else if (p.today.length) {
-    txt(w, "🎉 今日はぜんぶおわり！", size === "small" ? 15 : 17, C.ok, true, 2)
+    txt(w, "今日はぜんぶおわりました", size === "small" ? 15 : 17, C.ok, true, 2)
   } else {
     txt(w, "今日の予定はなし", 15, C.sub, true)
-    txt(w, "タップして🎙で話して入れよう", 11, C.sub, false, 2)
+    txt(w, "タップして話して入れる", 11, C.sub, false, 2)
   }
 }
 function row(w, it, isNow) {
@@ -131,7 +131,7 @@ function row(w, it, isNow) {
   const t = txt(r, it.time || "いつでも", it.time ? 12 : 10, it.done ? C.sub : C.accent, true)
   t.font = it.time ? Font.boldMonospacedSystemFont(12) : Font.systemFont(10)
   r.addSpacer(2)
-  const s = txt(r, (it.done ? "✓ " : "") + (it.emoji || "") + " " + it.title, 13, it.done ? C.sub : C.ink, isNow)
+  const s = txt(r, it.title, 13, it.done ? C.sub : C.ink, isNow)
   r.addSpacer()
 }
 
@@ -153,12 +153,12 @@ async function build(family) {
     w.addAccessoryWidgetBackground = true
     const n = p.cur ? p.cur.e : p.next && !p.next.tomorrow ? p.next.s : null
     if (n) { const d = w.addDate(n); d.applyTimerStyle(); d.font = Font.boldSystemFont(11); d.centerAlignText() }
-    else { const t = w.addText("✓"); t.font = Font.boldSystemFont(20); t.centerAlignText() }
+    else { const t = w.addText("なし"); t.font = Font.boldSystemFont(12); t.centerAlignText() }
     return w
   }
   if (family === "accessoryRectangular") {
     if (p.cur) {
-      txt(w, "▶ " + p.cur.it.title, 14, Color.white(), true)
+      txt(w, p.cur.it.title, 14, Color.white(), true)
       const r = w.addStack(); txt(r, "のこり ", 12, Color.white())
       const d = r.addDate(p.cur.e); d.applyTimerStyle(); d.font = Font.boldSystemFont(12)
     } else if (p.next) {
@@ -180,13 +180,13 @@ async function build(family) {
     return w
   }
   const head = w.addStack(); head.centerAlignContent()
-  txt(head, (p.now.getMonth() + 1) + "/" + p.now.getDate() + "(" + WD[p.now.getDay()] + ")", 11, C.sub, true)
+  txt(head, (p.now.getMonth() + 1) + "月" + p.now.getDate() + "日 " + WD[p.now.getDay()] + "曜", 11, C.sub, true)
   head.addSpacer()
   if (family !== "small") {
     const done = p.today.filter(i => i.done).length
-    if (p.today.length) txt(head, "✅ " + done + "/" + p.today.length, 11, C.ok, true)
+    if (p.today.length) txt(head, done + "/" + p.today.length + " できた", 11, C.ok, true)
   }
-  if (data.stale) txt(head, " ⚠︎", 11, C.warn)
+  if (data.stale) txt(head, "  前回の内容", 10, C.warn)
   w.addSpacer(4)
   hero(w, p, family)
 
@@ -203,7 +203,7 @@ async function build(family) {
     }
     if (family !== "medium" && (data.later || data.overdue)) {
       w.addSpacer(4)
-      txt(w, (data.overdue ? "🧺 やり残し " + data.overdue + "  " : "") + (data.later ? "📥 あとで " + data.later : ""), 10, C.sub)
+      txt(w, (data.overdue ? "前の日から " + data.overdue + "件　" : "") + (data.later ? "あとで " + data.later + "件" : ""), 10, C.sub)
     }
   }
   w.addSpacer()
