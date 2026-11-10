@@ -1,14 +1,25 @@
-// しゃべって予定帳ウィジェット（Scriptable 用）
+// 予定帳ウィジェット（Scriptable 用）
 // 使い方: 予定帳の「設定」→「ウィジェット」→「コードをコピー」
-//         → Scriptable で新しいスクリプトを作り、全部はりつける（名前は「予定帳」）。
+//         → Scriptable で新しいスクリプトを作り、全部はりつける（名前は「予定帳」）
+//         → 一度 ▶ を押して、カレンダーとリマインダーへのアクセスを「許可」。
 // ホーム画面（小・中・大）とロック画面（長方形・丸・1行）に対応。
+//
+// 予定の読みこみ先：
+//   ・ふだんは iPhone のカレンダー（Googleアカウントを入れていれば Googleカレンダーも）と、
+//     今日が期限のリマインダーを表示します。設定はいりません。
+//   ・予定帳を Google とつないでいるときは、予定帳の予定（あとで・やり残しの数も）を表示します。
 
 // ====== ここは予定帳が自動で入れます（さわらなくてOK） ======
 const GAS_URL = "__GAS_URL__"
 const TOKEN = "__TOKEN__"
-// ウィジェットをタップしたときに開くURL
-const OPEN_URL = "https://33rrr33.github.io/apps/yotei/"
 // =========================================================
+
+// 表示しないカレンダー（名前の一部でOK）
+const HIDE_CALENDARS = ["祝日", "Holidays", "誕生日", "Birthdays"]
+// 今日が期限のリマインダーも出す
+const SHOW_REMINDERS = true
+// ウィジェットをタップしたときに開くURL（空なら自動：予定帳 or iPhoneのカレンダー）
+const OPEN_URL = ""
 
 const C = {
   bg: Color.dynamic(new Color("#F6F5F2"), new Color("#0C0C0D")),
@@ -24,7 +35,47 @@ const WD = "日月火水木金土"
 // ---------- データ（ネットにつながらないときは前回の分を使う） ----------
 const fm = FileManager.local()
 const cachePath = fm.joinPath(fm.documentsDirectory(), "yotei-widget-cache.json")
+const USE_GAS = /^https:\/\//.test(GAS_URL)
+function hm(d) { return pad(d.getHours()) + ":" + pad(d.getMinutes()) }
+
+// iPhone のカレンダーとリマインダーから読む（Googleの設定いらず）
+async function loadLocal() {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const end = new Date(start.getTime() + 3 * 864e5)
+  let cals = await Calendar.forEvents()
+  cals = cals.filter(c => !HIDE_CALENDARS.some(h => c.title.indexOf(h) >= 0))
+  const evs = await CalendarEvent.between(start, end, cals)
+  const items = []
+  for (const e of evs) {
+    if (e.isAllDay) {
+      // 何日も続く終日予定は、今日〜あさってに入る日だけ出す
+      for (let d = new Date(Math.max(e.startDate, start)); d < e.endDate && d < end; d = new Date(d.getTime() + 864e5)) {
+        items.push({ title: e.title, date: ymd(d), time: "", dur: 0, done: false, allDay: true, location: e.location || "" })
+      }
+    } else {
+      items.push({ title: e.title, date: ymd(e.startDate), time: hm(e.startDate),
+        dur: Math.max(1, Math.round((e.endDate - e.startDate) / 60000)), done: false, location: e.location || "" })
+    }
+  }
+  let overdue = 0
+  if (SHOW_REMINDERS) {
+    try {
+      const rs = await Reminder.allDueToday()
+      for (const r of rs) {
+        items.push({ title: r.title, date: ymd(now), time: r.dueDateIncludesTime && r.dueDate ? hm(r.dueDate) : "", dur: 15, done: r.isCompleted, location: "" })
+      }
+      overdue = (await Reminder.allIncomplete()).filter(r => r.dueDate && r.dueDate < start).length
+    } catch (e) { /* リマインダーを許可していなければ出さない */ }
+  }
+  return { ok: true, items, later: 0, overdue }
+}
+
 async function loadData() {
+  if (!USE_GAS) {
+    try { return await loadLocal() }
+    catch (e) { return { ok: false, error: "Scriptable で一度 ▶ を押して、カレンダーへのアクセスを許可してください", items: [] } }
+  }
   try {
     const url = GAS_URL + "?action=widget&token=" + encodeURIComponent(TOKEN)
     const req = new Request(url)
@@ -76,7 +127,7 @@ function pick(data) {
     const tm = tomorrow.find(i => startOf(i))
     if (tm) next = { it: tm, s: startOf(tm), tomorrow: true }
   }
-  return { now, today, tomorrow, cur, next, undone: today.filter(i => !i.done) }
+  return { now, today, tomorrow, cur, next, undone: today.filter(i => !i.done && !i.allDay) }
 }
 
 // ---------- 部品 ----------
@@ -128,7 +179,7 @@ function hero(w, p, size) {
 }
 function row(w, it, isNow) {
   const r = w.addStack(); r.centerAlignContent(); r.spacing = 6
-  const t = txt(r, it.time || "いつでも", it.time ? 12 : 10, it.done ? C.sub : C.accent, true)
+  const t = txt(r, it.time || (it.allDay ? "終日" : "いつでも"), it.time ? 12 : 10, it.done ? C.sub : C.accent, true)
   t.font = it.time ? Font.boldMonospacedSystemFont(12) : Font.systemFont(10)
   r.addSpacer(2)
   const s = txt(r, it.title, 13, it.done ? C.sub : C.ink, isNow)
@@ -140,7 +191,7 @@ async function build(family) {
   const data = await loadData()
   const p = pick(data)
   const w = new ListWidget()
-  w.url = OPEN_URL
+  w.url = OPEN_URL || (USE_GAS ? "https://33rrr33.github.io/apps/yotei/" : "calshow://")
   w.refreshAfterDate = new Date(Date.now() + 10 * 60000)
 
   // ロック画面
@@ -203,7 +254,7 @@ async function build(family) {
     }
     if (family !== "medium" && (data.later || data.overdue)) {
       w.addSpacer(4)
-      txt(w, (data.overdue ? "前の日から " + data.overdue + "件　" : "") + (data.later ? "あとで " + data.later + "件" : ""), 10, C.sub)
+      txt(w, (data.overdue ? "やり残し " + data.overdue + "件　" : "") + (data.later ? "あとで " + data.later + "件" : ""), 10, C.sub)
     }
   }
   w.addSpacer()
