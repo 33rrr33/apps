@@ -422,6 +422,9 @@
       <p class="status" id="gStatus"></p>
       <label class="chkline"><input type="checkbox" id="setAutoG"> 入れた予定を自動でGoogleカレンダーにも入れる</label>
       <label class="chkline"><input type="checkbox" id="setSyncG"> Googleカレンダーの予定をここにも出す</label>
+      <details class="tr" style="margin-top:10px"><summary>🔄 前につないだ人へ：プログラムを新しくする手順</summary>
+        <p>ウィジェットやApple Watchを使うには、Googleのプログラムを新しい版にします。<br>① 上の「① コードをコピー」→ ② script.google.com の前のプロジェクトを開き、ぜんぶ消して貼り付け → 💾 保存 → ③「デプロイ」→「デプロイを管理」→ ✏️（編集）→ バージョン「新バージョン」→「デプロイ」→ 聞かれたら「アクセスを承認」→「許可」→ ④ ここで「つなぐ／テスト」<br>（URLは前と同じままです）</p></details>
+      <p class="status" id="gVerNote"></p>
       <label class="fl">📧 メールをさがす条件（Gmailの検索と同じ書き方）</label>
       <input class="tx" id="setMailQ" placeholder="newer_than:3d -category:promotions -category:social">
     </div>
@@ -450,6 +453,49 @@
       </div>
       <label class="chkline" style="margin-top:10px"><input type="checkbox" id="setIos"> 作った！（アラーム・タイマーを使う）</label>
       <p class="note">セットしたあとは、左上の「◀ 予定帳」でもどってこられます。</p>
+    </div>
+  </details>
+
+  <!-- ウィジェット -->
+  <details class="sec" id="secW">
+    <summary>📱 ホーム画面・ロック画面のウィジェット <span class="st" id="stW">未設定</span></summary>
+    <div class="in2">
+      <p class="note">「つぎ：歯医者 あと25分」と今日の予定を、ホーム画面やロック画面に出します。時間割ウィジェットと同じ <b>Scriptable</b> アプリを使います。<b>先に「📅 Googleカレンダー・Gmail」をつないでおいてね</b>（予定はGoogleを通してウィジェットにとどきます）。</p>
+      <ol class="steps2">
+        <li>App Store で <b>Scriptable</b> を入れる（無料・時間割ウィジェットで入れていればOK）</li>
+        <li>下の <b>「ウィジェット用コードをコピー」</b> を押す</li>
+        <li>Scriptable を開いて右上 <b>＋</b> → ぜんぶ貼り付け → 上の名前を <b>予定帳</b> にして「完了」</li>
+        <li>ホーム画面を長押し → 左上 <b>＋</b>（または「編集」→「ウィジェットを追加」）→ <b>Scriptable</b> → 大きさをえらんで追加</li>
+        <li>置いたウィジェットを長押し →「<b>ウィジェットを編集</b>」→ Script を <b>予定帳</b> にする</li>
+        <li>ロック画面も同じ：ロック画面を長押し →「カスタマイズ」→ ウィジェット → Scriptable → Script を <b>予定帳</b></li>
+      </ol>
+      <button class="btn wide" id="wCopy">📋 ウィジェット用コードをコピー</button>
+      <textarea class="codebox" id="wCode" readonly hidden></textarea>
+      <p class="status" id="wStatus"></p>
+      <p class="note">ウィジェットは iPhone のつごうで10〜15分ごとに新しくなります（「あと◯分」は自動で動きます）。タップすると予定帳が Safari で開きます。</p>
+    </div>
+  </details>
+
+  <!-- Watch -->
+  <details class="sec" id="secWatch">
+    <summary>⌚ Apple Watch・Siri <span class="st" id="stWatch">未設定</span></summary>
+    <div class="in2">
+      <p class="note"><b>お知らせ</b>：Googleカレンダーの通知と、予定帳でセットしたiPhoneのアラーム・タイマーは、そのままWatchでも鳴ります（iPhoneの「設定」→「カレンダー」→「アカウント」にGoogleを入れておく）。Watchの文字盤に「カレンダー」をのせると、つぎの予定も見えます。</p>
+      <p class="note"><b>Watchに話して入れる</b>：Watchで「予定帳に入れる」を押して話すと、AIが整理してGoogleカレンダー（と予定帳）に入れます。「Hey Siri、予定帳に入れる」でもOK。<b>AIとGoogleを先につないでおいてね。</b></p>
+      <button class="btn pri wide" id="wtPrep" style="margin-top:6px">① Google側にAIを準備する</button>
+      <p class="status" id="wtStatus"></p>
+      <button class="btn wide" id="wtCopy">② ショートカット用のURLをコピー</button>
+      <ol class="steps2">
+        <li>「ショートカット」アプリ → 右上 <b>＋</b> → 名前を <b>予定帳に入れる</b> にする</li>
+        <li><b>テキストを音声入力</b> を追加（言語は日本語）</li>
+        <li><b>URLエンコード</b> を追加（入力が「音声入力されたテキスト」になっていればOK）</li>
+        <li><b>URL</b> を追加 → ②でコピーした文字を貼る → いちばん最後をタップして、下に出る「<b>URLエンコードされたテキスト</b>」をえらぶ</li>
+        <li><b>URLの内容を取得</b> を追加</li>
+        <li><b>結果を表示</b> を追加（「URLの内容」を表示）</li>
+        <li>下の ⓘ（または右上の設定）→ <b>Apple Watchに表示</b> をオン → 完了</li>
+      </ol>
+      <p class="note">Watchの「ショートカット」アプリに出ます。文字盤の「ショートカット」コンプリケーションに置くと、ワンタップで話せます。</p>
+      <button class="btn wide" id="wtTest">🧪 ためす（「明日の朝7時に知らせて」を送る）</button>
     </div>
   </details>
 
@@ -495,7 +541,8 @@
       LS_LEAD="yotei_lead_v1", LS_NOTI="yotei_notified_v1",
       LS_GAS="yotei_gas_url_v1", LS_TOKEN="yotei_gas_token_v1", LS_AUTOG="yotei_auto_gcal_v1",
       LS_SYNCG="yotei_sync_gcal_v1", LS_MAILQ="yotei_mail_q_v1", LS_IOS="yotei_ios_sc_v1",
-      LS_PEND="yotei_pending_alarms_v1", LS_NONUDGE="yotei_nonudge_v1";
+      LS_PEND="yotei_pending_alarms_v1", LS_NONUDGE="yotei_nonudge_v1",
+      LS_TOMB="yotei_tombs_v1", LS_GASVER="yotei_gas_ver_v1", LS_WATCH="yotei_watch_v1";
   var FURI_KEY="furigana_apikey_v1"; // 同じサイトの「ふりがなテスト」で登録済みのキーも使う
   var DEF_MODEL="gemini-3.6-flash";
   var DEF_MAILQ="newer_than:3d -category:promotions -category:social";
@@ -543,7 +590,18 @@
   /* ============ データ ============ */
   var items=[];
   try{ items=JSON.parse(lsGet(LS_ITEMS,"[]"))||[]; }catch(e){ items=[]; }
-  function save(){ lsSet(LS_ITEMS,JSON.stringify(items)); }
+  // 変わった予定には upd（更新時刻）をつけ、消した予定は tombs に残す（Googleを通して、ほかの画面・ウィジェット・Watchと合わせるため）
+  var lastSer={}, tombs={};
+  try{ tombs=JSON.parse(lsGet(LS_TOMB,"{}"))||{}; }catch(e){ tombs={}; }
+  function serOf(it){ var c={}; for(var k in it) if(k!=="upd"&&k.charAt(0)!=="_") c[k]=it[k]; return JSON.stringify(c); }
+  function resetSer(){ lastSer={}; items.forEach(function(it){ lastSer[it.id]=serOf(it); }); }
+  function save(){
+    var now=Date.now(), seen={};
+    items.forEach(function(it){ seen[it.id]=1; var ser=serOf(it); if(lastSer[it.id]!==ser){ it.upd=now; lastSer[it.id]=ser; } });
+    Object.keys(lastSer).forEach(function(id){ if(!seen[id]){ tombs[id]=now; delete lastSer[id]; } });
+    lsSet(LS_ITEMS,JSON.stringify(items)); lsSet(LS_TOMB,JSON.stringify(tombs));
+    scheduleSync();
+  }
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
   function find(id){ for(var i=0;i<items.length;i++) if(items[i].id===id) return items[i]; return null; }
   function normItem(o){
@@ -556,10 +614,11 @@
       dur:Math.max(5,Math.min(1440,parseInt(o.dur,10)||30)),
       steps:steps, note:String(o.note||""), location:String(o.location||""),
       done:!!o.done, doneAt:o.doneAt||null, created:o.created||Date.now(),
-      gcalId:o.gcalId||null, gcalRec:!!o.gcalRec, src:o.src||""
+      gcalId:o.gcalId||null, gcalRec:!!o.gcalRec, src:o.src||"", upd:+o.upd||o.created||Date.now()
     };
   }
   items=items.map(normItem);
+  resetSer();
 
   var EMOJI_RULES=[
     [/歯医者|病院|クリニック|通院|診察|薬/,"🏥"],[/会議|ミーティング|打ち合わせ|打合せ|面談|職員会/,"👥"],
@@ -979,13 +1038,44 @@
       if(ng) toast("📅 "+ng+"件 入れられませんでした",4000);
     },function(e){ toast("📅 Googleカレンダーに入れられませんでした（"+e.message+"）",4500); });
   }
+  // 予定帳のデータをGoogleの中に預けて、ほかの画面（Safari／ホーム画面）・ウィジェット・Watchと合わせる
+  var syncTimer=0, syncing=false;
+  function gasV2(){ return +lsGet(LS_GASVER,"0")>=2; }
+  function scheduleSync(){
+    if(!gasOn()||!gasV2()) return;
+    clearTimeout(syncTimer); syncTimer=setTimeout(syncItems,2500);
+  }
+  function syncItems(){
+    if(!gasOn()||!gasV2()) return Promise.resolve();
+    if(syncing){ scheduleSync(); return Promise.resolve(); }
+    syncing=true; clearTimeout(syncTimer);
+    var lim=Date.now()-14*864e5;
+    var send=items.filter(function(i){ return !(i.done&&(i.doneAt||0)<lim); });
+    return gas("syncItems",{items:send,tombs:tombs}).then(function(j){
+      // 送ったあとに変えたものは、こちらを残す
+      var mine={}; items.forEach(function(i){ mine[i.id]=i; });
+      var merged=(j.items||[]).map(normItem).map(function(r){ var m=mine[r.id]; return (m&&m.upd>r.upd)?m:r; });
+      var ids={}; merged.forEach(function(i){ ids[i.id]=1; });
+      items.forEach(function(i){ if(!ids[i.id]&&!(j.tombs&&j.tombs[i.id])&&!(i.done&&(i.doneAt||0)<lim)) merged.push(i); });
+      items.forEach(function(i){ if(i.done&&(i.doneAt||0)<lim&&!ids[i.id]) merged.push(i); }); // 古い「できた」はこの端末にだけ残す
+      tombs=j.tombs||tombs;
+      var before=JSON.stringify(items.map(serOf).sort());
+      items=merged; resetSer();
+      lsSet(LS_ITEMS,JSON.stringify(items)); lsSet(LS_TOMB,JSON.stringify(tombs));
+      if(JSON.stringify(items.map(serOf).sort())!==before) render();
+    },function(e){
+      if(/unknown action/.test(e.message)) lsSet(LS_GASVER,"1");
+    }).then(function(){ syncing=false; });
+  }
   var lastPull=0;
   function syncPull(force){
-    if(!gasOn()||lsGet(LS_SYNCG,"1")!=="1") return Promise.resolve();
+    if(!gasOn()) return Promise.resolve();
     if(!force&&Date.now()-lastPull<5*6e4) return Promise.resolve();
     lastPull=Date.now();
+    var first=syncItems();
+    if(lsGet(LS_SYNCG,"1")!=="1") return first;
     var from=todayStr(), to=ymd(addDays(new Date(),30));
-    return gas("listEvents",{from:from,to:to}).then(function(j){
+    return first.then(function(){ return gas("listEvents",{from:from,to:to}); }).then(function(j){
       var seen={}, changed=false;
       (j.events||[]).forEach(function(ev){
         var key=ev.recurring?(ev.gcalId+"@"+ev.date):ev.gcalId;
@@ -1619,6 +1709,10 @@
     setChip("stAi",!!apiKey());
     setChip("stG",gasOn());
     setChip("stIos",iosOn(),"✅ 準備OK");
+    setChip("stW",gasOn()&&gasV2()&&lsGet(LS_WATCH+"_w","")==="1","✅ コピー済み");
+    setChip("stWatch",gasOn()&&gasV2()&&lsGet(LS_WATCH,"")==="1","✅ 準備OK");
+    $("gVerNote").textContent=gasOn()&&!gasV2()?"⚠︎ ウィジェット・Watchを使うには、上の手順でプログラムを新しくしてね":"";
+    $("gVerNote").className="status err";
   }
   function updNotifBtn(){
     var b=$("setNotif");
@@ -1630,6 +1724,11 @@
     lsSet(LS_KEY,$("setKey").value.trim()); lsSet(LS_MODEL,$("setModel").value.trim()); lsSet(LS_LEAD,$("setLead").value);
     lsSet(LS_GAS,$("setGas").value.trim()); lsSet(LS_AUTOG,$("setAutoG").checked?"1":"0"); lsSet(LS_SYNCG,$("setSyncG").checked?"1":"0");
     lsSet(LS_MAILQ,$("setMailQ").value.trim()); lsSet(LS_IOS,$("setIos").checked?"1":"0");
+    var sig=apiKey()+"|"+lsGet(LS_MODEL,"")+"|"+lsGet(LS_LEAD,"10");
+    if(lsGet(LS_WATCH,"")==="1"&&gasOn()&&gasV2()&&lsGet(LS_WATCH+"_sig","")!==sig){
+      lsSet(LS_WATCH+"_sig",sig);
+      gas("setAiKey",{key:apiKey(),model:lsGet(LS_MODEL,""),lead:+lsGet(LS_LEAD,"10")}).catch(function(){});
+    }
     updStatus();
   }
   $("btnSet").addEventListener("click",function(){ openSet(); });
@@ -1684,9 +1783,57 @@
     if(!/^https:\/\/script\.google(usercontent)?\.com\/.+/.test(u)){ status("gStatus","err","https://script.google.com/macros/s/…/exec の形のURLを貼ってね"); return; }
     saveSettings(); status("gStatus","","テストしています…");
     gas("ping").then(function(j){
-      status("gStatus","ok","✅ つながりました！（カレンダー：「"+j.calendar+"」）");
+      lsSet(LS_GASVER,String(j.version||1));
+      if((j.version||1)<2) status("gStatus","err","つながりましたが、Googleのプログラムが古い版です。下の「新しくする手順」で貼りなおしてね");
+      else status("gStatus","ok","✅ つながりました！（カレンダー：「"+j.calendar+"」）");
       updStatus(); render(); syncPull(true);
     },function(e){ status("gStatus","err","つながりませんでした："+e.message); });
+  });
+
+  // ウィジェット
+  function copyText(code,box,stId,okMsg){
+    box.value=code; box.hidden=false;
+    var fail=function(){ box.select(); status(stId,"","下の枠を長押し →「すべてを選択」→「コピー」してね"); };
+    if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(code).then(function(){ status(stId,"ok",okMsg); return true; },function(){ fail(); return true; });
+    fail(); return Promise.resolve(true);
+  }
+  function needGas(stId){
+    if(!gasOn()){ status(stId,"err","先に「📅 Googleカレンダー・Gmail」をつないでね"); return true; }
+    if(!gasV2()){ status(stId,"err","Googleのプログラムを新しくしてね（「📅 Googleカレンダー・Gmail」の中の手順）"); return true; }
+    return false;
+  }
+  $("wCopy").addEventListener("click",function(){
+    if(needGas("wStatus")) return;
+    fetch("widget.js",{cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.text(); }).then(function(t){
+      var code=t.replace("__GAS_URL__",gasUrl()).replace("__TOKEN__",gasToken());
+      return copyText(code,$("wCode"),"wStatus","コピーしました。Scriptable に貼り付けてね");
+    }).then(function(){ lsSet(LS_WATCH+"_w","1"); updStatus(); },function(){ status("wStatus","err","コードを読みこめませんでした"); });
+  });
+
+  // Apple Watch・Siri
+  function watchUrl(){ return gasUrl()+"?action=addText&token="+encodeURIComponent(gasToken())+"&text="; }
+  $("wtPrep").addEventListener("click",function(){
+    if(needGas("wtStatus")) return;
+    if(!apiKey()){ status("wtStatus","err","先に「🤖 AI」をつないでね"); return; }
+    status("wtStatus","","準備しています…");
+    gas("setAiKey",{key:apiKey(),model:lsGet(LS_MODEL,""),lead:+lsGet(LS_LEAD,"10")}).then(function(){
+      lsSet(LS_WATCH,"1"); lsSet(LS_WATCH+"_sig",apiKey()+"|"+lsGet(LS_MODEL,"")+"|"+lsGet(LS_LEAD,"10")); updStatus(); status("wtStatus","ok","✅ 準備できました。つぎは②へ");
+    },function(e){ status("wtStatus","err","できませんでした："+e.message); });
+  });
+  $("wtCopy").addEventListener("click",function(){
+    if(needGas("wtStatus")) return;
+    var u=watchUrl();
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(function(){ status("wtStatus","ok","コピーしました。ショートカットの「URL」に貼ってね"); },function(){ prompt("これをコピーしてね",u); });
+    else prompt("これをコピーしてね",u);
+  });
+  $("wtTest").addEventListener("click",function(){
+    if(needGas("wtStatus")) return;
+    if(lsGet(LS_WATCH,"")!=="1"){ status("wtStatus","err","先に「① Google側にAIを準備する」を押してね"); return; }
+    status("wtStatus","","送っています…（10秒くらい）");
+    fetchTimeout(watchUrl()+encodeURIComponent("明日の朝7時に知らせて"),{method:"GET"},60000).then(function(r){ return r.text(); }).then(function(t){
+      status("wtStatus",/入れました|お知らせ/.test(t)?"ok":"err","Googleからの返事："+t.slice(0,200));
+      lastPull=0; syncPull(true);
+    },function(e){ status("wtStatus","err","とどきませんでした："+e.message); });
   });
 
   // iPhone
@@ -1751,7 +1898,9 @@
   /* ============ はじまり ============ */
   render();
   checkReminders();
-  syncPull(true);
+  if(gasOn()&&!gasV2()){
+    gas("ping").then(function(j){ lsSet(LS_GASVER,String(j.version||1)); syncPull(true); },function(){});
+  }else syncPull(true);
   setInterval(function(){
     checkReminders();
     var busyUI=document.querySelector(".modal.show")||$("rec").classList.contains("show");
