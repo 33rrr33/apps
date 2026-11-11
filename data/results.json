@@ -434,5 +434,24 @@
    "cta": "保存"
   },
   "experiment": null
+ },
+ "-ZIU-9oTaHA": {
+  "title": "iPhone爆速神操作⑧ #Shorts",
+  "published": "2026-11-10T06:00",
+  "age_at_record": 48.2,
+  "views48": 81,
+  "likes": 0,
+  "comments": 1,
+  "late": false,
+  "tags": {
+   "length": "短縮版",
+   "slot": "朝6:00",
+   "layout": "黒帯＋端末",
+   "title_style": "シリーズ名だけ",
+   "hook": "削除キー連打は {今すぐやめて}",
+   "hook_type": "即効型",
+   "cta": "保存"
+  },
+  "experiment": null
  }
 }

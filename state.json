@@ -695,6 +695,24 @@
     "disp_num": 7,
     "publish_at": "2026-11-13T19:00:00+09:00",
     "hook_type": "疑問型"
+   },
+   "2026-11-14T06:00": {
+    "kind": "short",
+    "series_key": "w20261109_second",
+    "theme": "iPhone隠し神機能",
+    "num": 3,
+    "episode": "episodes/w20261109_second/ep03_battery_health.py",
+    "id": "6pVyc-_SNTw",
+    "title": "iPhoneユーザーの9割が知らない、バッテリーの寿命チェック #Shorts",
+    "made": "2026-11-12",
+    "related_long": "1VNksL05WS4",
+    "comment": "あなたのiPhoneの最大容量は何%でしたか？👇 コメントで教えてください！",
+    "comment_posted": false,
+    "experiment": "short_length",
+    "layout": "rec",
+    "disp_num": 8,
+    "publish_at": "2026-11-14T06:00:00+09:00",
+    "hook_type": "即効型"
    }
   }
  },
