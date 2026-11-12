@@ -136,7 +136,12 @@ def v3_slot(publish):
     half, off, key, _ = v3_block(i // 5); h = v3_series(half, off, key); num = i % 5 + 1
     tp = h["topics"][num - 1] if h["topics"] else None
     rl = v3_latest_long(publish)
-    return dict(kind="short", publish_at=publish.strftime("%Y-%m-%dT%H:%M:00+09:00"), half=half, half_ja=HALF_JA[half],
+    ft = v3_strategy().get("format_test") or {}
+    fmt = None
+    if ft and d.isoformat() >= ft.get("since", "9999") and not v3_strategy().get("format_pin"):
+        fmt = "60秒3選" if d.day % 2 else "13秒1ネタ"
+    elif v3_strategy().get("format_pin"): fmt = v3_strategy()["format_pin"]
+    return dict(kind="short", format=fmt, publish_at=publish.strftime("%Y-%m-%dT%H:%M:00+09:00"), half=half, half_ja=HALF_JA[half],
                 theme=h["title"], theme_spoken=h["spoken"], series_key=key, week=key, num=num, notify_subscribers=False,
                 title=f"{h['title']}{CIRCLED[off + num - 1]} #Shorts", disp_num=off + num, num_offset=off,
                 hook_split=h["hook_split"], hook_type=v3_hook(d),

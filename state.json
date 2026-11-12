@@ -713,6 +713,25 @@
     "disp_num": 8,
     "publish_at": "2026-11-14T06:00:00+09:00",
     "hook_type": "即効型"
+   },
+   "2026-11-15T12:00": {
+    "kind": "short",
+    "series_key": "w20261109_second",
+    "theme": "iPhone隠し神機能",
+    "num": 4,
+    "episode": "episodes/w20261109_second/ep04_danger3.py",
+    "id": "AHhV82OZ6QI",
+    "title": "このiPhoneの設定、オンのままだと危ないかも… #Shorts",
+    "made": "2026-11-12",
+    "related_long": "1VNksL05WS4",
+    "comment": "3つのうち、いくつオンのままでしたか？👇 フォローしておくと、毎日1つiPhoneの設定が届きます！",
+    "comment_posted": false,
+    "experiment": "format_test",
+    "layout": "rec",
+    "disp_num": 9,
+    "publish_at": "2026-11-15T12:00:00+09:00",
+    "hook_type": "疑問型",
+    "format": "60秒3選"
    }
   }
  },
