@@ -239,3 +239,8 @@ python3 lib/shortlib.py episodes/<series>/epNN_<slug>.py render   # out/<name>.m
 ## 2026-11-12 いらない非公開動画は削除（ユーザー指示）
 - 差し替えや作り直しで不要になった動画は、**非公開で残さず削除**する（videos.delete）。
 - 削除前に必ず GET で「private かつ publishAt なし」かつ state.json の v2.slots の id ではないことを確認。予約済み（publishAt あり）は絶対に消さない。
+
+## 2026-11-14 チャンネル名の変更（ユーザー決定）
+- チャンネル名は「まっく｜iPhoneの損しない設定」（ユーザーがStudioで変更）。アイコンは out/channel_icon.png。
+- 概要欄の締めは「まっくでは毎日1本、iPhoneの損しない設定を紹介しています。フォローすると毎日1つ届きます📱」。「Macun」とは書かない。
+- 関連動画は、公開済みで一番伸びているショート（hits.py の上位）を案内する（長尺は伸びていないため）。
