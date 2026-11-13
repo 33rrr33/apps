@@ -16,7 +16,8 @@ def tags_for(v, slot_meta):
     t = {"length": "短縮版" if v["seconds"] <= 15 and v["published"][:10] >= "2026-11-10" else ("11〜16秒" if v["seconds"] <= 17 else "20秒"),
          "slot": {"06:00": "朝6:00", "12:00": "昼12:00", "17:30": "夕方17:30", "19:00": "夜19:00"}.get(v["hhmm"], "その他"),
          "layout": "旧デザイン",
-         "title_style": "中身入り" if "｜" in v["title"] else "シリーズ名だけ"}
+         "title_style": "中身入り" if "｜" in v["title"] else "シリーズ名だけ",
+         "title_type": "番号型" if re.search(r"[①-⑳]", v["title"]) else "内容型"}
     ep = (slot_meta or {}).get("episode")
     if ep and os.path.exists(P(ep)):
         src = open(P(ep)).read()
@@ -65,7 +66,7 @@ def perf_log():
         e["latest"] = snap
     json.dump(log, open(P("data", "performance_log.json"), "w"), ensure_ascii=False, indent=1)
 
-FEATURES = ("hook_type", "slot", "layout", "length", "topic_kind")
+FEATURES = ("hook_type", "slot", "layout", "length", "topic_kind", "title_type")
 
 def patterns():
     """Score each feature value by its 48h median vs the overall median -> config/patterns.json (winners >=600, losers <200)."""

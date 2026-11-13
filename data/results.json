@@ -11,7 +11,8 @@
    "length": "11〜16秒",
    "slot": "その他",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -27,7 +28,8 @@
    "length": "11〜16秒",
    "slot": "その他",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -43,7 +45,8 @@
    "length": "11〜16秒",
    "slot": "その他",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -59,7 +62,8 @@
    "length": "11〜16秒",
    "slot": "その他",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -75,7 +79,8 @@
    "length": "11〜16秒",
    "slot": "その他",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -91,7 +96,8 @@
    "length": "11〜16秒",
    "slot": "その他",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -107,7 +113,8 @@
    "length": "11〜16秒",
    "slot": "その他",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -123,7 +130,8 @@
    "length": "20秒",
    "slot": "その他",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -139,7 +147,8 @@
    "length": "20秒",
    "slot": "夕方17:30",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -155,7 +164,8 @@
    "length": "20秒",
    "slot": "夕方17:30",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -171,7 +181,8 @@
    "length": "20秒",
    "slot": "夕方17:30",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -187,7 +198,8 @@
    "length": "20秒",
    "slot": "夕方17:30",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -203,7 +215,8 @@
    "length": "20秒",
    "slot": "朝6:00",
    "layout": "旧デザイン",
-   "title_style": "シリーズ名だけ"
+   "title_style": "シリーズ名だけ",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -222,7 +235,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "計算機で全部消す人 [全員損]してます",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -241,7 +255,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "9割が知らない [片手キーボード]",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -260,7 +275,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "スクロール連打は {今すぐやめて}",
    "hook_type": "即効型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -279,7 +295,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "タブ溜めてる人 [今すぐ見て！]",
    "hook_type": "即効型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -298,7 +315,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "知らないと損 [アプリ爆速切替]",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -317,7 +335,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "写真の文字を手打ち？ {それ時間のムダ}",
    "hook_type": "疑問型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -336,7 +355,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "9割が知らない [写真の翻訳ボタン]",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -355,7 +375,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "写真が傾く人 {この設定オフです}",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -374,7 +395,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "写真が暗い人 {全員損}してます",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -393,7 +415,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "9割が知らない [カメラの神ワザ]",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -412,7 +435,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "消しすぎて打ち直す人 {全員損}してます",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -431,7 +455,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "1個ずつ選ぶ人 {時間のムダ}です",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -450,7 +475,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "削除キー連打は {今すぐやめて}",
    "hook_type": "即効型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -469,7 +495,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "タップしかしない人 {全員損}してます",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "番号型"
   },
   "experiment": null
  },
@@ -488,7 +515,8 @@
    "title_style": "シリーズ名だけ",
    "hook": "スクショで指が {つりそうな人へ}",
    "hook_type": "煽り型",
-   "cta": "保存"
+   "cta": "保存",
+   "title_type": "内容型"
   },
   "experiment": null
  }

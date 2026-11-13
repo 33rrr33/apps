@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-13T08:58",
+ "updated": "2026-11-13T10:09",
  "overall_median": 233.0,
  "features": {
   "hook_type": {
@@ -76,7 +76,21 @@
     "score": 1.04
    }
   },
-  "topic_kind": {}
+  "topic_kind": {},
+  "title_type": {
+   "番号型": {
+    "n": 27,
+    "median": 223,
+    "hit": 0.2962962962962963,
+    "score": 0.96
+   },
+   "内容型": {
+    "n": 1,
+    "median": 1075,
+    "hit": 1.0,
+    "score": 4.61
+   }
+  }
  },
  "winners": [
   "計算機で全部消す人 [全員損]してます",
