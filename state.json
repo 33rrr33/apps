@@ -709,7 +709,7 @@
     "made": "2026-11-12",
     "related_long": "1VNksL05WS4",
     "comment": "あなたのiPhoneの最大容量は何%でしたか？👇 コメントで教えてください！",
-    "comment_posted": false,
+    "comment_posted": true,
     "experiment": "short_length",
     "layout": "rec",
     "disp_num": 8,
@@ -736,6 +736,26 @@
     "publish_at": "2026-11-15T12:00:00+09:00",
     "hook_type": "疑問型",
     "format": "60秒3選"
+   },
+   "2026-11-16T19:00": {
+    "kind": "short",
+    "series_key": "w20261109_second",
+    "theme": "iPhone隠し神機能",
+    "num": 5,
+    "episode": "episodes/w20261109_second/ep05_bg_refresh.py",
+    "id": "IBxioScZmns",
+    "title": "電池がすぐ減る人、この設定オンのままかも… #Shorts",
+    "made": "2026-11-14",
+    "related_long": "1VNksL05WS4",
+    "comment": "バックグラウンド更新、いくつオンになってましたか？👇 フォローしておくと、電池を長持ちさせる設定が毎日届きます！",
+    "comment_posted": false,
+    "experiment": "format_test",
+    "layout": "rec",
+    "disp_num": 10,
+    "publish_at": "2026-11-16T19:00:00+09:00",
+    "hook_type": "即効型",
+    "format": "13秒1ネタ",
+    "note": "ヒット（充電1,132回）の関連ネタ。予定の notes_scan から差し替え"
    }
   }
  },
