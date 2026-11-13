@@ -705,7 +705,7 @@
     "num": 3,
     "episode": "episodes/w20261109_second/ep03_battery_health.py",
     "id": "6pVyc-_SNTw",
-    "title": "iPhoneユーザーの9割が知らない、バッテリーの寿命チェック #Shorts",
+    "title": "iPhoneの電池、最近減りが早い人へ #Shorts",
     "made": "2026-11-12",
     "related_long": "1VNksL05WS4",
     "comment": "あなたのiPhoneの最大容量は何%でしたか？👇 コメントで教えてください！",
@@ -714,7 +714,9 @@
     "layout": "rec",
     "disp_num": 8,
     "publish_at": "2026-11-14T06:00:00+09:00",
-    "hook_type": "即効型"
+    "hook_type": "即効型",
+    "title_before": "iPhoneユーザーの9割が知らない、バッテリーの寿命チェック #Shorts",
+    "title_changed": "2026-11-14 04:58 公開1時間前：ヒット型『〜してる人へ』＋全員の悩み（電池の減り）に寄せた。低電力モード（便利系）は7.5hで75回と不発"
    },
    "2026-11-15T12:00": {
     "kind": "short",
