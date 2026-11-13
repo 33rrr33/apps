@@ -60,6 +60,7 @@ function defaultState() {
     out: { format: 'mp4', vbr: 12000, abr: 192, whipUrl: '', whipToken: '', sbr: 6000, outSrc: 'pgm' },
     mv: { safe: false, labels: true, meters: true },
     ui: { open: { trans: true, usk: true } , audioSel: 'in1' },
+    macros: Array.from({ length: 10 }, () => null),
   };
 }
 function merge(def, saved) {
@@ -152,7 +153,19 @@ class InputSource {
         this.status = '画面共有';
         audio.ch('in' + this.n).setSource(audio.fromStream(st));
       } else if (cfg.type === 'file') {
-        if (!opts.file) { this.status = '「ファイルを選ぶ」を押してください'; syncAll(); return; }
+        let file = opts.file;
+        if (!file) {
+          const fh = await idb('kv', 'readonly', s => s.get('file-in' + this.n)).catch(() => null);
+          if (fh && fh.getFile) {
+            let perm = await fh.queryPermission({ mode: 'read' });
+            if (perm !== 'granted' && opts.gesture) perm = await fh.requestPermission({ mode: 'read' });
+            if (perm === 'granted') file = await fh.getFile();
+            else { this.status = `「再接続」を押してください（${fh.name}）`; this.needsReconnect = true; syncAll(); return; }
+          }
+        }
+        if (!file) { this.status = '「ファイルを選ぶ」を押してください'; syncAll(); return; }
+        this.needsReconnect = false;
+        opts.file = file;
         const v = this.newVideo();
         this.fileUrl = URL.createObjectURL(opts.file);
         v.src = this.fileUrl; v.loop = !!cfg.loop; v.muted = false;
@@ -811,6 +824,7 @@ function renderSwitcherPane() {
     root.append(pal('col', 'カラージェネレーター', null,
       colorPick('カラー1', () => S.colors.c1, v => { S.colors.c1 = v; updateColors(); }),
       colorPick('カラー2', () => S.colors.c2, v => { S.colors.c2 = v; updateColors(); })));
+    root.append(macroPal());
   });
 }
 
@@ -1266,8 +1280,18 @@ function renderSettingsPane() {
       } else if (cfg.type === 'file') {
         const f = h('input', { type: 'file', accept: 'video/*,audio/*', style: 'display:none' });
         f.addEventListener('change', () => f.files[0] && src.apply({ file: f.files[0] }));
+        const pick = async () => {
+          if (!window.showOpenFilePicker) return f.click();
+          try {
+            const [fh] = await showOpenFilePicker({ id: 'lsw-media', types: [{ description: '動画・音声', accept: { 'video/*': ['.mp4', '.mov', '.m4v', '.webm', '.mkv'], 'audio/*': ['.mp3', '.wav', '.m4a', '.aac'] } }] });
+            await idb('kv', 'readwrite', s => s.put(fh, 'file-in' + n));
+            src.apply({ file: await fh.getFile() });
+          } catch (e) {}
+        };
+        const recon = h('button', { class: 'btn primary', onclick: () => src.apply({ gesture: true }) }, '再接続');
+        reg(() => recon.style.display = src.needsReconnect ? '' : 'none');
         box.append(f, h('div', { class: 'row' },
-          h('button', { class: 'btn', onclick: () => f.click() }, 'ファイルを選ぶ'),
+          h('button', { class: 'btn', onclick: pick }, 'ファイルを選ぶ'), recon,
           h('button', { class: 'btn', onclick: () => { if (src.video) { src.video.currentTime = 0; src.video.play(); } } }, '⏮ 頭出し'),
           h('button', { class: 'btn', onclick: () => { const v = src.video; if (v) v.paused ? v.play() : v.pause(); } }, '⏯ 再生/停止')),
           toggle('ループ再生', () => cfg.loop, v => { cfg.loop = v; if (src.video) src.video.loop = v; }));
@@ -1292,7 +1316,7 @@ function renderSettingsPane() {
       h('div', { class: 'kbd' }, ...[
         ['1〜4', '入力（モードに従う）'], ['Shift+1〜4', 'プログラムに直接'], ['5 / 6', 'MP1 / MP2 をプレビュー'], ['7 / 8 / 9 / 0', 'カラー1 / カラー2 / バー / ブラック'],
         ['Space', 'CUT'], ['Enter', 'AUTO'], ['M / I / W / V', 'ミックス / ディップ / ワイプ / DVE'], ['K', 'キー ON / OFF'], ['P', 'PinP ON / OFF'],
-        ['D', 'DSK AUTO'], ['T', 'DSK TIE'], ['F', 'フェードトゥブラック'], ['R', '録画 開始 / 停止'], ['Esc', 'スポイト取消'],
+        ['D', 'DSK AUTO'], ['T', 'DSK TIE'], ['Shift+Q〜P', 'マクロ 1〜10 を実行'], ['F', 'フェードトゥブラック'], ['R', '録画 開始 / 停止'], ['Esc', 'スポイト取消'],
       ].flatMap(([k, d]) => [h('kbd', null, k), h('span', null, d)])))));
     const imp = h('input', { type: 'file', accept: 'application/json', style: 'display:none' });
     imp.addEventListener('change', async () => {
@@ -1450,6 +1474,9 @@ function buildSW() {
   paneSync.get('panel').push(() => { if (document.activeElement !== ftbRate) ftbRate.textContent = fmtRate(S.ftb.rate); });
   ftbRate.textContent = fmtRate(S.ftb.rate);
   root.append(sec('FADE TO BLACK', h('div', { class: 'grid' }, ftbRate, K('FTB', 'big', ftbGo, () => R.ftbAuto ? 'red' : R.ftbOn ? 'red flash' : ''))));
+  const mg = h('div', { class: 'grid', style: 'grid-template-columns:repeat(5,auto)' });
+  for (let i = 0; i < 10; i++) mg.append(K(String(i + 1), 'xs', () => macroRun(i), () => Macro.running === i || Macro.slot === i ? 'red' : S.macros[i] ? 'lit' : '', 'マクロ ' + (i + 1)));
+  root.append(sec('MACRO', mg, h('div', { style: 'margin-top:6px' }, K('REC', 'xs', () => macroRec(Macro.sel), () => Macro.rec ? 'red flash' : ''))));
 }
 
 function updateLights(pg, pv) {
@@ -1484,6 +1511,8 @@ document.addEventListener('keydown', e => {
   if (dm[e.code]) { e.preventDefault(); e.shiftKey ? setProgram(dm[e.code]) : inputPress(dm[e.code]); return; }
   const pm = { Digit5: MP1, Digit6: MP2, Digit7: COL1, Digit8: COL2, Digit9: BARS, Digit0: BLK };
   if (pm[e.code] != null) { e.preventDefault(); e.shiftKey ? setProgram(pm[e.code]) : (S.mode === 'pp' ? setPreview(pm[e.code]) : inputPress(pm[e.code])); return; }
+  const mk = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP'].indexOf(e.code);
+  if (e.shiftKey && mk >= 0) { e.preventDefault(); macroRun(mk); return; }
   if (k === ' ') { e.preventDefault(); cut(); }
   else if (k === 'Enter') { e.preventDefault(); autoTrans(); }
   else if (k === 'Escape') endPick();
@@ -1496,6 +1525,88 @@ document.addEventListener('keydown', e => {
     else if (l === 'f') ftbGo(); else if (l === 'r') Rec.on ? recStop() : recStart();
   }
 });
+
+/* ============================================================
+   マクロ（操作の記録と再生）
+   ============================================================ */
+const MACRO_ACTS = { inputPress: '入力', setPreview: 'プレビュー', setProgram: 'プログラム', cut: 'CUT', autoTrans: 'AUTO', keyOnAir: 'キー', pipSet: 'PinP', pipPos: 'PinP位置', dskOnAir: 'DSK ON AIR', dskAutoGo: 'DSK AUTO', ftbGo: 'FTB', setStyle: 'スタイル', recStart: '録画開始', recStop: '録画停止', setOutput: '外部出力' };
+const Macro = { rec: null, slot: -1, sel: 0, t0: 0, depth: 0, running: -1 };
+for (const name of Object.keys(MACRO_ACTS)) {
+  const orig = window[name];
+  window[name] = function (...args) {
+    if (Macro.rec && Macro.depth === 0 && Macro.running < 0) {
+      const now = performance.now();
+      Macro.rec.push({ fn: name, args: args.filter(a => a == null || typeof a !== 'object'), dt: Math.round(now - Macro.t0) });
+      Macro.t0 = now;
+    }
+    Macro.depth++;
+    try { return orig.apply(this, args); } finally { Macro.depth--; }
+  };
+}
+function macroRec(i) {
+  if (Macro.rec) return macroStop();
+  Macro.rec = []; Macro.slot = i; Macro.t0 = performance.now();
+  toast(`マクロ ${i + 1} を記録中…（操作してから「記録停止」）`); syncAll();
+}
+function macroStop() {
+  if (!Macro.rec) return;
+  const i = Macro.slot, steps = Macro.rec;
+  if (steps.length) steps[0].dt = 0;
+  Macro.rec = null; Macro.slot = -1;
+  if (steps.length) { S.macros[i] = { name: (S.macros[i] && S.macros[i].name) || `マクロ ${i + 1}`, steps }; toast(`マクロ ${i + 1} を保存しました（${steps.length} 操作）`); }
+  else toast('操作が記録されなかったので保存しませんでした');
+  changed();
+}
+async function macroRun(i) {
+  const m = S.macros[i];
+  if (!m || Macro.running >= 0 || Macro.rec) return;
+  Macro.running = i; syncAll();
+  for (const st of m.steps) {
+    if (st.dt > 0) await new Promise(r => setTimeout(r, Math.min(st.dt, 30000)));
+    if (Macro.running !== i) break;
+    try { await window[st.fn](...st.args); } catch (e) { console.warn(e); }
+  }
+  Macro.running = -1; syncAll();
+}
+function macroDesc(st) {
+  const a = st.args;
+  let arg = '';
+  if (['inputPress', 'setPreview', 'setProgram', 'pipSet'].includes(st.fn)) arg = srcLabel(a[0], true);
+  else if (st.fn === 'keyOnAir') arg = a[0] ? 'ON' : 'OFF';
+  else if (st.fn === 'setStyle') arg = String(a[0]).toUpperCase();
+  else if (st.fn === 'setOutput') arg = String(a[0]).toUpperCase();
+  return `${(st.dt / 1000).toFixed(1)}s 後 ${MACRO_ACTS[st.fn]} ${arg}`;
+}
+function macroPal() {
+  const grid = h('div', { class: 'grid', style: 'display:grid;grid-template-columns:repeat(5,1fr);gap:4px' });
+  for (let i = 0; i < 10; i++) {
+    const b = h('button', { class: 'btn', style: 'padding:6px 2px;font-size:11px', onclick: () => { Macro.sel = i; syncAll(); }, ondblclick: () => macroRun(i) });
+    reg(() => {
+      const m = S.macros[i];
+      b.textContent = `${i + 1}${m ? ' ●' : ''}`; b.title = m ? m.name : '空き';
+      b.style.background = Macro.running === i ? 'var(--red)' : Macro.slot === i ? 'var(--red)' : Macro.sel === i ? 'var(--yellow)' : '';
+      b.style.color = Macro.sel === i || Macro.running === i || Macro.slot === i ? '#111' : '';
+    });
+    grid.append(b);
+  }
+  const nameIn = h('input', { type: 'text', placeholder: 'マクロ名' });
+  nameIn.addEventListener('keydown', e => e.stopPropagation());
+  nameIn.addEventListener('change', () => { const m = S.macros[Macro.sel]; if (m) { m.name = nameIn.value || `マクロ ${Macro.sel + 1}`; changed(); } });
+  reg(() => { const m = S.macros[Macro.sel]; if (document.activeElement !== nameIn) nameIn.value = m ? m.name : ''; nameIn.disabled = !m; });
+  const recB = h('button', { class: 'btn', onclick: () => macroRec(Macro.sel) });
+  const runB = h('button', { class: 'btn primary', onclick: () => Macro.running >= 0 ? (Macro.running = -1, syncAll()) : macroRun(Macro.sel) });
+  const delB = h('button', { class: 'btn', onclick: () => { if (S.macros[Macro.sel] && confirm(`マクロ ${Macro.sel + 1} を削除しますか？`)) { S.macros[Macro.sel] = null; changed(); } } }, '削除');
+  reg(() => {
+    recB.textContent = Macro.rec ? '■ 記録停止' : '● 記録'; recB.className = 'btn' + (Macro.rec ? ' red' : '');
+    runB.textContent = Macro.running >= 0 ? '■ 中止' : '▶ 実行'; runB.disabled = !S.macros[Macro.sel] && Macro.running < 0;
+  });
+  const steps = h('div', { class: 'reclist', style: 'max-height:120px' });
+  reg(() => { steps.innerHTML = ''; const m = S.macros[Macro.sel]; (m ? m.steps : []).forEach(st => steps.append(h('div', null, macroDesc(st)))); if (!m) steps.append(h('div', null, '（空き）')); });
+  return pal('macro', 'マクロ', () => [Macro.rec ? '記録中' : Macro.running >= 0 ? '実行中' : '', 'red'],
+    grid, h('div', { class: 'row' }, h('label', null, '名前'), nameIn),
+    h('div', { class: 'row' }, recB, runB, delB), steps,
+    h('div', { class: 'sub' }, '「記録」を押してから入力切替・CUT・AUTO・キー・DSK・FTB・録画などを操作し、「記録停止」。操作の間隔も再現されます。番号のダブルクリック、ソフトウェアパネルの MACRO ボタン、Shift+Q〜P キーでも実行できます。'));
+}
 
 /* ============================================================
    起動
