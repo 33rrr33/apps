@@ -685,7 +685,7 @@
     "num": 2,
     "episode": "episodes/w20261109_second/ep02_low_power_cc.py",
     "id": "WcsUbzYrdtg",
-    "title": "iPhoneの低電力モード、毎回設定から探してない？ #Shorts",
+    "title": "低電力モード、毎回設定から開いてる人へ #Shorts",
     "made": "2026-11-11",
     "related_long": "1VNksL05WS4",
     "comment": "低電力モード、いつも何%くらいでオンにしてますか？👇 20%派？50%派？ずっとオン派？",
@@ -694,7 +694,9 @@
     "layout": "rec",
     "disp_num": 7,
     "publish_at": "2026-11-13T19:00:00+09:00",
-    "hook_type": "疑問型"
+    "hook_type": "疑問型",
+    "title_before": "iPhoneの低電力モード、毎回設定から探してない？ #Shorts",
+    "title_changed": "2026-11-13 17:58 公開1時間前：ヒットした『〜してる人へ』型に寄せた"
    },
    "2026-11-14T06:00": {
     "kind": "short",
