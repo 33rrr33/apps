@@ -1336,7 +1336,7 @@ function rebuildPanels() { lights.length = 0; hwMeters.length = 0; paneSync.set(
 function buildHW() {
   const root = $('#hw'); root.innerHTML = '';
   // オーディオ
-  const acols = h('div', { style: 'display:flex;gap:6px' });
+  const acols = h('div', { style: 'display:flex;gap:4px' });
   for (const [id, nm] of [['mic1', 'MIC 1'], ['mic2', 'MIC 2'], ['in1', '1'], ['in2', '2'], ['in3', '3'], ['in4', '4']]) {
     const isIn = id.startsWith('in');
     const mi = h('i'); hwMeters.push([id, mi]);
@@ -1373,7 +1373,7 @@ function buildHW() {
     K('ON', 's', () => { S.usk.type = S.usk.keyType; keyOnAir(true); }, () => S.usk.onAir && S.usk.type !== 'dve' ? 'red' : '', '設定済みのキー（クロマ等）をオン'),
     K('OFF', 's', () => { if (S.usk.type !== 'dve') keyOnAir(false); }, () => !(S.usk.onAir && S.usk.type !== 'dve') ? 'lit' : ''))));
   // トランジション
-  const fx = h('div', { class: 'grid', style: 'grid-template-columns:repeat(6,auto)' });
+  const fx = h('div', { class: 'grid', style: 'grid-template-columns:repeat(5,auto)' });
   HW_FX.forEach(f => fx.append(K(f.label ? `<span style="font-size:10px">${f.label}</span>` : f.icon, 's', () => { f.set(); changed(); }, () => f.is() ? 'lit' : '')));
   const ca = h('div', { class: 'grid' },
     K('CUT', '', () => { if (S.mode === 'cutbus') { S.hwAuto = false; changed(); } else cut(); }, () => S.mode === 'cutbus' ? (!S.hwAuto ? 'lit' : '') : ''),

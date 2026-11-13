@@ -140,7 +140,7 @@ input[type=checkbox]{accent-color:var(--yellow)}
 .phead .modeinfo{margin-left:auto}
 .pbody{flex:1;min-height:0;display:flex;align-items:stretch;padding:6px 12px 10px;gap:0;overflow-x:auto;overflow-y:hidden}
 .pbody.hide{display:none}
-.sec{display:flex;flex-direction:column;padding:0 12px;border-left:1px solid #15161a;box-shadow:-1px 0 0 #36373c;flex:none}
+.sec{display:flex;flex-direction:column;padding:0 9px;border-left:1px solid #15161a;box-shadow:-1px 0 0 #36373c;flex:none}
 .sec:first-child{border-left:0;box-shadow:none;padding-left:0}
 .sec>.sl{font-size:9px;font-weight:800;letter-spacing:.14em;color:#8d8f96;margin-bottom:6px;white-space:nowrap;text-align:center}
 .sec .grid{display:grid;gap:5px}
@@ -148,8 +148,8 @@ input[type=checkbox]{accent-color:var(--yellow)}
 /* ハードウェア風ボタン */
 .k{position:relative;border:0;border-radius:5px;background:linear-gradient(#45474d,#36383d);color:#c6c7cb;font-weight:800;font-size:11px;letter-spacing:.04em;box-shadow:0 2px 0 #121316,0 3px 5px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);min-width:44px;height:36px;padding:0 6px;white-space:nowrap;transition:transform .04s}
 .k:active{transform:translateY(1px);box-shadow:0 1px 0 #121316,0 1px 3px rgba(0,0,0,.4)}
-.k.s{height:26px;min-width:34px;font-size:10px}
-.k.xs{height:22px;min-width:26px;font-size:10px;padding:0 3px}
+.k.s{height:26px;min-width:32px;font-size:10px}
+.k.xs{height:22px;min-width:24px;font-size:9px;padding:0 3px}
 .k.big{height:56px;min-width:58px;font-size:18px}
 .k.lit{background:linear-gradient(#f2f2f2,#cfd0d3);color:#111;box-shadow:0 2px 0 #121316,0 0 10px rgba(255,255,255,.35)}
 .k.red{background:linear-gradient(#ff4b4b,#d81d1d);color:#fff;box-shadow:0 2px 0 #121316,0 0 14px rgba(255,45,45,.6)}
@@ -157,7 +157,7 @@ input[type=checkbox]{accent-color:var(--yellow)}
 .k.yel{background:linear-gradient(#ffd34f,#f0ad00);color:#231a00;box-shadow:0 2px 0 #121316,0 0 12px rgba(255,194,26,.5)}
 .k.amb{background:linear-gradient(#ffb04f,#e67d00);color:#231300;box-shadow:0 2px 0 #121316,0 0 12px rgba(255,150,30,.5)}
 .k.flash{animation:blink .5s steps(2) infinite}
-.k svg{width:28px;height:18px;display:block;margin:auto}
+.k svg{width:26px;height:16px;display:block;margin:auto;color:#e8e8ea;border-radius:2px}
 .k .sub{display:block;font-size:8px;font-weight:700;opacity:.7;letter-spacing:.06em;margin-top:1px}
 .k.redDim{background:linear-gradient(#5c2224,#481a1c);color:#ff9a9a}
 .k.greenDim{background:linear-gradient(#1f4a2a,#173a21);color:#8de8a6}
