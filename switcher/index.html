@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ライブスイッチャー</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="4入力ライブプロダクションスイッチャー（Mac / Chrome）">
+<meta name="theme-color" content="#1d1e21">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="boot" id="boot">
+  <h1>LIVE <span>SWITCHER</span></h1>
+  <p>4入力ライブプロダクションスイッチャー<br>カメラ・キャプチャーボード・画面共有・動画を切り替えて、録画・配信・外部出力。</p>
+  <button class="go" id="bootGo">スイッチャーを起動</button>
+  <p class="small">Mac の Google Chrome 推奨（Safari・Edge でも動作）<br>Chrome のメニュー →「キャスト、保存、共有」→「ページをアプリとしてインストール」で Mac アプリとして使えます</p>
+</div>
+
+<header class="top">
+  <div class="brand"><i></i>LIVE SWITCHER</div>
+  <div class="status">
+    <div class="st" id="stRec"><i></i>REC <b id="recTime">--:--:--</b></div>
+    <div class="st" id="stStream"><i></i>ON AIR <b id="streamTime">--:--:--</b></div>
+    <div class="st" id="stFtb">FTB</div>
+    <div class="clock" id="clock">00:00:00:00</div>
+    <div class="fps" id="fps"></div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="switcher" class="on">スイッチャー</button>
+    <button data-tab="media">メディア</button>
+    <button data-tab="audio">オーディオ</button>
+    <button data-tab="output">出力</button>
+    <button data-tab="settings">設定</button>
+  </nav>
+</header>
+
+<div class="main">
+  <div class="left">
+    <div class="mvbox" id="mvbox"><canvas id="mv" width="1920" height="1080"></canvas><div class="mvhint" id="mvHint"></div></div>
+  </div>
+  <aside class="right">
+    <section class="pane on" data-pane="switcher" id="paneSwitcher"></section>
+    <section class="pane" data-pane="media" id="paneMedia"></section>
+    <section class="pane" data-pane="audio" id="paneAudio"></section>
+    <section class="pane" data-pane="output" id="paneOutput"></section>
+    <section class="pane" data-pane="settings" id="paneSettings"></section>
+  </aside>
+</div>
+
+<footer class="panel">
+  <div class="phead">
+    <span>CONTROL PANEL</span>
+    <div class="seg" id="panelSel"><button data-p="hw" class="on">ハードウェアパネル</button><button data-p="sw">ソフトウェアパネル</button></div>
+    <span class="modeinfo" id="modeInfo"></span>
+  </div>
+  <div class="pbody" id="hw"></div>
+  <div class="pbody hide" id="sw"></div>
+</footer>
+
+<div id="hiddenMedia"></div>
+<div class="toast" id="toast"></div>
+
+<script src="engine.js"></script>
+<script src="audio.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
