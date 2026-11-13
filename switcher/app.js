@@ -564,6 +564,7 @@ function tick() {
     const [L, Rr] = audio.masterMeter(); meters.L = L; meters.R = Rr;
   }
   engine.frame(sp.pgm, sp.pvw, GLTILES, () => drawMV(pgmSet, pvwSet, meters));
+  for (const st of [pgmStream, mvStream]) if (st) { const tr = st.getVideoTracks()[0]; if (tr && tr.requestFrame) tr.requestFrame(); }
   if (R.snap) { const f = R.snap; R.snap = null; const c = document.createElement('canvas'); c.width = 1920; c.height = 1080; c.getContext('2d').drawImage(glCanvas, 0, 0); f(c); }
   updateLights(pgmSet, pvwSet);
   updateMeters(meters);
@@ -1136,7 +1137,7 @@ async function streamStop(silent) {
 let outWin = null, mvStream = null;
 function outStreamFor(src) {
   if (src === 'pgm') return pgmStream;
-  if (src === 'mv') return mvStream || (mvStream = mvCanvas.captureStream(S.fps));
+  if (src === 'mv') return mvStream || (mvStream = mvCanvas.captureStream(0));
   const n = +src.slice(2); const s = inputs[n - 1] && inputs[n - 1].outStream();
   return s || null;
 }
@@ -1313,7 +1314,7 @@ function setFps(v) {
 }
 function makeStreams() {
   if (pgmStream) pgmStream.getTracks().forEach(t => t.stop());
-  pgmStream = glCanvas.captureStream(S.fps);
+  pgmStream = glCanvas.captureStream(0);
   if (mvStream) { mvStream.getTracks().forEach(t => t.stop()); mvStream = null; }
   if (outWin && !outWin.closed) setOutput(S.out.outSrc);
 }
@@ -1331,7 +1332,7 @@ function K(label, cls, onclick, lightFn, title) {
   return b;
 }
 function sec(label, ...kids) { return h('div', { class: 'sec' }, h('div', { class: 'sl' }, label), ...kids); }
-function rebuildPanels() { lights.length = 0; hwMeters.length = 0; paneSync.set('panel', []); buildHW(); buildSW(); }
+function rebuildPanels() { lights.length = 0; hwMeters.length = 0; paneSync.set('panel', []); buildHW(); buildSW(); fitPanel(); }
 
 function buildHW() {
   const root = $('#hw'); root.innerHTML = '';
@@ -1350,7 +1351,7 @@ function buildHW() {
   }
   root.append(sec('AUDIO', acols));
   // 入力
-  const vin = h('div', { style: 'display:flex;gap:7px;align-items:center;flex:1' });
+  const vin = h('div', { style: 'display:flex;gap:7px;align-items:flex-start;padding-top:14px' });
   for (let n = 1; n <= 4; n++) {
     vin.append(K(`${n}<span class="sub">${S.inputs[n - 1].short}</span>`, 'big', () => inputPress(n), (pg, pv) => {
       if (S.pgm === n || (R.t > 0 && S.trans.next.bkgd && S.pvw === n && !S.trans.prevTrans)) return 'red';
@@ -1373,7 +1374,7 @@ function buildHW() {
     K('ON', 's', () => { S.usk.type = S.usk.keyType; keyOnAir(true); }, () => S.usk.onAir && S.usk.type !== 'dve' ? 'red' : '', '設定済みのキー（クロマ等）をオン'),
     K('OFF', 's', () => { if (S.usk.type !== 'dve') keyOnAir(false); }, () => !(S.usk.onAir && S.usk.type !== 'dve') ? 'lit' : ''))));
   // トランジション
-  const fx = h('div', { class: 'grid', style: 'grid-template-columns:repeat(5,auto)' });
+  const fx = h('div', { class: 'grid', style: 'grid-template-columns:repeat(6,auto)' });
   HW_FX.forEach(f => fx.append(K(f.label ? `<span style="font-size:10px">${f.label}</span>` : f.icon, 's', () => { f.set(); changed(); }, () => f.is() ? 'lit' : '')));
   const ca = h('div', { class: 'grid' },
     K('CUT', '', () => { if (S.mode === 'cutbus') { S.hwAuto = false; changed(); } else cut(); }, () => S.mode === 'cutbus' ? (!S.hwAuto ? 'lit' : '') : ''),
@@ -1506,6 +1507,7 @@ ticker.onmessage = () => { if (busy || !engine) return; busy = true; try { tick(
 async function boot() {
   $('#boot').classList.add('hide');
   glCanvas = document.createElement('canvas');
+  glCanvas.style.cssText = 'width:2px;height:2px'; $('#hiddenMedia').append(glCanvas);
   try { engine = new Engine(glCanvas); } catch (e) { alert('WebGL2 を初期化できませんでした: ' + e.message); return; }
   mvCanvas = $('#mv'); mvCtx = mvCanvas.getContext('2d', { alpha: false });
   audio = new AudioEngine();
@@ -1520,7 +1522,7 @@ async function boot() {
   try { Rec.dir = await idb('kv', 'readonly', s => s.get('recDir')) || null; } catch (e) {}
   makeStreams();
   renderSwitcherPane(); renderMediaPane(); renderAudioPane(); renderOutputPane(); renderSettingsPane();
-  rebuildPanels(); setPanel(S.panel);
+  rebuildPanels(); setPanel(S.panel); setTimeout(fitMV, 50);
   ticker.postMessage(1000 / S.fps);
   // デバイス
   if (navigator.mediaDevices) {
@@ -1558,11 +1560,21 @@ function fitMV() {
   const W = L.clientWidth - 16, H = L.clientHeight - 16;
   const w = Math.min(W, H * 16 / 9);
   b.style.width = Math.floor(w) + 'px'; b.style.height = Math.floor(w * 9 / 16) + 'px';
+  fitPanel();
+}
+function fitPanel() {
+  for (const el of [$('#hw'), $('#sw')]) {
+    if (el.classList.contains('hide')) continue;
+    el.style.zoom = 1;
+    const sw = el.scrollWidth, cw = el.clientWidth;
+    if (sw > cw + 1) el.style.zoom = Math.max(0.6, cw / sw).toFixed(3);
+  }
 }
 window.addEventListener('resize', fitMV); fitMV();
 function setPanel(p) {
   S.panel = p; save();
   $('#hw').classList.toggle('hide', p !== 'hw'); $('#sw').classList.toggle('hide', p !== 'sw');
+  fitPanel();
   $$('#panelSel button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
 }
 $$('#panelSel button').forEach(b => b.addEventListener('click', () => setPanel(b.dataset.p)));
