@@ -756,6 +756,25 @@
     "hook_type": "即効型",
     "format": "13秒1ネタ",
     "note": "ヒット（充電1,132回）の関連ネタ。予定の notes_scan から差し替え"
+   },
+   "2026-11-17T06:00": {
+    "kind": "short",
+    "series_key": "b20261117_first",
+    "theme": "iPhone爆速神操作",
+    "num": 1,
+    "disp_num": 11,
+    "episode": "episodes/b20261117_first/ep01_battery3.py",
+    "id": "o3XDYtGq9sc",
+    "title": "電池がすぐ減る人がやりがちな設定3つ… #Shorts",
+    "made": "2026-11-15",
+    "comment": "3つのうち、いくつ当てはまりましたか？👇 フォローしておくと、電池を長持ちさせる設定が毎日届きます！",
+    "comment_posted": false,
+    "experiment": "format_test",
+    "format": "60秒3選",
+    "layout": "rec",
+    "hook_type": "煽り型",
+    "publish_at": "2026-11-17T06:00:00+09:00",
+    "note": "ヒット系統（バッテリー）を60秒3選で"
    }
   }
  },
