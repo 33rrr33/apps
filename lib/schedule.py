@@ -140,7 +140,10 @@ def v3_slot(publish):
     fmt = None
     if ft and d.isoformat() >= ft.get("since", "9999") and not v3_strategy().get("format_pin"):
         if d >= dt.date(2026, 11, 16):            # 3-way rotation from 11/16 (user feedback 11/15): 13s / 40-60s 3選 / 25-30s 2ネタ
-            fmt = ("13秒1ネタ", "60秒3選", "28秒2ネタ")[(d - dt.date(2026, 11, 16)).days % 3]
+            if d >= dt.date(2026, 11, 18):        # 11/15 competitor analysis: peers' shorts median 61s -> 60s gets half the slots
+                fmt = ("28秒2ネタ", "60秒3選", "13秒1ネタ", "60秒3選")[(d - dt.date(2026, 11, 18)).days % 4]
+            else:
+                fmt = ("13秒1ネタ", "60秒3選", "28秒2ネタ")[(d - dt.date(2026, 11, 16)).days % 3]
         else:
             fmt = "60秒3選" if d.day % 2 else "13秒1ネタ"
     elif v3_strategy().get("format_pin"): fmt = v3_strategy()["format_pin"]
