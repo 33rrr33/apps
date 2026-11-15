@@ -783,6 +783,25 @@
      "old_id": "o3XDYtGq9sc",
      "why": "ユーザー提供フィードバック（60秒は約30秒で離脱）を受け、予告＋つなぎを入れ42秒に短縮"
     }
+   },
+   "2026-11-18T12:00": {
+    "kind": "short",
+    "series_key": "b20261117_first",
+    "theme": "iPhone爆速神操作",
+    "num": 2,
+    "disp_num": 12,
+    "episode": "episodes/b20261117_first/ep02_charge_heat.py",
+    "id": "NmEvrbONq0o",
+    "title": "充電しながらゲームしてる人、電池が… #Shorts",
+    "made": "2026-11-16",
+    "comment": "充電しながら遊ぶ派ですか？👇「やってた」「やってない」でコメントしてね！フォローしておくと電池を長持ちさせるコツが毎日届きます",
+    "comment_posted": false,
+    "experiment": "format_test",
+    "format": "28秒2ネタ",
+    "layout": "rec",
+    "hook_type": "煽り型",
+    "publish_at": "2026-11-18T12:00:00+09:00",
+    "note": "plan b1。LINE（n2）は情報源で日付・無料範囲が食い違うため保留"
    }
   },
   "parked": [
