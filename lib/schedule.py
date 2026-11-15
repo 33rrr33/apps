@@ -139,7 +139,10 @@ def v3_slot(publish):
     ft = v3_strategy().get("format_test") or {}
     fmt = None
     if ft and d.isoformat() >= ft.get("since", "9999") and not v3_strategy().get("format_pin"):
-        fmt = "60秒3選" if d.day % 2 else "13秒1ネタ"
+        if d >= dt.date(2026, 11, 16):            # 3-way rotation from 11/16 (user feedback 11/15): 13s / 40-60s 3選 / 25-30s 2ネタ
+            fmt = ("13秒1ネタ", "60秒3選", "28秒2ネタ")[(d - dt.date(2026, 11, 16)).days % 3]
+        else:
+            fmt = "60秒3選" if d.day % 2 else "13秒1ネタ"
     elif v3_strategy().get("format_pin"): fmt = v3_strategy()["format_pin"]
     return dict(kind="short", format=fmt, publish_at=publish.strftime("%Y-%m-%dT%H:%M:00+09:00"), half=half, half_ja=HALF_JA[half],
                 theme=h["title"], theme_spoken=h["spoken"], series_key=key, week=key, num=num, notify_subscribers=False,

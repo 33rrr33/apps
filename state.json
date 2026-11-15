@@ -766,17 +766,21 @@
     "num": 1,
     "disp_num": 11,
     "episode": "episodes/b20261117_first/ep01_battery3.py",
-    "id": "o3XDYtGq9sc",
+    "id": "ydt0MSKU6MQ",
     "title": "電池がすぐ減る人がやりがちな設定3つ… #Shorts",
     "made": "2026-11-15",
     "comment": "3つのうち、いくつ当てはまりましたか？👇 フォローしておくと、電池を長持ちさせる設定が毎日届きます！",
     "comment_posted": false,
     "experiment": "format_test",
-    "format": "60秒3選",
+    "format": "60秒3選（42秒・予告＋つなぎ）",
     "layout": "rec",
     "hook_type": "煽り型",
     "publish_at": "2026-11-17T06:00:00+09:00",
-    "note": "ヒット系統（バッテリー）を60秒3選で"
+    "note": "ヒット系統（バッテリー）を60秒3選で",
+    "replaced": {
+     "old_id": "o3XDYtGq9sc",
+     "why": "ユーザー提供フィードバック（60秒は約30秒で離脱）を受け、予告＋つなぎを入れ42秒に短縮"
+    }
    }
   }
  },
