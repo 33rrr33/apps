@@ -539,5 +539,25 @@
    "cta": "保存"
   },
   "experiment": "v3_redesign"
+ },
+ "WcsUbzYrdtg": {
+  "title": "低電力モード、毎回設定から開いてる人へ #Shorts",
+  "published": "2026-11-13T19:00",
+  "age_at_record": 48.1,
+  "views48": 82,
+  "likes": 0,
+  "comments": 1,
+  "late": false,
+  "tags": {
+   "length": "短縮版",
+   "slot": "夜19:00",
+   "layout": "画面録画風",
+   "title_style": "シリーズ名だけ",
+   "title_type": "疑問型",
+   "hook": "低電力モード 毎回{設定から}探してない？",
+   "hook_type": "疑問型",
+   "cta": "保存"
+  },
+  "experiment": "v3_redesign"
  }
 }
