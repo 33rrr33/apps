@@ -1,0 +1,131 @@
+{
+ "made": "2026-11-15 週次",
+ "note": "上ほど優先。ニュース系は出典を確認済み（2026-11-15 WebSearch）。全動画に『コメントしたくなる問い』『シェアのひと言』『フォローで毎日1つ』を入れる",
+ "replace": [
+  {
+   "slot": "2026-11-16T19:00",
+   "with": "n1",
+   "why": "ニュース系（iOS 27.2 Siri AI日本語対応）を最優先。予約中の『バックグラウンド更新』13秒は後日に回す（削除せず次の空き枠へ）"
+  }
+ ],
+ "ideas": [
+  {
+   "id": "n1",
+   "theme": "iOS 27.2 Siri AIが日本語に",
+   "angle": "アップデートしただけでは使えない。言語設定と順番待ち登録が必要",
+   "hook": "損失回避",
+   "title": "iOS 27.2にしたのにSiri AIが使えない人へ…",
+   "length": "28秒2ネタ",
+   "facts": "iOS 27.2で日本語ベータ対応（10/27配信）。設定→Siri→言語→日本語、Apple Intelligenceを有効化、モデルのダウンロード（Wi-Fi・充電推奨）。対象はiPhone 15 Pro以降・16以降。13歳未満不可・回数制限あり",
+   "sources": [
+    "https://news.yahoo.co.jp/articles/124fda9a4d7e37376892249aec5ea4c632178b3c",
+    "https://blog.skeg.jp/archives/2026/10/ios-27-2-siri-ai-japanese.html"
+   ]
+  },
+  {
+   "id": "n2",
+   "theme": "LINEのスクロールプレビューが有料に",
+   "angle": "11/4から既読をつけずにさかのぼる機能はLYPプレミアム限定。知らずに困る人向け",
+   "hook": "損失回避",
+   "title": "LINEで既読つけずに読んでた人、11月から…",
+   "length": "28秒2ネタ",
+   "facts": "2026-11-04からスクロールプレビューはLYPプレミアム（Web508円/アプリ650円）限定。無料ユーザーは使えない",
+   "sources": [
+    "https://jetstream.blog/2026/10/28/line-scroll-preview-labs-ending-november-4-2026/",
+    "https://selectra.jp/telecom/news/line-scroll-preview-lyp-premium-november-2026"
+   ],
+   "caution": "無料の代わりの方法は事実確認できたものだけ紹介"
+  },
+  {
+   "id": "n3",
+   "theme": "LINEのメッセージ予約",
+   "angle": "LINEラボで今だけ無料。指定日時に自動送信",
+   "hook": "劇的時短",
+   "title": "LINEで送り忘れる人、今だけ無料のこの機能…",
+   "length": "13秒1ネタ",
+   "facts": "LINEラボの試験提供中は全ユーザー無料、今冬以降LYPプレミアム特典に",
+   "sources": [
+    "https://www.watch.impress.co.jp/docs/news/2155084.html"
+   ],
+   "caution": "操作手順は作る前に再確認"
+  },
+  {
+   "id": "n4",
+   "theme": "iOS 27.2にしたら見直す設定3つ",
+   "angle": "アップデート直後の容量・電池・Siri",
+   "hook": "損失回避",
+   "title": "iOS 27.2にアップデートした人、この3つ見直して…",
+   "length": "60秒3選",
+   "facts": "Siri AIのモデルで容量を使う点など、作る前に再確認",
+   "sources": [
+    "https://note.com/tenorsharejp/n/nbf0cdcb56d6b"
+   ]
+  },
+  {
+   "id": "b1",
+   "theme": "バッテリー（ヒット系統）",
+   "angle": "充電しながらの使用・高温",
+   "hook": "損失回避",
+   "title": "充電しながらゲームしてる人、電池が…",
+   "length": "28秒2ネタ",
+   "facts": "Apple公式の高温に関する注意をもとに"
+  },
+  {
+   "id": "b2",
+   "theme": "バッテリー",
+   "angle": "最適化された充電・80%上限の使い分け",
+   "hook": "損失回避",
+   "title": "iPhoneの電池、2年で半分になる人の特徴…",
+   "length": "60秒3選"
+  },
+  {
+   "id": "s1",
+   "theme": "危険設定",
+   "angle": "ロック画面から見られる通知の中身",
+   "hook": "損失回避",
+   "title": "ロック画面でLINEの中身、丸見えになってない？",
+   "length": "13秒1ネタ"
+  },
+  {
+   "id": "s2",
+   "theme": "危険設定",
+   "angle": "盗難デバイスの保護",
+   "hook": "損失回避",
+   "title": "iPhoneを盗まれた人が後悔した設定…",
+   "length": "28秒2ネタ"
+  },
+  {
+   "id": "t1",
+   "theme": "日常操作の時短",
+   "angle": "文字入力のカーソル移動・取り消し",
+   "hook": "劇的時短",
+   "title": "文字の打ち直し、まだ1文字ずつ消してるの？",
+   "length": "13秒1ネタ"
+  },
+  {
+   "id": "t2",
+   "theme": "写真",
+   "angle": "写真の文字コピー・被写体の切り抜き",
+   "hook": "劇的時短",
+   "title": "写真の文字、まだ手で打ち直してる人へ",
+   "length": "28秒2ネタ"
+  },
+  {
+   "id": "b3",
+   "theme": "バッテリー",
+   "angle": "バックグラウンド更新（作成済み・11/16から移動）",
+   "hook": "即効",
+   "title": "電池がすぐ減る人、この設定オンのままかも…",
+   "length": "13秒1ネタ",
+   "note": "既存の動画IBxioScZmnsを別の空き枠へ移す"
+  },
+  {
+   "id": "s3",
+   "theme": "危険設定",
+   "angle": "不審なカレンダー招待・SMSの見分け方",
+   "hook": "損失回避",
+   "title": "iPhoneにこの通知が来たら危険…",
+   "length": "60秒3選"
+  }
+ ]
+}
