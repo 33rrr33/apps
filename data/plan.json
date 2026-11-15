@@ -5,7 +5,8 @@
   {
    "slot": "2026-11-16T19:00",
    "with": "n1",
-   "why": "ニュース系（iOS 27.2 Siri AI日本語対応）を最優先。予約中の『バックグラウンド更新』13秒は後日に回す（削除せず次の空き枠へ）"
+   "why": "ニュース系（iOS 27.2 Siri AI日本語対応）を最優先。予約中の『バックグラウンド更新』13秒は後日に回す（削除せず次の空き枠へ）",
+   "done": true
   }
  ],
  "ideas": [
@@ -20,7 +21,8 @@
    "sources": [
     "https://news.yahoo.co.jp/articles/124fda9a4d7e37376892249aec5ea4c632178b3c",
     "https://blog.skeg.jp/archives/2026/10/ios-27-2-siri-ai-japanese.html"
-   ]
+   ],
+   "used": "2026-11-16T19:00"
   },
   {
    "id": "n2",

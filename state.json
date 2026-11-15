@@ -741,23 +741,25 @@
    },
    "2026-11-16T19:00": {
     "kind": "short",
-    "series_key": "w20261109_second",
-    "theme": "iPhone隠し神機能",
-    "num": 5,
-    "episode": "episodes/w20261109_second/ep05_bg_refresh.py",
-    "id": "IBxioScZmns",
-    "title": "電池がすぐ減る人、この設定オンのままかも… #Shorts",
-    "made": "2026-11-14",
-    "related_long": "1VNksL05WS4",
-    "comment": "バックグラウンド更新、いくつオンになってましたか？👇 フォローしておくと、電池を長持ちさせる設定が毎日届きます！",
+    "series_key": "news_202611",
+    "theme": "iPhoneニュース",
+    "num": 1,
+    "disp_num": 1,
+    "episode": "episodes/news_202611/ep01_siri_ai.py",
+    "id": "3J4ODK9Esqc",
+    "title": "iOS 27.2にしたのにSiri AIが使えない人へ… #Shorts",
+    "made": "2026-11-16",
+    "comment": "Siri AI、使えましたか？👇「使えた」「まだ順番待ち」「対応してない」でコメントしてね！家族のiPhoneにも教えてあげて📱",
     "comment_posted": false,
     "experiment": "format_test",
+    "format": "28秒2ネタ",
     "layout": "rec",
-    "disp_num": 10,
+    "hook_type": "煽り型",
     "publish_at": "2026-11-16T19:00:00+09:00",
-    "hook_type": "即効型",
-    "format": "13秒1ネタ",
-    "note": "ヒット（充電1,132回）の関連ネタ。予定の notes_scan から差し替え"
+    "replaced": {
+     "old_id": "IBxioScZmns",
+     "why": "plan n1：ニュース系を優先。旧動画は parked（次の空き枠で再予約）"
+    }
    },
    "2026-11-17T06:00": {
     "kind": "short",
@@ -782,7 +784,31 @@
      "why": "ユーザー提供フィードバック（60秒は約30秒で離脱）を受け、予告＋つなぎを入れ42秒に短縮"
     }
    }
-  }
+  },
+  "parked": [
+   {
+    "kind": "short",
+    "series_key": "w20261109_second",
+    "theme": "iPhone隠し神機能",
+    "num": 5,
+    "episode": "episodes/w20261109_second/ep05_bg_refresh.py",
+    "id": "IBxioScZmns",
+    "title": "電池がすぐ減る人、この設定オンのままかも… #Shorts",
+    "made": "2026-11-14",
+    "related_long": "1VNksL05WS4",
+    "comment": "バックグラウンド更新、いくつオンになってましたか？👇 フォローしておくと、電池を長持ちさせる設定が毎日届きます！",
+    "comment_posted": false,
+    "experiment": "format_test",
+    "layout": "rec",
+    "disp_num": 10,
+    "publish_at": "2026-11-16T19:00:00+09:00",
+    "hook_type": "即効型",
+    "format": "13秒1ネタ",
+    "note": "ヒット（充電1,132回）の関連ネタ。予定の notes_scan から差し替え",
+    "parked_at": "2026-11-16",
+    "why": "ニュース（Siri AI）を優先。次の空き枠で再予約する"
+   }
+  ]
  },
  "rules": [
   "同じ時刻に2本以上公開しない（ショートと長尺、内容が違っても禁止）。2026-10-31 ユーザー指定。ytupload.py が state.json の予約と重なるアップロードを止める。",
