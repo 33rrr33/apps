@@ -772,7 +772,7 @@
     "title": "電池がすぐ減る人がやりがちな設定3つ… #Shorts",
     "made": "2026-11-15",
     "comment": "3つのうち、いくつ当てはまりましたか？👇 フォローしておくと、電池を長持ちさせる設定が毎日届きます！",
-    "comment_posted": false,
+    "comment_posted": true,
     "experiment": "format_test",
     "format": "60秒3選（42秒・予告＋つなぎ）",
     "layout": "rec",
@@ -802,10 +802,26 @@
     "hook_type": "煽り型",
     "publish_at": "2026-11-18T12:00:00+09:00",
     "note": "plan b1。LINE（n2）は情報源で日付・無料範囲が食い違うため保留"
-   }
-  },
-  "parked": [
-   {
+   },
+   "2026-11-19T06:00": {
+    "kind": "short",
+    "series_key": "b20261117_first",
+    "theme": "iPhone爆速神操作",
+    "num": 3,
+    "disp_num": 13,
+    "episode": "episodes/b20261117_first/ep03_theft3.py",
+    "id": "HvLgTZsM4iE",
+    "title": "iPhoneを盗まれる前に、この3つだけはやって… #Shorts",
+    "made": "2026-11-17",
+    "comment": "3つのうち、何個オンでしたか？👇 0〜3の数字でコメントしてね！フォローしておくと、iPhoneを守る設定が毎日届きます",
+    "comment_posted": false,
+    "experiment": "format_test",
+    "format": "60秒3選",
+    "layout": "rec",
+    "hook_type": "煽り型",
+    "publish_at": "2026-11-19T06:00:00+09:00"
+   },
+   "2026-11-20T12:00": {
     "kind": "short",
     "series_key": "w20261109_second",
     "theme": "iPhone隠し神機能",
@@ -819,15 +835,14 @@
     "comment_posted": false,
     "experiment": "format_test",
     "layout": "rec",
-    "disp_num": 10,
-    "publish_at": "2026-11-16T19:00:00+09:00",
+    "disp_num": 14,
+    "publish_at": "2026-11-20T12:00:00+09:00",
     "hook_type": "即効型",
     "format": "13秒1ネタ",
-    "note": "ヒット（充電1,132回）の関連ネタ。予定の notes_scan から差し替え",
-    "parked_at": "2026-11-16",
-    "why": "ニュース（Siri AI）を優先。次の空き枠で再予約する"
+    "note": "11/16から移動（ニュース差し替えで待機していた動画）"
    }
-  ]
+  },
+  "parked": []
  },
  "rules": [
   "同じ時刻に2本以上公開しない（ショートと長尺、内容が違っても禁止）。2026-10-31 ユーザー指定。ytupload.py が state.json の予約と重なるアップロードを止める。",
