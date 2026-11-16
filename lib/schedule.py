@@ -77,7 +77,7 @@ def related_long(half, monday):
 # hook type A/B-tested on a Latin square, series run back to back (5 parts each, alternating 隠し神機能 / 爆速神操作),
 # ONE long a week (Sunday 17:30) compiling the last finished series. Old weekday 2-a-day slots stop on 11/11.
 V3_START = dt.date(2026, 11, 12)
-V3_TIMES = ["12:00", "19:00", "06:00"]                  # rotation; pdca.py judges the winner, strategy.json can pin one
+V3_TIMES = ["12:00", "06:00"]          # 2026-11-16: 19:00 dropped (19:00 posts: 94 and 253 views vs 06:00/12:00 ~1,000)
 HOOK_TYPES = ["煽り型", "疑問型", "即効型"]               # 煽り：〇〇な人全員損してます / 疑問：これ知ってた？ / 即効：3秒でできる
 LONG_TIME_V3 = "17:30"
 
