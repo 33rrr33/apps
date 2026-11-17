@@ -195,3 +195,70 @@ input[type=checkbox]{accent-color:var(--yellow)}
 
 @media (max-width:1180px){:root{--rightW:360px}}
 @media (max-height:820px){:root{--panelH:228px}.k{height:32px}.k.big{height:48px;min-width:52px}.fz{height:140px}}
+
+/* ---------- かんたんパネル ---------- */
+:root{--panelH:268px}
+.helpbtn{background:#3a3c42;color:#fff;border:1px solid #111;border-radius:6px;padding:6px 11px;font-weight:700;white-space:nowrap}
+.helpbtn:hover{background:#4a4c53}
+.pbody.ez{gap:0;padding-top:4px}
+.ezcol{display:flex;flex-direction:column;gap:6px;padding:0 14px;border-left:1px solid #15161a;box-shadow:-1px 0 0 #36373c;flex:none}
+.ezcol:first-child{border-left:0;box-shadow:none;padding-left:0}
+.ezhead{display:flex;align-items:center;gap:7px;font-size:13px;white-space:nowrap;min-height:24px}
+.ezhead b{color:#fff}
+.ezn{width:20px;height:20px;border-radius:50%;background:var(--yellow);color:#111;font-weight:800;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.ezhead .ezseg{margin-left:10px}
+.ezcams{display:flex;gap:8px}
+.k.cam{height:auto;padding:4px;min-width:0;border-radius:8px;outline:3px solid transparent;outline-offset:-1px}
+.camin{display:flex;flex-direction:column;align-items:stretch;gap:4px;position:relative}
+.k.cam canvas{width:152px;height:86px;display:block;border-radius:4px;background:#000}
+.camname{display:flex;align-items:center;gap:5px;font-size:12px;justify-content:center;white-space:nowrap;overflow:hidden;max-width:152px}
+.kbdk{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:700;background:rgba(0,0,0,.35);color:inherit;opacity:.8;border-radius:3px;padding:0 4px;line-height:14px}
+.badge{position:absolute;left:4px;top:4px;font-size:11px;font-weight:800;padding:1px 7px;border-radius:4px;display:none}
+.k.cam.onpgm{outline-color:var(--red);background:linear-gradient(#5a2224,#401416);color:#fff;box-shadow:0 0 16px rgba(255,45,45,.55)}
+.k.cam.onpgm .badge{display:block;background:var(--red);color:#fff}
+.k.cam.onpgm .badge::after{content:"本番"}
+.k.cam.onpvw{outline-color:var(--green);background:linear-gradient(#1f4a2a,#163a20);color:#fff}
+.k.cam.onpvw .badge{display:block;background:var(--green);color:#042}
+.k.cam.onpvw .badge::after{content:"次"}
+.ezmini{display:flex;gap:6px}
+.k.ezs{height:30px;padding:0 7px}
+.minin{display:flex;align-items:center;gap:5px}
+.minin .sw{display:inline-block;width:32px;height:18px;border-radius:3px;border:1px solid #000;overflow:hidden;flex:none}
+.minin .sw canvas{width:100%;height:100%;display:block}
+.k.ezs.onpgm{outline:2px solid var(--red);outline-offset:-1px;color:#fff;background:linear-gradient(#5a2224,#401416)}
+.k.ezs.onpvw{outline:2px solid var(--green);outline-offset:-1px;color:#fff;background:linear-gradient(#1f4a2a,#163a20)}
+.eznow{display:flex;align-items:center;gap:8px}
+.eznow>div{background:#121316;border:1px solid #000;border-radius:6px;padding:4px 10px;min-width:110px}
+.eznow small{display:block;font-size:10px;color:var(--sub);font-weight:700}
+.eznow span{font-size:15px;font-weight:800;white-space:nowrap}
+.eznow .pg{border-color:var(--red)}.eznow .pg span{color:#ff7272}
+.eznow .pv{border-color:#1f6a35}.eznow .pv span{color:#6ee796}
+.eznow .arrow{color:var(--sub);font-size:18px}
+.ezgo2{display:flex;gap:8px}
+.k.go{height:44px;min-width:130px;font-size:14px;line-height:1.1;padding:0 12px}
+.k.go small{display:block;font-size:9px;font-weight:600;opacity:.75;margin-top:2px}
+.k.go.ftb{margin-top:auto}
+.ezseg{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.ezl{font-size:11px;font-weight:700;color:var(--sub);width:52px;flex:none}
+.k.xs.wide{padding:0 10px;height:26px;font-size:11px}
+.ezseg .k.xs{height:26px;font-size:11px;padding:0 8px}
+.k.xs small{font-weight:600;opacity:.7}
+.ezrec{gap:8px}
+.ezrec .k.go{width:190px}
+
+/* 使い方 */
+.help{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px}
+.help.on{display:flex}
+.helpbox{position:relative;background:#232428;border:1px solid #000;border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow:auto;padding:26px 30px;box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:14px;line-height:1.7;user-select:text}
+.helpbox h2{margin:0 0 12px;font-size:20px}
+.helpbox h3{margin:18px 0 8px;font-size:15px;color:var(--yellow)}
+.helpbox .close{position:absolute;right:14px;top:12px;width:32px;height:32px;border-radius:50%;border:0;background:#3a3c42;color:#fff;font-size:18px}
+.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:8px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:2px 10px;background:#1a1b1e;border-radius:9px;padding:10px 12px}
+.steps li::before{content:counter(s);grid-row:span 2;width:28px;height:28px;border-radius:50%;background:var(--yellow);color:#111;font-weight:800;display:flex;align-items:center;justify-content:center}
+.steps li b{font-size:15px}.steps li span{color:var(--sub)}
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hgrid div{background:#1a1b1e;border-radius:9px;padding:9px 12px;color:var(--sub);font-size:13px}
+.hgrid b{display:block;color:#fff;font-size:14px}
+.keys kbd{font-family:var(--mono);background:#111;border:1px solid var(--line2);border-radius:4px;padding:1px 7px;color:#fff;font-size:12px}
+@media (max-height:820px){:root{--panelH:250px}.k.cam canvas{width:136px;height:77px}.k.go{height:40px}}

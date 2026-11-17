@@ -31,11 +31,11 @@ const keyTexId = id => (id === MP1K ? MP1 : id === MP2K ? MP2 : id);
 const isAlphaKey = id => id === MP1K || id === MP2K;
 
 /* ---------------- 既定の状態 ---------------- */
-function defaultInput(n) { return { name: `カメラ${n}`, short: `CAM${n}`, type: 'none', deviceId: '', res: '1080', audio: 'auto', screenAudio: true, fit: 'fit', mirror: false, still: 0, loop: true }; }
+function defaultInput(n) { return { name: `カメラ${n}`, short: `カメラ${n}`, type: 'none', deviceId: '', res: '1080', audio: 'auto', screenAudio: true, fit: 'fit', mirror: false, still: 0, loop: true }; }
 function defaultAudioCh() { return { gain: 0, delay: 0, eqOn: true, low: 0, mid: 0, high: 0, compOn: false, thresh: -18, ratio: 3, pan: 0, fader: 0, mode: 'on', mute: false, device: '' }; }
 function defaultState() {
   return {
-    v: 1, fps: 30, mode: 'cutbus', panel: 'hw', hwAuto: false,
+    v: 2, fps: 30, mode: 'cutbus', panel: 'easy', hwAuto: true,
     pgm: 1, pvw: 2,
     trans: {
       style: 'mix', rates: { mix: 30, dip: 30, wipe: 30, dve: 30 }, dipSrc: COL1,
@@ -73,6 +73,10 @@ function merge(def, saved) {
 let S;
 try { S = merge(defaultState(), JSON.parse(localStorage.getItem('lsw.state.v1') || 'null')); } catch (e) { S = defaultState(); }
 S.inputs = [0, 1, 2, 3].map(i => merge(defaultInput(i + 1), S.inputs[i]));
+if (!(S.v >= 2)) { // 日本語化の移行
+  S.v = 2; S.panel = 'easy';
+  S.inputs.forEach((c, i) => { if (/^CAM\d$/.test(c.short)) c.short = `カメラ${i + 1}`; });
+}
 let saveT = 0;
 function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem('lsw.state.v1', JSON.stringify(S)); } catch (e) {} }, 300); }
 
@@ -95,7 +99,7 @@ function toast(msg, err) {
 
 function srcLabel(id, short) {
   if (id >= 1 && id <= 4) { const c = S.inputs[id - 1]; return short ? c.short : c.name; }
-  const m = { [BLK]: ['BLK', 'ブラック'], [BARS]: ['BARS', 'カラーバー'], [COL1]: ['COL1', 'カラー1'], [COL2]: ['COL2', 'カラー2'], [MP1]: ['MP1', 'メディアプレーヤー1'], [MP1K]: ['MP1K', 'MP1 キー'], [MP2]: ['MP2', 'メディアプレーヤー2'], [MP2K]: ['MP2K', 'MP2 キー'] }[id];
+  const m = { [BLK]: ['黒', 'ブラック（黒画面）'], [BARS]: ['バー', 'カラーバー'], [COL1]: ['色1', 'カラー1'], [COL2]: ['色2', 'カラー2'], [MP1]: ['静止画1', '静止画プレーヤー1'], [MP1K]: ['静止画1の透明', '静止画1 の透明部分'], [MP2]: ['静止画2', '静止画プレーヤー2'], [MP2K]: ['静止画2の透明', '静止画2 の透明部分'] }[id];
   return m ? m[short ? 0 : 1] : '?';
 }
 const srcOpts = (keys) => [...BUS, ...(keys ? [MP1K, MP2K] : [])].map(id => [id, srcLabel(id)]);
@@ -437,8 +441,8 @@ function programLevel(n) {
    マルチビュー
    ============================================================ */
 const MV_TILES = [
-  { id: 'pvw', x: 0, y: 0, w: 960, h: 540, label: 'プレビュー' },
-  { id: 'pgm', x: 960, y: 0, w: 960, h: 540, label: 'プログラム' },
+  { id: 'pvw', x: 0, y: 0, w: 960, h: 540, label: '次（準備）' },
+  { id: 'pgm', x: 960, y: 0, w: 960, h: 540, label: '本番' },
   { id: 1, x: 0, y: 540, w: 480, h: 270 }, { id: 2, x: 480, y: 540, w: 480, h: 270 },
   { id: 3, x: 960, y: 540, w: 480, h: 270 }, { id: 4, x: 1440, y: 540, w: 480, h: 270 },
   { id: MP1, x: 0, y: 810, w: 480, h: 270 },
@@ -463,6 +467,13 @@ function drawMeter(c, x, y, w, hh, db) {
 function drawMV(pgmSet, pvwSet, meters) {
   const c = mvCtx;
   c.drawImage(glCanvas, 0, 0);
+  if (ezThumbs.length && !$('#easy').classList.contains('hide') && (R.frames & 1) === 0) {
+    for (const t of ezThumbs) {
+      const tile = MV_TILES.find(x => x.id === t.id);
+      if (tile) t.ctx.drawImage(glCanvas, tile.x + 2, tile.y + 2, tile.w - 4, tile.h - 4, 0, 0, t.ctx.canvas.width, t.ctx.canvas.height);
+      else if (t.id === MP2) { t.ctx.fillStyle = '#000'; t.ctx.fillRect(0, 0, 64, 36); const p = pool[S.mp[1].slot]; if (p) t.ctx.drawImage(p.img, 0, 0, 64, 36); }
+    }
+  }
   c.textAlign = 'center'; c.textBaseline = 'middle';
   for (const t of MV_TILES) {
     if (t.st) { drawStatusTile(c, t, meters); continue; }
@@ -499,8 +510,8 @@ function drawMV(pgmSet, pvwSet, meters) {
       c.fillStyle = '#fff'; c.fillText(label, t.x + t.w / 2, ly + lh / 2 + 1);
     }
     if (t.id === 'pgm') {
-      if (R.ftbT > 0) { c.font = `800 22px ${FONT}`; c.fillStyle = '#ff2d2d'; c.textAlign = 'right'; c.fillText(R.ftbOn && !R.ftbAuto ? 'FADE TO BLACK' : 'FTB…', t.x + t.w - 22, t.y + 30); c.textAlign = 'center'; }
-      if (Rec.on) { c.fillStyle = '#ff2d2d'; c.beginPath(); c.arc(t.x + 30, t.y + 30, 9, 0, 7); c.fill(); c.font = `700 20px ${FONT}`; c.textAlign = 'left'; c.fillStyle = '#fff'; c.fillText('REC ' + fmtTime((performance.now() - Rec.start) / 1000), t.x + 46, t.y + 31); c.textAlign = 'center'; }
+      if (R.ftbT > 0) { c.font = `800 22px ${FONT}`; c.fillStyle = '#ff2d2d'; c.textAlign = 'right'; c.fillText(R.ftbOn && !R.ftbAuto ? '暗転中' : '暗転…', t.x + t.w - 22, t.y + 30); c.textAlign = 'center'; }
+      if (Rec.on) { c.fillStyle = '#ff2d2d'; c.beginPath(); c.arc(t.x + 30, t.y + 30, 9, 0, 7); c.fill(); c.font = `700 20px ${FONT}`; c.textAlign = 'left'; c.fillStyle = '#fff'; c.fillText('録画 ' + fmtTime((performance.now() - Rec.start) / 1000), t.x + 46, t.y + 31); c.textAlign = 'center'; }
     }
     if (t.id === 'pvw' && R.pick) { c.font = `700 22px ${FONT}`; c.fillStyle = '#ffc21a'; c.fillText('クリックしてキー色を選択', t.x + t.w / 2, t.y + 34); }
   }
@@ -518,23 +529,23 @@ function drawStatusTile(c, t, meters) {
   if (t.st === 'rec') {
     const on = Rec.on;
     c.fillStyle = on ? '#ff2d2d' : '#3a3c42'; c.beginPath(); c.arc(cx - 70, t.y + 80, 14, 0, 7); c.fill();
-    c.font = `800 34px ${FONT}`; c.fillStyle = on ? '#fff' : '#8a8c92'; c.textAlign = 'left'; c.fillText('REC', cx - 46, t.y + 82); c.textAlign = 'center';
+    c.font = `800 34px ${FONT}`; c.fillStyle = on ? '#fff' : '#8a8c92'; c.textAlign = 'left'; c.fillText('録画', cx - 46, t.y + 82); c.textAlign = 'center';
     c.font = `500 40px ui-monospace, Menlo, monospace`; c.fillStyle = on ? '#fff' : '#5b5d63';
     c.fillText(on ? fmtTime((performance.now() - Rec.start) / 1000) : '00:00:00', cx, t.y + 145);
     c.font = `500 18px ${FONT}`; c.fillStyle = '#8a8c92';
     c.fillText(on ? (Rec.dir ? 'フォルダに保存中' : '停止時にダウンロード') : (Rec.dir ? '保存先: ' + Rec.dir.name : '保存先: ダウンロード'), cx, t.y + 195);
-    c.fillText('録画', cx, t.y + 232);
+    c.fillText(on ? '録画中' : '録画していません', cx, t.y + 232);
   } else if (t.st === 'stream') {
     const on = Stream.state === 'live', con = Stream.state === 'connecting';
     c.font = `800 34px ${FONT}`; c.fillStyle = on ? '#ff2d2d' : con ? '#ffc21a' : '#8a8c92';
-    c.fillText(on ? 'ON AIR' : con ? '接続中…' : 'OFF AIR', cx, t.y + 82);
+    c.fillText(on ? '配信中' : con ? '接続中…' : '配信していません', cx, t.y + 82);
     c.font = `500 40px ui-monospace, Menlo, monospace`; c.fillStyle = on ? '#fff' : '#5b5d63';
     c.fillText(on ? fmtTime((performance.now() - Stream.start) / 1000) : '00:00:00', cx, t.y + 145);
     c.font = `500 18px ${FONT}`; c.fillStyle = '#8a8c92';
     c.fillText(on ? `${Stream.kbps | 0} kbps` : (S.out.whipUrl ? 'WHIP 配信' : '配信先未設定'), cx, t.y + 195);
     c.fillText('配信', cx, t.y + 232);
   } else if (t.st === 'audio' && meters) {
-    const chs = [['in1', '1'], ['in2', '2'], ['in3', '3'], ['in4', '4'], ['mic1', 'M1'], ['mic2', 'M2']];
+    const chs = [['in1', '1'], ['in2', '2'], ['in3', '3'], ['in4', '4'], ['mic1', 'ﾏｲｸ1'], ['mic2', 'ﾏｲｸ2']];
     const x0 = t.x + 26, top = t.y + 20, mh = t.h - 74;
     chs.forEach(([id, lb], i) => {
       const x = x0 + i * 52;
@@ -543,7 +554,7 @@ function drawStatusTile(c, t, meters) {
     });
     const mx = x0 + 6 * 52 + 22;
     drawMeter(c, mx, top, 16, mh, meters.L); drawMeter(c, mx + 22, top, 16, mh, meters.R);
-    c.fillStyle = '#c6c7cb'; c.fillText('PGM', mx + 19, top + mh + 20);
+    c.fillStyle = '#c6c7cb'; c.fillText('本番', mx + 19, top + mh + 20);
     c.strokeStyle = 'rgba(255,255,255,.2)'; c.lineWidth = 1;
     for (const d of [-6, -18, -30, -42]) { const y = top + mh * (1 - dbFrac(d)); c.beginPath(); c.moveTo(x0 - 6, y); c.lineTo(mx + 44, y); c.stroke(); }
   }
@@ -693,12 +704,15 @@ const FX_ICONS = {
   push: `<svg viewBox="0 0 32 20"><rect width="32" height="20" fill="#111"/><rect x="17" y="0" width="15" height="20" fill="currentColor"/><path d="M13 10 H4 M8 6 L4 10 L8 14" stroke="currentColor" stroke-width="2" fill="none"/></svg>`,
   squeeze: `<svg viewBox="0 0 32 20"><rect width="32" height="20" fill="#111"/><rect x="20" y="0" width="12" height="20" fill="currentColor"/><path d="M3 4 L12 10 L3 16" stroke="currentColor" stroke-width="2" fill="none"/></svg>`,
 };
+const STYLE_JA = { mix: 'ミックス', dip: 'ディップ', wipe: 'ワイプ', dve: '押し出し' };
+const STYLE_TIP = { mix: 'ふわっと重ねて切り替え', dip: '一度色をはさんで切り替え', wipe: '形に沿って切り替え', dve: '画面を押し出して切り替え' };
+const PAT_JA = ['左から右', '上から下', '中央から左右', '中央から上下', '十字', '四角', 'ダイヤ', '円', '左上から', '右上から', '右下から', '左下から', '斜め', '右から左'];
 const HW_FX = [
-  { id: 'mix', label: 'MIX', icon: FX_ICONS.mix, set: () => { S.trans.style = 'mix'; }, is: () => S.trans.style === 'mix' },
-  { id: 'dip', label: 'DIP', icon: FX_ICONS.dip, set: () => { S.trans.style = 'dip'; }, is: () => S.trans.style === 'dip' },
-  ...[0, 1, 2, 3, 5, 7, 6].map(p => ({ id: 'w' + p, icon: patIcon(p), set: () => { S.trans.style = 'wipe'; S.trans.wipe.pattern = p; }, is: () => S.trans.style === 'wipe' && S.trans.wipe.pattern === p })),
-  { id: 'push', icon: FX_ICONS.push, set: () => { S.trans.style = 'dve'; S.trans.dve.type = 0; }, is: () => S.trans.style === 'dve' && S.trans.dve.type === 0 },
-  { id: 'sq', icon: FX_ICONS.squeeze, set: () => { S.trans.style = 'dve'; S.trans.dve.type = 1; }, is: () => S.trans.style === 'dve' && S.trans.dve.type === 1 },
+  { id: 'mix', label: 'ミックス', tip: 'ふわっと重ねて切り替え', icon: FX_ICONS.mix, set: () => { S.trans.style = 'mix'; }, is: () => S.trans.style === 'mix' },
+  { id: 'dip', label: 'ディップ', tip: '一度カラー1をはさんで切り替え', icon: FX_ICONS.dip, set: () => { S.trans.style = 'dip'; }, is: () => S.trans.style === 'dip' },
+  ...[0, 1, 2, 3, 5, 7, 6].map(p => ({ id: 'w' + p, tip: 'ワイプ: ' + PAT_JA[p], icon: patIcon(p), set: () => { S.trans.style = 'wipe'; S.trans.wipe.pattern = p; }, is: () => S.trans.style === 'wipe' && S.trans.wipe.pattern === p })),
+  { id: 'push', tip: '押し出し', icon: FX_ICONS.push, set: () => { S.trans.style = 'dve'; S.trans.dve.type = 0; }, is: () => S.trans.style === 'dve' && S.trans.dve.type === 0 },
+  { id: 'sq', tip: 'スクイーズ（押しつぶし）', icon: FX_ICONS.squeeze, set: () => { S.trans.style = 'dve'; S.trans.dve.type = 1; }, is: () => S.trans.style === 'dve' && S.trans.dve.type === 1 },
 ];
 
 /* ============================================================
@@ -708,16 +722,16 @@ function renderSwitcherPane() {
   buildPane('switcher', $('#paneSwitcher'), root => {
     // --- トランジション
     const styleTabs = h('div', { class: 'subtabs' });
-    STYLES.forEach(st => { const b = h('button', { onclick: () => setStyle(st) }, { mix: 'ミックス', dip: 'ディップ', wipe: 'ワイプ', dve: 'DVE' }[st]); styleTabs.append(b); reg(() => b.classList.toggle('on', S.trans.style === st)); });
+    STYLES.forEach(st => { const b = h('button', { onclick: () => setStyle(st), title: STYLE_TIP[st] }, STYLE_JA[st]); styleTabs.append(b); reg(() => b.classList.toggle('on', S.trans.style === st)); });
     const boxes = {};
-    boxes.mix = h('div', null, h('div', { class: 'row' }, h('label', null, 'レート'), h('span', null, rateBox(() => S.trans.rates.mix, v => S.trans.rates.mix = v))));
+    boxes.mix = h('div', null, h('div', { class: 'row' }, h('label', null, '速さ（秒:コマ）'), h('span', null, rateBox(() => S.trans.rates.mix, v => S.trans.rates.mix = v))));
     boxes.dip = h('div', null,
-      h('div', { class: 'row' }, h('label', null, 'レート'), h('span', null, rateBox(() => S.trans.rates.dip, v => S.trans.rates.dip = v))),
+      h('div', { class: 'row' }, h('label', null, '速さ（秒:コマ）'), h('span', null, rateBox(() => S.trans.rates.dip, v => S.trans.rates.dip = v))),
       select('ディップソース', () => srcOpts(false), () => S.trans.dipSrc, v => S.trans.dipSrc = v));
     const pats = h('div', { class: 'icongrid' });
-    for (let p = 0; p < 14; p++) { const b = h('button', { html: patIcon(p), title: 'パターン ' + (p + 1), onclick: () => { S.trans.wipe.pattern = p; changed(); } }); pats.append(b); reg(() => b.classList.toggle('on', S.trans.wipe.pattern === p)); }
+    for (let p = 0; p < 14; p++) { const b = h('button', { html: patIcon(p), title: PAT_JA[p], onclick: () => { S.trans.wipe.pattern = p; changed(); } }); pats.append(b); reg(() => b.classList.toggle('on', S.trans.wipe.pattern === p)); }
     boxes.wipe = h('div', null,
-      h('div', { class: 'row' }, h('label', null, 'レート'), h('span', null, rateBox(() => S.trans.rates.wipe, v => S.trans.rates.wipe = v))),
+      h('div', { class: 'row' }, h('label', null, '速さ（秒:コマ）'), h('span', null, rateBox(() => S.trans.rates.wipe, v => S.trans.rates.wipe = v))),
       pats,
       slider('ソフトネス', () => S.trans.wipe.soft, v => S.trans.wipe.soft = v, 0, 0.3, 0.005, pct),
       slider('ボーダー幅', () => S.trans.wipe.border, v => S.trans.wipe.border = v, 0, 0.15, 0.002, pct),
@@ -725,25 +739,25 @@ function renderSwitcherPane() {
       toggle('反転', () => S.trans.wipe.reverse, v => S.trans.wipe.reverse = v),
       toggle('フリップフロップ', () => S.trans.wipe.flipflop, v => S.trans.wipe.flipflop = v));
     boxes.dve = h('div', null,
-      h('div', { class: 'row' }, h('label', null, 'レート'), h('span', null, rateBox(() => S.trans.rates.dve, v => S.trans.rates.dve = v))),
+      h('div', { class: 'row' }, h('label', null, '速さ（秒:コマ）'), h('span', null, rateBox(() => S.trans.rates.dve, v => S.trans.rates.dve = v))),
       seg('エフェクト', [[0, 'プッシュ'], [1, 'スクイーズ'], [2, 'スライド'], [3, 'ズーム']], () => S.trans.dve.type, v => S.trans.dve.type = v),
       seg('方向', [[0, '← 右から'], [1, '左から →'], [2, '↓ 上から'], [3, '下から ↑']], () => S.trans.dve.dir, v => S.trans.dve.dir = v));
     const boxWrap = h('div');
     Object.entries(boxes).forEach(([k, b]) => { boxWrap.append(b); reg(() => b.style.display = S.trans.style === k ? '' : 'none'); });
-    root.append(pal('trans', 'トランジション', () => [R.auto ? '実行中' : S.trans.style.toUpperCase(), R.auto ? 'red' : ''],
+    root.append(pal('trans', '切り替えの効果（トランジション）', () => [R.auto ? '切り替え中' : STYLE_JA[S.trans.style], R.auto ? 'red' : ''],
       styleTabs, boxWrap, h('div', { class: 'hr' }),
-      toggle('プレビュートランジション', () => S.trans.prevTrans, v => S.trans.prevTrans = v)));
+      toggle('試し見（本番に出さず「次」で確認）', () => S.trans.prevTrans, v => S.trans.prevTrans = v)));
 
     // --- アップストリームキー
     const ktabs = h('div', { class: 'subtabs' });
-    [['luma', 'ルマ'], ['chroma', 'クロマ'], ['pattern', 'パターン'], ['dve', 'DVE（PinP）']].forEach(([k, t]) => {
+    [['luma', '明るさ'], ['chroma', 'グリーンバック'], ['pattern', '形'], ['dve', '小窓']].forEach(([k, t]) => {
       const b = h('button', { onclick: () => { S.usk.type = k; if (k !== 'dve') S.usk.keyType = k; changed(); } }, t); ktabs.append(b);
       reg(() => b.classList.toggle('on', S.usk.type === k));
     });
     const kb = {};
     kb.luma = h('div', null,
-      select('キーソース', () => srcOpts(true), () => S.usk.key, v => S.usk.key = v),
-      toggle('プリマルチプライ', () => S.usk.luma.premult, v => S.usk.luma.premult = v),
+      select('抜く基準（キー）', () => srcOpts(true), () => S.usk.key, v => S.usk.key = v),
+      toggle('透明度をそのまま使う', () => S.usk.luma.premult, v => S.usk.luma.premult = v),
       slider('クリップ', () => S.usk.luma.clip, v => S.usk.luma.clip = v, 0, 1, 0.005, pct),
       slider('ゲイン', () => S.usk.luma.gain, v => S.usk.luma.gain = v, 0, 1, 0.005, pct),
       toggle('キー反転', () => S.usk.luma.invert, v => S.usk.luma.invert = v));
@@ -788,36 +802,36 @@ function renderSwitcherPane() {
     reg(() => maskBox.style.display = S.usk.type === 'dve' ? 'none' : '');
     const kw = h('div');
     Object.entries(kb).forEach(([k, b]) => { kw.append(b); reg(() => b.style.display = S.usk.type === k ? '' : 'none'); });
-    root.append(pal('usk', 'アップストリームキー 1', () => [S.usk.onAir ? 'ON AIR' : '', 'red'],
+    root.append(pal('usk', '合成キー・小窓（アップストリームキー）', () => [S.usk.onAir ? '本番中' : '', 'red'],
       ktabs,
-      select('フィルソース', () => srcOpts(false), () => S.usk.fill, v => S.usk.fill = v),
+      select('重ねる映像', () => srcOpts(false), () => S.usk.fill, v => S.usk.fill = v),
       kw, maskBox, h('div', { class: 'hr' }),
-      h('div', { class: 'row' }, h('button', { class: 'btn full', onclick: () => keyOnAir(!S.usk.onAir) }, 'キー ON AIR 切替（カット）'))));
+      h('div', { class: 'row' }, h('button', { class: 'btn full', onclick: () => keyOnAir(!S.usk.onAir) }, '本番に出す／消す（K）'))));
 
     // --- ダウンストリームキー
-    root.append(pal('dsk', 'ダウンストリームキー 1', () => [S.dsk.onAir || R.dskT > 0 ? 'ON AIR' : '', 'red'],
-      select('フィルソース', () => srcOpts(false), () => S.dsk.fill, v => S.dsk.fill = v),
-      select('キーソース', () => srcOpts(true), () => S.dsk.key, v => S.dsk.key = v),
-      h('div', { class: 'row' }, h('label', null, 'レート'), h('span', null, rateBox(() => S.dsk.rate, v => S.dsk.rate = v))),
-      toggle('プリマルチプライ', () => S.dsk.premult, v => S.dsk.premult = v),
+    root.append(pal('dsk', 'テロップ（ダウンストリームキー）', () => [S.dsk.onAir || R.dskT > 0 ? '本番中' : '', 'red'],
+      select('重ねる映像', () => srcOpts(false), () => S.dsk.fill, v => S.dsk.fill = v),
+      select('透明にする基準', () => srcOpts(true), () => S.dsk.key, v => S.dsk.key = v),
+      h('div', { class: 'row' }, h('label', null, '速さ（秒:コマ）'), h('span', null, rateBox(() => S.dsk.rate, v => S.dsk.rate = v))),
+      toggle('透明度をそのまま使う（PNG向け）', () => S.dsk.premult, v => S.dsk.premult = v),
       slider('クリップ', () => S.dsk.clip, v => S.dsk.clip = v, 0, 1, 0.005, pct),
       slider('ゲイン', () => S.dsk.gain, v => S.dsk.gain = v, 0, 1, 0.005, pct),
       toggle('キー反転', () => S.dsk.invert, v => S.dsk.invert = v),
       toggle('マスク', () => S.dsk.mask.on, v => S.dsk.mask.on = v),
       slider('マスク 上', () => S.dsk.mask.t, v => S.dsk.mask.t = v, 0, 1, 0.005, pct),
       slider('マスク 下', () => S.dsk.mask.b, v => S.dsk.mask.b = v, 0, 1, 0.005, pct),
-      h('div', { class: 'note' }, '静止画（透過PNG）をメディアプレーヤーに入れ、フィル＝MP1・キー＝MP1 キー・プリマルチプライ ON にするとテロップがそのまま乗ります。')));
+      h('div', { class: 'note' }, '「メディア」タブでテロップを作り（または透過PNGを追加）静止画1にセットすると、そのまま画面に重なります。下のパネルの「テロップ」ボタンで出し入れできます。')));
 
     // --- FTB
-    root.append(pal('ftb', 'フェードトゥブラック', () => [R.ftbOn || R.ftbT > 0 ? 'BLACK' : '', 'red'],
-      h('div', { class: 'row' }, h('label', null, 'レート'), h('span', null, rateBox(() => S.ftb.rate, v => S.ftb.rate = v))),
+    root.append(pal('ftb', '暗転（フェードトゥブラック）', () => [R.ftbOn || R.ftbT > 0 ? '暗転中' : '', 'red'],
+      h('div', { class: 'row' }, h('label', null, '速さ（秒:コマ）'), h('span', null, rateBox(() => S.ftb.rate, v => S.ftb.rate = v))),
       toggle('音声もフェード', () => S.audio.master.ftbFollow, v => { S.audio.master.ftbFollow = v; audio && (audio.mp.ftbFollow = v); })));
 
     // --- メディアプレーヤー
     const mpOpts = () => [[-1, '（空）'], ...Array.from({ length: POOL_N }, (_, i) => [i, `${i + 1}: ${pool[i] ? pool[i].name : '—'}`])];
-    root.append(pal('mp', 'メディアプレーヤー', null,
-      select('MP1', mpOpts, () => S.mp[0].slot, v => { S.mp[0].slot = v; updateMP(); }),
-      select('MP2', mpOpts, () => S.mp[1].slot, v => { S.mp[1].slot = v; updateMP(); }),
+    root.append(pal('mp', '静止画プレーヤー', null,
+      select('静止画1', mpOpts, () => S.mp[0].slot, v => { S.mp[0].slot = v; updateMP(); }),
+      select('静止画2', mpOpts, () => S.mp[1].slot, v => { S.mp[1].slot = v; updateMP(); }),
       h('div', { class: 'sub' }, '静止画の追加は「メディア」タブから。')));
 
     // --- カラージェネレーター
@@ -860,8 +874,8 @@ function renderMediaPane() {
     for (let i = 0; i < POOL_N; i++) {
       const p = pool[i];
       const mp = h('div', { class: 'mp' });
-      if (S.mp[0].slot === i) mp.append(h('span', null, 'MP1'));
-      if (S.mp[1].slot === i) mp.append(h('span', null, 'MP2'));
+      if (S.mp[0].slot === i) mp.append(h('span', null, '静止画1'));
+      if (S.mp[1].slot === i) mp.append(h('span', null, '静止画2'));
       grid.append(h('div', { class: 'slot' + (poolSel === i ? ' sel' : ''), title: p ? p.name : '空き', onclick: () => { poolSel = i; renderMediaPane(); } },
         p ? h('img', { src: p.url }) : null, h('span', { class: 'n' }, i + 1), mp,
         p ? h('button', { class: 'x', onclick: e => { e.stopPropagation(); if (confirm(`静止画 ${i + 1} を削除しますか？`)) setStill(i, null); } }, '×') : null));
@@ -869,8 +883,8 @@ function renderMediaPane() {
     root.append(h('div', { class: 'pal open' }, h('h3', null, 'メディアプール'),
       h('div', { class: 'body' }, drop, file, grid,
         h('div', { class: 'row', style: 'margin-top:10px' },
-          h('button', { class: 'btn', onclick: () => { S.mp[0].slot = poolSel; updateMP(); changed(); renderMediaPane(); } }, `→ MP1 にセット`),
-          h('button', { class: 'btn', onclick: () => { S.mp[1].slot = poolSel; updateMP(); changed(); renderMediaPane(); } }, `→ MP2 にセット`)),
+          h('button', { class: 'btn', onclick: () => { S.mp[0].slot = poolSel; updateMP(); changed(); renderMediaPane(); } }, `→ 静止画1 にセット`),
+          h('button', { class: 'btn', onclick: () => { S.mp[1].slot = poolSel; updateMP(); changed(); renderMediaPane(); } }, `→ 静止画2 にセット`)),
         h('div', { class: 'sub' }, `選択中: スロット ${poolSel + 1}${pool[poolSel] ? '（' + pool[poolSel].name + '）' : '（空き）'}`))));
 
     // テロップ作成
@@ -896,7 +910,7 @@ function renderMediaPane() {
             renderTitle(T).toBlob(b => setStill(slot, b, 'テロップ ' + (T.l1 || '').slice(0, 10)).then(() => toast(`スロット ${slot + 1} に追加しました`)), 'image/png');
           }
         }, 'メディアプールに追加'),
-        h('div', { class: 'note' }, '追加したテロップを MP1 にセット → ダウンストリームキー（フィル MP1／キー MP1 キー）→ DSK の AUTO で出し入れできます。'))));
+        h('div', { class: 'note' }, '追加したテロップを「→ 静止画1 にセット」すると、下のパネルの「テロップ」ボタンで出し入れできます。'))));
     setTimeout(draw, 0);
   });
 }
@@ -934,7 +948,7 @@ function renderTitle(T) {
 /* ============================================================
    右ペイン：オーディオ
    ============================================================ */
-const ACH = [['in1', 1], ['in2', 2], ['in3', 3], ['in4', 4], ['mic1', 'MIC 1'], ['mic2', 'MIC 2']];
+const ACH = [['in1', 1], ['in2', 2], ['in3', 3], ['in4', 4], ['mic1', 'マイク1'], ['mic2', 'マイク2']];
 const meterEls = [];
 function chName(id) { const n = ACH.find(a => a[0] === id)[1]; return typeof n === 'number' ? S.inputs[n - 1].short : n; }
 function applyAudioState() {
@@ -957,9 +971,9 @@ function renderAudioPane() {
       fader.addEventListener('input', () => { setA(id, 'fader', +fader.value); dbv.textContent = fmtDb(+fader.value); });
       fader.addEventListener('dblclick', () => { setA(id, 'fader', 0); syncAll(); });
       reg(() => { fader.value = S.audio[id].fader; dbv.textContent = fmtDb(S.audio[id].fader); });
-      const bOn = h('button', { onclick: () => { setA(id, 'mode', S.audio[id].mode === 'on' ? 'off' : 'on'); syncAll(); } }, 'ON');
-      const bAfv = isIn ? h('button', { class: 'afv', onclick: () => { setA(id, 'mode', S.audio[id].mode === 'afv' ? 'off' : 'afv'); syncAll(); } }, 'AFV') : null;
-      const bMute = h('button', { class: 'mut', onclick: () => { setA(id, 'mute', !S.audio[id].mute); syncAll(); } }, 'MUTE');
+      const bOn = h('button', { onclick: () => { setA(id, 'mode', S.audio[id].mode === 'on' ? 'off' : 'on'); syncAll(); } }, '入');
+      const bAfv = isIn ? h('button', { class: 'afv', onclick: () => { setA(id, 'mode', S.audio[id].mode === 'afv' ? 'off' : 'afv'); syncAll(); } }, '連動') : null;
+      const bMute = h('button', { class: 'mut', onclick: () => { setA(id, 'mute', !S.audio[id].mute); syncAll(); } }, '消音');
       reg(() => { bOn.classList.toggle('on', S.audio[id].mode === 'on'); bAfv && bAfv.classList.toggle('on', S.audio[id].mode === 'afv'); bMute.classList.toggle('on', S.audio[id].mute); });
       const gain = h('input', { type: 'range', min: -20, max: 40, step: 0.5 });
       gain.addEventListener('input', () => setA(id, 'gain', +gain.value));
@@ -970,8 +984,8 @@ function renderAudioPane() {
       const nm = h('div', { class: 'nm', style: 'cursor:pointer', onclick: () => { S.ui.audioSel = id; save(); renderAudioPane(); } });
       reg(() => { nm.textContent = chName(id); nm.style.color = S.ui.audioSel === id ? 'var(--yellow)' : ''; });
       mixer.append(h('div', { class: 'strip' }, nm,
-        h('div', { class: 'knob' }, h('label', null, 'GAIN'), gain),
-        h('div', { class: 'knob' }, h('label', null, 'PAN'), pan),
+        h('div', { class: 'knob' }, h('label', null, '入力音量'), gain),
+        h('div', { class: 'knob' }, h('label', null, '左右'), pan),
         h('div', { class: 'fz' }, m, fader), dbv,
         h('div', { class: 'abtns' }, bOn, bAfv, bMute)));
     }
@@ -984,13 +998,13 @@ function renderAudioPane() {
     mf.addEventListener('input', () => { mm.fader = +mf.value; audio && (audio.mp.fader = mm.fader, audio.applyMaster()); mdb.textContent = fmtDb(mm.fader); save(); });
     mf.addEventListener('dblclick', () => { mm.fader = 0; audio && (audio.mp.fader = 0, audio.applyMaster()); syncAll(); save(); });
     reg(() => { mf.value = mm.fader; mdb.textContent = fmtDb(mm.fader); });
-    const mon = h('button', { onclick: () => { mm.monitorOn = !mm.monitorOn; audio && (audio.mp.monitorOn = mm.monitorOn, audio.applyMaster()); syncAll(); save(); } }, 'MON');
-    const lim = h('button', { onclick: () => { mm.limiter = !mm.limiter; audio && (audio.mp.limiter = mm.limiter, audio.applyMaster()); syncAll(); save(); } }, 'LIMIT');
+    const mon = h('button', { onclick: () => { mm.monitorOn = !mm.monitorOn; audio && (audio.mp.monitorOn = mm.monitorOn, audio.applyMaster()); syncAll(); save(); } }, 'モニター');
+    const lim = h('button', { onclick: () => { mm.limiter = !mm.limiter; audio && (audio.mp.limiter = mm.limiter, audio.applyMaster()); syncAll(); save(); } }, '音割れ防止');
     reg(() => { mon.classList.toggle('on', mm.monitorOn); lim.classList.toggle('on', mm.limiter); });
-    mixer.append(h('div', { class: 'strip master' }, h('div', { class: 'nm' }, 'MASTER'), h('div', { class: 'src' }, 'PGM'),
+    mixer.append(h('div', { class: 'strip master' }, h('div', { class: 'nm' }, '全体'), h('div', { class: 'src' }, '本番の音'),
       h('div', { class: 'fz', style: 'margin-top:auto' }, mL, mR, mf), mdb, h('div', { class: 'abtns' }, lim, mon)));
     root.append(h('div', { class: 'pal open' }, h('h3', null, 'オーディオミキサー'), h('div', { class: 'body', style: 'padding:8px' }, mixer,
-      h('div', { class: 'sub', style: 'margin-top:6px' }, 'ON＝常に出す ／ AFV＝その映像が番組に出ている時だけ出す（オーディオ・フォロー・ビデオ）。フェーダーはダブルクリックで 0dB。チャンネル名をクリックすると詳細設定。'))));
+      h('div', { class: 'sub', style: 'margin-top:6px' }, '入＝常に音を出す ／ 連動＝その映像が本番に出ている時だけ音を出す ／ 消音＝一時的に消す。つまみはダブルクリックで元に戻ります。上の名前を押すと、くわしい設定（EQ など）が開きます。'))));
 
     // 詳細（選択チャンネル）
     const id = S.ui.audioSel || 'in1';
@@ -1016,7 +1030,7 @@ function renderAudioPane() {
     root.append(h('div', { class: 'pal open' }, h('h3', null, `チャンネル詳細：${chName(id)}`), h('div', { class: 'body' }, ...det)));
     root.append(h('div', { class: 'pal open' }, h('h3', null, 'モニター（ヘッドホン）'), h('div', { class: 'body' },
       slider('モニター音量', () => mm.monitorLevel, v => { mm.monitorLevel = v; audio && (audio.mp.monitorLevel = v, audio.applyMaster()); }, -40, 6, 0.5, v => v + 'dB'),
-      h('div', { class: 'note' }, 'MON を押すとプログラム音声を Mac のスピーカー／ヘッドホンから聞けます。マイク使用時はハウリングに注意してヘッドホンで。'))));
+      h('div', { class: 'note' }, '「モニター」を押すと本番の音を Mac のスピーカー／ヘッドホンで聞けます。マイクを使う時はハウリングしないようヘッドホンで。'))));
   });
 }
 async function applyMic(id) {
@@ -1178,7 +1192,7 @@ function setOutput(src) {
 function renderOutputPane() {
   buildPane('output', $('#paneOutput'), root => {
     const recBtn = h('button', { class: 'btn full', onclick: () => Rec.on ? recStop() : recStart() });
-    reg(() => { recBtn.textContent = Rec.on ? '■ 録画停止' : '● 録画開始'; recBtn.className = 'btn full ' + (Rec.on ? 'red' : 'primary'); });
+    reg(() => { recBtn.textContent = Rec.on ? '■ 録画を止める' : '● 録画を始める'; recBtn.className = 'btn full ' + (Rec.on ? 'red' : 'primary'); });
     const dirLbl = h('span', { class: 'sub' });
     reg(() => dirLbl.textContent = Rec.dir ? Rec.dir.name : '未選択（停止時にダウンロード）');
     const list = h('div', { class: 'reclist' });
@@ -1197,16 +1211,16 @@ function renderOutputPane() {
     tokIn.addEventListener('input', () => { S.out.whipToken = tokIn.value; save(); }); tokIn.addEventListener('keydown', e => e.stopPropagation());
     reg(() => { if (document.activeElement !== tokIn) tokIn.value = S.out.whipToken; });
     const stBtn = h('button', { class: 'btn full', onclick: () => Stream.state === 'off' ? streamStart() : streamStop() });
-    reg(() => { stBtn.textContent = Stream.state === 'off' ? '配信開始（ON AIR）' : Stream.state === 'connecting' ? '接続中…（押すと中止）' : '配信停止'; stBtn.className = 'btn full ' + (Stream.state === 'off' ? 'primary' : 'red'); });
-    root.append(h('div', { class: 'pal open' }, h('h3', null, '配信（WHIP）'), h('div', { class: 'body' },
-      h('div', { class: 'row' }, h('label', null, 'WHIP URL'), urlIn),
-      h('div', { class: 'row' }, h('label', null, 'ストリームキー'), tokIn),
+    reg(() => { stBtn.textContent = Stream.state === 'off' ? '配信を始める' : Stream.state === 'connecting' ? '接続中…（押すと中止）' : '配信停止'; stBtn.className = 'btn full ' + (Stream.state === 'off' ? 'primary' : 'red'); });
+    root.append(h('div', { class: 'pal open' }, h('h3', null, '配信'), h('div', { class: 'body' },
+      h('div', { class: 'row' }, h('label', null, '配信先URL'), urlIn),
+      h('div', { class: 'row' }, h('label', null, 'キー（パスワード）'), tokIn),
       select('ビットレート', [[2500, '2.5 Mbps'], [4500, '4.5 Mbps'], [6000, '6 Mbps'], [9000, '9 Mbps'], [12000, '12 Mbps']], () => S.out.sbr, v => S.out.sbr = v),
       stBtn,
       h('div', { class: 'note', html: 'ブラウザから直接配信できる <b>WHIP</b> 方式です（Cloudflare Stream、OvenMediaEngine、MediaMTX、Dolby.io、OBS 30+ の WHIP 受信 など）。<br>YouTube などへ RTMP で配信したい場合は、下の外部出力ウィンドウ（プログラム）を OBS でキャプチャして配信してください。' }))));
 
     const outs = h('div', { class: 'seg' });
-    [['in1', '1'], ['in2', '2'], ['in3', '3'], ['in4', '4'], ['mv', 'M/V'], ['pgm', 'PGM']].forEach(([v, t]) => {
+    [['in1', '入力1'], ['in2', '入力2'], ['in3', '入力3'], ['in4', '入力4'], ['mv', '全体'], ['pgm', '本番']].forEach(([v, t]) => {
       const b = h('button', { onclick: () => setOutput(v) }, t); outs.append(b);
       reg(() => b.classList.toggle('on', S.out.outSrc === v && outWin && !outWin.closed));
     });
@@ -1258,13 +1272,13 @@ function renderSettingsPane() {
     for (let i = 0; i < 4; i++) {
       const n = i + 1, cfg = S.inputs[i], src = inputs[i];
       const chip = h('span', { class: 'chip' });
-      reg(() => { chip.textContent = src.live ? (src.res || 'LIVE') : (cfg.type === 'none' ? 'なし' : '信号なし'); chip.style.background = src.live ? '#1d5a2d' : ''; chip.style.color = src.live ? '#bff5cc' : ''; });
+      reg(() => { chip.textContent = src.live ? (src.res || '映っています') : (cfg.type === 'none' ? 'なし' : '信号なし'); chip.style.background = src.live ? '#1d5a2d' : ''; chip.style.color = src.live ? '#bff5cc' : ''; });
       const status = h('div', { class: 'sub' });
       reg(() => status.textContent = src.status);
       const nameIn = h('input', { type: 'text', value: cfg.name, maxLength: 20 });
       nameIn.addEventListener('change', () => { cfg.name = nameIn.value || `カメラ${n}`; changed(); rebuildPanels(); });
-      const shortIn = h('input', { type: 'text', value: cfg.short, maxLength: 5, style: 'flex:none;width:70px' });
-      shortIn.addEventListener('change', () => { cfg.short = (shortIn.value || `CAM${n}`).toUpperCase(); shortIn.value = cfg.short; changed(); rebuildPanels(); renderAudioPane(); });
+      const shortIn = h('input', { type: 'text', value: cfg.short, maxLength: 6, style: 'flex:none;width:80px', title: 'ボタンに出る短い名前' });
+      shortIn.addEventListener('change', () => { cfg.short = (shortIn.value || `カメラ${n}`); shortIn.value = cfg.short; changed(); rebuildPanels(); renderAudioPane(); });
       [nameIn, shortIn].forEach(e => e.addEventListener('keydown', ev => ev.stopPropagation()));
       const typeSel = select('ソース', [['none', 'なし'], ['camera', 'カメラ / キャプチャー'], ['screen', '画面共有'], ['file', '動画ファイル'], ['still', '静止画（メディアプール）'], ['bars', 'カラーバー']], () => cfg.type, v => { cfg.type = v; src.apply(); renderSettingsPane(); });
       const box = h('div', { class: 'inputcard' }, h('h4', null, `入力 ${n}`, chip),
@@ -1305,8 +1319,8 @@ function renderSettingsPane() {
       root.append(box);
     }
     root.append(h('div', { class: 'pal open' }, h('h3', null, 'スイッチャー'), h('div', { class: 'body' },
-      seg('スイッチャーモード', [['cutbus', 'カットバス'], ['pp', 'プログラム／プレビュー']], () => S.mode, v => { S.mode = v; }),
-      h('div', { class: 'sub' }, 'カットバス：入力ボタンを押すとすぐ番組が切り替わる（AUTO 点灯時はトランジション）。プログラム／プレビュー：入力ボタンでプレビューを選び、CUT / AUTO で本番へ。'),
+      seg('入力ボタンの動き', [['cutbus', '押すとすぐ本番'], ['pp', '次に準備してから本番']], () => S.mode, v => { S.mode = v; }),
+      h('div', { class: 'sub' }, '「押すとすぐ本番」：カメラのボタンを押した瞬間に本番が切り替わります（いちばん簡単）。「次に準備してから本番」：まず「次」に用意して、確認してからカット／オートで本番へ（失敗しにくい）。'),
       select('ビデオフォーマット', [[24, '1080p 24'], [25, '1080p 25'], [30, '1080p 30'], [50, '1080p 50'], [60, '1080p 60']], () => S.fps, v => setFps(v)),
       h('div', { class: 'hr' }),
       toggle('マルチビュー：ラベル', () => S.mv.labels, v => S.mv.labels = v),
@@ -1314,9 +1328,9 @@ function renderSettingsPane() {
       toggle('マルチビュー：セーフエリア', () => S.mv.safe, v => S.mv.safe = v))));
     root.append(h('div', { class: 'pal open' }, h('h3', null, 'キーボードショートカット'), h('div', { class: 'body' },
       h('div', { class: 'kbd' }, ...[
-        ['1〜4', '入力（モードに従う）'], ['Shift+1〜4', 'プログラムに直接'], ['5 / 6', 'MP1 / MP2 をプレビュー'], ['7 / 8 / 9 / 0', 'カラー1 / カラー2 / バー / ブラック'],
-        ['Space', 'CUT'], ['Enter', 'AUTO'], ['M / I / W / V', 'ミックス / ディップ / ワイプ / DVE'], ['K', 'キー ON / OFF'], ['P', 'PinP ON / OFF'],
-        ['D', 'DSK AUTO'], ['T', 'DSK TIE'], ['Shift+Q〜P', 'マクロ 1〜10 を実行'], ['F', 'フェードトゥブラック'], ['R', '録画 開始 / 停止'], ['Esc', 'スポイト取消'],
+        ['1〜4', 'カメラ（入力）を選ぶ'], ['Shift+1〜4', 'すぐ本番に出す'], ['5 / 6', '静止画1 / 静止画2'], ['7 / 8 / 9 / 0', 'カラー1 / カラー2 / カラーバー / 黒'],
+        ['Space', 'カット（パッと切り替え）'], ['Enter', 'オート（ふわっと切り替え）'], ['M / I / W / V', 'ミックス / ディップ / ワイプ / 押し出し'], ['K', '合成キーを出す・消す'], ['P', '小窓を出す・消す'],
+        ['D', 'テロップを出す・消す'], ['T', 'テロップを切り替えと連動'], ['Shift+Q〜P', 'マクロ 1〜10 を実行'], ['F', '暗転 / 戻す'], ['R', '録画 開始 / 停止'], ['Esc', 'スポイト取消'], ['?', '使い方を開く'],
       ].flatMap(([k, d]) => [h('kbd', null, k), h('span', null, d)])))));
     const imp = h('input', { type: 'file', accept: 'application/json', style: 'display:none' });
     imp.addEventListener('change', async () => {
@@ -1356,24 +1370,24 @@ function K(label, cls, onclick, lightFn, title) {
   return b;
 }
 function sec(label, ...kids) { return h('div', { class: 'sec' }, h('div', { class: 'sl' }, label), ...kids); }
-function rebuildPanels() { lights.length = 0; hwMeters.length = 0; paneSync.set('panel', []); buildHW(); buildSW(); fitPanel(); }
+function rebuildPanels() { lights.length = 0; hwMeters.length = 0; ezThumbs.length = 0; paneSync.set('panel', []); buildEasy(); buildHW(); buildSW(); fitPanel(); }
 
 function buildHW() {
   const root = $('#hw'); root.innerHTML = '';
   // オーディオ
   const acols = h('div', { style: 'display:flex;gap:4px' });
-  for (const [id, nm] of [['mic1', 'MIC 1'], ['mic2', 'MIC 2'], ['in1', '1'], ['in2', '2'], ['in3', '3'], ['in4', '4']]) {
+  for (const [id, nm] of [['mic1', 'マイク1'], ['mic2', 'マイク2'], ['in1', '入力1'], ['in2', '入力2'], ['in3', '入力3'], ['in4', '入力4']]) {
     const isIn = id.startsWith('in');
     const mi = h('i'); hwMeters.push([id, mi]);
     const lvl = d => () => { setA(id, 'fader', clamp(Math.round((S.audio[id].fader + d) * 2) / 2, -60, 10)); syncAll(); toast(`${chName(id)} レベル ${fmtDb(S.audio[id].fader)} dB`); };
     acols.append(h('div', { class: 'acol' }, h('span', { class: 'an' }, nm), h('div', { class: 'minimeter', style: 'height:52px' }, mi),
-      h('div', { style: 'display:flex;gap:3px' }, K('▼', 'xs', lvl(-2)), K('▲', 'xs', lvl(+2))),
+      h('div', { style: 'display:flex;gap:3px' }, K('▼', 'xs', lvl(-2), null, '音量を下げる'), K('▲', 'xs', lvl(+2), null, '音量を上げる')),
       h('div', { style: 'display:flex;gap:3px' },
-        K('ON', 'xs', () => { setA(id, 'mode', S.audio[id].mode === 'on' ? 'off' : 'on'); syncAll(); }, () => S.audio[id].mode === 'on' ? 'lit' : ''),
-        isIn ? K('AFV', 'xs', () => { setA(id, 'mode', S.audio[id].mode === 'afv' ? 'off' : 'afv'); syncAll(); }, () => S.audio[id].mode === 'afv' ? 'amb' : '')
-          : K('OFF', 'xs', () => { setA(id, 'mode', 'off'); syncAll(); }, () => S.audio[id].mode === 'off' ? 'lit' : ''))));
+        K('入', 'xs', () => { setA(id, 'mode', S.audio[id].mode === 'on' ? 'off' : 'on'); syncAll(); }, () => S.audio[id].mode === 'on' ? 'lit' : '', '常に音を出す（もう一度押すと切）'),
+        isIn ? K('連動', 'xs', () => { setA(id, 'mode', S.audio[id].mode === 'afv' ? 'off' : 'afv'); syncAll(); }, () => S.audio[id].mode === 'afv' ? 'amb' : '', 'この映像が本番に出ている時だけ音を出す')
+          : K('切', 'xs', () => { setA(id, 'mode', 'off'); syncAll(); }, () => S.audio[id].mode === 'off' ? 'lit' : '', '音を出さない'))));
   }
-  root.append(sec('AUDIO', acols));
+  root.append(sec('音声', acols));
   // 入力
   const vin = h('div', { style: 'display:flex;gap:7px;align-items:flex-start;padding-top:14px' });
   for (let n = 1; n <= 4; n++) {
@@ -1381,40 +1395,40 @@ function buildHW() {
       if (S.pgm === n || (R.t > 0 && S.trans.next.bkgd && S.pvw === n && !S.trans.prevTrans)) return 'red';
       if (S.mode === 'pp' && S.pvw === n) return 'green';
       return '';
-    }));
+    }, `${S.inputs[n - 1].name}（キー ${n}）`));
   }
-  root.append(sec('VIDEO INPUTS', vin));
+  root.append(sec('映像入力', vin));
   // PinP
   const pip = h('div', { class: 'grid', style: 'grid-template-columns:repeat(4,auto)' });
-  for (let n = 1; n <= 4; n++) pip.append(K(String(n), 's', () => pipSet(n), () => S.usk.onAir && S.usk.type === 'dve' && S.usk.fill === n ? 'red' : ''));
-  pip.append(K('OFF', 's', () => { if (S.usk.type === 'dve') keyOnAir(false); }, () => !(S.usk.onAir && S.usk.type === 'dve') ? 'lit' : ''));
+  for (let n = 1; n <= 4; n++) pip.append(K(String(n), 's', () => pipSet(n), () => S.usk.onAir && S.usk.type === 'dve' && S.usk.fill === n ? 'red' : '', `入力${n} を小窓で出す`));
+  pip.append(K('消す', 's', () => { if (S.usk.type === 'dve') keyOnAir(false); }, () => !(S.usk.onAir && S.usk.type === 'dve') ? 'lit' : '', '小窓を消す'));
   pip.append(h('span'));
-  const posB = K('POS', 's', () => pipPos(S.usk.pipPos + 1), null, 'PinP の位置を切り替え');
+  const posB = K('位置', 's', () => pipPos(S.usk.pipPos + 1), null, '小窓の位置を切り替え（右上→右下→左下→左上→中央）');
   posB.style.gridColumn = 'span 2'; pip.append(posB);
   pip.children[4].style.gridColumn = 'span 2'; pip.children[5].remove();
-  root.append(sec('PICTURE IN PICTURE', pip));
+  root.append(sec('小窓（ワイプ）', pip));
   // キー
-  root.append(sec('KEY', h('div', { class: 'grid' },
-    K('ON', 's', () => { S.usk.type = S.usk.keyType; keyOnAir(true); }, () => S.usk.onAir && S.usk.type !== 'dve' ? 'red' : '', '設定済みのキー（クロマ等）をオン'),
-    K('OFF', 's', () => { if (S.usk.type !== 'dve') keyOnAir(false); }, () => !(S.usk.onAir && S.usk.type !== 'dve') ? 'lit' : ''))));
+  root.append(sec('合成キー', h('div', { class: 'grid' },
+    K('入', 's', () => { S.usk.type = S.usk.keyType; keyOnAir(true); }, () => S.usk.onAir && S.usk.type !== 'dve' ? 'red' : '', '設定済みのキー（クロマ等）をオン'),
+    K('切', 's', () => { if (S.usk.type !== 'dve') keyOnAir(false); }, () => !(S.usk.onAir && S.usk.type !== 'dve') ? 'lit' : '', '合成キーを消す'))));
   // トランジション
   const fx = h('div', { class: 'grid', style: 'grid-template-columns:repeat(6,auto)' });
-  HW_FX.forEach(f => fx.append(K(f.label ? `<span style="font-size:10px">${f.label}</span>` : f.icon, 's', () => { f.set(); changed(); }, () => f.is() ? 'lit' : '')));
+  HW_FX.forEach(f => fx.append(K(f.label ? `<span style="font-size:10px">${f.label}</span>` : f.icon, 's', () => { f.set(); changed(); }, () => f.is() ? 'lit' : '', f.tip)));
   const ca = h('div', { class: 'grid' },
-    K('CUT', '', () => { if (S.mode === 'cutbus') { S.hwAuto = false; changed(); } else cut(); }, () => S.mode === 'cutbus' ? (!S.hwAuto ? 'lit' : '') : ''),
-    K('AUTO', '', () => { if (S.mode === 'cutbus') { S.hwAuto = true; changed(); } else autoTrans(); }, () => R.auto ? 'red' : S.mode === 'cutbus' && S.hwAuto ? 'lit' : ''));
-  root.append(sec('TRANSITION', h('div', { style: 'display:flex;gap:8px;align-items:flex-start' }, ca, fx),
-    h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, h('span', { class: 'sl', style: 'margin:0' }, 'RATE'), rateBoxLive())));
+    K('カット', '', () => { if (S.mode === 'cutbus') { S.hwAuto = false; changed(); } else cut(); }, () => S.mode === 'cutbus' ? (!S.hwAuto ? 'lit' : '') : '', 'パッと一瞬で切り替える（Space）'),
+    K('オート', '', () => { if (S.mode === 'cutbus') { S.hwAuto = true; changed(); } else autoTrans(); }, () => R.auto ? 'red' : S.mode === 'cutbus' && S.hwAuto ? 'lit' : '', '右の効果でなめらかに切り替える（Enter）'));
+  root.append(sec('切り替え', h('div', { style: 'display:flex;gap:8px;align-items:flex-start' }, ca, fx),
+    h('div', { style: 'display:flex;gap:6px;align-items:center;margin-top:6px' }, h('span', { class: 'sl', style: 'margin:0' }, '速さ（秒:コマ）'), rateBoxLive())));
   // FTB
-  root.append(sec('FADE TO BLACK', K('FTB', 'big', ftbGo, () => R.ftbAuto ? 'red' : R.ftbOn ? 'red flash' : '')));
+  root.append(sec('暗転', K('暗転', 'big', ftbGo, () => R.ftbAuto ? 'red' : R.ftbOn ? 'red flash' : '', '画面を黒にフェード／もう一度押すと戻る（F）')));
   // 出力
   const vo = h('div', { class: 'grid', style: 'grid-template-columns:repeat(3,auto)' });
-  [['in1', '1'], ['in2', '2'], ['in3', '3'], ['in4', '4'], ['mv', 'M/V'], ['pgm', 'PGM']].forEach(([v, t]) => vo.append(K(t, 's', () => setOutput(v), () => S.out.outSrc === v && outWin && !outWin.closed ? 'lit' : '')));
-  root.append(sec('VIDEO OUT', vo));
+  [['in1', '1'], ['in2', '2'], ['in3', '3'], ['in4', '4'], ['mv', '全体'], ['pgm', '本番']].forEach(([v, t]) => vo.append(K(t, 's', () => setOutput(v), () => S.out.outSrc === v && outWin && !outWin.closed ? 'lit' : '', 'プロジェクター用の出力ウィンドウに出す: ' + ({ mv: 'マルチビュー全体', pgm: '本番映像' }[v] || '入力' + t))));
+  root.append(sec('外部出力', vo));
   // 録画・配信
-  root.append(sec('RECORD / STREAM', h('div', { class: 'grid', style: 'grid-template-columns:auto auto' },
-    K('REC', 's', recStart, () => Rec.on ? 'red' : ''), K('STOP', 's', recStop, () => !Rec.on ? 'lit' : ''),
-    K('ON AIR', 's', streamStart, () => Stream.state === 'live' ? 'red' : Stream.state === 'connecting' ? 'red flash' : ''), K('OFF', 's', () => streamStop(), () => Stream.state === 'off' ? 'lit' : ''))));
+  root.append(sec('録画・配信', h('div', { class: 'grid', style: 'grid-template-columns:auto auto' },
+    K('● 録画', 's', recStart, () => Rec.on ? 'red' : '', '本番映像の録画を始める（R）'), K('停止', 's', recStop, () => !Rec.on ? 'lit' : '', '録画を止めて保存'),
+    K('配信', 's', streamStart, () => Stream.state === 'live' ? 'red' : Stream.state === 'connecting' ? 'red flash' : '', '配信を始める（出力タブで設定）'), K('停止', 's', () => streamStop(), () => Stream.state === 'off' ? 'lit' : '', '配信を止める'))));
 }
 function rateBoxLive() {
   const b = h('div', { class: 'ratebox', contentEditable: 'true', spellcheck: false });
@@ -1434,52 +1448,137 @@ let tbarEl;
 function buildSW() {
   const root = $('#sw'); root.innerHTML = '';
   const rows = h('div');
-  const pr = h('div', { class: 'busrow' }, h('span', { class: 'buslbl r' }, 'PROGRAM'));
-  const pv = h('div', { class: 'busrow' }, h('span', { class: 'buslbl g' }, 'PREVIEW'));
+  const pr = h('div', { class: 'busrow' }, h('span', { class: 'buslbl r' }, '本番'));
+  const pv = h('div', { class: 'busrow' }, h('span', { class: 'buslbl g' }, '次（準備）'));
   for (const id of BUS) {
-    pr.append(K(srcLabel(id, true), 's', () => setProgram(id), () => S.pgm === id ? 'red' : ''));
-    pv.append(K(srcLabel(id, true), 's', () => setPreview(id), () => S.pvw === id ? 'green' : ''));
+    pr.append(K(srcLabel(id, true), 's', () => setProgram(id), () => S.pgm === id ? 'red' : '', srcLabel(id) + ' をすぐ本番に出す'));
+    pv.append(K(srcLabel(id, true), 's', () => setPreview(id), () => S.pvw === id ? 'green' : '', srcLabel(id) + ' を次に準備する'));
   }
   rows.append(pr, pv);
-  root.append(sec('M/E 1', rows));
-  root.append(sec('NEXT TRANSITION', h('div', { class: 'grid', style: 'grid-template-columns:auto auto' },
-    h('span'), K('ON AIR', 'xs', () => keyOnAir(!S.usk.onAir), () => S.usk.onAir ? 'red' : ''),
-    K('BKGD', 's', () => { S.trans.next.bkgd = !S.trans.next.bkgd; if (!S.trans.next.bkgd && !S.trans.next.key) S.trans.next.bkgd = true; changed(); }, () => S.trans.next.bkgd ? 'yel' : ''),
-    K('KEY 1', 's', () => { S.trans.next.key = !S.trans.next.key; if (!S.trans.next.bkgd && !S.trans.next.key) S.trans.next.key = true; changed(); }, () => S.trans.next.key ? 'yel' : ''))));
-  root.append(sec('TRANSITION STYLE', h('div', { class: 'grid', style: 'grid-template-columns:auto auto' },
-    ...STYLES.map(st => K(st.toUpperCase(), 's', () => setStyle(st), () => S.trans.style === st ? 'yel' : '')),
-    K('PREV<br>TRANS', 's', () => { S.trans.prevTrans = !S.trans.prevTrans; changed(); }, () => S.trans.prevTrans ? 'red' : ''),
+  root.append(sec('映像の選択', rows));
+  root.append(sec('一緒に切り替えるもの', h('div', { class: 'grid', style: 'grid-template-columns:auto auto' },
+    h('span'), K('キー入切', 'xs', () => keyOnAir(!S.usk.onAir), () => S.usk.onAir ? 'red' : '', '合成キー／小窓をすぐ出す・消す'),
+    K('背景', 's', () => { S.trans.next.bkgd = !S.trans.next.bkgd; if (!S.trans.next.bkgd && !S.trans.next.key) S.trans.next.bkgd = true; changed(); }, () => S.trans.next.bkgd ? 'yel' : '', '切り替え時に背景の映像を入れ替える'),
+    K('キー', 's', () => { S.trans.next.key = !S.trans.next.key; if (!S.trans.next.bkgd && !S.trans.next.key) S.trans.next.key = true; changed(); }, () => S.trans.next.key ? 'yel' : '', '切り替え時に合成キー／小窓も一緒に出し入れする'))));
+  root.append(sec('切り替えの効果', h('div', { class: 'grid', style: 'grid-template-columns:auto auto' },
+    ...STYLES.map(st => K(STYLE_JA[st], 's', () => setStyle(st), () => S.trans.style === st ? 'yel' : '', STYLE_TIP[st])),
+    K('試し見', 's', () => { S.trans.prevTrans = !S.trans.prevTrans; changed(); }, () => S.trans.prevTrans ? 'red' : '', 'ONにすると、切り替えを本番に出さず「次」の画面で試せます'),
     h('div', { style: 'display:flex;align-items:center' }, rateBoxLive()))));
   tbarEl = h('div', { class: 'tbar' }, h('div', { class: 'rail' }), h('div', { class: 'fill' }), h('div', { class: 'h' }));
   const tb = e => { const r = tbarEl.getBoundingClientRect(); tbarSet(clamp((e.clientY - r.top - 8) / (r.height - 16), 0, 1)); };
   tbarEl.addEventListener('pointerdown', e => { if (R.auto) return; R.dragging = true; tbarEl.setPointerCapture(e.pointerId); tb(e); });
   tbarEl.addEventListener('pointermove', e => R.dragging && tb(e));
   tbarEl.addEventListener('pointerup', () => R.dragging = false);
-  root.append(sec('TRANSITION', h('div', { style: 'display:flex;gap:10px;flex:1' },
-    h('div', { class: 'grid', style: 'align-content:start' }, K('CUT', '', cut), K('AUTO', '', autoTrans, () => R.auto ? 'red' : '')),
+  root.append(sec('本番へ', h('div', { style: 'display:flex;gap:10px;flex:1' },
+    h('div', { class: 'grid', style: 'align-content:start' }, K('カット', '', cut, null, 'パッと一瞬で切り替える（Space）'), K('オート', '', autoTrans, () => R.auto ? 'red' : '', '効果を使ってなめらかに切り替える（Enter）')),
     tbarEl)));
   const dskRate = h('div', { class: 'ratebox', contentEditable: 'true', spellcheck: false });
   dskRate.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); dskRate.blur(); } });
   dskRate.addEventListener('blur', () => { const v = parseRate(dskRate.textContent); if (v) { S.dsk.rate = v; changed(); } dskRate.textContent = fmtRate(S.dsk.rate); });
   paneSync.get('panel').push(() => { if (document.activeElement !== dskRate) dskRate.textContent = fmtRate(S.dsk.rate); });
   dskRate.textContent = fmtRate(S.dsk.rate);
-  root.append(sec('DOWNSTREAM KEY 1', h('div', { class: 'grid', style: 'grid-template-columns:auto' },
-    K('TIE', 's', () => { S.dsk.tie = !S.dsk.tie; changed(); }, () => S.dsk.tie ? 'yel' : ''),
+  root.append(sec('テロップ', h('div', { class: 'grid', style: 'grid-template-columns:auto' },
+    K('連動', 's', () => { S.dsk.tie = !S.dsk.tie; changed(); }, () => S.dsk.tie ? 'yel' : '', '映像の切り替えと一緒にテロップも出し入れする'),
     dskRate,
-    K('ON AIR', 's', dskOnAir, () => S.dsk.onAir && !R.dskAuto ? 'red' : ''),
-    K('AUTO', 's', dskAutoGo, () => R.dskAuto ? 'red' : ''))));
+    K('すぐ入切', 's', dskOnAir, () => S.dsk.onAir && !R.dskAuto ? 'red' : '', 'テロップをパッと出す・消す'),
+    K('ふわっと', 's', dskAutoGo, () => R.dskAuto ? 'red' : '', 'テロップをふわっと出す・消す（D）'))));
   const ftbRate = h('div', { class: 'ratebox', contentEditable: 'true', spellcheck: false });
   ftbRate.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); ftbRate.blur(); } });
   ftbRate.addEventListener('blur', () => { const v = parseRate(ftbRate.textContent); if (v) { S.ftb.rate = v; changed(); } ftbRate.textContent = fmtRate(S.ftb.rate); });
   paneSync.get('panel').push(() => { if (document.activeElement !== ftbRate) ftbRate.textContent = fmtRate(S.ftb.rate); });
   ftbRate.textContent = fmtRate(S.ftb.rate);
-  root.append(sec('FADE TO BLACK', h('div', { class: 'grid' }, ftbRate, K('FTB', 'big', ftbGo, () => R.ftbAuto ? 'red' : R.ftbOn ? 'red flash' : ''))));
+  root.append(sec('暗転', h('div', { class: 'grid' }, ftbRate, K('暗転', 'big', ftbGo, () => R.ftbAuto ? 'red' : R.ftbOn ? 'red flash' : '', '画面を黒にフェード／もう一度押すと戻る（F）'))));
   const mg = h('div', { class: 'grid', style: 'grid-template-columns:repeat(5,auto)' });
   for (let i = 0; i < 10; i++) mg.append(K(String(i + 1), 'xs', () => macroRun(i), () => Macro.running === i || Macro.slot === i ? 'red' : S.macros[i] ? 'lit' : '', 'マクロ ' + (i + 1)));
-  root.append(sec('MACRO', mg, h('div', { style: 'margin-top:6px' }, K('REC', 'xs', () => macroRec(Macro.sel), () => Macro.rec ? 'red flash' : ''))));
+  root.append(sec('マクロ', mg, h('div', { style: 'margin-top:6px' }, K('記録', 'xs', () => macroRec(Macro.sel), () => Macro.rec ? 'red flash' : '', '操作の記録を開始／停止'))));
+}
+
+/* ============================================================
+   下部パネル：かんたん（はじめての人向け）
+   ============================================================ */
+const ezThumbs = [];   // [{id, ctx}]
+const ezText = [];     // [el, fn]
+function ezHead(num, txt, extra) { return h('div', { class: 'ezhead' }, h('span', { class: 'ezn' }, num), h('b', null, txt), extra || null); }
+function ezT(fn, cls) { const e = h('span', { class: cls || '' }); ezText.push([e, fn]); return e; }
+function buildEasy() {
+  const root = $('#easy'); root.innerHTML = ''; ezText.length = 0;
+  // ① 映像を選ぶ
+  const cams = h('div', { class: 'ezcams' });
+  for (let n = 1; n <= 4; n++) {
+    const cv = h('canvas', { width: 192, height: 108 });
+    ezThumbs.push({ id: n, ctx: cv.getContext('2d') });
+    const inner = h('span', { class: 'camin' }, cv,
+      h('span', { class: 'camname' }, h('span', { class: 'kbdk' }, String(n)), S.inputs[n - 1].name),
+      h('span', { class: 'badge' }));
+    cams.append(K(inner, 'cam', () => inputPress(n), () => {
+      const onPgm = S.pgm === n || (R.t > 0 && S.trans.next.bkgd && S.pvw === n && !S.trans.prevTrans);
+      return onPgm ? 'onpgm' : (S.mode === 'pp' && S.pvw === n) ? 'onpvw' : '';
+    }, `${S.inputs[n - 1].name}（キーボードの ${n}）`));
+  }
+  const mini = h('div', { class: 'ezmini' });
+  [[MP1, '5'], [MP2, '6'], [COL1, '7'], [BARS, '9'], [BLK, '0']].forEach(([id, key]) => {
+    const sw = h('i', { class: 'sw' });
+    if (id === COL1) ezText.push([sw, () => { sw.style.background = S.colors.c1; return null; }]);
+    else if (id === BARS) sw.style.background = 'linear-gradient(90deg,#bfbfbf 14%,#bfbf00 0 28%,#00bfbf 0 42%,#00bf00 0 57%,#bf00bf 0 71%,#bf0000 0 85%,#0000bf 0)';
+    else if (id === BLK) sw.style.background = '#000';
+    else { const cv = h('canvas', { width: 64, height: 36 }); sw.append(cv); ezThumbs.push({ id, ctx: cv.getContext('2d') }); }
+    mini.append(K(h('span', { class: 'minin' }, sw, h('span', null, srcLabel(id, true)), h('span', { class: 'kbdk' }, key)), 's ezs', () => S.mode === 'pp' ? setPreview(id) : inputPress(id),
+      () => S.pgm === id ? 'onpgm' : S.mode === 'pp' && S.pvw === id ? 'onpvw' : '', srcLabel(id) + `（キーボードの ${key}）`));
+  });
+  const modeSeg = h('div', { class: 'ezseg' },
+    K('押すとすぐ本番', 'xs', () => { S.mode = 'cutbus'; changed(); }, () => S.mode === 'cutbus' ? 'yel' : '', 'カメラのボタンを押した瞬間に本番が切り替わります（いちばん簡単）'),
+    K('次に準備してから本番', 'xs', () => { S.mode = 'pp'; changed(); }, () => S.mode === 'pp' ? 'yel' : '', 'まず「次」に用意し、確認してから ② のボタンで本番へ（失敗しにくい）'));
+  root.append(h('div', { class: 'ezcol ezsrc' }, ezHead('1', '映す映像を選ぶ', modeSeg), cams, mini));
+
+  // ② 本番に切り替える
+  const pvBox = h('div', { class: 'pv' }, h('small', null, '次（準備）'), ezT(() => S.mode === 'pp' ? srcLabel(S.pvw) : '—'));
+  ezText.push([pvBox, () => { pvBox.style.opacity = S.mode === 'pp' ? 1 : 0.35; return null; }]);
+  const now = h('div', { class: 'eznow' },
+    h('div', { class: 'pg' }, h('small', null, 'いま本番'), ezT(() => srcLabel(S.pgm))),
+    h('span', { class: 'arrow' }, '→'), pvBox);
+  const goPP = h('div', { class: 'ezgo2' },
+    K('パッと<small>カット・Space</small>', 'go', cut, null, '「次」の映像に一瞬で切り替え'),
+    K('ふわっと<small>オート・Enter</small>', 'go', autoTrans, () => R.auto ? 'red' : '', '「次」の映像に、選んだ効果でなめらかに切り替え'));
+  const goCB = h('div', { class: 'ezgo2' },
+    K('パッと<small>押した瞬間に切替</small>', 'go', () => { S.hwAuto = false; changed(); }, () => !S.hwAuto ? 'yel' : '', 'カメラを押すと一瞬で切り替わるようにする'),
+    K('ふわっと<small>なめらかに切替</small>', 'go', () => { S.hwAuto = true; changed(); }, () => R.auto ? 'red' : S.hwAuto ? 'yel' : '', 'カメラを押すと、選んだ効果でなめらかに切り替わるようにする'));
+  ezText.push([goPP, () => { goPP.style.display = S.mode === 'pp' ? '' : 'none'; goCB.style.display = S.mode === 'pp' ? 'none' : ''; return null; }]);
+  const styles = h('div', { class: 'ezseg' }, h('span', { class: 'ezl' }, '効果'),
+    ...STYLES.map(st => K(STYLE_JA[st], 'xs', () => setStyle(st), () => S.trans.style === st ? 'yel' : '', STYLE_TIP[st])));
+  const speeds = h('div', { class: 'ezseg' }, h('span', { class: 'ezl' }, '速さ'),
+    ...[[0.5, 'はやい'], [1, 'ふつう'], [2, 'ゆっくり']].map(([sec, t]) => K(`${t}<small> ${sec}秒</small>`, 'xs', () => { const f = Math.round(sec * S.fps); for (const k of STYLES) S.trans.rates[k] = f; S.dsk.rate = f; S.ftb.rate = f; changed(); },
+      () => S.trans.rates[S.trans.style] === Math.round(sec * S.fps) ? 'yel' : '', `切り替え・テロップ・暗転を ${sec} 秒にする`)));
+  root.append(h('div', { class: 'ezcol ezgo' }, ezHead('2', '本番に切り替える'), now, goPP, goCB, styles, speeds));
+
+  // ③ 重ねる
+  const pip = h('div', { class: 'ezseg' }, h('span', { class: 'ezl' }, '小窓'),
+    ...[1, 2, 3, 4].map(n => K(String(n), 'xs', () => pipSet(n), () => S.usk.onAir && S.usk.type === 'dve' && S.usk.fill === n ? 'red' : '', `${S.inputs[n - 1].name} を小窓（ワイプ）で重ねる`)),
+    K('消す', 'xs', () => { if (S.usk.type === 'dve') keyOnAir(false); }, null, '小窓を消す'),
+    K('位置', 'xs', () => pipPos(S.usk.pipPos + 1), null, '小窓の場所を変える（右上→右下→左下→左上→中央）'));
+  const tel = h('div', { class: 'ezseg' }, h('span', { class: 'ezl' }, 'テロップ'),
+    K('ふわっと出す／消す', 'xs wide', dskAutoGo, () => R.dskAuto ? 'red flash' : (S.dsk.onAir ? 'red' : ''), '静止画1 のテロップを出す・消す（D）。テロップは「メディア」タブで作れます'));
+  const key = h('div', { class: 'ezseg' }, h('span', { class: 'ezl' }, '合成'),
+    K('グリーンバック等を 入／切', 'xs wide', () => { if (!(S.usk.onAir && S.usk.type !== 'dve')) { S.usk.type = S.usk.keyType; keyOnAir(true); } else keyOnAir(false); }, () => S.usk.onAir && S.usk.type !== 'dve' ? 'red' : '', '右の「合成キー」で設定したキーを出す・消す（K）'));
+  const ftbLbl = ezT(() => R.ftbOn ? '暗転を戻す' : '暗転する');
+  const ftb = K(h('span', null, ftbLbl, h('small', null, 'F')), 'go ftb', ftbGo, () => R.ftbAuto ? 'red' : R.ftbOn ? 'red flash' : '', '画面と音をゆっくり黒に。もう一度押すと戻ります');
+  root.append(h('div', { class: 'ezcol ezfx' }, ezHead('3', '重ねる・演出'), pip, tel, key, ftb));
+
+  // ④ 残す・届ける
+  const recLbl = ezT(() => Rec.on ? '■ 録画を止める ' + fmtTime((performance.now() - Rec.start) / 1000) : '● 録画する');
+  const rec = K(recLbl, 'go rec', () => Rec.on ? recStop() : recStart(), () => Rec.on ? 'red' : '', '本番の映像と音を録画（R）。保存先は「出力」タブで選べます');
+  const stLbl = ezT(() => Stream.state === 'live' ? '■ 配信を止める' : Stream.state === 'connecting' ? '接続中…' : '配信する');
+  const st = K(stLbl, 'go', () => Stream.state === 'off' ? (S.out.whipUrl ? streamStart() : (selectTab('output'), toast('まず「出力」タブで配信先を設定してください', true))) : streamStop(),
+    () => Stream.state === 'live' ? 'red' : Stream.state === 'connecting' ? 'red flash' : '', '配信を始める・止める（配信先は「出力」タブで設定）');
+  const out = K('プロジェクターへ出す', 'go', () => setOutput('pgm'), () => outWin && !outWin.closed ? 'lit' : '', '本番映像だけの窓を開きます。2台目の画面に移してダブルクリックで全画面');
+  root.append(h('div', { class: 'ezcol ezrec' }, ezHead('4', '残す・届ける'), rec, st, out));
+}
+function selectTab(t) {
+  $$('#tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === t));
+  $$('.pane').forEach(p => p.classList.toggle('on', p.dataset.pane === t));
 }
 
 function updateLights(pg, pv) {
+  for (const [e, fn] of ezText) { if (!e.isConnected) continue; const v = fn(); if (v != null && e.textContent !== v) e.textContent = v; }
   for (const [b, fn] of lights) {
     const c = b._base + ' ' + (fn(pg, pv) || '');
     if (b.className !== c) b.className = c;
@@ -1494,7 +1593,7 @@ function updateLights(pg, pv) {
   }
   const ftb = $('#stFtb');
   const on = R.ftbT > 0; if (ftb.classList.contains('warn') !== on) ftb.classList.toggle('warn', on);
-  const mi = S.mode === 'cutbus' ? 'モード: カットバス' + (S.hwAuto ? '（AUTO）' : '（CUT）') : 'モード: プログラム／プレビュー';
+  const mi = S.mode === 'cutbus' ? '入力を押すと、すぐ本番に切り替わります' + (S.hwAuto ? '（ふわっと）' : '（パッと）') : '入力を押すと「次」に準備 → カット／オートで本番へ';
   const modeInfo = $('#modeInfo'); if (modeInfo.textContent !== mi) modeInfo.textContent = mi;
 }
 
@@ -1515,7 +1614,8 @@ document.addEventListener('keydown', e => {
   if (e.shiftKey && mk >= 0) { e.preventDefault(); macroRun(mk); return; }
   if (k === ' ') { e.preventDefault(); cut(); }
   else if (k === 'Enter') { e.preventDefault(); autoTrans(); }
-  else if (k === 'Escape') endPick();
+  else if (k === 'Escape') { endPick(); showHelp(false); }
+  else if (k === '?') showHelp(true);
   else {
     const l = k.toLowerCase();
     if (l === 'm') setStyle('mix'); else if (l === 'i') setStyle('dip'); else if (l === 'w') setStyle('wipe'); else if (l === 'v') setStyle('dve');
@@ -1529,7 +1629,7 @@ document.addEventListener('keydown', e => {
 /* ============================================================
    マクロ（操作の記録と再生）
    ============================================================ */
-const MACRO_ACTS = { inputPress: '入力', setPreview: 'プレビュー', setProgram: 'プログラム', cut: 'CUT', autoTrans: 'AUTO', keyOnAir: 'キー', pipSet: 'PinP', pipPos: 'PinP位置', dskOnAir: 'DSK ON AIR', dskAutoGo: 'DSK AUTO', ftbGo: 'FTB', setStyle: 'スタイル', recStart: '録画開始', recStop: '録画停止', setOutput: '外部出力' };
+const MACRO_ACTS = { inputPress: '入力', setPreview: '次に準備', setProgram: '本番に出す', cut: 'カット', autoTrans: 'オート', keyOnAir: '合成キー', pipSet: '小窓', pipPos: '小窓の位置', dskOnAir: 'テロップ入切', dskAutoGo: 'テロップ（ふわっと）', ftbGo: '暗転', setStyle: 'スタイル', recStart: '録画開始', recStop: '録画停止', setOutput: '外部出力' };
 const Macro = { rec: null, slot: -1, sel: 0, t0: 0, depth: 0, running: -1 };
 for (const name of Object.keys(MACRO_ACTS)) {
   const orig = window[name];
@@ -1664,6 +1764,7 @@ async function boot() {
     }
     if (typeof t.id === 'number') inputPress(t.id);
   });
+  try { if (!localStorage.getItem('lsw.helped')) { localStorage.setItem('lsw.helped', '1'); showHelp(true); } } catch (e) {}
   window.addEventListener('beforeunload', e => { if (Rec.on || Stream.state !== 'off') { e.preventDefault(); e.returnValue = ''; } });
 }
 function fitMV() {
@@ -1674,7 +1775,7 @@ function fitMV() {
   fitPanel();
 }
 function fitPanel() {
-  for (const el of [$('#hw'), $('#sw')]) {
+  for (const el of [$('#easy'), $('#hw'), $('#sw')]) {
     if (el.classList.contains('hide')) continue;
     el.style.zoom = 1;
     const sw = el.scrollWidth, cw = el.clientWidth;
@@ -1684,13 +1785,13 @@ function fitPanel() {
 window.addEventListener('resize', fitMV); fitMV();
 function setPanel(p) {
   S.panel = p; save();
-  $('#hw').classList.toggle('hide', p !== 'hw'); $('#sw').classList.toggle('hide', p !== 'sw');
+  $('#easy').classList.toggle('hide', p !== 'easy'); $('#hw').classList.toggle('hide', p !== 'hw'); $('#sw').classList.toggle('hide', p !== 'sw');
   fitPanel();
   $$('#panelSel button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
 }
 $$('#panelSel button').forEach(b => b.addEventListener('click', () => setPanel(b.dataset.p)));
-$$('#tabs button').forEach(b => b.addEventListener('click', () => {
-  $$('#tabs button').forEach(x => x.classList.toggle('on', x === b));
-  $$('.pane').forEach(p => p.classList.toggle('on', p.dataset.pane === b.dataset.tab));
-}));
+$$('#tabs button').forEach(b => b.addEventListener('click', () => selectTab(b.dataset.tab)));
+function showHelp(on) { $('#help').classList.toggle('on', on); }
+$('#helpBtn').addEventListener('click', () => showHelp(true));
+$('#help').addEventListener('click', e => { if (e.target.id === 'help' || e.target.closest('.close')) showHelp(false); });
 $('#bootGo').addEventListener('click', boot);

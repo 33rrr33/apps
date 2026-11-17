@@ -14,20 +14,21 @@
 <body>
 
 <div class="boot" id="boot">
-  <h1>LIVE <span>SWITCHER</span></h1>
+  <h1>ライブ<span>スイッチャー</span></h1>
   <p>4入力ライブプロダクションスイッチャー<br>カメラ・キャプチャーボード・画面共有・動画を切り替えて、録画・配信・外部出力。</p>
   <button class="go" id="bootGo">スイッチャーを起動</button>
   <p class="small">Mac の Google Chrome 推奨（Safari・Edge でも動作）<br>Chrome のメニュー →「キャスト、保存、共有」→「ページをアプリとしてインストール」で Mac アプリとして使えます</p>
 </div>
 
 <header class="top">
-  <div class="brand"><i></i>LIVE SWITCHER</div>
+  <div class="brand"><i></i>ライブスイッチャー</div>
   <div class="status">
-    <div class="st" id="stRec"><i></i>REC <b id="recTime">--:--:--</b></div>
-    <div class="st" id="stStream"><i></i>ON AIR <b id="streamTime">--:--:--</b></div>
-    <div class="st" id="stFtb">FTB</div>
+    <div class="st" id="stRec" title="録画の状態"><i></i>録画 <b id="recTime">--:--:--</b></div>
+    <div class="st" id="stStream" title="配信の状態"><i></i>配信 <b id="streamTime">--:--:--</b></div>
+    <div class="st" id="stFtb" title="暗転中は赤くなります">暗転</div>
     <div class="clock" id="clock">00:00:00:00</div>
     <div class="fps" id="fps"></div>
+    <button class="helpbtn" id="helpBtn" title="使い方（? キー）">？ 使い方</button>
   </div>
   <nav class="tabs" id="tabs">
     <button data-tab="switcher" class="on">スイッチャー</button>
@@ -53,16 +54,41 @@
 
 <footer class="panel">
   <div class="phead">
-    <span>CONTROL PANEL</span>
-    <div class="seg" id="panelSel"><button data-p="hw" class="on">ハードウェアパネル</button><button data-p="sw">ソフトウェアパネル</button></div>
+    <span>操作パネル</span>
+    <div class="seg" id="panelSel"><button data-p="easy" class="on" title="はじめての人向け。大きなボタンと映像の小さな画面つき">かんたん</button><button data-p="hw" title="スイッチャー本体のボタン配置に近いパネル">本体風</button><button data-p="sw" title="本番／次 を細かく操作できるプロ向けパネル">プロ向け</button></div>
     <span class="modeinfo" id="modeInfo"></span>
   </div>
-  <div class="pbody" id="hw"></div>
+  <div class="pbody ez" id="easy"></div>
+  <div class="pbody hide" id="hw"></div>
   <div class="pbody hide" id="sw"></div>
 </footer>
 
 <div id="hiddenMedia"></div>
 <div class="toast" id="toast"></div>
+
+<div class="help" id="help">
+  <div class="helpbox">
+    <button class="close" title="閉じる（Esc）">×</button>
+    <h2>使い方（3ステップ）</h2>
+    <ol class="steps">
+      <li><b>カメラをつなぐ</b><span>USB カメラや HDMI キャプチャーを Mac につなぐと、自動で「カメラ1〜4」に入ります。変えたい時は右上の「設定」タブ。</span></li>
+      <li><b>映したいカメラのボタンを押す</b><span>下のパネルの映像つきボタンを押すと本番が切り替わります。赤い枠＝いま本番、緑の枠＝次に準備中。</span></li>
+      <li><b>録画・プロジェクター</b><span>「● 録画する」で録画、「プロジェクターへ出す」で本番映像だけの窓が開きます（2台目の画面でダブルクリック→全画面）。</span></li>
+    </ol>
+    <h3>よく使う機能</h3>
+    <div class="hgrid">
+      <div><b>ふわっと切り替え</b>②の「ふわっと」を選ぶと、なめらかに切り替わります。効果（ミックス・ワイプなど）と速さも選べます。</div>
+      <div><b>小窓（ワイプ）</b>③の「小窓 1〜4」で、そのカメラを右上に小さく重ねます。「位置」で場所を変更。</div>
+      <div><b>テロップ</b>「メディア」タブで名前などを入力して作成 →「静止画1 にセット」→ ③の「テロップ」で出し入れ。</div>
+      <div><b>暗転</b>③の「暗転する」で画面と音がゆっくり黒に。もう一度押すと戻ります。</div>
+      <div><b>音声</b>「オーディオ」タブで音量を調整。「連動」にすると、そのカメラが映っている時だけ音が出ます。</div>
+      <div><b>本格的に使う</b>操作パネルを「本体風」「プロ向け」に切り替えると、本格的なスイッチャーと同じ細かい操作ができます。</div>
+    </div>
+    <h3>キーボード</h3>
+    <p class="keys"><kbd>1</kbd>〜<kbd>4</kbd> カメラ　<kbd>Space</kbd> パッと切替　<kbd>Enter</kbd> ふわっと切替　<kbd>P</kbd> 小窓　<kbd>D</kbd> テロップ　<kbd>F</kbd> 暗転　<kbd>R</kbd> 録画　<kbd>?</kbd> この画面</p>
+    <p class="sub">ボタンの上にマウスを置くと、説明が出ます。</p>
+  </div>
+</div>
 
 <script src="engine.js"></script>
 <script src="audio.js"></script>
