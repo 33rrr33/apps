@@ -579,5 +579,26 @@
    "cta": "保存"
   },
   "experiment": "v3_redesign"
+ },
+ "AHhV82OZ6QI": {
+  "title": "iPhoneを買ったままの設定で使ってる人へ… #Shorts",
+  "published": "2026-11-15T12:00",
+  "age_at_record": 55.1,
+  "views48": 926,
+  "likes": 4,
+  "comments": 1,
+  "late": false,
+  "tags": {
+   "length": "60秒3選",
+   "slot": "昼12:00",
+   "layout": "画面録画風",
+   "title_style": "シリーズ名だけ",
+   "title_type": "…止め",
+   "hook": "この設定 {オンのまま}だと危ない？",
+   "hook_type": "疑問型",
+   "cta": "フォロー",
+   "topic_kind": "危険設定"
+  },
+  "experiment": "v3_redesign"
  }
 }
