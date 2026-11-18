@@ -814,7 +814,7 @@
     "title": "iPhoneを盗まれる前に、この3つだけはやって… #Shorts",
     "made": "2026-11-17",
     "comment": "3つのうち、何個オンでしたか？👇 0〜3の数字でコメントしてね！フォローしておくと、iPhoneを守る設定が毎日届きます",
-    "comment_posted": false,
+    "comment_posted": true,
     "experiment": "format_test",
     "format": "60秒3選",
     "layout": "rec",
@@ -840,6 +840,25 @@
     "hook_type": "即効型",
     "format": "13秒1ネタ",
     "note": "11/16から移動（ニュース差し替えで待機していた動画）"
+   },
+   "2026-11-21T06:00": {
+    "kind": "short",
+    "series_key": "b20261117_first",
+    "theme": "iPhone爆速神操作",
+    "num": 15,
+    "episode": "episodes/b20261117_first/ep05_lock_preview.py",
+    "id": "dTAPVFTDqr8",
+    "title": "ロック画面でLINEの中身、丸見えになってない？ #Shorts",
+    "made": "2026-11-19",
+    "comment": "あなたのロック画面、どうでした？👇「丸見えだった」「隠してた」でコメントしてね！フォローしておくとiPhoneの守り方が毎日届きます",
+    "comment_posted": false,
+    "experiment": "format_test",
+    "layout": "rec",
+    "disp_num": 15,
+    "publish_at": "2026-11-21T06:00:00+09:00",
+    "hook_type": "煽り型",
+    "format": "28秒2ネタ",
+    "first_frame": "本物のロック画面＋LINEの中身"
    }
   },
   "parked": []

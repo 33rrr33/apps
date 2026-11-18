@@ -621,5 +621,27 @@
    "topic_kind": "ニュース"
   },
   "experiment": "v3_redesign"
+ },
+ "ydt0MSKU6MQ": {
+  "title": "電池がすぐ減る人がやりがちな設定3つ… #Shorts",
+  "published": "2026-11-17T06:00",
+  "age_at_record": 48.1,
+  "views48": 751,
+  "likes": 2,
+  "comments": 1,
+  "late": false,
+  "tags": {
+   "length": "60秒3選",
+   "slot": "朝6:00",
+   "layout": "画面録画風",
+   "title_style": "シリーズ名だけ",
+   "title_type": "…止め",
+   "hook": "電池が減る原因 {この3つ}かも…",
+   "hook_type": "煽り型",
+   "cta": "フォロー",
+   "structure": "予告＋つなぎ",
+   "topic_kind": "バッテリー"
+  },
+  "experiment": "v3_redesign"
  }
 }
