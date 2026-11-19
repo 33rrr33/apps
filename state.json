@@ -859,6 +859,24 @@
     "hook_type": "煽り型",
     "format": "28秒2ネタ",
     "first_frame": "本物のロック画面＋LINEの中身"
+   },
+   "2026-11-22T12:00": {
+    "kind": "short",
+    "series_key": "b20261122_second",
+    "theme": "iPhone隠し神機能",
+    "num": 1,
+    "disp_num": 11,
+    "episode": "episodes/b20261122_second/ep01_battery_culprit.py",
+    "id": "GeR721jbMQM",
+    "title": "電池がすぐ減る人、犯人はこのアプリかも… #Shorts",
+    "made": "2026-11-20",
+    "comment": "あなたの電池を一番使ってるアプリは何でしたか？👇 1位をコメントしてね！フォローしておくと電池を長持ちさせるコツが毎日届きます",
+    "comment_posted": false,
+    "layout": "rec",
+    "publish_at": "2026-11-22T12:00:00+09:00",
+    "hook_type": "疑問型",
+    "format": "13秒1ネタ",
+    "first_frame": "本物の画面＋自分ごと"
    }
   },
   "parked": []
