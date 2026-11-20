@@ -851,7 +851,7 @@
     "title": "ロック画面でLINEの中身、丸見えになってない？ #Shorts",
     "made": "2026-11-19",
     "comment": "あなたのロック画面、どうでした？👇「丸見えだった」「隠してた」でコメントしてね！フォローしておくとiPhoneの守り方が毎日届きます",
-    "comment_posted": false,
+    "comment_posted": true,
     "experiment": "format_test",
     "layout": "rec",
     "disp_num": 15,
@@ -875,6 +875,24 @@
     "layout": "rec",
     "publish_at": "2026-11-22T12:00:00+09:00",
     "hook_type": "疑問型",
+    "format": "13秒1ネタ",
+    "first_frame": "本物の画面＋自分ごと"
+   },
+   "2026-11-23T06:00": {
+    "kind": "short",
+    "series_key": "b20261122_second",
+    "theme": "iPhone隠し神機能",
+    "num": 2,
+    "disp_num": 12,
+    "episode": "episodes/b20261122_second/ep02_cursor_space.py",
+    "id": "lLbzwNLmj28",
+    "title": "文字の打ち直し、まだ1文字ずつ消してる人へ… #Shorts",
+    "made": "2026-11-21",
+    "comment": "このワザ、知ってましたか？👇「知ってた」「知らなかった」でコメントしてね！フォローしておくと毎日1つ時短ワザが届きます",
+    "comment_posted": false,
+    "layout": "rec",
+    "publish_at": "2026-11-23T06:00:00+09:00",
+    "hook_type": "即効型",
     "format": "13秒1ネタ",
     "first_frame": "本物の画面＋自分ごと"
    }
