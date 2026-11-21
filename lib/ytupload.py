@@ -122,9 +122,13 @@ def upload(video, meta_path):
         status["publishAt"] = meta["publish_at"]          # stays private until then, then goes public
     body = {"snippet": {"title": meta["title"], "description": meta["description"], "tags": meta.get("tags", []),
                         "categoryId": "28", "defaultLanguage": "ja", "defaultAudioLanguage": "ja"}, "status": status}
+    parts = "snippet,status"
+    if meta.get("paid_promotion"):                         # PR/referral: YouTube "includes paid promotion" label
+        body["paidProductPlacementDetails"] = {"hasPaidProductPlacement": True}
+        parts += ",paidProductPlacementDetails"
     size = os.path.getsize(video)
     notify = "true" if meta.get("notify_subscribers", True) else "false"   # Shorts: false / weekend longs: true
-    _, h, _ = http("POST", f"{UPLOAD}?uploadType=resumable&part=snippet,status&notifySubscribers={notify}", body,
+    _, h, _ = http("POST", f"{UPLOAD}?uploadType=resumable&part={parts}&notifySubscribers={notify}", body,
                    {**auth(tok), "X-Upload-Content-Type": "video/mp4", "X-Upload-Content-Length": str(size)})
     loc = h.get("Location") or h.get("location")
     _, _, v = http("PUT", loc, raw=open(video, "rb").read(), headers={**auth(tok), "Content-Type": "video/mp4"})

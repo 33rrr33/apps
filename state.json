@@ -895,6 +895,25 @@
     "hook_type": "即効型",
     "format": "13秒1ネタ",
     "first_frame": "本物の画面＋自分ごと"
+   },
+   "2026-11-21T12:00": {
+    "kind": "short",
+    "series_key": "x20261121_muse",
+    "theme": "iPhoneで話題のAI",
+    "num": 1,
+    "disp_num": 1,
+    "episode": "episodes/x20261121_muse/ep01_muse_code.py",
+    "id": "_xVdclc-gLc",
+    "title": "Muse始めた人、48時間以内にこれしないと損… #Shorts",
+    "made": "2026-11-21",
+    "comment": "【PR】招待コード：2202NF（投稿者のコードです）👇 登録から48時間以内に「設定 → Redeem token」で入力してね！もらえた人はコメントで教えて",
+    "comment_posted": false,
+    "layout": "rec",
+    "publish_at": "2026-11-21T12:00:00+09:00",
+    "hook_type": "煽り型",
+    "format": "13秒1ネタ",
+    "paid_promotion": true,
+    "note": "ユーザー依頼の単発PR（招待コード）。招待コードはこの1本だけ"
    }
   },
   "parked": []
