@@ -914,6 +914,24 @@
     "format": "13秒1ネタ",
     "paid_promotion": true,
     "note": "ユーザー依頼の単発PR（招待コード）。招待コードはこの1本だけ"
+   },
+   "2026-11-24T12:00": {
+    "kind": "short",
+    "series_key": "b20261122_second",
+    "theme": "iPhone隠し神機能",
+    "num": 3,
+    "disp_num": 13,
+    "episode": "episodes/b20261122_second/ep03_deleted_photos.py",
+    "id": "M6iav8WvS88",
+    "title": "消したはずの写真、まだiPhoneに残ってる人へ… #Shorts",
+    "made": "2026-11-22",
+    "comment": "最近削除した項目、何枚残ってましたか？👇 枚数をコメントしてね！フォローしておくとiPhoneの守り方が毎日届きます",
+    "comment_posted": false,
+    "layout": "rec",
+    "publish_at": "2026-11-24T12:00:00+09:00",
+    "hook_type": "疑問型",
+    "format": "13秒1ネタ",
+    "first_frame": "本物の画面＋自分ごと"
    }
   },
   "parked": []
