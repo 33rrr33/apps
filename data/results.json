@@ -686,5 +686,26 @@
    "structure": "予告＋つなぎ"
   },
   "experiment": "v3_redesign"
+ },
+ "IBxioScZmns": {
+  "title": "電池がすぐ減る人、この設定オンのままかも… #Shorts",
+  "published": "2026-11-20T12:00",
+  "age_at_record": 55.1,
+  "views48": 1023,
+  "likes": 6,
+  "comments": 1,
+  "late": false,
+  "tags": {
+   "length": "13秒1ネタ",
+   "slot": "昼12:00",
+   "layout": "画面録画風",
+   "title_style": "シリーズ名だけ",
+   "title_type": "…止め",
+   "hook": "電池が{すぐ減る}人 これオフにして",
+   "hook_type": "即効型",
+   "cta": "フォロー",
+   "topic_kind": "バッテリー"
+  },
+  "experiment": "v3_redesign"
  }
 }
