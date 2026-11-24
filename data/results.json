@@ -767,5 +767,25 @@
    "cta": "保存"
   },
   "experiment": "v3_redesign"
+ },
+ "lLbzwNLmj28": {
+  "title": "文字の打ち直し、まだ1文字ずつ消してる人へ… #Shorts",
+  "published": "2026-11-23T06:00",
+  "age_at_record": 48.1,
+  "views48": 1084,
+  "likes": 2,
+  "comments": 1,
+  "late": false,
+  "tags": {
+   "length": "短縮版",
+   "slot": "朝6:00",
+   "layout": "画面録画風",
+   "title_style": "シリーズ名だけ",
+   "title_type": "内容型",
+   "hook": "文字の打ち直し {1文字ずつ}消してない？",
+   "hook_type": "疑問型",
+   "cta": "保存"
+  },
+  "experiment": "v3_redesign"
  }
 }

@@ -944,7 +944,7 @@
     "title": "iPhoneの画面にこの点が出たら注意… #Shorts",
     "made": "2026-11-23",
     "comment": "あなたのiPhone、点いてませんでしたか？👇 どのアプリだったかコメントしてね！フォローしておくとiPhoneの守り方が毎日届きます",
-    "comment_posted": false,
+    "comment_posted": true,
     "layout": "rec",
     "publish_at": "2026-11-25T06:00:00+09:00",
     "hook_type": "即効型",
@@ -966,6 +966,24 @@
     "layout": "rec",
     "publish_at": "2026-11-26T12:00:00+09:00",
     "hook_type": "煽り型",
+    "format": "13秒1ネタ",
+    "first_frame": "本物の画面＋自分ごと"
+   },
+   "2026-11-27T06:00": {
+    "kind": "short",
+    "series_key": "b20261127_first",
+    "theme": "iPhone爆速神操作",
+    "num": 1,
+    "disp_num": 16,
+    "episode": "episodes/b20261127_first/ep01_system_services.py",
+    "id": "eWPf3dsdF50",
+    "title": "電池を減らす犯人、ここにも隠れてる… #Shorts",
+    "made": "2026-11-25",
+    "comment": "システムサービス、いくつオンになってましたか？👇 数をコメントしてね！フォローしておくと電池を長持ちさせるコツが毎日届きます",
+    "comment_posted": false,
+    "layout": "rec",
+    "publish_at": "2026-11-27T06:00:00+09:00",
+    "hook_type": "即効型",
     "format": "13秒1ネタ",
     "first_frame": "本物の画面＋自分ごと"
    }
