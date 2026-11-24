@@ -747,5 +747,25 @@
    "cta": "保存"
   },
   "experiment": "v3_redesign"
+ },
+ "GeR721jbMQM": {
+  "title": "電池がすぐ減る人、犯人はこのアプリかも… #Shorts",
+  "published": "2026-11-22T12:00",
+  "age_at_record": 55.1,
+  "views48": 1051,
+  "likes": 0,
+  "comments": 1,
+  "late": false,
+  "tags": {
+   "length": "短縮版",
+   "slot": "昼12:00",
+   "layout": "画面録画風",
+   "title_style": "シリーズ名だけ",
+   "title_type": "内容型",
+   "hook": "電池が減る犯人 {このアプリ}かも…",
+   "hook_type": "煽り型",
+   "cta": "保存"
+  },
+  "experiment": "v3_redesign"
  }
 }
