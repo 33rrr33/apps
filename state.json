@@ -992,6 +992,25 @@
       "why": "11/25 ユーザー共有の診断：フック『ここにも』が曖昧→『位置情報が裏で』に具体化、冒頭を超拡大＋赤丸に"
      }
     ]
+   },
+   "2026-11-28T12:00": {
+    "kind": "short",
+    "series_key": "b20261127_first",
+    "theme": "iPhone爆速神操作",
+    "num": 2,
+    "disp_num": 17,
+    "episode": "episodes/b20261127_first/ep02_mic_dot2.py",
+    "id": "NvE_Bg7ADQ8",
+    "title": "画面右上に緑やオレンジの点が出てる人… #Shorts",
+    "made": "2026-11-26",
+    "comment": "あなたのiPhone、点いてませんでしたか？👇 どのアプリだったかコメントしてね！フォローしておくとiPhoneの守り方が毎日届きます",
+    "comment_posted": false,
+    "layout": "rec",
+    "publish_at": "2026-11-28T12:00:00+09:00",
+    "hook_type": "煽り型",
+    "format": "13秒1ネタ",
+    "first_frame": "超拡大＋赤丸",
+    "remake_of": "hgI9uNktgWk"
    }
   },
   "parked": []
