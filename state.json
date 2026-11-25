@@ -976,8 +976,8 @@
     "num": 1,
     "disp_num": 16,
     "episode": "episodes/b20261127_first/ep01_system_services.py",
-    "id": "eWPf3dsdF50",
-    "title": "電池を減らす犯人、ここにも隠れてる… #Shorts",
+    "id": "BInS1YFovwI",
+    "title": "位置情報が裏で電池を減らしてる人へ… #Shorts",
     "made": "2026-11-25",
     "comment": "システムサービス、いくつオンになってましたか？👇 数をコメントしてね！フォローしておくと電池を長持ちさせるコツが毎日届きます",
     "comment_posted": false,
@@ -985,7 +985,13 @@
     "publish_at": "2026-11-27T06:00:00+09:00",
     "hook_type": "即効型",
     "format": "13秒1ネタ",
-    "first_frame": "本物の画面＋自分ごと"
+    "first_frame": "超拡大＋赤丸",
+    "replaced": [
+     {
+      "id": "eWPf3dsdF50",
+      "why": "11/25 ユーザー共有の診断：フック『ここにも』が曖昧→『位置情報が裏で』に具体化、冒頭を超拡大＋赤丸に"
+     }
+    ]
    }
   },
   "parked": []

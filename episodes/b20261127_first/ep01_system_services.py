@@ -7,7 +7,7 @@ from shortlib import *
 
 SERIES = dict(key="b20261127_first", title="iPhone爆速神操作", spoken="iPhone爆速、かみ操作",
               hook_split=("iPhone", "爆速神操作"), total=5, offset=15)
-TITLE = "電池を減らす犯人、ここにも隠れてる… #Shorts"
+TITLE = "位置情報が裏で電池を減らしてる人へ… #Shorts"
 NUM, SLUG = 1, "system_services"
 NEXT = "次も電池の話"
 SCREEN_CROP = (0, 40, 400, 760)
@@ -15,8 +15,8 @@ DURATION, END_CARD = 15.0, False
 TAGS = {"length": "13秒1ネタ", "layout": "画面録画風", "hook_type": "即効型", "title_type": "…止め", "topic_kind": "バッテリー",
         "first_frame": "本物の画面＋自分ごと"}
 LAYOUT, FOCUS_Y, CAPTION_Y = "rec", 400, 1260
-HOOK = "電池を減らす犯人\n{ここにも}…"
-HOOK_SPOKEN = "電池を減らす犯人、ここにも隠れてます！"
+HOOK = "{位置情報}が裏で\n電池を食ってる…"
+HOOK_SPOKEN = "位置情報が、裏で電池を食ってる人へ！"
 TELOPS = [("b1", "位置情報サービス →\n[システムサービス]"), ("b2", "裏で{位置情報を使う}\n項目がずらり"),
           ("b3", "使わないものを\n[オフ]にするだけ"), ("b4", "[iPhoneを探す]は\nオンのまま")]
 ACTIONS = [("b1", "b2", "プライバシーとセキュリティの中"), ("b2", "b3", "知らないうちに全部オン"),
@@ -42,8 +42,30 @@ def pill(ps, text, col):
     rra(ps, (40, 640, BW - 40, 696), 28, col + (235,))
     txt(ps, (BW / 2, 668), text, 17, WHITE, anchor="mm")
 
+def zoom(t, T):
+    # 冒頭（フック中）：大事な所だけを超拡大＋赤丸（11/25 ユーザー共有の診断：入口の視認性）
+    ps = Image.new("RGBA", (BW, BH), (242, 242, 247, 255))
+    d = ImageDraw.Draw(ps)
+    d.rounded_rectangle((BW / 2 - 80, 70, BW / 2 + 60, 130), 12, outline=(255, 59, 48), width=6)
+    d.rectangle((BW / 2 - 72, 78, BW / 2 - 40, 122), fill=(255, 59, 48))
+    d.rounded_rectangle((BW / 2 + 60, 86, BW / 2 + 72, 114), 4, fill=(255, 59, 48))
+    txt(ps, (BW / 2 + 140, 100), "15%", 40, (255, 59, 48), anchor="mm")
+    for i, lab in enumerate(["位置情報に基づく提案", "利用頻度の高い場所"]):
+        y = 170 + i * 110
+        rr(ps, (10, y, BW - 10, y + 90), 18, WHITE)
+        d.polygon([(28, y + 58), (40, y + 32), (52, y + 58)], fill=BLUE)
+        txt(ps, (64, y + 45), lab, 22, INK, anchor="lm")
+        tx, ty = BW - 96, y + 22
+        rr(ps, (tx, ty, tx + 80, ty + 46), 23, (52, 199, 89))
+        d.ellipse((tx + 36, ty + 3, tx + 76, ty + 43), fill=WHITE)
+        d.ellipse((tx - 12, ty - 12, tx + 92, ty + 58), outline=(255, 59, 48), width=6)
+    txt(ps, (BW / 2, 420), "位置情報サービス → システムサービス", 15, GRAY, bold=False, anchor="mm")
+    pill(ps, "裏でずっと位置情報を使ってる…", (255, 59, 48))
+    return ps
+
 def SCREEN(t, T):
     a = T.at
+    if t < a["b1"]: return zoom(t, T)
     ps = Image.new("RGBA", (BW, BH), (242, 242, 247, 255))
     d = ImageDraw.Draw(ps)
     txt(ps, (56, 84), "9:41", 24, INK, anchor="lm")
