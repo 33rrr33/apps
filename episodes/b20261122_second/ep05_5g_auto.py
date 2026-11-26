@@ -39,8 +39,25 @@ def pill(ps, text, col):
     rra(ps, (40, 640, BW - 40, 696), 28, col + (235,))
     txt(ps, (BW / 2, 668), text, 17, WHITE, anchor="mm")
 
+def zoom(t, T):
+    # 冒頭：主役だけ超拡大＋赤丸（11/25 ルール）
+    ps = Image.new("RGBA", (BW, BH), (242, 242, 247, 255))
+    d = ImageDraw.Draw(ps)
+    txt(ps, (BW / 2 - 70, 120), "5G", 64, INK, anchor="mm")
+    d.rounded_rectangle((BW / 2 + 10, 92, BW / 2 + 120, 148), 12, outline=(255, 59, 48), width=6)
+    d.rectangle((BW / 2 + 18, 100, BW / 2 + 36, 140), fill=(255, 59, 48))
+    txt(ps, (BW / 2 + 160, 120), "12%", 30, (255, 59, 48), anchor="mm")
+    rr(ps, (12, 200, BW - 12, 300), 20, (255, 236, 150))
+    txt(ps, (40, 250), "5Gオン", 40, INK, anchor="lm")
+    check(ps, BW - 90, 226, 44, BLUE, 7)
+    d.ellipse((4, 186, BW - 4, 314), outline=(255, 59, 48), width=7)
+    txt(ps, (BW / 2, 360), "設定 → モバイル通信 → 通信のオプション", 15, GRAY, bold=False, anchor="mm")
+    pill(ps, "5Gオンのまま＝電池を使いやすい…", (255, 59, 48))
+    return ps
+
 def SCREEN(t, T):
     a = T.at
+    if t < a["b1"]: return zoom(t, T)
     pick = a["b2"] + 0.6
     auto = t >= pick
     ps = Image.new("RGBA", (BW, BH), (242, 242, 247, 255))
