@@ -787,5 +787,25 @@
    "cta": "保存"
   },
   "experiment": "v3_redesign"
+ },
+ "M6iav8WvS88": {
+  "title": "消したはずの写真、まだiPhoneに残ってる人へ… #Shorts",
+  "published": "2026-11-24T12:00",
+  "age_at_record": 55.1,
+  "views48": 124,
+  "likes": 0,
+  "comments": 1,
+  "late": false,
+  "tags": {
+   "length": "短縮版",
+   "slot": "昼12:00",
+   "layout": "画面録画風",
+   "title_style": "シリーズ名だけ",
+   "title_type": "内容型",
+   "hook": "消した写真 {まだ残ってる}…",
+   "hook_type": "煽り型",
+   "cta": "保存"
+  },
+  "experiment": "v3_redesign"
  }
 }
