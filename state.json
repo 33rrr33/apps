@@ -1035,6 +1035,24 @@
     "hook_type": "疑問型",
     "format": "13秒1ネタ",
     "first_frame": "超拡大＋赤丸"
+   },
+   "2026-11-30T12:00": {
+    "kind": "short",
+    "series_key": "b20261127_first",
+    "theme": "iPhone爆速神操作",
+    "num": 4,
+    "disp_num": 19,
+    "episode": "episodes/b20261127_first/ep04_offload_apps.py",
+    "id": "JNa1e6f-MuU",
+    "title": "iPhoneの容量がいっぱいの人、データを消さずに空く… #Shorts",
+    "made": "2026-11-28",
+    "comment": "何GB空きましたか？👇 空いた容量をコメントしてね！フォローしておくとiPhoneの損しない設定が毎日届きます",
+    "comment_posted": false,
+    "layout": "rec",
+    "publish_at": "2026-11-30T12:00:00+09:00",
+    "hook_type": "煽り型",
+    "format": "13秒1ネタ",
+    "first_frame": "超拡大＋赤丸"
    }
   },
   "parked": []
