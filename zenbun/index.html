@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-title" content="全文シート">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <link rel="icon" href="../icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
 <style id="pageStyle">@page{size:297mm 210mm;margin:0}</style>
 <style>
   :root{--bg:#f5f2ec;--panel:#fff;--ink:#2f2a24;--sub:#7c7367;--line:#e6ded0;--accent:#c96f3f;--accent-soft:#fbeee4;--ng:#c0392b;--shadow:0 2px 12px rgba(90,70,40,.08)}
@@ -44,7 +47,7 @@
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
   .cols{position:absolute;display:flex;flex-direction:row-reverse;align-items:flex-start}
   .col{writing-mode:vertical-rl;-webkit-writing-mode:vertical-rl;text-orientation:mixed;white-space:nowrap;position:relative;
-    font-family:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif}
+    font-family:"BIZ UDGothic","BIZ UDPGothic","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif}
   .col.ttl{font-weight:700}
   .col.au{text-align:end}
   .lno{position:absolute;left:50%;transform:translateX(-50%);font-family:sans-serif;color:#888;writing-mode:horizontal-tb;white-space:nowrap}
@@ -115,6 +118,7 @@
       <label><input type="checkbox" id="oLno" checked> 行番号（5行ごと）</label>
       <label><input type="checkbox" id="oPno"> 段落番号</label>
       <label><input type="checkbox" id="oRuby" checked> ふりがな</label>
+      <label><input type="checkbox" id="oAuto" checked> 自動でつける</label>
     </div>
     <p class="sub" id="shInfo" style="margin:8px 0 0"></p>
   </div>
@@ -197,14 +201,50 @@ var PT=0.3528; // 1pt = 0.3528mm
 var LH=1.75;   // 行の間かく（文字の大きさの何倍）
 function openSheet(id){ cur=id; var o=DB.opt||{};
   $("oPaper").value=o.paper||"A4L"; $("oDan").value=String(o.dan||1); $("oPages").value=(o.pages===undefined?"1":String(o.pages)); $("oSize").value=o.size||"12";
-  $("oLno").checked=o.lno!==false; $("oPno").checked=!!o.pno; $("oRuby").checked=o.ruby!==false;
+  $("oLno").checked=o.lno!==false; $("oPno").checked=!!o.pno; $("oRuby").checked=o.ruby!==false; $("oAuto").checked=o.auto!==false;
   go("sheet"); build();
 }
-["oPaper","oDan","oPages","oSize","oLno","oPno","oRuby"].forEach(function(k){ $(k).addEventListener("change", function(){
-  DB.opt={paper:$("oPaper").value, dan:+$("oDan").value, pages:+$("oPages").value, size:$("oSize").value, lno:$("oLno").checked, pno:$("oPno").checked, ruby:$("oRuby").checked}; save(); build(); }); });
+["oPaper","oDan","oPages","oSize","oLno","oPno","oRuby","oAuto"].forEach(function(k){ $(k).addEventListener("change", function(){
+  DB.opt={paper:$("oPaper").value, dan:+$("oDan").value, pages:+$("oPages").value, size:$("oSize").value, lno:$("oLno").checked, pno:$("oPno").checked, ruby:$("oRuby").checked, auto:$("oAuto").checked}; save(); build(); }); });
+
+/* ---------- 自動ふりがな（kuromoji・CDN） ---------- */
+var TOK=null, TOKloading=false, RUBYCACHE={};
+function kataToHira(s){ return (s||"").replace(/[ァ-ヶ]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-96);}); }
+function hasKanji(s){ return /[㐀-鿿豈-﫿々〆ヵヶ]/.test(s); }
+// 1トークン（表層形＋読み）を ｜漢字《よみ》 形式へ。送りがなは漢字の外に出す
+function alignRuby(surface, reading){
+  if(!reading || !hasKanji(surface)) return surface;
+  var s=surface, r=reading, tail="", head="";
+  while(s && r && !hasKanji(s.slice(-1)) && kataToHira(s.slice(-1))===r.slice(-1)){ tail=s.slice(-1)+tail; s=s.slice(0,-1); r=r.slice(0,-1); }
+  while(s && r && !hasKanji(s.charAt(0)) && kataToHira(s.charAt(0))===r.charAt(0)){ head+=s.charAt(0); s=s.slice(1); r=r.slice(1); }
+  if(!s) return surface;
+  if(!r) return head+s+tail;
+  return head+"｜"+s+"《"+r+"》"+tail;
+}
+// 1段落ぶんを自動ルビつきテキストに（手動ルビ《》がある段落はそのまま）
+function autoRubyPara(p){
+  if(RUBYCACHE[p]!==undefined) return RUBYCACHE[p];
+  var out=p;
+  if(!/[《｜]/.test(p) && TOK){
+    try{ out=TOK.tokenize(p).map(function(tk){ return alignRuby(tk.surface_form, kataToHira(tk.reading&&tk.reading!=="*"?tk.reading:"")); }).join(""); }
+    catch(e){ out=p; }
+  }
+  RUBYCACHE[p]=out; return out;
+}
+function ensureTokenizer(){
+  if(TOK||TOKloading) return;
+  if(typeof kuromoji==="undefined"){ $("shInfo").textContent="ふりがな辞書を読み込めませんでした（ネット接続を確認してください）。手動のルビ《》は使えます。"; $("oAuto").checked=false; return; }
+  TOKloading=true;
+  $("shInfo").textContent="ふりがな辞書を読み込み中…（初回だけ少し時間がかかります）";
+  kuromoji.builder({dicPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"}).build(function(err,tk){
+    TOKloading=false;
+    if(err||!tk){ $("oAuto").checked=false; if(DB.opt){DB.opt.auto=false; save();} build(); $("shInfo").textContent="ふりがな辞書を読み込めませんでした（ネット接続を確認してください）。手動のルビ《》は使えます。"; return; }
+    TOK=tk; RUBYCACHE={}; build();
+  });
+}
 
 // 文字の大きさ fs(pt)・段数 dan で、ページ/段ごとの行のならびをつくる
-function layout(t, fs, paper, ruby, dan){
+function layout(t, fs, paper, ruby, dan, useAuto){
   dan=Math.max(1, dan||1);
   var W=paper[0], H=paper[1], mt=16, mb=16, ml=12, mr=12, gap=12;
   var fsmm=fs*PT, pitch=fsmm*LH;
@@ -219,7 +259,9 @@ function layout(t, fs, paper, ruby, dan){
   t.body.split("\n").forEach(function(p){
     if (!p.trim()){ return; }
     paraNo++;
-    var tokens=[{b:"　"}].concat(tokenize(p.replace(/^[ 　]+/,""), ruby));
+    var raw=p.replace(/^[ 　]+/,"");
+    var src=useAuto?autoRubyPara(raw):raw;
+    var tokens=[{b:"　"}].concat(tokenize(src, ruby));
     wrapPara(tokens, per).forEach(function(line,i){ lineNo++; cols.push({kind:"line", html:lineHTML(line, ruby), no:lineNo, para:i===0?paraNo:0}); });
   });
   // 行を「ページ → 段」に割りつける（各段は右→左、段は上→下）
@@ -244,13 +286,16 @@ function circled(n){ return n<=20 ? String.fromCharCode(0x2460+n-1) : "("+n+")";
 function build(){
   var t=getT(cur); if (!t) return;
   var paper=PAPER[$("oPaper").value], target=+$("oPages").value, ruby=$("oRuby").checked, dan=+$("oDan").value||1;
+  var auto=$("oAuto").checked;
+  if (auto && !TOK){ ensureTokenizer(); if (TOKloading) return; auto=$("oAuto").checked; }
+  var useAuto = auto && !!TOK;
   $("oSizeL").classList.toggle("hidden", target!==0);
   $("pageStyle").textContent="@page{size:"+paper[0]+"mm "+paper[1]+"mm;margin:0}";
   var L;
-  if (target===0) L=layout(t, +$("oSize").value, paper, ruby, dan);
+  if (target===0) L=layout(t, +$("oSize").value, paper, ruby, dan, useAuto);
   else { // 枚数におさまる いちばん大きい文字
-    var fs=20; L=layout(t, fs, paper, ruby, dan);
-    while (L.pages>target && fs>6){ fs-=0.5; L=layout(t, fs, paper, ruby, dan); }
+    var fs=20; L=layout(t, fs, paper, ruby, dan, useAuto);
+    while (L.pages>target && fs>6){ fs-=0.5; L=layout(t, fs, paper, ruby, dan, useAuto); }
   }
   $("shTitle").textContent=t.title||"（題名なし）";
   $("shInfo").textContent="文字の大きさ "+L.fs+"pt ・ 1行 "+L.per+"字 ・ "+L.dan+"段 ・ "+L.lines+"行 ・ "+L.pages+"枚"+(L.fs<9?"　※文字が小さいので、用紙を大きくするか枚数をふやすと読みやすくなります":"");
