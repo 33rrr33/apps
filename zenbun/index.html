@@ -109,6 +109,7 @@
     </div>
     <div class="opts" style="margin-top:10px">
       <label>用紙 <select id="oPaper"><option value="A4L">A4 横</option><option value="B4L">B4 横</option><option value="A3L">A3 横</option><option value="A4P">A4 縦</option></select></label>
+      <label>段組 <select id="oDan"><option value="1" selected>1段</option><option value="2">2段</option><option value="3">3段</option></select></label>
       <label>枚数 <select id="oPages"><option value="1">1枚におさめる</option><option value="2">2枚におさめる</option><option value="3">3枚におさめる</option><option value="0">文字の大きさで決める</option></select></label>
       <label id="oSizeL" class="hidden">文字 <select id="oSize"><option>10</option><option>11</option><option selected>12</option><option>14</option><option>16</option><option>18</option></select>pt</label>
       <label><input type="checkbox" id="oLno" checked> 行番号（5行ごと）</label>
@@ -195,19 +196,21 @@ var PAPER={A4L:[297,210],B4L:[364,257],A3L:[420,297],A4P:[210,297]};
 var PT=0.3528; // 1pt = 0.3528mm
 var LH=1.75;   // 行の間かく（文字の大きさの何倍）
 function openSheet(id){ cur=id; var o=DB.opt||{};
-  $("oPaper").value=o.paper||"A4L"; $("oPages").value=(o.pages===undefined?"1":String(o.pages)); $("oSize").value=o.size||"12";
+  $("oPaper").value=o.paper||"A4L"; $("oDan").value=String(o.dan||1); $("oPages").value=(o.pages===undefined?"1":String(o.pages)); $("oSize").value=o.size||"12";
   $("oLno").checked=o.lno!==false; $("oPno").checked=!!o.pno; $("oRuby").checked=o.ruby!==false;
   go("sheet"); build();
 }
-["oPaper","oPages","oSize","oLno","oPno","oRuby"].forEach(function(k){ $(k).addEventListener("change", function(){
-  DB.opt={paper:$("oPaper").value, pages:+$("oPages").value, size:$("oSize").value, lno:$("oLno").checked, pno:$("oPno").checked, ruby:$("oRuby").checked}; save(); build(); }); });
+["oPaper","oDan","oPages","oSize","oLno","oPno","oRuby"].forEach(function(k){ $(k).addEventListener("change", function(){
+  DB.opt={paper:$("oPaper").value, dan:+$("oDan").value, pages:+$("oPages").value, size:$("oSize").value, lno:$("oLno").checked, pno:$("oPno").checked, ruby:$("oRuby").checked}; save(); build(); }); });
 
-// 文字の大きさ fs(pt) で何ページになるか・行のならび
-function layout(t, fs, paper, ruby){
-  var W=paper[0], H=paper[1], mt=16, mb=16, ml=12, mr=12;
+// 文字の大きさ fs(pt)・段数 dan で、ページ/段ごとの行のならびをつくる
+function layout(t, fs, paper, ruby, dan){
+  dan=Math.max(1, dan||1);
+  var W=paper[0], H=paper[1], mt=16, mb=16, ml=12, mr=12, gap=12;
   var fsmm=fs*PT, pitch=fsmm*LH;
-  var per=Math.max(5, Math.floor((H-mt-mb)/fsmm));
-  var perPage=Math.max(3, Math.floor((W-ml-mr)/pitch));
+  var tierH=(H-mt-mb-(dan-1)*gap)/dan;   // 1段ぶんの高さ
+  var per=Math.max(4, Math.floor(tierH/fsmm));         // 1行に入る字数（段の高さで決まる）
+  var perTier=Math.max(3, Math.floor((W-ml-mr)/pitch)); // 1段に入る行数（紙の幅で決まる）
   var cols=[];
   cols.push({kind:"ttl", html:esc(zen(t.title||"")), size:fs*1.4});
   if (t.author) cols.push({kind:"au", html:esc(zen(t.author)), size:fs});
@@ -219,42 +222,58 @@ function layout(t, fs, paper, ruby){
     var tokens=[{b:"　"}].concat(tokenize(p.replace(/^[ 　]+/,""), ruby));
     wrapPara(tokens, per).forEach(function(line,i){ lineNo++; cols.push({kind:"line", html:lineHTML(line, ruby), no:lineNo, para:i===0?paraNo:0}); });
   });
-  // タイトル行は1.4倍なので少し多めに数える
-  var units=cols.length+0.6;
-  return {cols:cols, pages:Math.ceil(units/perPage), per:per, perPage:perPage, fs:fs, W:W, H:H, mt:mt, mb:mb, ml:ml, mr:mr, pitch:pitch, fsmm:fsmm, lines:lineNo};
+  // 行を「ページ → 段」に割りつける（各段は右→左、段は上→下）
+  var avail=W-ml-mr, pageList=[], idx=0, guard=0;
+  while (idx<cols.length && guard++<9999){
+    var page=[];
+    for (var ti=0; ti<dan && idx<cols.length; ti++){
+      var tier=[], used=0;
+      while (idx<cols.length){
+        var w=cols[idx].kind==="ttl"?pitch*1.4:pitch;
+        if (used>0 && used+w>avail+0.01) break;
+        tier.push(cols[idx]); used+=w; idx++;
+      }
+      page.push(tier);
+    }
+    pageList.push(page);
+  }
+  return {pageList:pageList, pages:pageList.length, cols:cols, per:per, perTier:perTier, fs:fs,
+    W:W, H:H, mt:mt, mb:mb, ml:ml, mr:mr, gap:gap, tierH:tierH, dan:dan, pitch:pitch, fsmm:fsmm, lines:lineNo};
 }
 function circled(n){ return n<=20 ? String.fromCharCode(0x2460+n-1) : "("+n+")"; }
 function build(){
   var t=getT(cur); if (!t) return;
-  var paper=PAPER[$("oPaper").value], target=+$("oPages").value, ruby=$("oRuby").checked;
+  var paper=PAPER[$("oPaper").value], target=+$("oPages").value, ruby=$("oRuby").checked, dan=+$("oDan").value||1;
   $("oSizeL").classList.toggle("hidden", target!==0);
   $("pageStyle").textContent="@page{size:"+paper[0]+"mm "+paper[1]+"mm;margin:0}";
   var L;
-  if (target===0) L=layout(t, +$("oSize").value, paper, ruby);
+  if (target===0) L=layout(t, +$("oSize").value, paper, ruby, dan);
   else { // 枚数におさまる いちばん大きい文字
-    var fs=20; L=layout(t, fs, paper, ruby);
-    while (L.pages>target && fs>6){ fs-=0.5; L=layout(t, fs, paper, ruby); }
+    var fs=20; L=layout(t, fs, paper, ruby, dan);
+    while (L.pages>target && fs>6){ fs-=0.5; L=layout(t, fs, paper, ruby, dan); }
   }
   $("shTitle").textContent=t.title||"（題名なし）";
-  $("shInfo").textContent="文字の大きさ "+L.fs+"pt ・ 1行 "+L.per+"字 ・ "+L.lines+"行 ・ "+L.pages+"枚"+(L.fs<9?"　※文字が小さいので、用紙を大きくするか枚数をふやすと読みやすくなります":"");
-  var lno=$("oLno").checked, pno=$("oPno").checked, html="", idx=0;
-  for (var pg=0; pg<L.pages; pg++){
-    html+='<div class="page" style="width:'+L.W+'mm;height:'+L.H+'mm"><div class="cols" style="top:'+L.mt+'mm;right:'+L.mr+'mm;height:'+(L.H-L.mt-L.mb)+'mm">';
-    var used=0;
-    while (idx<L.cols.length){
-      var c=L.cols[idx], w=c.kind==="ttl"?L.pitch*1.4:L.pitch;
-      if (used+w > L.W-L.ml-L.mr+0.01) break;
-      var st='width:'+w.toFixed(2)+'mm;height:'+(L.per*L.fsmm).toFixed(2)+'mm;font-size:'+(c.size||L.fs)+'pt;line-height:'+w.toFixed(2)+'mm';
-      if (c.kind==="gap") html+='<div class="col" style="'+st+'"></div>';
-      else {
+  $("shInfo").textContent="文字の大きさ "+L.fs+"pt ・ 1行 "+L.per+"字 ・ "+L.dan+"段 ・ "+L.lines+"行 ・ "+L.pages+"枚"+(L.fs<9?"　※文字が小さいので、用紙を大きくするか枚数をふやすと読みやすくなります":"");
+  var lno=$("oLno").checked, pno=$("oPno").checked, html="";
+  var colH=(L.per*L.fsmm).toFixed(2);
+  for (var pg=0; pg<L.pageList.length; pg++){
+    html+='<div class="page" style="width:'+L.W+'mm;height:'+L.H+'mm">';
+    var page=L.pageList[pg];
+    for (var ti=0; ti<page.length; ti++){
+      var tierTop=(L.mt + ti*(L.tierH+L.gap)).toFixed(2);
+      html+='<div class="cols" style="top:'+tierTop+'mm;right:'+L.mr+'mm;height:'+L.tierH.toFixed(2)+'mm">';
+      page[ti].forEach(function(c){
+        var w=c.kind==="ttl"?L.pitch*1.4:L.pitch;
+        var st='width:'+w.toFixed(2)+'mm;height:'+colH+'mm;font-size:'+(c.size||L.fs)+'pt;line-height:'+w.toFixed(2)+'mm';
+        if (c.kind==="gap"){ html+='<div class="col" style="'+st+'"></div>'; return; }
         var extra="";
-        if (c.kind==="line" && lno && c.no%5===0) extra+='<span class="lno" style="bottom:-'+(L.mb-3)+'mm;font-size:7pt">'+c.no+'</span>';
-        if (c.kind==="line" && pno && c.para) extra+='<span class="pno" style="top:-'+(L.mt-3)+'mm;font-size:9pt">'+circled(c.para)+'</span>';
+        if (c.kind==="line" && lno && c.no%5===0) extra+='<span class="lno" style="bottom:-5mm;font-size:7pt">'+c.no+'</span>';
+        if (c.kind==="line" && pno && c.para) extra+='<span class="pno" style="top:-6mm;font-size:9pt">'+circled(c.para)+'</span>';
         html+='<div class="col '+(c.kind==="ttl"?"ttl":c.kind==="au"?"au":"")+'" style="'+st+'">'+c.html+extra+'</div>';
-      }
-      used+=w; idx++;
+      });
+      html+='</div>';
     }
-    html+='</div>'+(L.pages>1?'<div class="pgno">'+(pg+1)+' / '+L.pages+'</div>':'')+'</div>';
+    html+=(L.pages>1?'<div class="pgno">'+(pg+1)+' / '+L.pages+'</div>':'')+'</div>';
   }
   $("sheets").innerHTML=html;
   fit();
