@@ -827,5 +827,25 @@
    "cta": "保存"
   },
   "experiment": "v3_redesign"
+ },
+ "E7kK2WE9BgM": {
+  "title": "5Gを常にオンにしてる人、電池が… #Shorts",
+  "published": "2026-11-26T12:00",
+  "age_at_record": 55.1,
+  "views48": 1040,
+  "likes": 2,
+  "comments": 1,
+  "late": false,
+  "tags": {
+   "length": "短縮版",
+   "slot": "昼12:00",
+   "layout": "画面録画風",
+   "title_style": "シリーズ名だけ",
+   "title_type": "内容型",
+   "hook": "5Gを{常にオン} にしてない？",
+   "hook_type": "疑問型",
+   "cta": "保存"
+  },
+  "experiment": "v3_redesign"
  }
 }
